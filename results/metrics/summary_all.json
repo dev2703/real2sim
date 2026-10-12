@@ -72,6 +72,24 @@
     "mean_latency_ms": 44.3
   },
   {
+    "run": "E2_cart_so101_v2",
+    "experiment_id": "E2_cart_ACT_so101",
+    "controller_source": "LEARNED_ACT",
+    "robot": "so101",
+    "n": 10,
+    "successes": 0,
+    "lifted": 0,
+    "delivered": 0,
+    "released": 0,
+    "phase_failed": {
+      "approach": 10
+    },
+    "checkpoint_sha256": [
+      "0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0"
+    ],
+    "mean_latency_ms": 14.9
+  },
+  {
     "run": "E3_cart_panda",
     "experiment_id": "E3_cart_ACT_panda",
     "controller_source": "LEARNED_ACT",

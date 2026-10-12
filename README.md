@@ -42,8 +42,10 @@ uv run python -m real2sim.policy.train --config configs/act_cartesian.yaml --out
 # 4. check a checkpoint against held-out episodes (open-loop, not task success)
 uv run python -m real2sim.policy.check --checkpoint outputs/act_joint_so101/checkpoints/last --data .cache/derived_joint
 
-# 5. simulation evaluation (being built; see docs/experiment_protocol.md)
-uv run python -m real2sim.evaluation.run --help
+# 5. simulation evaluation (see docs/experiment_protocol.md for the full command set)
+uv run python -m real2sim.evaluation.run --robot so101 --checkpoint outputs/act_cartesian/checkpoints/006000 --n-trials 10 --out results/metrics/E2_cart_so101_v2 --video
+uv run python -m real2sim.evaluation.oracle --n-trials 10 --out results/metrics/oracle_so101
+uv run python scripts/aggregate_trials.py
 ```
 
 ## Models and physics assumptions

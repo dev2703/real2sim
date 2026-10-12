@@ -14,10 +14,10 @@ It changes only when work is verified or a decision in `docs/decisions.md` is ap
 | M1 joint ACT baseline | G1 | **G1 PASS** on step-2000 checkpoint (open-loop val L1 0.337); 20k-step MPS run continuing | none |
 | M2 SO-101 MuJoCo | G2 | **PASS**: scene from task.yaml, 48 sim tests, bowl physics measured, replay diagnostic (E0), PnP camera fit applied | D-014 base height |
 | M3 Cartesian dataset | G3 | **PASS**: 7-D labels and 13-float proprio built, 2-step train/infer round trip OK; full run queued on MPS | joint-map verification at M2 |
-| M4 Cartesian ACT + closed loop | G4 | **PARTIAL**: runner, adapters, oracle-schema guard and closed-loop test done; E1 debug 0/3; Cartesian training queued on MPS | Cartesian checkpoint; D-014 |
-| M5 Panda | G5 | **PARTIAL**: scene, 7-DoF IK adapter, 12/12 IK poses; retargeting replay and frozen-E2 rollouts pending | E2 checkpoint |
-| M6 recovery | G6 | **PARTIAL**: detector, FSM, loop, MLP and dataset loader with 40 unit tests; no correction data yet | G4 instrumentation |
-| M7 packaging | G7 | not started | all |
+| M4 Cartesian ACT + closed loop | G4 | **PASS (0/10 measured)**: frozen checkpoint 006000, 10 instrumented learned trials, causes isolated (domain-gap diagnostic, oracle 10/10) | none |
+| M5 Panda | G5 | **PASS as attempted transfer (0/10)**: retarget replay 94.8 % IK acceptance, frozen E2 on Panda 10 trials with 0 IK rejections | none |
+| M6 recovery | G6 | **NOT COMPLETED**: detector/FSM/loop/MLP built and unit-tested; no correction data, E5/E6 not run | time |
+| M7 packaging | G7 | **IN PROGRESS**: README results table, protocol §5, limitations; videos untracked | public links |
 
 Skills under `.agents/skills/`: G1 reached; still **DEFERRED** in favour of M2/M4 (plan §10 allows skipping). Not required for P0.
 

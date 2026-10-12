@@ -325,3 +325,66 @@ IK accepted 567/598 (94.8 %, the 31 rejections all joint-limit), accepted residu
 over the episode because deltas are executed relative to the Panda's own TCP from a different
 start pose (0.21 m offset) and rejected ticks lose their motion. This is an engineering
 baseline for the adapter, not a transfer result.
+
+---
+
+## 2026-10-13 09:10 AEDT — G4/G5 primary experiments (honest 0/N) and failure isolation
+
+Geometry frozen at commit `5a29044` (base lift 0.012 m, camera refit, v3 centres); 248 tests pass.
+Checkpoints: joint `outputs/act_joint_so101/checkpoints/020000` (SHA-256 `d27ff21f8698…`),
+Cartesian `outputs/act_cartesian/checkpoints/006000` (`0a3b22211c97…`), frozen; no Panda training.
+
+| Experiment | Controller | Robot | Checkpoint | Success | Lifted | Phase failed | Notes |
+|---|---|---|---|---|---|---|---|
+| E0 `hold_pose_null` | HOLD_POSE (no policy) | SO-101 | — | **0/10** | 0 | approach ×10 | null floor |
+| E0 `hold_pose_null` | HOLD_POSE (no policy) | Panda | — | **0/10** | 0 | approach ×10 | null floor |
+| E1 `joint_ACT` | LEARNED_ACT | SO-101 | joint 020000 (`d27ff21f8698…`) | **0/10** | 0 | approach ×10 | min EE–ball 14–17 cm; arm rises and holds |
+| E2 `cart_ACT_so101` (run 1) | LEARNED_ACT | SO-101 | cartesian 006000 (`0a3b22211c97…`) | **0/10** | 0 | approach ×10 | 4 trials had 227–238 IK rejections from a workspace-floor bug |
+| E2 `cart_ACT_so101` (run 2, floor fixed) | LEARNED_ACT | SO-101 | cartesian 006000 | **0/10** | 0 | approach ×10 | 2–3 IK rejections per trial; min EE–ball 15–19 cm |
+| E3 `cart_ACT_panda` | LEARNED_ACT (same frozen E2 weights, no Panda training) | Panda | cartesian 006000 | **0/10** | 0 | approach ×10 | 0 IK rejections; min EE–ball 6–12 cm |
+| E4b `oracle_geometry_diagnostic` | ORACLE (scripted on simulator GT, privileged) | SO-101 | — | **10/10** | 10 | none | scene feasibility only, not an E2 upper bound |
+| E5/E6 recovery | — | — | — | not run | | | detector/FSM/MLP built; no correction data (G6 not completed) |
+
+Every trial is a row in `results/metrics/trials.csv` (70 rows). Seeds 0–9, 300 ticks (30 s) at
+10 Hz, success = ball resting inside the bowl and released for 1 s. Captioned videos per trial in
+`results/media/` (not tracked in git; regenerate with the commands below).
+
+
+**Failure isolation (plan M4.4).** The learned policies never reach the ball: minimum
+end-effector–ball distance 14–19 cm on the SO-101 and 6–12 cm on the Panda, versus the oracle's
+grasp at tick ~30. Evidence for each candidate cause:
+
+- *Gripping / scene physics*: ruled out as the blocker. The scripted oracle grasps, carries and
+  places the ball 10/10 with the same gripper, contacts and friction sweep.
+- *IK / controller*: the first E2 run rejected 227–238 of 300 ticks in 4 trials because the IK
+  workspace floor (z ≥ 0.015) sat above the lifted start pose; with the floor at the table top
+  the re-run has 2–3 rejections per trial and the outcome is unchanged (0/10). Not the cause.
+- *Vision domain gap*: measured directly by `real2sim.evaluation.domain_gap` on validation
+  episode 1 (120 ticks): feeding the frozen policy a simulated render of the recorded state
+  instead of the real frame raises the open-loop error from 10.4° to 13.5° (joint policy, ×1.29)
+  and from 0.016 to 0.023 (Cartesian, ×1.44), with the gripper channel taking most of the hit
+  (7.0→14.0 %, 0.082→0.127). A moderate gap, not a collapse.
+- *Open-loop quality and compounding (distribution shift)*: the Cartesian policy's per-tick
+  error on *real* frames is 1.5–2 mm against a 3.7 mm median tick motion (relative error ≈ 0.4);
+  the joint policy's is 10–21° on the large joints. With 28 training episodes and no
+  perturbation data, closed-loop execution drifts off the demonstrated manifold within the
+  first second and never recovers. This is the dominant cause on the evidence above.
+
+Latency: 30–70 ms per chunk on CPU (two runs sharing the machine); no timeouts from latency.
+
+Commands (each ≈ 1–5 min on CPU):
+
+```
+uv run python -m real2sim.evaluation.run --robot so101 --checkpoint outputs/act_joint_so101/checkpoints/020000 --n-trials 10 --seed-start 0 --out results/metrics/E1_joint_so101 --video
+uv run python -m real2sim.evaluation.run --robot so101 --checkpoint outputs/act_cartesian/checkpoints/006000 --n-trials 10 --seed-start 0 --out results/metrics/E2_cart_so101_v2 --video
+uv run python -m real2sim.evaluation.run --robot panda --checkpoint outputs/act_cartesian/checkpoints/006000 --config configs/sim_panda.yaml --eval-config configs/eval_panda.yaml --n-trials 10 --seed-start 0 --out results/metrics/E3_cart_panda --video
+uv run python -m real2sim.evaluation.run --robot so101 --controller hold --n-trials 10 --out results/metrics/E0_hold_so101
+uv run python -m real2sim.evaluation.oracle --config configs/sim_so101.yaml --n-trials 10 --seed-start 0 --out results/metrics/oracle_so101 --video results/media/oracle
+uv run python -m real2sim.evaluation.domain_gap --checkpoint outputs/act_cartesian/checkpoints/006000 --data .cache/derived_cartesian --episode 1 --out results/metrics/domain_gap/cart_ep1.json
+uv run python scripts/aggregate_trials.py
+```
+
+**Gates:** G4 PASS (instrumented learned closed-loop rollouts exist; success 0/10, causes
+isolated). G5 PASS as *attempted* transfer (0/10, IK feasible, 0 rejections). G6 NOT COMPLETED
+(no correction data; FSM/detector/MLP unit-tested only). Subagent workflows stopped at 08:30 when
+the API usage limit was reached; the remaining work was done directly.

@@ -55,9 +55,16 @@ claims this project can make.
   transient (p95 elbow 5°, EE 3.2 cm); the FK→IK path accepts 96 % of ticks with 0.08 mm
   median residual but accumulates 5–13 cm EE error because deltas are relative to the drifted
   sim pose. The ball start of the real episode is unknown, so replay says nothing about grasps.
-- Closed-loop results beyond the debug run are not yet measured. When reported they carry the provisional-scene
+- **Primary closed-loop results are 0/10 for every learned policy** (E1 joint, E2 Cartesian,
+  E3 Panda zero-shot), all failing in the approach phase; the scripted oracle is 10/10 and the
+  null baselines 0/10. The dominant cause on the evidence is compounding error of a weak
+  open-loop policy trained on 28 episodes, with a moderate rendering gap on top (×1.3–1.4
+  open-loop error on sim renders). See `docs/experiment_protocol.md` §5.
+- **The E2 run 1 contained a harness bug** (IK workspace floor above the start pose); it is kept
+  as a labelled row set and the corrected run 2 is the reported result. Both are 0/10. When reported they carry the provisional-scene
   caveat above and are a sim-only evaluation of a real-data policy; nothing is claimed about
   sim-to-real.
 - Placo is not importable on macOS; IK uses a MuJoCo damped-least-squares solver instead of
   the LeRobot Placo interface named in the plan.
-- Panda transfer (E3), recovery (E5/E6) and the oracle diagnostic (E4b) are not started.
+- Recovery E5/E6 were not run: no correction data were collected, so the learned specialist
+  (G6) is NOT COMPLETED; only the detector/FSM/MLP code with unit tests exists.
