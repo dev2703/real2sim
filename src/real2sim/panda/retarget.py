@@ -43,7 +43,6 @@ from real2sim.panda.model import DEFAULT_CONFIG, ROOT, project_path
 CONTROLLER_SOURCE = "SCRIPTED_REPLAY"
 DELTA_NAMES = ("dx", "dy", "dz", "drx", "dry", "drz")
 DEFAULT_OUT = ROOT / "results/metrics/panda_retarget"
-DEFAULT_VIDEO = ROOT / "results/media/panda_retarget"
 
 
 def caption_for(episode: int) -> str:

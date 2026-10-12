@@ -29,7 +29,7 @@ def _pick_codec() -> str:
         try:
             av.codec.Codec(name, "w")
             return name
-        except Exception:  # noqa: BLE001 - codec probing
+        except (ValueError, av.FFmpegError):  # codec not built into this PyAV
             continue
     raise RuntimeError("no usable video encoder in PyAV")
 

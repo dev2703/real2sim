@@ -29,7 +29,6 @@ from real2sim.recovery.detector import FEATURE_NAMES
 
 ALLOWED_PROVENANCE = ("scripted_oracle_sim", "human_teleop_sim", "real_intervention")
 EXPERT_COLUMNS = [f"expert_{a}" for a in ACTION_NAMES]
-BASE_COLUMNS = [f"base_proposed_{a}" for a in ACTION_NAMES]
 META_COLUMNS = [
     "correction_episode_id",
     "tick",

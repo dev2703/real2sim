@@ -36,7 +36,10 @@ STATE_KEY = "observation.state"
 IMAGE_SHAPE_CHW = (3, 192, 256)
 JOINT_NAMES = ("shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper")
 JOINT_STATE_NAMES = [f"{j}.pos" for j in JOINT_NAMES]
+# Observation keys that may exist in ``env.observation()`` / ``info`` but must never reach the
+# policy: simulator diagnostics (``sim.*``) and ground truth (``privileged*``).
 FORBIDDEN_PREFIXES = ("privileged", "sim.")
+POLICY_KEYS = frozenset({IPHONE_KEY, STATE_KEY})
 
 
 class ContractError(ValueError):
@@ -50,8 +53,11 @@ def normalize_image_chw(normalizer, chw_float01: np.ndarray) -> np.ndarray:
     the env already divided by 255 so only the mean/std step remains.
     """
     chw = np.asarray(chw_float01, np.float32)
-    if chw.shape != IMAGE_SHAPE_CHW or chw.min() < 0.0 or chw.max() > 1.0:
+    if chw.shape != IMAGE_SHAPE_CHW:
         raise ContractError(f"expected image {IMAGE_SHAPE_CHW} float in [0,1], got {chw.shape}")
+    # NaN compares False against both bounds, so check finiteness explicitly.
+    if not np.all(np.isfinite(chw)) or chw.min() < 0.0 or chw.max() > 1.0:
+        raise ContractError("image must be finite and within [0, 1]")
     return (chw - normalizer.img_mean) / normalizer.img_std
 
 
@@ -123,16 +129,27 @@ class ObservationAdapter:
     def batch(self, obs: dict, env) -> dict[str, torch.Tensor]:
         # Only the contract's two inputs are copied; ``sim.*`` diagnostics and any privileged
         # metrics in ``info`` never reach the policy.
-        if "privileged_metrics" in obs or any(k.startswith("privileged") for k in obs):
+        if any(k.startswith("privileged") for k in obs):
             raise ContractError("observation carries privileged keys")
         if IPHONE_KEY not in obs:
             raise ContractError(f"observation lacks {IPHONE_KEY}")
         img = normalize_image_chw(self.normalizer, obs[IPHONE_KEY])
         state = self.normalizer.state(self.state(env)).astype(np.float32)
-        return {
+        if not np.all(np.isfinite(state)):
+            raise ContractError("normalised state is not finite")
+        batch = {
             IPHONE_KEY: torch.from_numpy(np.ascontiguousarray(img))[None].to(self.device),
             STATE_KEY: torch.from_numpy(state)[None].to(self.device),
         }
+        assert_policy_batch(batch)
+        return batch
+
+
+def assert_policy_batch(batch: dict) -> None:
+    """Runtime guard (plan rule 5): a policy batch holds exactly the contract inputs, never GT."""
+    bad = [k for k in batch if k.startswith(FORBIDDEN_PREFIXES)]
+    if bad or set(batch) != POLICY_KEYS:
+        raise ContractError(f"policy batch keys {sorted(batch)} != {sorted(POLICY_KEYS)}; forbidden: {bad}")
 
 
 @dataclass
@@ -233,7 +250,8 @@ class ChunkExecutor:
         self.normalizer = normalizer
         self.obs_adapter = obs_adapter
         self.action_adapter = action_adapter
-        n = n_action_steps or int(policy.config.n_action_steps)
+        # ``is None``, not ``or``: an explicit 0 is invalid and must not fall back to the default.
+        n = int(policy.config.n_action_steps) if n_action_steps is None else int(n_action_steps)
         if n < 1 or n > int(policy.config.chunk_size):
             raise ValueError("n_action_steps must be in [1, chunk_size]")
         self.n_action_steps = n

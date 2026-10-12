@@ -301,7 +301,7 @@ def mujoco_camera_params(rvec, tvec, K, height: int, look_depth_point) -> dict:
     pos, fwd = conv["pos"], conv["forward"]
     d = float((np.asarray(look_depth_point, float) - pos) @ fwd)
     look_at = pos + fwd * d
-    x_rf, y_rf = roll_free_axes(pos, look_at)
+    x_rf, _ = roll_free_axes(pos, look_at)
     roll_deg = math.degrees(math.atan2(np.cross(x_rf, conv["xaxis"]) @ (-fwd), x_rf @ conv["xaxis"]))
     pitch_deg = math.degrees(math.asin(-fwd[2]))
     return {

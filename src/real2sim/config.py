@@ -21,6 +21,9 @@ def validate_camera_keys(config: dict[str, Any], available_keys: list[str]) -> l
     keys = list(config.get("camera_keys") or [])
     if not keys:
         raise ValueError("configs/data.yaml must list at least one camera key (audit-selected)")
+    dupes = sorted({k for k in keys if keys.count(k) > 1})
+    if dupes:
+        raise ValueError(f"camera keys listed more than once: {dupes}")
     missing = [k for k in keys if k not in available_keys]
     if missing:
         raise ValueError(f"camera keys not present in dataset: {missing}; available: {available_keys}")

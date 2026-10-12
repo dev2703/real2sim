@@ -119,7 +119,7 @@ class DeviationDetector:
     """Per-tick deviation rules with persistence counters (no simulator truth)."""
 
     def __init__(self, config: dict[str, Any]) -> None:
-        det = config["detector"] if "detector" in config else config
+        det = config.get("detector", config)
         self.cfg = det
         self.ball_conf_min = float(det["ball_conf_min"])
         self.ball_lost_ticks = int(det["ball_lost_ticks"])

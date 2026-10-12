@@ -152,7 +152,7 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
 def run_trial(env, controller, *, seed: int, max_ticks: int, tracker: TrialTracker,
               caption_prefix: str, video: CaptionedVideo | None = None,
               upscale: int = 2) -> TrialTracker:
-    obs, info = env.reset(seed=seed)
+    obs, _ = env.reset(seed=seed)
     controller.reset()
     if video is not None:
         video.write(policy_view_to_bgr(obs[IPHONE_KEY], upscale), f"{caption_prefix} seed={seed} tick=0")

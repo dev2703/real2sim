@@ -56,7 +56,8 @@ def prepare_and_train(mode: str, config: str, run_name: str, smoke_steps: int | 
     os.chdir("/repo")
     import yaml
 
-    data_cfg = yaml.safe_load(open("configs/data.yaml"))
+    with open("configs/data.yaml") as f:
+        data_cfg = yaml.safe_load(f)
     src = data_cfg["source"]
     root = snapshot_download(
         repo_id=src["repo_id"],

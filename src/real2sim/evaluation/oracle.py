@@ -312,7 +312,7 @@ class OracleGeometryController:
 def run_oracle_trial(env: So101PickPlaceEnv, ctrl: OracleGeometryController, *, seed: int,
                      start_qpos: np.ndarray, max_ticks: int, tracker: TrialTracker,
                      video: CaptionedVideo | None = None, upscale: int = 2) -> list[dict]:
-    obs, info = env.reset(seed=seed, scenario={"joint_positions": start_qpos})
+    obs, _ = env.reset(seed=seed, scenario={"joint_positions": start_qpos})
     ctrl.reset()
     if video is not None:
         video.write(policy_view_to_bgr(obs[IPHONE_KEY], upscale), f"{CAPTION} seed={seed} tick=0")

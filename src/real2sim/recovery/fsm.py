@@ -46,7 +46,7 @@ class GateOutput:
 
 class RecoveryGate:
     def __init__(self, config: dict[str, Any]) -> None:
-        fsm = config["fsm"] if "fsm" in config else config
+        fsm = config.get("fsm", config)
         self.max_recovery_ticks = int(fsm["max_recovery_ticks"])
         self.max_retries = int(fsm["max_retries"])
         h = fsm["handoff"]

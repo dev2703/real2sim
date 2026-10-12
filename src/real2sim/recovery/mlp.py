@@ -54,7 +54,7 @@ class MLPSpec:
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> MLPSpec:
-        m = config["mlp"] if "mlp" in config else config
+        m = config.get("mlp", config)
         b = m.get("action_bounds", {})
         return cls(
             input_dim=int(config.get("features", {}).get("input_dim", 29)),
