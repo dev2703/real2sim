@@ -72,12 +72,15 @@ def test_opencv_to_mujoco_rendered_sphere_matches_cv2_projection():
         model = mujoco.MjModel.from_xml_string(xml)
         data = mujoco.MjData(model)
         mujoco.mj_forward(model, data)
-        renderer = mujoco.Renderer(model, height=H, width=W)
         try:
-            renderer.update_scene(data, camera="cam")
-            rgb = renderer.render()
-        finally:
-            renderer.close()
+            renderer = mujoco.Renderer(model, height=H, width=W)
+            try:
+                renderer.update_scene(data, camera="cam")
+                rgb = renderer.render()
+            finally:
+                renderer.close()
+        except mujoco.FatalError as exc:
+            pytest.skip(f"MuJoCo rendering backend unavailable: {exc}")
         mask = (rgb[..., 0] > 100) & (rgb[..., 1] < 60) & (rgb[..., 2] < 60)
         assert mask.sum() > 20, f"sphere not rendered (trial {trial})"
         vs, us = np.nonzero(mask)
