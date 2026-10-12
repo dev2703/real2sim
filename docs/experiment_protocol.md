@@ -34,11 +34,22 @@ reported in `docs/progress.md` and the README.
 
 `experiment_id, controller_source, robot, seed, checkpoint_sha256, checkpoint_step, success,
 lifted, delivered, released, rolled_out, ball_escaped_table, phase_failed, min_ee_ball_distance_m,
-ticks, ik_rejections, mean_latency_ms, max_action_saturation, video_path`.
+ticks, ik_rejections, mean_latency_ms, max_action_saturation, video_path, abort`.
 
-`phase_failed` is one of `approach` (never came within 3 cm of the ball), `grasp` (reached but
-never lifted), `transport` (lifted but never over the bowl), `release` (over the bowl but ball
-not resting inside at the end), `none` (success).
+Definitions (tightened 2026-10-13 after a logic review; see `tests/unit/test_metrics_edge_cases.py`):
+
+- `success`: ball inside the bowl, resting, and **not held** for 1 s of consecutive ticks. It does
+  not require the ball to have been grasped; a ball pushed in counts, and `released` shows whether
+  it was placed.
+- `lifted`: the ball was above the lift height **while held**. A ball knocked into the air is not
+  a lift.
+- `rolled_out`: a released ball left the bowl and the trial did **not** end in success.
+- `phase_failed` is the furthest phase reached: `none` (success), `release` (ball was in the bowl
+  but no stable released success), `transport` (lifted but never in the bowl), `grasp` (held, or
+  came within 3 cm, but never lifted), `approach` (neither), `aborted` (the trial stopped on an
+  exception; the message is in `abort` and the trial is still counted).
+- `mean_latency_ms`: steady-state policy inference latency, excluding the first (warm-up) call,
+  which is in `summary.json` as `warmup_latency_ms`. For the oracle it is IK solve time.
 
 ## 4. Reporting rules
 
@@ -61,7 +72,7 @@ not resting inside at the end), `none` (success).
 | E1 `joint_ACT` | LEARNED_ACT | SO-101 | joint 020000 (`d27ff21f8698…`) | **0/10** | 0 | approach ×10 | min EE–ball 14–17 cm; arm rises and holds |
 | E2 `cart_ACT_so101` (run 1) | LEARNED_ACT | SO-101 | cartesian 006000 (`0a3b22211c97…`) | **0/10** | 0 | approach ×10 | 4 trials had 227–238 IK rejections from a workspace-floor bug |
 | E2 `cart_ACT_so101` (run 2, floor fixed) | LEARNED_ACT | SO-101 | cartesian 006000 | **0/10** | 0 | approach ×10 | 2–3 IK rejections per trial; min EE–ball 15–19 cm |
-| E3 `cart_ACT_panda` | LEARNED_ACT (same frozen E2 weights, no Panda training) | Panda | cartesian 006000 | **0/10** | 0 | approach ×10 | 0 IK rejections; min EE–ball 6–12 cm |
+| E3 `cart_ACT_panda` (run 2, corrected scene) | LEARNED_ACT (same frozen E2 weights, no Panda training) | Panda | cartesian 006000 | **0/10** | 0 | approach ×8, grasp ×2 | min EE–ball 3.4–4.9 cm (run 1: 6–12 cm); seeds 4 and 8 held the ball 105 and 18 ticks without lifting; 0–85 IK rejections |
 | E4b `oracle_geometry_diagnostic` | ORACLE (scripted on simulator GT, privileged) | SO-101 | — | **10/10** | 10 | none | scene feasibility only, not an E2 upper bound |
 | E5/E6 recovery | — | — | — | not run | | | detector/FSM/MLP built; no correction data (G6 not completed) |
 
@@ -90,3 +101,12 @@ grasp at tick ~30. Evidence for each candidate cause:
   first second and never recovers. This is the dominant cause on the evidence above.
 
 Latency: 30–70 ms per chunk on CPU (two runs sharing the machine); no timeouts from latency.
+
+**Correction (2026-10-13 cleanup).** The first E3 run (`results/metrics/E3_cart_panda`) was
+measured on a Panda scene that ignored the 12 mm base lift (D-014) and dropped the fitted camera
+roll, so the frozen policy saw a shifted proprio and a rotated image unrelated to the
+embodiment. The scene now shares the SO-101 task frame and camera
+(`tests/integration/test_embodiment_consistency.py`); the re-run
+`results/metrics/E3_cart_panda_v2` is the reported result and is also 0/10, but it behaves
+differently: every trial gets within 3.4–4.9 cm of the ball (6–12 cm in run 1) and two trials
+make contact and hold the ball without lifting it. Run 1 is kept, not deleted.

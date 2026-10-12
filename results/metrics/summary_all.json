@@ -18,6 +18,24 @@
     "mean_latency_ms": 0.0
   },
   {
+    "run": "E0_hold_panda_v2",
+    "experiment_id": "E0_hold_pose_null_panda",
+    "controller_source": "HOLD_POSE",
+    "robot": "panda",
+    "n": 10,
+    "successes": 0,
+    "lifted": 0,
+    "delivered": 0,
+    "released": 0,
+    "phase_failed": {
+      "approach": 10
+    },
+    "checkpoint_sha256": [
+      ""
+    ],
+    "mean_latency_ms": 0.0
+  },
+  {
     "run": "E0_hold_so101",
     "experiment_id": "E0_hold_pose_null",
     "controller_source": "HOLD_POSE",
@@ -51,7 +69,7 @@
     "checkpoint_sha256": [
       "d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274"
     ],
-    "mean_latency_ms": 44.4
+    "mean_latency_ms": 15.8
   },
   {
     "run": "E2_cart_so101",
@@ -87,7 +105,7 @@
     "checkpoint_sha256": [
       "0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0"
     ],
-    "mean_latency_ms": 14.9
+    "mean_latency_ms": 15.1
   },
   {
     "run": "E3_cart_panda",
@@ -108,6 +126,25 @@
     "mean_latency_ms": 46.1
   },
   {
+    "run": "E3_cart_panda_v2",
+    "experiment_id": "E3_cart_ACT_panda",
+    "controller_source": "LEARNED_ACT",
+    "robot": "panda",
+    "n": 10,
+    "successes": 0,
+    "lifted": 0,
+    "delivered": 0,
+    "released": 2,
+    "phase_failed": {
+      "approach": 8,
+      "grasp": 2
+    },
+    "checkpoint_sha256": [
+      "0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0"
+    ],
+    "mean_latency_ms": 14.9
+  },
+  {
     "run": "oracle_so101",
     "experiment_id": "E4b_oracle_geometry_diagnostic",
     "controller_source": "ORACLE_GEOMETRY_DIAGNOSTIC",
@@ -123,6 +160,6 @@
     "checkpoint_sha256": [
       ""
     ],
-    "mean_latency_ms": 1.0
+    "mean_latency_ms": 0.4
   }
 ]

@@ -68,3 +68,21 @@ claims this project can make.
   the LeRobot Placo interface named in the plan.
 - Recovery E5/E6 were not run: no correction data were collected, so the learned specialist
   (G6) is NOT COMPLETED; only the detector/FSM/MLP code with unit tests exists.
+
+## Engineering limitations found in the 2026-10-13 cleanup
+
+- **Two IK solvers.** The SO-101 (5-DoF, soft orientation) and Panda (7-DoF, full pose) each
+  carry their own damped-least-squares IK with near-duplicate code paths.
+- **`sim/camera_fit.py` is 1,100+ lines** with about 60 % test coverage; the PnP and
+  back-projection core is tested, the rendering and CLI paths are not.
+- **Recovery detector without phase hints** treats every tick as pre-grasp, so a successful
+  placement would trigger a roll-away takeover. Nothing calls the recovery loop yet (E5/E6 not
+  run); any future caller must pass phase hints.
+- **Training resume is not bit-exact**: torch/numpy RNG states are not restored, so a resumed run
+  replays a different batch order from the original.
+- **`domain_gap` compares** a real frame with a sim render of the same robot state, but the sim
+  ball/bowl come from seed 0, so the gap mixes rendering differences with scene-content ones.
+- **The approach threshold (3 cm) is inside the ball radius (3.35 cm)**: a gripper that only
+  touches the ball surface is scored `approach`, as the protocol states.
+- **E3 run 1 was on a mis-registered Panda scene** (base lift and camera roll ignored); the
+  corrected run 2 is reported and has the same 0/10 outcome.

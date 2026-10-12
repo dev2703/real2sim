@@ -22,3 +22,7 @@ results/media/**/*.mp4
 *.pt
 *.ckpt
 annotations/*.bak
+# test/coverage artefacts
+.coverage
+.pytest_cache/
+.ruff_cache/

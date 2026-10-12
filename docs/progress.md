@@ -388,3 +388,31 @@ uv run python scripts/aggregate_trials.py
 isolated). G5 PASS as *attempted* transfer (0/10, IK feasible, 0 rejections). G6 NOT COMPLETED
 (no correction data; FSM/detector/MLP unit-tested only). Subagent workflows stopped at 08:30 when
 the API usage limit was reached; the remaining work was done directly.
+
+---
+
+## 2026-10-13 — Codebase cleanup, logic review and edge-case tests
+
+Three read-only reviewers (data/geometry, policy/evaluation, sim/Panda/recovery) plus direct
+fixes. Tests 248 → **375 passed**; coverage 84 % → **87 %**; `ruff check .` clean.
+
+**Bugs fixed (confirmed by running code):**
+
+| Area | Bug | Effect before the fix |
+|---|---|---|
+| Panda scene | ignored the D-014 base lift and the fitted camera roll | E3 run 1 measured on a mis-registered scene (12 mm proprio shift, rotated image) |
+| prepare | aligned video frames to rows by count only | a frame dropped at a segment start shifted every image 33 ms, undetected ~2/3 of the time |
+| scoring | phase attribution, "lifted" by a bump, roll-out on successful trials, aborts hidden as `approach` | per-phase failure counts could be wrong; a harness bug could look like a policy failure |
+| adapters | runtime guard declared but unused; NaN images passed validation; `n_action_steps=0` silently replaced | guards existed only in tests |
+| recovery MLP | per-component box clamp vs the adapters' norm clamp | a diagonal step could reach 1.7× the limit with a changed direction |
+| labels / stats | extrapolated end-of-episode labels trained as real targets | 37 placeholder targets in the loss and the action statistics (applies to future training) |
+| geometry | `log_so3` lost 1e-4 near π; rot6d / letterbox degenerate inputs gave NaN / crash | latent |
+| config / split / audit / check / train | duplicate cameras, null exclusions, empty training set, short video passing audit, re-prepared data passing check, duplicated history rows on resume, non-atomic `last` link | latent |
+
+Re-preparing the real joint dataset with the new alignment checks is byte-identical to the one
+the checkpoints were trained on. All primary experiments were regenerated under the final code
+(`results/metrics/trials.csv`, 90 rows): E1 0/10, E2 0/10, E3 (corrected scene) 0/10 with two
+grasp-phase trials, HOLD 0/10 on both robots, oracle 10/10, 0 aborted trials.
+
+**Cleanup:** one `REPO_ROOT`/`project_path` (was four copies); dead constants removed; videos
+untracked (the ignore pattern missed subdirectories); `.coverage`/cache artefacts ignored.
