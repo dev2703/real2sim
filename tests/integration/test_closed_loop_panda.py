@@ -133,3 +133,12 @@ def test_panda_hold_pose_baseline_is_labelled_and_policy_free(tmp_path, monkeypa
     assert rows[0]["success"] == "False" and rows[0]["ticks"] == str(TICKS)
     assert summary["summary"]["successes"] == 0
     assert summary["trials"][0]["abort"] is None
+
+
+@pytest.mark.parametrize("robot, config", [("panda", Path("configs/sim_so101.yaml")),
+                                           ("so101", Path("configs/sim_panda.yaml"))])
+def test_config_robot_mismatch_is_refused_before_env_construction(tmp_path, robot, config):
+    with pytest.raises(ValueError, match=f"--config is a .* scene but --robot is {robot}"):
+        run_trials(robot=robot, checkpoint=None, config=config, eval_config=EVAL, n_trials=1,
+                   seed_start=0, out=tmp_path / "mismatch", video=False, controller="hold",
+                   device="cpu", max_ticks=1)

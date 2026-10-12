@@ -183,9 +183,9 @@ def test_rolled_out_counts_only_unheld_departures():
 
     # Held ball toggling across the bowl boundary during placement (seed 0 pattern): not rolled out.
     assert not rolled_out([(True, True), (False, True), (True, True), (True, False)])
-    # Not pinned: a held -> unheld transition on the very tick the ball leaves the bowl. metrics.py
-    # updates _held_prev before the rolled_out check, so that case currently counts as a roll-out;
-    # it only arises when the gripper opens exactly while crossing the rim band.
+    # A release that coincides with leaving the rim band is a release, not a roll-out (the ball
+    # was held on the previous tick): metrics.py checks both ticks.
+    assert not rolled_out([(True, True), (False, False), (True, False)])
     # Ball resting in the bowl then leaving it unheld: rolled out, and it latches.
     assert rolled_out([(True, False), (True, False), (False, False)])
     assert rolled_out([(True, False), (False, False), (True, False)])

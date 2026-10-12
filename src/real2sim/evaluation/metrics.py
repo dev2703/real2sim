@@ -62,13 +62,15 @@ class TrialTracker:
         self.held_ever |= held
         if self._held_prev and not held:
             self.released = True
-        self._held_prev = held
         in_bowl = bool(privileged["ball_in_bowl"])
         self.delivered |= in_bowl
-        # Only a *released* ball leaving the bowl counts as rolling out; a held ball passing
-        # through the rim+radius band while being lowered toggles in_bowl without any roll.
+        # Only a *released* ball leaving the bowl counts as rolling out: the ball must be unheld
+        # on both the previous and the current tick. A held ball lowered through the rim+radius
+        # band toggles in_bowl without any roll, and a release that coincides with leaving the
+        # band is a release, not a roll-out.
         if self._in_bowl_prev and not in_bowl and not held and not self._held_prev:
             self.rolled_out = True
+        self._held_prev = held
         self._in_bowl_prev = in_bowl
         z = float(privileged["ball_xyz"][2])
         if z < self.table_top_z - self.ball_radius_m:

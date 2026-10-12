@@ -179,10 +179,12 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
     eval_cfg = load_yaml(eval_config)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
+    # Check the scene yaml's robot field BEFORE building the env: the robot-specific env class
+    # fails inside its constructor (opaque StopIteration) when handed the other robot's scene.
+    config_robot = str(load_yaml(config).get("robot", "so101"))
+    if config_robot != robot:
+        raise ValueError(f"--config is a {config_robot} scene but --robot is {robot}")
     env = make_env(robot, config)
-    if str(env.config.get("robot", "so101")) != robot:
-        env.close()
-        raise ValueError(f"--config is a {env.config.get('robot')} scene but --robot is {robot}")
     task = env.task
     hold_ticks = int(math.ceil(task["episode"]["success_hold_s"] * env.control_hz))
     ticks_cap = env.max_episode_steps if max_ticks is None else min(int(max_ticks), env.max_episode_steps)
