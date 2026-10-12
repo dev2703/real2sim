@@ -1,0 +1,52 @@
+# Task geometry and physical parameters. Labels: see docs/calibration.md (D-012).
+# Units: metres, kilograms, radians unless the key says otherwise. Transforms are T_parent_child.
+provenance_default: PROVISIONAL-STANDARD
+
+table:
+  height: 0.75
+  mat: {size_xy: [0.45, 0.40], center_task_xy: [0.25, 0.0]}
+
+frames:
+  T_task_so101base: {xyz: [0.0, 0.0, 0.0], rpy: [0.0, 0.0, 0.0]}
+
+ball:
+  radius: 0.0335
+  mass: 0.058
+  friction: {nominal: 0.6, sweep: [0.4, 0.9]}
+  inertia: thin_shell
+  restitution_nominal: 0.75
+  start_region: {center_task_xy: [0.25, 0.12], radius: 0.03, provenance: "PROVISIONAL-STANDARD; DATA-DERIVED at M2"}
+
+bowl:
+  # OPERATOR-SUPPLIED 2026-10-12 (image cross-check suggests ~12 cm outer diameter, ~5-6 cm height;
+  # re-measure requested, see docs/calibration.md section 1)
+  inner_rim_radius: 0.050
+  inner_depth: 0.0254
+  wall_thickness: 0.002
+  outer_height: 0.030
+  base_diameter: 0.060      # PROVISIONAL-STANDARD
+  mass: 0.30                # PROVISIONAL-STANDARD
+  static: true
+  center_task_xy: [0.22, -0.12]
+  center_provenance: "PROVISIONAL-STANDARD; DATA-DERIVED at M2"
+  collision: {wall_boxes: 20, base: cylinder}
+  depth_sweep: [0.0254, 0.045, 0.060]
+
+camera_iphone:
+  key: observation.images.iphone
+  width: 1280
+  height: 720
+  fovy_deg: 42.6
+  intrinsics_px: {fx: 924.0, fy: 924.0, cx: 640.0, cy: 360.0}
+  extrinsics_provenance: "PROVISIONAL-STANDARD eyeballed; PnP fit at M2"
+  approx_position_task: [0.55, -0.45, 0.45]
+  look_at_task: [0.20, 0.0, 0.0]
+
+robot_so101:
+  joint_names: [shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll]
+  real_to_sim: {sign: [1, 1, 1, 1, 1], offset_deg: [0, 0, 0, 0, 0], provenance: "PROVISIONAL-STANDARD; verify at M2"}
+  gripper: {real_unit: percent, closed_at: 0, sim_range_rad: [-0.1745, 1.7454]}
+
+episode:
+  success_hold_s: 1.0
+  timeout_s: 30.0

@@ -1,0 +1,27 @@
+# M2 is a native MuJoCo diagnostic interface, not a trained policy adapter.
+robot: so101
+model: assets/menagerie/robotstudio_so101/so101.xml
+manifest: assets/menagerie/manifest.json
+task_config: configs/task.yaml
+data_config: configs/data.yaml
+physics_hz: 500
+control_hz: 10
+max_episode_steps: 200
+joint_names: [shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper]
+tool_site: gripperframe
+initial_qpos: [0, 0, 0, 0, 0, 0.8]
+control:
+  interface: native_mujoco_absolute_joint_positions
+  units: radians_all_six_hinges_including_gripper
+  max_velocity: [1, 1, 1, 1, 1, 1.5]
+  upstream_actuators: unchanged
+observation:
+  joint_key: sim.joint_position
+  joint_units: radians_all_six_hinges_including_gripper
+  policy_state_adapter: blocked_until_real_sim_mapping_verified
+  image_normalization: float32_0_to_1_before_policy_normalizer
+real_joint_mapping:
+  status: unverified
+  signs: null
+  offsets_radians: null
+  gripper_percent_to_radians: null

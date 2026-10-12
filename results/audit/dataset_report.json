@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-12T11:30:47+00:00",
+  "generated_at": "2026-10-12T11:44:09+00:00",
   "tool": "real2sim.data.audit",
   "source": {
     "repo_id": "bottowork/so101_act_pickplace_v1",
@@ -1258,9 +1258,9 @@
   },
   "split": {
     "seed": 0,
-    "n_train": 30,
-    "n_val": 10,
-    "sha256": "bb8bfb57499ce13346b5a5927f87dfaa21f4f70e6f7718f6a69e617486803c4a",
+    "n_train": 28,
+    "n_val": 9,
+    "sha256": "948803789de23605f85378917c40680be567764c17df0774979a6f5f50091717",
     "val": [
       1,
       2,
@@ -1270,7 +1270,11 @@
       18,
       23,
       24,
-      27,
+      27
+    ],
+    "excluded": [
+      25,
+      33,
       34
     ]
   },

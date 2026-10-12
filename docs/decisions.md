@@ -13,10 +13,11 @@ Conflict order: latest explicit user approval → plan contracts → approved en
 | D-005 | Recovery MLP architecture and inputs | **APPROVED: option A** (29-float observable input → 256 → 256 → 128 → 7) | 2026-10-12 |
 | D-006 | Episode outcomes manifest and train/validation split | **APPROVED: 30 train / 10 validation** (user's own ratio); outcomes manifest still to be filled by operator | 2026-10-12 |
 | D-007 | Policy tick rate | **APPROVED: option A** (10 Hz, chunk 20, execute 2) | 2026-10-12 |
-| D-008 | Canonical proprioception vector | PENDING APPROVAL (recommended A, 13 floats); not needed before M3 | 2026-10-12 |
-| D-009 | Compute budget (MPS only vs rented GPU) | **APPROVED in principle: option B** (MPS for smoke/joint baseline, rented CUDA for Cartesian). Provider and budget cap NOT yet given; nothing rented until they are | 2026-10-12 |
-| D-010 | Handling of the 17 dropped iphone frames (episodes 25, 33, 34) | **PENDING APPROVAL** — measured, options below, recommend excluding episode 33 | 2026-10-12 |
-| D-011 | Architecture / system design documents | DRAFTS UPDATED WITH APPROVED CHOICES, document-level approval PENDING | 2026-10-12 |
+| D-008 | Canonical proprioception vector | **APPROVED: option A** (13 floats) | 2026-10-12 |
+| D-009 | Compute budget (MPS only vs rented GPU) | **APPROVED: option B** — Modal (USD 30 credit) first; vast.ai / Kaggle as additional sources | 2026-10-12 |
+| D-010 | Handling of the 17 dropped iphone frames (episodes 25, 33, 34) | **APPROVED: option B** — exclude all three (train 28 / val 9) | 2026-10-12 |
+| D-011 | Architecture / system design documents | **APPROVED** (both documents) | 2026-10-12 |
+| D-012 | Calibration values before measurement | **APPROVED by user: use standard values**, labelled PROVISIONAL in `docs/calibration.md` | 2026-10-12 |
 
 Approvals above were given by the user in chat on 2026-10-12 (evening, AEDT) in answer to the
 option sets below.
@@ -217,6 +218,8 @@ the dataset card's statement and is revisited once the review is done.
 | B | drop velocity → 10 | simpler, no finite-difference noise | policy cannot infer motion phase from a single frame |
 | C | add gripper state (actual opening) → 14 | encodes "ball held" signal seen in the data | leaks robot-specific gripper semantics into the cross-embodiment vector; Panda mapping must be defined |
 
+**Approved (user, 2026-10-12): A.**
+
 **Recommendation:** A for the cross-embodiment policy. Note that C's "ball held" signal is
 genuinely informative on SO-101; if A underperforms it is the first ablation.
 
@@ -237,8 +240,9 @@ possible reruns.
 **Recommendation:** B. The user must state the budget cap and provider; nothing is rented
 without that.
 
-**Approved in principle (user, 2026-10-12): B.** Provider and budget cap were not given; the
-rental step stays blocked until they are. All MPS work proceeds.
+**Approved (user, 2026-10-12): B.** Provider: Modal with USD 30 credit as the first choice;
+vast.ai and Kaggle notebooks as further sources. Spend cap = the Modal credit unless the user
+raises it. GPU use still requires the 2-step train/save/resume test to pass locally first.
 
 ---
 
@@ -262,11 +266,28 @@ raise: it silently returns neighbouring frames. Episode 34 is in the validation 
 Recommendation: A. Changes: `configs/data.yaml` `excluded_episodes`, split regenerated with
 the exclusion recorded in the manifest, `docs/data_contract.md`.
 
+**Approved (user, 2026-10-12): B — exclude episodes 25, 33 and 34.** Implementation: the
+seed-0 split over all 40 episodes is computed first and the excluded episodes are then removed,
+so the remaining assignments are unchanged: train 28, validation 9 (episode 34 leaves validation).
+
 ---
 
 ## D-011 Architecture and system design documents
+
+**Approved (user, 2026-10-12): both documents.**
 
 `docs/architecture.md` and `docs/system_design.md` were written as **DRAFT — PENDING APPROVAL**
 at the user's explicit request on 2026-10-12. They embed the options above rather than locking
 them. They become approved designs only when the user approves them in chat; the approved
 answers will then be written back into both files and this register.
+
+---
+
+## D-012 Calibration values before measurement
+
+**Approved (user, 2026-10-12): use standard values.** `docs/calibration.md` lists each value with
+its source (ITF rules, LeRobot motor normalisation, the operator's own calibration files,
+Menagerie joint ranges, typical iPhone main-lens field of view). Every such value is labelled
+PROVISIONAL-STANDARD, is never described as measured, and is replaced if the operator measures
+it. Ball start and bowl positions will additionally be estimated from the recorded data (FK of
+the gripper at grasp and release) at M2; those estimates are labelled DATA-DERIVED.

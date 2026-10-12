@@ -1,6 +1,6 @@
 # System design — runtime pipelines, configuration and verification
 
-**Status: DRAFT — PENDING USER APPROVAL (decision D-011).** Companion to
+**Status: APPROVED by the user 2026-10-12 (decision D-011).** Companion to
 `docs/architecture.md` (static structure). This file describes how data moves at runtime, the
 proposed hyperparameters, compute budget and the test strategy. Open choices reference
 `docs/decisions.md`.
@@ -25,8 +25,8 @@ roll-up decides USABLE / PARTIALLY_USABLE / UNUSABLE with thresholds written int
 The HTML montage shows first/middle/last frames per episode per camera plus the ten worst frames.
 
 Action/state audit: the lag and offset table already computed in `docs/data_contract.md`, per
-episode. Split manifest: seeded whole-episode split, 30 train / 10 validation (D-006), with SHA-256 of
-the episode-ID list.
+episode. Split manifest: seeded whole-episode split over all 40 episodes, then episodes 25, 33, 34
+removed (D-010), giving 28 train / 9 validation, with SHA-256 of the episode-ID lists.
 
 ### 1.3 Resampling and labels (M1, M3)
 
@@ -63,7 +63,7 @@ the pinned LeRobot writer) so `ACTPolicy` training uses the stock dataloader. Ea
 | `optimizer_lr` / `optimizer_lr_backbone` | 1e-5 / 1e-5 | same | defaults |
 | batch size | 16 (2×8 accumulation if MPS memory forces it) | 16 | D-004 approved |
 | steps | 20 k, ckpt every 2 k, val every 1 k | 20 k | D-004 |
-| device | mps (smoke, baseline) | rented cuda (provider/budget pending) | D-009 approved in principle |
+| device | mps (smoke, baseline) | Modal CUDA (USD 30), vast.ai/Kaggle as backup | D-009 approved |
 
 ### 2.2 Loop
 

@@ -94,3 +94,16 @@ def test_file_manifest_hashes_small_files(synthetic_root):
     assert len(info_row["sha256"]) == 64
     video_rows = [r for r in rows if r["path"].endswith(".mp4")]
     assert video_rows and all(r["sha256"] is None for r in video_rows)
+
+
+def test_exclusion_removes_without_reshuffling():
+    ids = list(range(40))
+    base = make_episode_split(ids, n_val=10, seed=0)
+    ex = make_episode_split(ids, n_val=10, seed=0, exclude=[25, 33, 34])
+    assert ex.excluded == [25, 33, 34]
+    assert ex.train == [e for e in base.train if e not in (25, 33, 34)]
+    assert ex.val == [e for e in base.val if e not in (25, 33, 34)]
+    assert not {25, 33, 34} & set(ex.train + ex.val)
+    assert ex.sha256 != base.sha256
+    with pytest.raises(ValueError, match="not in dataset"):
+        make_episode_split(ids, n_val=10, exclude=[99])

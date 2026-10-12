@@ -1,9 +1,9 @@
 # Architecture — Real2Sim-RaC
 
-**Status: DRAFT — PENDING USER APPROVAL (decision D-011).** Written 2026-10-12 at the user's
+**Status: APPROVED by the user 2026-10-12 (decision D-011).** Written 2026-10-12 at the user's
 request after the M0 inspection, then updated the same evening with the user's approved choices
 for D-002, D-003, D-004, D-005, D-006, D-007 and D-009 (see `docs/decisions.md`). D-008
-(proprioception vector) is still a recommendation. Provenance: plan.md §2–§7 plus the observed
+(proprioception vector), D-010 and D-011 were approved later the same evening. Provenance: plan.md §2–§7 plus the observed
 dataset facts in `docs/data_contract.md`.
 
 ## 1. One-paragraph summary
@@ -80,9 +80,9 @@ run. Large artifacts (`.cache/`, `outputs/`) are git-ignored; manifests with has
 | Field | Joint baseline (`act_joint_so101`) | Canonical Cartesian (`act_cartesian`) |
 |---|---|---|
 | `observation.images.iphone` | `float32 [3,192,256]`, letterboxed from 1280x720, ImageNet-normalised by LeRobot | same (D-004, approved by delegation) |
-| `observation.state` | `float32 [6]` degrees + gripper %, train-stat normalised | `float32 [13]` = `ee_xyz(3) + ee_rot6d(6) + ee_lin_vel(3) + gripper_semantic(1)` in task frame (D-008, pending) |
+| `observation.state` | `float32 [6]` degrees + gripper %, train-stat normalised | `float32 [13]` = `ee_xyz(3) + ee_rot6d(6) + ee_lin_vel(3) + gripper_semantic(1)` in task frame (D-008, approved) |
 | Clock | 10 Hz (D-007, approved) | 10 Hz |
-| Split | 30 train / 10 validation episodes, seed 0 (D-006, approved) | same |
+| Split | 28 train / 9 validation episodes, seed 0; episodes 25, 33, 34 excluded (D-006, D-010 approved) | same |
 
 The same adapter builds this dict from the real dataset and from the simulator. Camera count,
 key name, tensor shape, normalisation and meaning are identical in both; a checkpoint manifest

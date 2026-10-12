@@ -20,6 +20,7 @@ class SplitManifest:
     sha256: str
     source_repo_id: str | None = None
     source_revision: str | None = None
+    excluded: list[int] | None = None
 
     def to_json(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -30,8 +31,11 @@ class SplitManifest:
         return cls(**json.loads(Path(path).read_text()))
 
 
-def split_hash(train: list[int], val: list[int], seed: int) -> str:
-    payload = json.dumps({"seed": seed, "train": sorted(train), "val": sorted(val)}, sort_keys=True)
+def split_hash(train: list[int], val: list[int], seed: int, excluded: list[int] | None = None) -> str:
+    body = {"seed": seed, "train": sorted(train), "val": sorted(val)}
+    if excluded:
+        body["excluded"] = sorted(excluded)
+    payload = json.dumps(body, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
@@ -41,14 +45,25 @@ def make_episode_split(
     seed: int = 0,
     repo_id: str | None = None,
     revision: str | None = None,
+    exclude: list[int] | None = None,
 ) -> SplitManifest:
+    """Seeded whole-episode split.
+
+    The permutation is drawn over *all* ``episode_ids`` and ``exclude`` is removed afterwards, so
+    excluding an episode never reshuffles the others (D-010). ``n_val`` counts validation episodes
+    before exclusion.
+    """
     ids = sorted(int(e) for e in episode_ids)
     if n_val < 0 or n_val >= len(ids):
         raise ValueError(f"n_val={n_val} must be in [0, {len(ids) - 1}]")
+    excluded = sorted({int(e) for e in (exclude or [])})
+    unknown = set(excluded) - set(ids)
+    if unknown:
+        raise ValueError(f"excluded episodes not in dataset: {sorted(unknown)}")
     rng = np.random.default_rng(seed)
     perm = rng.permutation(len(ids))
-    val = sorted(ids[i] for i in perm[:n_val])
-    train = sorted(ids[i] for i in perm[n_val:])
+    val = sorted(ids[i] for i in perm[:n_val] if ids[i] not in excluded)
+    train = sorted(ids[i] for i in perm[n_val:] if ids[i] not in excluded)
     assert not set(train) & set(val)
     return SplitManifest(
         seed=seed,
@@ -56,7 +71,8 @@ def make_episode_split(
         n_val=len(val),
         train=train,
         val=val,
-        sha256=split_hash(train, val, seed),
+        sha256=split_hash(train, val, seed, excluded),
         source_repo_id=repo_id,
         source_revision=revision,
+        excluded=excluded or None,
     )

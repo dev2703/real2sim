@@ -311,6 +311,7 @@ def run_audit(
     skip_video: bool = False,
     hash_videos: bool = False,
     max_worst: int = 10,
+    exclude: list[int] | None = None,
 ) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     ds = RawDataset(root, repo_id=repo_id, revision=revision)
@@ -347,7 +348,9 @@ def run_audit(
         write_montage_html(out / "camera_montage.html", f"{repo_id or root.name} @ {revision or 'local'}", streams, thumbs, worst)
 
     n_val_eff = min(n_val, max(len(ds.episode_indices) - 1, 0))
-    split = make_episode_split(ds.episode_indices, n_val=n_val_eff, seed=seed, repo_id=repo_id, revision=revision)
+    split = make_episode_split(
+        ds.episode_indices, n_val=n_val_eff, seed=seed, repo_id=repo_id, revision=revision, exclude=exclude
+    )
     split.to_json(out / "split.json")
 
     license_str = _read_license(root)
@@ -378,7 +381,14 @@ def run_audit(
         "state_action": state_action,
         "camera_quality_labels": camera_quality["labels"],
         "camera_selection": selection,
-        "split": {"seed": split.seed, "n_train": split.n_train, "n_val": split.n_val, "sha256": split.sha256, "val": split.val},
+        "split": {
+            "seed": split.seed,
+            "n_train": split.n_train,
+            "n_val": split.n_val,
+            "sha256": split.sha256,
+            "val": split.val,
+            "excluded": split.excluded,
+        },
         "file_manifest": ds.file_manifest(hash_videos=hash_videos),
     }
     (out / "dataset_report.json").write_text(json.dumps(report, indent=2, default=_json_default) + "\n")
@@ -420,6 +430,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--skip-video", action="store_true", help="metadata/action audit only")
     p.add_argument("--hash-videos", action="store_true", help="also SHA-256 the video files (slow)")
     p.add_argument("--max-worst", type=int, default=10)
+    p.add_argument("--exclude-episodes", default=None, help="comma-separated episodes removed from the split (D-010)")
     return p
 
 
@@ -439,6 +450,7 @@ def main(argv: list[str] | None = None) -> int:
         skip_video=args.skip_video,
         hash_videos=args.hash_videos,
         max_worst=args.max_worst,
+        exclude=[int(e) for e in args.exclude_episodes.split(",")] if args.exclude_episodes else None,
     )
     return 0
 

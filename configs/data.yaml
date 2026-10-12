@@ -16,9 +16,9 @@ excluded_cameras:
   - key: observation.images.top
     reason: "UNUSABLE in results/audit/camera_quality.json (2026-10-12): aimed at the ceiling, median sharpness 2.3, 37/40 episodes fail; no robot/ball/bowl visible."
 
-# D-010 (PENDING): iphone video has fewer frames than data rows in episodes 25 (-2), 33 (-14),
-# 34 (-1). Recommended exclusion = [33]. Empty until the user decides.
-excluded_episodes: []
+# D-010 (APPROVED option B): iphone video has fewer frames than data rows in episodes
+# 25 (-2), 33 (-14), 34 (-1); all three are excluded from training, validation and fit stats.
+excluded_episodes: [25, 33, 34]
 
 # D-004 (delegated): aspect-preserving letterbox, full field of view retained.
 image:
@@ -39,7 +39,7 @@ labels:
   cartesian: achieved_motion
   cartesian_lead_ticks: 1
 
-# D-006 (approved): 30 train / 10 validation whole episodes, seed 0.
+# D-006 + D-010 (approved): seed-0 split of all 40 episodes (10 val), then exclusions removed -> 28 / 9.
 split:
   seed: 0
   n_val: 10
