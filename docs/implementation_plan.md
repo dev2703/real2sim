@@ -12,11 +12,11 @@ It changes only when work is verified or a decision in `docs/decisions.md` is ap
 | M0 scaffold + audit | G0 | **PASS**: env, package, audit CLI, full audit artifacts in `results/audit/`, final split 28/9 | none |
 | M0.5 docs | G0.5 | **PASS**: all docs exist; architecture and system design approved | none |
 | M1 joint ACT baseline | G1 | **G1 PASS** on step-2000 checkpoint (open-loop val L1 0.337); 20k-step MPS run continuing | none |
-| M2 SO-101 MuJoCo | G2 | **IN PROGRESS by another writer** in this working tree (`src/real2sim/sim/`, `assets/`, sim tests; 4 sim tests failing at 22:50) | ownership/worktree clarification |
+| M2 SO-101 MuJoCo | G2 | **PASS**: scene from task.yaml, 48 sim tests, bowl physics measured, replay diagnostic (E0), PnP camera fit applied | D-014 base height |
 | M3 Cartesian dataset | G3 | **PASS**: 7-D labels and 13-float proprio built, 2-step train/infer round trip OK; full run queued on MPS | joint-map verification at M2 |
-| M4 Cartesian ACT + closed loop | G4 | training queued on MPS; closed loop needs the M2 env | Modal needs a payment method (fallback MPS) |
-| M5 Panda | G5 | not started | G4 |
-| M6 recovery | G6 | not started | D-005, G4 |
+| M4 Cartesian ACT + closed loop | G4 | **PARTIAL**: runner, adapters, oracle-schema guard and closed-loop test done; E1 debug 0/3; Cartesian training queued on MPS | Cartesian checkpoint; D-014 |
+| M5 Panda | G5 | **PARTIAL**: scene, 7-DoF IK adapter, 12/12 IK poses; retargeting replay and frozen-E2 rollouts pending | E2 checkpoint |
+| M6 recovery | G6 | **PARTIAL**: detector, FSM, loop, MLP and dataset loader with 40 unit tests; no correction data yet | G4 instrumentation |
 | M7 packaging | G7 | not started | all |
 
 Skills under `.agents/skills/`: G1 reached; still **DEFERRED** in favour of M2/M4 (plan §10 allows skipping). Not required for P0.

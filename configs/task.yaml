@@ -36,11 +36,14 @@ camera_iphone:
   key: observation.images.iphone
   width: 1280
   height: 720
-  fovy_deg: 42.6
+  fovy_deg: 42.57
   intrinsics_px: {fx: 924.0, fy: 924.0, cx: 640.0, cy: 360.0}
-  extrinsics_provenance: "PROVISIONAL-STANDARD eyeballed; PnP fit at M2"
-  approx_position_task: [0.55, -0.45, 0.45]
-  look_at_task: [0.20, 0.0, 0.0]
+  extrinsics_provenance: "DATA-DERIVED PnP, reprojection error 17.2 px RMS over 27 inliers of 43 points, provisional intrinsics fixed; 3-D points from provisional FK mapping and preliminary start/bowl centres"
+  # Base/task frame (m). look_at = point on the optical axis nearest the workspace centre; the
+  # roll-free look-at form drops the roll about the optical axis, kept in xyaxes_task below.
+  approx_position_task: [0.3241, -0.4190, 0.3771]
+  look_at_task: [0.2142, -0.0126, -0.0032]
+  xyaxes_task: [0.98099, 0.13389, -0.14045, 0.01087, 0.68478, 0.72867]   # MuJoCo xyaxes (x right, y up); roll -10.9 deg
 
 robot_so101:
   joint_names: [shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll]

@@ -45,6 +45,17 @@ The supplied numbers stay in use because operator input takes precedence. The si
 parameterised, so a corrected measurement is a one-line change. The bowl depth is also included
 in the contact sensitivity sweep.
 
+
+### Simulated bowl physics (measured in `tests/integration/test_so101_scene.py`, `results/audit/sim_bowl_physics.json`)
+
+The simulated bowl is a straight-wall frustum: base radius 0.03 m (from the PROVISIONAL
+base diameter) to rim radius 0.05 m, 20 wall boxes plus a floor slab. Ball-on-floor static
+sink 0.05–0.18 mm, impact transient up to 1.93 mm (damping ratio 1.3), no tunnelling. A
+floor-resting ball stays contained at every probed speed up to 0.5 m/s for all three depths
+(0.0254, 0.045, 0.060 m); escape over the rim at the supplied depth needs more than about
+0.7 m/s. The earlier "shallow bowl cannot contain a 0.12 m/s roll" statement was an artefact of
+a vertical-wall model and is withdrawn; the result now depends on the unmeasured base diameter.
+
 ## 2. Workspace and frames
 
 | Item | Value used | Label | Source / note |
@@ -94,6 +105,32 @@ These estimates replace the PROVISIONAL-STANDARD ball start and bowl centre in
 | Intrinsics at 1280×720 | fx = fy ≈ 924, cx = 640, cy = 360 | PROVISIONAL-STANDARD | Video stabilisation may crop further and raise fx |
 | Intrinsics after 192×256 letterbox | fx = fy ≈ 184.8, cx = 128, cy = 96 | derived | Scale 0.2 with 24 px top pad, via `adjust_intrinsics` |
 | Extrinsics | about 0.55 m in front of and 0.45 m to the right of the base, 0.45 m above the table, pitched down about 40° | PROVISIONAL-STANDARD (eyeballed) | Replaced at M2 by a PnP fit on FK-projected gripper points and the bowl rim, with reprojection error reported |
+
+
+### DATA-DERIVED camera fit (2026-10-13, `python -m real2sim.sim.camera_fit`)
+
+PnP on 43 observable correspondences (held-ball centroids at gripper FK positions, ball at the
+start marker, ball in the bowl) with the provisional intrinsics held fixed:
+
+| Quantity | Value |
+|---|---|
+| Camera position (task frame) | (0.324, −0.419, 0.377) m |
+| Optical axis | pitched 42.1° down, rolled −10.9° |
+| Inliers / RMS | 27 of 43 points, 17.2 px (all points 51.9 px) |
+| Held-ball points | 23/27 inliers, 21.8 px |
+| Start-marker points | 4/8 inliers, 36.6 px |
+| In-bowl points | 0/8 inliers, 107 px: reprojection sits 104 px above the detections |
+
+Focal refinement diverged (points span only a 0.15 × 0.25 × 0.15 m volume), so depth along the
+optical axis is weakly constrained and the simulated robot renders slightly smaller than real.
+The full axes are stored as `camera_iphone.xyaxes_task`; the scene uses them (the roll-free
+look-at form costs 61.6 px). Label: DATA-DERIVED, approximate. Report and overlays:
+`results/audit/camera_fit/`.
+
+The in-bowl outliers mean the preliminary bowl centre (0.33, −0.10) from release FK is about
+6–7 cm off (the real bowl is closer to the camera and/or lower). Re-deriving the bowl centre by
+back-projecting the in-bowl detections through the fitted camera is the next step; until then
+the bowl position stays labelled preliminary.
 
 ## 4. Robot joint conventions
 

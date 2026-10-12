@@ -29,8 +29,14 @@ claims this project can make.
 - **The dataset's folded rest pose (shoulder_lift ≈ −105°) is outside the Menagerie joint
   limit (±100°)** and is clamped in simulation.
 - **Contact parameters are swept, not identified.** Friction 0.4–0.9, restitution via solref.
-- **The supplied bowl depth (2.54 cm) is shallower than the ball radius (3.35 cm)**, so the
-  simulated rim cannot contain a rolling ball. Results depend on the depth sweep.
+- **The supplied bowl depth (2.54 cm) is shallower than the ball radius (3.35 cm).** With the
+  frustum model the ball is still contained up to 0.5 m/s, but that depends on the unmeasured
+  base diameter; the depth sweep is kept.
+- **Camera extrinsics are a PnP fit with 17 px RMS and weakly constrained depth**; the
+  simulated robot renders slightly smaller than real. The bowl position disagrees with the
+  images by 6–7 cm.
+- **The simulated start pose penetrates the table by 2.3 cm** until the base-height decision
+  D-014 is taken; every rollout currently begins with a push-out transient.
 
 ## Learned policy
 
@@ -40,9 +46,16 @@ claims this project can make.
   seed each. No hyperparameter search.
 - **Modal GPU is blocked** until a payment method is added to the account.
 
-## Simulation and evaluation (pending)
+## Simulation and evaluation
 
-- Closed-loop results are not yet measured. When reported they carry the provisional-scene
+- **E1 debug (joint ACT, step 2000, 3 seeds): 0/3**, all failing in the approach phase; the
+  arm rises to about 0.17, 0.0, 0.32 m and holds. Not yet separated between an under-trained
+  checkpoint, the camera gap (fit applied after this run) and the start-pose transient.
+- **E0 replay of validation episode 1**: joint setpoints track to 0.05° median after the start
+  transient (p95 elbow 5°, EE 3.2 cm); the FK→IK path accepts 96 % of ticks with 0.08 mm
+  median residual but accumulates 5–13 cm EE error because deltas are relative to the drifted
+  sim pose. The ball start of the real episode is unknown, so replay says nothing about grasps.
+- Closed-loop results beyond the debug run are not yet measured. When reported they carry the provisional-scene
   caveat above and are a sim-only evaluation of a real-data policy; nothing is claimed about
   sim-to-real.
 - Placo is not importable on macOS; IK uses a MuJoCo damped-least-squares solver instead of

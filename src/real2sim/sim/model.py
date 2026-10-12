@@ -1,4 +1,19 @@
-"""Assemble an explicitly provisional task around the unchanged pinned robot model."""
+"""Assemble the provisional pick-and-place scene around the unchanged pinned robot model.
+
+Single source of truth for geometry and physical parameters is ``configs/task.yaml`` (provenance
+labels live there and in ``docs/calibration.md``). ``configs/sim_so101.yaml`` holds only the
+simulator-specific knobs: physics rate, control interface, contact softness, render size, IK.
+
+Frames (docs/architecture.md section 4.3):
+
+* ``world``  MuJoCo world, z up. The table top is at ``z = task.table.height`` and the robot base
+  body is placed at ``(0, 0, table.height + base_z_offset)`` (offset 0 until D-014 is approved).
+* ``task``   origin at the robot base (``T_task_so101base`` is identity in task.yaml), so
+  ``p_task = p_world - (0, 0, table.height + base_z_offset)``. Everything policy-relevant is
+  expressed here.
+
+The upstream ``so101.xml`` is parsed and extended in memory only; the pinned file keeps its SHA.
+"""
 
 from __future__ import annotations
 
@@ -9,11 +24,13 @@ from pathlib import Path
 
 import mujoco
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from real2sim.config import load_yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = ROOT / "configs/sim_so101.yaml"
+MIN_WALL_BOXES = 12
 
 
 def project_path(path: str | Path) -> Path:
@@ -37,6 +54,7 @@ def _numbers(values) -> str:
 
 
 def _camera_axes(position, target) -> np.ndarray:
+    """Roll-free look-at ``xyaxes`` (x horizontal); fallback when no fitted axes exist."""
     z = np.asarray(position, dtype=float) - np.asarray(target, dtype=float)
     z /= np.linalg.norm(z)
     x = np.cross([0, 0, 1], z)
@@ -44,68 +62,180 @@ def _camera_axes(position, target) -> np.ndarray:
     return np.concatenate([x, np.cross(z, x)])
 
 
-def scene_xml(config: dict, task: dict) -> str:
+def camera_xyaxes(camera: dict, cam_pos, cam_at) -> np.ndarray:
+    """MuJoCo ``xyaxes`` of the iphone camera.
+
+    The PnP fit (``real2sim.sim.camera_fit``) writes the full axes to task.yaml
+    ``camera_iphone.xyaxes_task`` because the roll-free look-at form drops the roll about the
+    optical axis (results/audit/camera_fit/report.json: 61.6 px RMS roll-free vs 17.2 px with
+    the fitted axes). The fitted axes are used whenever present; the look-at form is only a
+    fallback for a task.yaml without a fit. The task frame is a pure translation of the world
+    frame, so the axes need no re-expression.
+    """
+    if (xyaxes := camera.get("xyaxes_task")) is not None:
+        axes = np.asarray(xyaxes, dtype=float)
+        if axes.shape != (6,) or not np.all(np.isfinite(axes)):
+            raise ValueError("camera_iphone.xyaxes_task must be six finite numbers")
+        x, y = axes[:3], axes[3:]
+        if (abs(np.linalg.norm(x) - 1) > 1e-3 or abs(np.linalg.norm(y) - 1) > 1e-3
+                or abs(float(x @ y)) > 1e-3):
+            raise ValueError("camera_iphone.xyaxes_task must be orthonormal unit axes")
+        look_dir = np.asarray(cam_at, float) - np.asarray(cam_pos, float)
+        if float(np.cross(x, y) @ look_dir) >= 0:  # MuJoCo cameras look along -z
+            raise ValueError("camera_iphone.xyaxes_task does not look towards look_at_task")
+        return axes
+    return _camera_axes(cam_pos, cam_at)
+
+
+def base_z_offset(task: dict) -> float:
+    """Height of the robot base origin above the table top (m), ``robot_so101.base_z_offset``.
+
+    Absent or zero until docs/decisions.md D-014 is approved (the key is read here so that the
+    approved value is a one-line task.yaml change). The task frame stays equal to the base frame,
+    so with a non-zero offset the table top lies at ``z_task = -base_z_offset``.
+    """
+    value = float(task.get("robot_so101", {}).get("base_z_offset", 0.0))
+    if not np.isfinite(value) or value < 0 or value > 0.05:
+        raise ValueError("robot_so101.base_z_offset must be a finite height in [0, 0.05] m")
+    return value
+
+
+def task_frame_offset(task: dict) -> np.ndarray:
+    """``p_world = p_task + offset``; task.yaml fixes T_task_so101base = identity.
+
+    The offset is the world position of the robot base origin: table top plus
+    :func:`base_z_offset`.
+    """
+    frame = task["frames"]["T_task_so101base"]
+    if np.any(np.asarray(frame["xyz"], float) != 0) or np.any(np.asarray(frame["rpy"], float) != 0):
+        raise ValueError("scene assembly assumes the identity T_task_so101base from task.yaml")
+    return np.array([0.0, 0.0, float(task["table"]["height"]) + base_z_offset(task)])
+
+
+def bowl_dimensions(task: dict, inner_depth: float | None = None) -> dict:
+    """Bowl geometry in metres; ``inner_depth`` overrides task.yaml for the depth sweep.
+
+    The floor thickness ``outer_height - inner_depth`` of the operator-supplied bowl is kept
+    constant when the depth is swept, so a deeper bowl is also taller.
+    """
+    bowl = task["bowl"]
+    floor = float(bowl["outer_height"]) - float(bowl["inner_depth"])
+    depth = float(bowl["inner_depth"] if inner_depth is None else inner_depth)
+    dims = {
+        "rim_radius": float(bowl["inner_rim_radius"]),
+        "base_radius": float(bowl["base_diameter"]) / 2,
+        "wall": float(bowl["wall_thickness"]),
+        "floor": floor,
+        "depth": depth,
+        "height": floor + depth,
+        "wall_boxes": int(bowl["collision"]["wall_boxes"]),
+        "center_xy": [float(v) for v in bowl["center_task_xy"]],
+    }
+    if not (0 < dims["floor"] and 0 < depth and 0 < dims["wall"]
+            and 0 < dims["base_radius"] <= dims["rim_radius"]):
+        raise ValueError("invalid bowl dimensions in task.yaml")
+    if dims["wall_boxes"] < MIN_WALL_BOXES or bowl["collision"].get("base") != "cylinder":
+        raise ValueError("bowl collision must be >= 12 wall boxes over a base cylinder")
+    if bowl.get("static") is not True:
+        raise ValueError("dynamic bowl requires measured mass/inertia and a new decision")
+    return dims
+
+
+def _add_bowl(world: ET.Element, dims: dict, origin, contacts: dict) -> None:
+    """Static bowl: base cylinder plus ``wall_boxes`` tilted boxes forming a truncated cone.
+
+    The inner wall runs from ``base_radius`` at the floor to ``rim_radius`` at the rim, following
+    the operator-supplied base diameter and rim radius (a straight-walled frustum, not a measured
+    profile). Geoms in one static body never collide with each other, so overlaps are harmless.
+    """
+    body = ET.SubElement(world, "body", name="bowl", pos=_numbers(origin))
+    rgba = "0.85 0.86 0.9 1"
+    slope = (dims["rim_radius"] - dims["base_radius"]) / dims["depth"]  # dr/dz of the inner wall
+    phi = float(np.arctan(slope))  # tilt from vertical
+    # Extend the wall segment down to the table so no gap opens at the floor/wall junction.
+    r_low = dims["base_radius"] - slope * dims["floor"]
+    length = float(np.hypot(dims["rim_radius"] - r_low, dims["height"]))
+    ET.SubElement(body, "geom", name="bowl_base", type="cylinder",
+                  size=_numbers([max(r_low, 0.0) + dims["wall"], dims["floor"] / 2]),
+                  pos=_numbers([0, 0, dims["floor"] / 2]), rgba=rgba, **contacts)
+    n = dims["wall_boxes"]
+    tangent_half = (dims["rim_radius"] + dims["wall"]) * np.tan(np.pi / n) * 1.02
+    mid_r = (r_low + dims["rim_radius"]) / 2 + dims["wall"] / 2 * np.cos(phi)
+    mid_z = dims["height"] / 2 - dims["wall"] / 2 * np.sin(phi)
+    for i in range(n):
+        angle = 2 * np.pi * i / n
+        rot = Rotation.from_euler("z", angle) * Rotation.from_euler("y", phi)
+        x, y, z, w = rot.as_quat()
+        ET.SubElement(body, "geom", name=f"bowl_wall_{i:02d}", type="box",
+                      size=_numbers([dims["wall"] / 2, tangent_half, length / 2]),
+                      pos=_numbers([mid_r * np.cos(angle), mid_r * np.sin(angle), mid_z]),
+                      quat=_numbers([w, x, y, z]), rgba=rgba, **contacts)
+
+
+def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None,
+              contacts: dict | None = None) -> str:
     source = project_path(config["model"])
     root = ET.parse(source).getroot()
-    root.set("model", "so101_provisional_pickplace_diagnostic")
+    root.set("model", "so101_provisional_pickplace")
     root.find("compiler").set("meshdir", str(source.parent / "assets"))
     option = root.find("option")
     option.set("timestep", str(1 / config["physics_hz"]))
     option.set("gravity", "0 0 -9.81")
-    camera = task["camera"]
+    offset = task_frame_offset(task)
+    camera = task["camera_iphone"]
+    render = config["render"]
     visual = root.find("visual")
     if visual is None:
         visual = ET.SubElement(root, "visual")
-    ET.SubElement(visual, "global", offwidth=str(camera["width"]),
-                  offheight=str(camera["height"]))
+    ET.SubElement(visual, "global", offwidth=str(render["width"]), offheight=str(render["height"]))
     ET.SubElement(visual, "headlight", ambient="0.3 0.3 0.3", diffuse="0.6 0.6 0.6")
     world = root.find("worldbody")
-    ET.SubElement(world, "light", pos="0 -0.4 1.5", dir="0 0 -1", directional="true")
-    ET.SubElement(world, "camera", name=camera["name"], pos=_numbers(camera["position"]),
-                  xyaxes=_numbers(_camera_axes(camera["position"], camera["look_at"])),
-                  fovy=str(camera["fovy_degrees"]))
+    base = next(b for b in world.findall("body") if b.get("name") == "base")
+    base.set("pos", _numbers(offset))  # robot base on the table top; task frame origin
+    ET.SubElement(world, "light", pos=_numbers(offset + [0.3, -0.4, 1.2]), dir="0 0 -1",
+                  directional="true")
+    cam_pos = np.asarray(camera["approx_position_task"], float) + offset
+    cam_at = np.asarray(camera["look_at_task"], float) + offset
+    ET.SubElement(world, "camera", name="iphone", pos=_numbers(cam_pos),
+                  xyaxes=_numbers(camera_xyaxes(camera, cam_pos, cam_at)),
+                  fovy=str(camera["fovy_deg"]))
     table = task["table"]
-    top = table["top_z"]
-    contacts = dict(friction=_numbers(task["contacts"]["friction"]),
-                    solref=_numbers(task["contacts"]["solref"]), condim="6")
-    ET.SubElement(world, "geom", name="table", type="box", size=_numbers(table["half_size"]),
-                  pos=_numbers([0, 0, top - table["half_size"][2]]),
-                  rgba="0.65 0.50 0.34 1", **contacts)
-    ET.SubElement(world, "geom", name="mat_visual", type="box", size="0.29 0.26 0.0001",
-                  pos=_numbers([0.22, 0, top + 0.0001]), rgba="0.08 0.09 0.1 1",
+    top = float(table["height"])
+    physics = dict(config["contacts"])
+    physics.update(contacts or {})
+    contact_attrs = dict(friction=_numbers(physics["friction"]), solref=_numbers(physics["solref"]),
+                         condim="6")
+    half = config["table_half_size"]
+    ET.SubElement(world, "geom", name="table", type="box", size=_numbers(half),
+                  pos=_numbers([*config["table_center_task_xy"], top - half[2]]),
+                  rgba="0.65 0.50 0.34 1", **contact_attrs)
+    mat = table["mat"]
+    ET.SubElement(world, "geom", name="mat_visual", type="box",
+                  size=_numbers([mat["size_xy"][0] / 2, mat["size_xy"][1] / 2, 0.0001]),
+                  pos=_numbers([*mat["center_task_xy"], top + 0.0001]), rgba="0.08 0.09 0.1 1",
                   contype="0", conaffinity="0")
-    bowl = task["bowl"]
-    radius, wall, height = bowl["inner_radius"], bowl["wall_thickness"], bowl["outer_height"]
-    bottom = height - bowl["inner_depth"]
-    if not 0 < bottom < height or radius <= 0 or wall <= 0 or bowl["wall_segments"] < 16:
-        raise ValueError("invalid bowl dimensions")
-    if bowl["fixed"] is not True:
-        raise ValueError("dynamic bowl requires measured mass/inertia and a new decision")
-    body = ET.SubElement(world, "body", name="bowl", pos=_numbers([*bowl["center_xy"], top]))
-    ET.SubElement(body, "geom", name="bowl_base", type="cylinder",
-                  size=_numbers([radius + wall, bottom / 2]),
-                  pos=_numbers([0, 0, bottom / 2]), rgba="0.85 0.86 0.9 1", **contacts)
-    n = bowl["wall_segments"]
-    tangent_half = (radius + wall) * np.tan(np.pi / n) * 1.01
-    for i in range(n):
-        angle = 2 * np.pi * i / n
-        ET.SubElement(body, "geom", name=f"bowl_wall_{i:02d}", type="box",
-                      size=_numbers([wall / 2, tangent_half, height / 2]),
-                      pos=_numbers([(radius + wall / 2) * np.cos(angle),
-                                    (radius + wall / 2) * np.sin(angle), height / 2]),
-                      quat=_numbers([np.cos(angle / 2), 0, 0, np.sin(angle / 2)]),
-                      rgba="0.85 0.86 0.9 1", **contacts)
+    dims = bowl_dimensions(task, bowl_inner_depth)
+    _add_bowl(world, dims, [*dims["center_xy"], top], contact_attrs)
     ball = task["ball"]
+    start = ball["start_region"]["center_task_xy"]
     body = ET.SubElement(world, "body", name="ball",
-                         pos=_numbers([*ball["start_xy"], top + ball["radius"] + 0.001]))
+                         pos=_numbers([*start, top + ball["radius"] + 0.001]))
     ET.SubElement(body, "freejoint", name="ball_free")
     ET.SubElement(body, "geom", name="ball_geom", type="sphere", size=str(ball["radius"]),
-                  mass=str(ball["mass"]), rgba="0.72 0.9 0.06 1", **contacts)
+                  mass=str(ball["mass"]), rgba="0.72 0.9 0.06 1", **contact_attrs)
     return ET.tostring(root, encoding="unicode")
 
 
-def load_scene(config_path: str | Path = DEFAULT_CONFIG) -> tuple[mujoco.MjModel, dict, dict]:
+def load_scene(config_path: str | Path = DEFAULT_CONFIG, *, bowl_inner_depth: float | None = None,
+               contacts: dict | None = None) -> tuple[mujoco.MjModel, dict, dict]:
     config = load_yaml(config_path)
     task = load_yaml(project_path(config["task_config"]))
-    model = mujoco.MjModel.from_xml_string(scene_xml(config, task))
+    xml = scene_xml(config, task, bowl_inner_depth=bowl_inner_depth, contacts=contacts)
+    model = mujoco.MjModel.from_xml_string(xml)
+    if task["ball"].get("inertia") == "thin_shell":
+        # Tennis balls are hollow: I = 2/3 m r^2 (docs/calibration.md), not the solid 2/5.
+        geom = model.geom("ball_geom").id
+        body = model.geom_bodyid[geom]
+        m, r = float(task["ball"]["mass"]), float(task["ball"]["radius"])
+        model.body_inertia[body] = 2 / 3 * m * r * r
     return model, config, task

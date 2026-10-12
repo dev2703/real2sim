@@ -1,0 +1,128 @@
+"""Per-trial outcome accounting from the env's privileged metrics (scoring only, plan section 7).
+
+The tracker consumes ``info['privileged_metrics']`` after every tick. It is the only consumer of
+simulator ground truth in the evaluation loop; the policy batch is built elsewhere and never sees
+these values.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+import numpy as np
+
+TRIAL_COLUMNS = [
+    "experiment_id", "controller_source", "robot", "seed", "checkpoint_sha256", "checkpoint_step",
+    "success", "lifted", "delivered", "released", "rolled_out", "ball_escaped_table",
+    "phase_failed", "min_ee_ball_distance_m", "ticks", "ik_rejections", "mean_latency_ms",
+    "max_action_saturation", "video_path",
+]
+PHASES = ("approach", "grasp", "transport", "release", "none")
+
+
+@dataclass
+class TrialTracker:
+    """Accumulates success/failure evidence over one trial.
+
+    ``success`` latches once ``ball_in_bowl and ball_resting and not ball_held`` has held for
+    ``success_hold_ticks`` consecutive ticks. ``approach_distance_m`` is the tool-site-to-ball-centre
+    distance below which a failed trial counts as having reached the ball (``grasp`` rather than
+    ``approach``); it must match docs/experiment_protocol.md section 3.
+    """
+
+    success_hold_ticks: int
+    approach_distance_m: float
+    table_top_z: float
+    ball_radius_m: float
+    ticks: int = 0
+    success: bool = False
+    lifted: bool = False
+    delivered: bool = False
+    held_ever: bool = False
+    released: bool = False
+    rolled_out: bool = False
+    ball_escaped_table: bool = False
+    min_ee_ball_distance_m: float = float("inf")
+    max_action_saturation: float = 0.0
+    ik_rejections: int = 0
+    _settled: int = 0
+    _in_bowl_prev: bool = False
+    _held_prev: bool = False
+    history: list[dict] = field(default_factory=list)
+
+    def update(self, privileged: dict, *, saturation: float = 0.0, ik_rejected: bool = False) -> bool:
+        """Record one tick; returns True once the success condition has held long enough."""
+        self.ticks += 1
+        self.max_action_saturation = max(self.max_action_saturation, float(saturation))
+        self.ik_rejections += int(ik_rejected)
+        self.min_ee_ball_distance_m = min(self.min_ee_ball_distance_m,
+                                          float(privileged["ee_ball_distance_m"]))
+        self.lifted |= bool(privileged["lifted"])
+        held = bool(privileged["ball_held"])
+        self.held_ever |= held
+        if self._held_prev and not held:
+            self.released = True
+        self._held_prev = held
+        in_bowl = bool(privileged["ball_in_bowl"])
+        self.delivered |= in_bowl
+        if self._in_bowl_prev and not in_bowl:
+            self.rolled_out = True
+        self._in_bowl_prev = in_bowl
+        z = float(privileged["ball_xyz"][2])
+        if z < self.table_top_z - self.ball_radius_m:
+            self.ball_escaped_table = True
+        # Success needs the ball resting inside the bowl *and out of the gripper*: a ball clamped
+        # motionless at the bowl mouth satisfies the geometric/velocity tests but was never placed.
+        settled = in_bowl and bool(privileged["ball_resting"]) and not held
+        self._settled = self._settled + 1 if settled else 0
+        if self._settled >= self.success_hold_ticks:
+            self.success = True
+        self.history.append({
+            "tick": self.ticks, "in_bowl": in_bowl, "held": held, "resting": bool(privileged["ball_resting"]),
+            "ee_ball_distance_m": float(privileged["ee_ball_distance_m"]),
+            "ball_xyz_task": [float(v) for v in privileged["ball_xyz_task"]],
+            "tool_xyz_task": [float(v) for v in privileged["tool_xyz_task"]],
+        })
+        return self.success
+
+    def phase_failed(self) -> str:
+        if self.success:
+            return "none"
+        if not self.held_ever and not self.lifted:
+            return "approach" if self.min_ee_ball_distance_m > self.approach_distance_m else "grasp"
+        if not self.delivered:
+            return "transport"
+        return "release"
+
+    def row(self, **static) -> dict:
+        row = dict(static)
+        row.update({
+            "success": self.success, "lifted": self.lifted, "delivered": self.delivered,
+            "released": self.released, "rolled_out": self.rolled_out,
+            "ball_escaped_table": self.ball_escaped_table, "phase_failed": self.phase_failed(),
+            "min_ee_ball_distance_m": (None if not np.isfinite(self.min_ee_ball_distance_m)
+                                       else round(self.min_ee_ball_distance_m, 5)),
+            "ticks": self.ticks, "ik_rejections": self.ik_rejections,
+            "max_action_saturation": round(self.max_action_saturation, 4),
+        })
+        missing = [c for c in TRIAL_COLUMNS if c not in row]
+        if missing:
+            raise KeyError(f"trial row lacks columns {missing}")
+        return {c: row[c] for c in TRIAL_COLUMNS}
+
+
+def summarize(rows: list[dict]) -> dict:
+    n = len(rows)
+    count = lambda key: int(sum(bool(r[key]) for r in rows))  # noqa: E731
+    lat = [r["mean_latency_ms"] for r in rows if r["mean_latency_ms"] is not None]
+    return {
+        "n": n,
+        "successes": count("success"),
+        "success_rate": (count("success") / n) if n else None,
+        "lifted": count("lifted"), "delivered": count("delivered"), "released": count("released"),
+        "rolled_out": count("rolled_out"), "ball_escaped_table": count("ball_escaped_table"),
+        "phase_failed_counts": {p: sum(r["phase_failed"] == p for r in rows) for p in PHASES},
+        "ik_rejections_total": int(sum(r["ik_rejections"] for r in rows)),
+        "mean_latency_ms": (float(np.mean(lat)) if lat else None),
+        "max_action_saturation": (max(r["max_action_saturation"] for r in rows) if rows else None),
+    }

@@ -1,0 +1,163 @@
+{
+  "controller_source": "SCRIPTED_REPLAY",
+  "caption": "SCRIPTED REPLAY (FK->IK) ep1",
+  "mode": "cartesian",
+  "episode": 1,
+  "dataset_root": "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v1",
+  "policy_hz": 10.0,
+  "stride": 3,
+  "source_fps": 30.0,
+  "n_rows": 1794,
+  "n_ticks_available": 598,
+  "n_ticks_replayed": 598,
+  "truncated_by_env": false,
+  "episode_cap_lifted": {
+    "lifted": true,
+    "env_max_episode_steps": 300,
+    "note": "diagnostic replay covers the full recording; policy rollouts keep the task.yaml timeout"
+  },
+  "start_pose_clamps": [
+    {
+      "joint": "shoulder_lift",
+      "requested_rad": -1.824348570488343,
+      "applied_rad": -1.7453293,
+      "clamp_deg": 4.527470699184714
+    }
+  ],
+  "limit_clipped_ticks_per_joint": {
+    "shoulder_pan": 0,
+    "shoulder_lift": 0,
+    "elbow_flex": 0,
+    "wrist_flex": 11,
+    "wrist_roll": 0,
+    "gripper": 0
+  },
+  "rate_limited_ticks_per_joint": {
+    "shoulder_pan": 0,
+    "shoulder_lift": 1,
+    "elbow_flex": 2,
+    "wrist_flex": 4,
+    "wrist_roll": 0,
+    "gripper": 16
+  },
+  "tracking_error": {
+    "shoulder_pan": {
+      "unit": "deg",
+      "median_abs": 1.1478261947631836,
+      "p95_abs": 6.395920038223267,
+      "max_abs": 10.90006399154663
+    },
+    "shoulder_lift": {
+      "unit": "deg",
+      "median_abs": 14.099403023719788,
+      "p95_abs": 72.8111216545105,
+      "max_abs": 73.04958534240723
+    },
+    "elbow_flex": {
+      "unit": "deg",
+      "median_abs": 18.483270168304443,
+      "p95_abs": 48.08670263290404,
+      "max_abs": 69.14912414550781
+    },
+    "wrist_flex": {
+      "unit": "deg",
+      "median_abs": 25.067657470703125,
+      "p95_abs": 52.535151958465576,
+      "max_abs": 55.223652839660645
+    },
+    "wrist_roll": {
+      "unit": "deg",
+      "median_abs": 6.342818260192871,
+      "p95_abs": 12.691976389288902,
+      "max_abs": 12.698408350348473
+    },
+    "gripper": {
+      "unit": "pct",
+      "median_abs": 0.775446891784668,
+      "p95_abs": 35.815790601074696,
+      "max_abs": 35.81580716371536
+    }
+  },
+  "ee_position_error_cm": {
+    "median": 4.870622131307051,
+    "p95": 12.725055981006573,
+    "max": 12.907597975274813
+  },
+  "after_settle": {
+    "from_tick": 30,
+    "note": "excludes the initial transient in which contact forces push the clamped start pose out of the table (the real start pose penetrates the sim table; see configs/sim_so101.yaml)",
+    "tracking_error_median_abs": {
+      "shoulder_pan": 1.3284540176391602,
+      "shoulder_lift": 14.31183671951294,
+      "elbow_flex": 18.616287231445312,
+      "wrist_flex": 25.121078491210938,
+      "wrist_roll": 6.389559507369995,
+      "gripper": 0.9532604217529297
+    },
+    "tracking_error_p95_abs": {
+      "shoulder_pan": 6.395920038223267,
+      "shoulder_lift": 72.82310771942139,
+      "elbow_flex": 48.608375167846674,
+      "wrist_flex": 52.588965034484865,
+      "wrist_roll": 12.692296823859214,
+      "gripper": 35.8157913684845
+    },
+    "ee_position_error_cm": {
+      "median": 4.813406371130665,
+      "p95": 12.734222719775353
+    }
+  },
+  "ee_error_reference": "FK(real state at tick+lead), the pose the label points at",
+  "ball_outcome": {
+    "ball_in_bowl_final": false,
+    "ball_held_any_tick": false,
+    "lifted_any_tick": false,
+    "ball_xyz_task_final": [
+      0.4413057660777917,
+      -0.022490237974817685,
+      0.033392244579783514
+    ],
+    "note": "privileged metric; the ball starts at the task.yaml start region (seeded), not at the real episode's unknown ball position, so this is not a success claim"
+  },
+  "video": {
+    "path": "results/media/replay/replay_ep1_cartesian.mp4",
+    "frames": 598,
+    "video_stride": 1,
+    "render_wh": [
+      640,
+      360
+    ]
+  },
+  "wall_time_s": 26.02736279182136,
+  "not_learned": "This is a scripted replay of recorded data (E0). It is not an ACT rollout.",
+  "ik": {
+    "acceptance_rate": 0.9615384615384616,
+    "accepted": 575,
+    "reasons": {
+      "outside_workspace": 7,
+      "accepted": 575,
+      "collision": 6,
+      "residual_rejected": 10
+    },
+    "pos_residual_m": {
+      "median": 9.259152064545346e-05,
+      "p95": 0.0024524162409503497
+    },
+    "pos_residual_accepted_m": {
+      "median": 8.490139699967302e-05,
+      "p95": 0.0018953701624071298
+    },
+    "rot_residual_rad": {
+      "median": 0.00017933127362311025,
+      "p95": 0.021657731637269084
+    },
+    "delta_clipped_ticks": 1,
+    "clamp": {
+      "max_translation_m": 0.03,
+      "max_rotation_rad": 0.3
+    },
+    "gripper_source": "leader_action",
+    "label_jump_flags": 0,
+    "note": "deltas are applied relative to the current simulated EE pose (plan 3.3); rejected ticks hold the last accepted joint target, so errors accumulate rather than reset"
+  }
+}

@@ -244,3 +244,43 @@ vast.ai/Kaggle. Fallback in use: MPS.
 
 Skills: G1 is reached, so the three optional skills (plan §10) may now be proposed. They are
 deferred because the core milestones (M2 sim, M4 closed loop) matter more.
+
+---
+
+## 2026-10-13 00:50 AEDT — M2 complete, M4 harness, M5/M6 packages (two workflows, 78 agents)
+
+Two orchestrated workflows built and adversarially reviewed the remaining milestones. Every
+reported number below comes from a test or a CLI run inside the working tree.
+
+**M2 (SO-101 scene)** — `configs/sim_so101.yaml` now reads all geometry from
+`configs/task.yaml` (the diagnostic duplicate was deleted). `So101PickPlaceEnv` gained
+real-unit adapters (`real_state`, `step_real_joint_targets`, `ee_pose`, `canonical_proprio`),
+`observation.state`, and privileged scoring metrics. Bowl physics measured and recorded in
+`results/audit/sim_bowl_physics.json`. Camera: PnP fit, 17.2 px RMS on 27/43 points, applied
+with full axes (roll −10.9°). 48 scene/kinematics tests pass.
+
+**E0 replay** (`python -m real2sim.evaluation.replay --episode 1`): joint setpoint tracking
+median 0.05° (p95 elbow 5°), EE p95 3.2 cm after the start transient; FK→IK 96 % accepted.
+Captions `SCRIPTED REPLAY`. Videos in `results/media/replay/`.
+
+**M4 harness** — `real2sim.policy.adapters` (contract-bound `ObservationAdapter` that refuses
+foreign slots: E4a is NOT APPLICABLE), `real2sim.evaluation.run` with `trials.csv`,
+`summary.json`, captioned videos, HOLD_POSE null baseline. **E1 debug run: 0/3** (joint ACT
+step 2000, seeds 0–2, 300 ticks; phase_failed = approach; latency ≈ 125 ms on a loaded CPU):
+`results/metrics/debug_so101_joint/`. This run predates the camera fix and the D-014 fix.
+
+**M5 Panda** — `real2sim.panda`: scene, TCP site, 7-DoF full-pose IK, gravity compensation
+(D-015); 12/12 validation poses, residual ≤ 0.22 mm. 13 tests. Retargeting replay and frozen
+E2 rollouts pending a Cartesian checkpoint.
+
+**M6 recovery** — `real2sim.recovery`: observable-only detector, FSM, loop, MLP, dataset
+loader; 40 unit tests. No correction data exist, so E6 is not completed.
+
+**Joint mapping** — signs verified (D-014): only the current mapping places grasps on the
+table; posture is elbow-up in both sim and real. The 2.3 cm start-pose penetration points to a
+base height offset; plumbing for `robot_so101.base_z_offset` exists, value awaits approval.
+
+**Verification:** `uv run ruff check .` clean; `uv run pytest -q tests` → **223 passed** in 52 s.
+
+**Training:** joint run at step ~13 000 of 20 000 (best val L1 0.318 at 11 000 and 13 000);
+Cartesian run queued.
