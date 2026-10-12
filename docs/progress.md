@@ -284,3 +284,44 @@ base height offset; plumbing for `robot_so101.base_z_offset` exists, value await
 
 **Training:** joint run at step ~13 000 of 20 000 (best val L1 0.318 at 11 000 and 13 000);
 Cartesian run queued.
+
+---
+
+## 2026-10-13 08:10 AEDT — both ACT runs finished overnight; E4b oracle 10/10; D-014 approved
+
+**Joint ACT (act_joint_so101)** — 20 000 steps on MPS, 2 h 11 min. Validation L1 (normalised)
+went 0.325 → 0.312; the final checkpoint 020000 is the best (SHA-256 `d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274`).
+Per joint on the 9 held-out episodes: pan 2.9°, lift 13.4°, elbow 10.3°, wrist_flex 14.4°,
+roll 2.4°, gripper 9.2 %. Evidence: `results/metrics/act_joint_g1_check_step20000.json`,
+`results/metrics/act_joint_training_history.csv`. Open-loop numbers only.
+
+**Cartesian ACT (act_cartesian)** — 20 000 steps on MPS. Validation L1 0.528–0.559, best saved
+checkpoint 006000 at 0.534 (SHA-256 `0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0`); the loss stops improving after ~3 000 steps.
+In raw units: 1.6–1.8 mm per-tick translation error against a 3.7 mm median tick motion, 5–17
+mrad rotation, 0.10 gripper. Evidence: `results/metrics/act_cartesian_training_history.csv`,
+`results/configs/act_cartesian_resolved.yaml`. Frozen checkpoint for E2/E3 = 006000.
+
+**E4b oracle (scripted, privileged GT, labelled ORACLE_GEOMETRY_DIAGNOSTIC):** 10/10 pick-and-
+place successes on seeds 0–9 and across the friction sweep 0.3/0.6/1.0; the simulated gripper
+holds the 67 mm ball with both jaws (settles at 43 % opening, matching the real 30–40 %). The
+dataset's grasp style (fixed jaw under the ball) was infeasible before the base lift. This is
+scene-feasibility evidence, not an upper bound for the learned policy.
+`results/metrics/oracle_so101/`, videos `results/media/oracle/`.
+
+**Camera/bowl:** bowl centre re-derived by back-projecting the in-bowl ball detections
+through the PnP camera: (0.328, −0.163) m, std 0.8/1.3 cm; start region (0.331, 0.069) m.
+The FK-at-release value was 6.3 cm off (it marks where the gripper opened, not the bowl).
+
+**D-014 approved:** `robot_so101.base_z_offset = 0.012` (PROVISIONAL). A workflow is making
+the height-dependent tests and back-projection planes offset-aware.
+
+**Panda retarget (E0-Panda):** `python -m real2sim.panda.retarget --episode 1` built; results in
+`results/metrics/panda_retarget/`.
+
+**Panda retarget detail** (`results/metrics/panda_retarget/panda_retarget_ep1.json`, label
+SCRIPTED_REPLAY): 598 ticks of validation episode 1 retargeted through the Panda 7-D adapter;
+IK accepted 567/598 (94.8 %, the 31 rejections all joint-limit), accepted residual p95 0.23 mm /
+5 mrad, no robot-table contact. Position error versus the SO-101 FK path grows from 0 to 31 cm
+over the episode because deltas are executed relative to the Panda's own TCP from a different
+start pose (0.21 m offset) and rejected ticks lose their motion. This is an engineering
+baseline for the adapter, not a transfer result.

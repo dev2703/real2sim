@@ -12,6 +12,11 @@
   the queue on reset. It advances the observation adapter's EE-position memory on *every* tick so
   the canonical proprio velocity is the one-tick finite difference ``(p_k - p_{k-1}) * hz`` of
   ``real2sim.data.labels`` even on ticks without an inference call.
+* :class:`PandaObservationAdapter` / :class:`PandaActionAdapter` (plan M5) serve the SAME
+  cartesian contract on the Panda: the proprio is the Panda env's canonical 13 floats with the
+  velocity slot taken from the adapter's own ``advance_tick`` memory (checked against the env's
+  value, so the semantics cannot drift apart), and the 7-D unnormalised action goes straight to
+  ``real2sim.panda.adapter.PandaCartesianActionAdapter.apply``. A joint checkpoint is refused.
 """
 
 from __future__ import annotations
@@ -239,6 +244,8 @@ class ChunkExecutor:
     def reset(self) -> None:
         self.policy.reset()
         self.obs_adapter.reset()
+        if hasattr(self.action_adapter, "reset"):
+            self.action_adapter.reset()
         self.queue.clear()
         self.latencies_ms.clear()
         self.n_policy_calls = 0
@@ -261,6 +268,85 @@ class ChunkExecutor:
         # p_k of this tick becomes p_{k-1} of the next one, regardless of whether we inferred.
         self.obs_adapter.advance_tick(env)
         action = self.queue.pop(0)
-        result = self.action_adapter.apply(action)
+        if getattr(self.action_adapter, "needs_obs", False):
+            result = self.action_adapter.apply(action, obs)
+        else:
+            result = self.action_adapter.apply(action)
         result.detail["action"] = action.tolist()
         return result
+
+
+# ---------------------------------------------------------------------------- Panda (M5)
+VELOCITY_SLICE = slice(9, 12)  # ee_vx, ee_vy, ee_vz in PROPRIO_NAMES
+
+
+class PandaObservationAdapter(ObservationAdapter):
+    """Cartesian contract on ``PandaPickPlaceEnv``; refuses the joint contract.
+
+    ``state`` is the env's canonical proprio with the velocity slot recomputed as the one-tick
+    finite difference ``(p_k - p_{k-1}) * control_hz`` from :meth:`advance_tick`'s memory, exactly
+    as the SO-101 path does. The env's own finite difference (``_ee_velocity``) must agree; a
+    disagreement means the two implementations diverged and is a contract error, not something
+    to paper over.
+    """
+
+    VELOCITY_ATOL = 1e-4  # m/s; float32 rounding of a one-tick finite difference
+
+    def __init__(self, contract: dict, normalizer, *, device: str = "cpu"):
+        super().__init__(contract, normalizer, device=device)
+        if self.kind != "cartesian":
+            raise ContractError(
+                "a 6-D SO-101 joint-space checkpoint has no meaning on the 7-joint Panda; only the "
+                "canonical 13-float / 7-D cartesian contract transfers (plan E3)")
+
+    def state(self, env) -> np.ndarray:
+        x = np.asarray(env.canonical_proprio(), np.float32)
+        if x.shape != (self.state_dim,):
+            raise ContractError(f"state length {x.shape} != contract {self.state_dim}")
+        p = env.ee_pose()[:3, 3]
+        if self._prev_ee_pos is None:
+            vel = np.zeros(3)
+        else:
+            vel = (p - self._prev_ee_pos) * float(env.control_hz)
+        if not np.allclose(x[VELOCITY_SLICE], vel, atol=self.VELOCITY_ATOL):
+            raise ContractError(
+                f"Panda env velocity {x[VELOCITY_SLICE].tolist()} != one-tick finite difference "
+                f"{vel.tolist()}; velocity semantics diverged from the SO-101 path")
+        x[VELOCITY_SLICE] = vel.astype(np.float32)
+        return x
+
+
+class PandaActionAdapter:
+    """Thin ``ChunkExecutor`` face over ``PandaCartesianActionAdapter`` (7-D, needs the obs)."""
+
+    dim = 7
+    needs_obs = True
+
+    def __init__(self, panda_adapter):
+        self.panda = panda_adapter
+        self.env = panda_adapter.env
+        self.ik_rejections = 0
+
+    def reset(self) -> None:
+        self.panda.reset_stats()
+        self.ik_rejections = 0
+
+    @property
+    def stats(self) -> dict:
+        return self.panda.stats
+
+    def apply(self, action: np.ndarray, obs: dict) -> ApplyResult:
+        a = np.asarray(action, np.float64).reshape(-1)
+        if a.shape != (7,) or not np.all(np.isfinite(a)):
+            raise ValueError("cartesian action must be seven finite values")
+        res = self.panda.apply(a, obs)
+        g_clamped = not 0.0 <= float(a[6]) <= 1.0  # PandaCartesianActionAdapter clips silently
+        clamped = [res.translation_clamped] * 3 + [res.rotation_clamped] * 3 + [g_clamped]
+        self.ik_rejections += int(res.rejected)
+        return ApplyResult(res.observation, res.info, res.truncated, float(np.mean(clamped)),
+                           ik_rejected=res.rejected,
+                           detail={"clamped": clamped, "ik_reason": res.reason,
+                                   "target_task": res.target_pose[:3, 3].tolist(),
+                                   "position_error_m": res.residual_position_m,
+                                   "orientation_error_rad": res.residual_orientation_rad,
+                                   "ik_iterations": res.ik_iterations})

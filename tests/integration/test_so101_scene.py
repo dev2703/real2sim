@@ -17,6 +17,7 @@ from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.model import (
     DEFAULT_CONFIG,
     ROOT,
+    base_z_offset,
     camera_xyaxes,
     scene_xml,
     task_frame_offset,
@@ -36,6 +37,12 @@ SPEEDS = [0.03, 0.06, 0.09, 0.12]
 STATIC_SINK_TOLERANCE_M = float(SIM["contacts"]["static_sink_tolerance_m"])
 assert 0 < STATIC_SINK_TOLERANCE_M <= 0.001
 MEASUREMENTS = ROOT / "results/audit/sim_bowl_physics.json"
+
+
+def table_top_task(env: So101PickPlaceEnv) -> float:
+    """Table-top height in task (= base) coordinates, derived from the env rather than assumed 0:
+    D-014 places the base ``base_z_offset`` above the table top, so ``z_task = -base_z_offset``."""
+    return float(env.table_top - env.offset[2])
 
 
 @pytest.fixture
@@ -58,10 +65,14 @@ def test_pinned_assets():
 
 def test_scene_uses_task_yaml_single_source(env):
     assert env.config["task_config"] == "configs/task.yaml"
-    np.testing.assert_allclose(env.offset, [0, 0, TASK["table"]["height"]])
-    # Robot base sits on the table top and is the task-frame origin.
+    lift = base_z_offset(TASK)
+    np.testing.assert_allclose(env.offset, [0, 0, TASK["table"]["height"] + lift])
+    # Robot base sits base_z_offset above the table top (D-014) and is the task-frame origin;
+    # the table top and the bowl base stay at task.table.height in world coordinates.
     np.testing.assert_allclose(env.model.body_pos[env.base_body], env.offset)
-    assert env.model.geom("table").pos[2] + env.model.geom("table").size[2] == pytest.approx(0.75)
+    assert env.model.geom("table").pos[2] + env.model.geom("table").size[2] == pytest.approx(env.table_top)
+    assert env.model.body("bowl").pos[2] == pytest.approx(env.table_top)
+    assert table_top_task(env) == pytest.approx(-lift)
     _, info = env.reset(seed=0)
     pm = info["privileged_metrics"]
     np.testing.assert_allclose(pm["bowl_xyz_task"][:2], TASK["bowl"]["center_task_xy"])
@@ -119,18 +130,25 @@ def _start_pose_contacts(task: dict) -> tuple[int, float, float]:
 
 
 def test_start_pose_penetration_is_reported_not_hidden(env):
-    """D-014 (pending): the clamped rest pose with the base on the table top penetrates the table.
+    """D-014 (approved, 1.2 cm base lift): the clamped rest pose still penetrates the table.
     The env must expose this in privileged_metrics so trial statistics carry the confound."""
     _, info = env.reset(seed=0)
     start = info["privileged_metrics"]["start_pose"]
     assert set(start) == {"robot_table_contacts", "robot_table_penetration_m",
                           "tool_height_above_table_m"}
     assert start["robot_table_penetration_m"] == info["privileged_metrics"]["robot_table_penetration_m"]
-    assert "base_z_offset" not in TASK["robot_so101"], "D-014 approved: update this test's expectation"
-    # Measured known limitation with the identity base placement: ~2.3 cm, 29 contacts.
+    lift = base_z_offset(TASK)
+    assert lift > 0, "D-014 approved: the base is lifted above the table top"
+    # The lift reduces the identity-placement penetration (~2.3 cm, 29 contacts) by exactly the
+    # offset: measured 1.14 cm over 21 contacts at 1.2 cm; a lift >= 2.4 cm would be contact-free.
+    flat = copy.deepcopy(TASK)
+    del flat["robot_so101"]["base_z_offset"]
+    _, pen_flat, tool_flat = _start_pose_contacts(flat)
     assert start["robot_table_contacts"] >= 10
-    assert 0.015 < start["robot_table_penetration_m"] < 0.03
-    assert start["tool_height_above_table_m"] < 0
+    assert start["robot_table_penetration_m"] == pytest.approx(pen_flat - lift, abs=1e-6)
+    assert start["robot_table_penetration_m"] > 0.005
+    assert start["tool_height_above_table_m"] == pytest.approx(tool_flat + lift, abs=1e-6)
+    assert start["tool_height_above_table_m"] < 0.01  # tool site still within 1 cm of the table
     before = env.sim_state().copy()
     _, _, _, _, info = env.step(env.initial_qpos)
     jump_deg = np.rad2deg(env.sim_state() - before)
@@ -139,25 +157,29 @@ def test_start_pose_penetration_is_reported_not_hidden(env):
 
 
 def test_base_z_offset_plumbing_moves_base_frame_and_reduces_penetration():
-    """task.yaml robot_so101.base_z_offset (D-014 option A) moves the base, the task frame and the
-    camera together; the table stays at task.table.height. Absent key == 0 == current scene.
-    Measured: the recommended 1.2 cm lift leaves 1.14 cm penetration (21 contacts; the deepest
-    gripper geom sits 2.34 cm below the table top); a lift >= 2.4 cm is contact-free."""
-    assert task_frame_offset(TASK)[2] == pytest.approx(TASK["table"]["height"])
-    lifted = copy.deepcopy(TASK)
-    lifted["robot_so101"]["base_z_offset"] = 0.012
-    np.testing.assert_allclose(task_frame_offset(lifted), [0, 0, TASK["table"]["height"] + 0.012])
-    model = mujoco.MjModel.from_xml_string(scene_xml(SIM, lifted))
-    np.testing.assert_allclose(model.body("base").pos, [0, 0, 0.762])
+    """task.yaml robot_so101.base_z_offset (D-014 option A, approved at 1.2 cm) moves the base, the
+    task frame and the camera together; the table stays at task.table.height. Absent key == 0 ==
+    base on the table top. Measured: the 1.2 cm lift leaves 1.14 cm penetration (21 contacts; the
+    deepest gripper geom sits 2.34 cm below the table top); a lift >= 2.4 cm is contact-free."""
+    top = float(TASK["table"]["height"])
+    lift = base_z_offset(TASK)
+    assert lift > 0  # D-014 approved
+    flat = copy.deepcopy(TASK)
+    del flat["robot_so101"]["base_z_offset"]
+    assert base_z_offset(flat) == 0.0
+    assert task_frame_offset(flat)[2] == pytest.approx(top)
+    np.testing.assert_allclose(task_frame_offset(TASK), [0, 0, top + lift])
+    model = mujoco.MjModel.from_xml_string(scene_xml(SIM, TASK))
+    np.testing.assert_allclose(model.body("base").pos, [0, 0, top + lift])
     np.testing.assert_allclose(model.camera("iphone").pos,
-                               np.array(TASK["camera_iphone"]["approx_position_task"]) + [0, 0, 0.762])
-    assert model.geom("table").pos[2] + model.geom("table").size[2] == pytest.approx(0.75)
-    assert model.body("bowl").pos[2] == pytest.approx(0.75)
-    n0, pen0, tool0 = _start_pose_contacts(TASK)
-    n1, pen1, tool1 = _start_pose_contacts(lifted)
-    assert pen1 == pytest.approx(pen0 - 0.012, abs=1e-6) and n1 < n0
-    assert pen1 > 0.01  # 1.2 cm alone is not contact-free; documented for D-014
-    assert tool1 == pytest.approx(tool0 + 0.012, abs=1e-9)
+                               np.array(TASK["camera_iphone"]["approx_position_task"]) + [0, 0, top + lift])
+    assert model.geom("table").pos[2] + model.geom("table").size[2] == pytest.approx(top)
+    assert model.body("bowl").pos[2] == pytest.approx(top)
+    n0, pen0, tool0 = _start_pose_contacts(flat)
+    n1, pen1, tool1 = _start_pose_contacts(TASK)
+    assert pen1 == pytest.approx(pen0 - lift, abs=1e-6) and n1 < n0
+    assert pen1 > 0.01  # 1.2 cm alone is not contact-free; documented in D-014
+    assert tool1 == pytest.approx(tool0 + lift, abs=1e-9)
     free = copy.deepcopy(TASK)
     free["robot_so101"]["base_z_offset"] = 0.025
     assert _start_pose_contacts(free)[:2] == (0, 0.0)
@@ -260,16 +282,16 @@ def test_real_unit_adapters_round_trip(env):
 
 
 def test_ball_falls_rests_and_rolls(env):
-    radius = TASK["ball"]["radius"]
+    rest = table_top_task(env) + TASK["ball"]["radius"]  # ball centre resting on the table top
     env.reset(seed=0, scenario={"ball_xy": [0.1, -0.3], "ball_drop_height": 0.15})
     ball = hold(env)
-    assert abs(ball[2] - radius) < STATIC_SINK_TOLERANCE_M
+    assert abs(ball[2] - rest) < STATIC_SINK_TOLERANCE_M
     pm = env.info()["privileged_metrics"]
     assert pm["ball_resting"] and pm["ball_touching_table"] and not pm["lifted"]
     env.reset(seed=0, scenario={"ball_xy": [0.1, -0.3], "ball_velocity": [0.15, 0, 0]})
     ball = hold(env, 10)
     assert ball[0] > 0.14
-    assert abs(ball[2] - radius) < STATIC_SINK_TOLERANCE_M
+    assert abs(ball[2] - rest) < STATIC_SINK_TOLERANCE_M
 
 
 @pytest.mark.parametrize("depth", DEPTHS)
@@ -284,7 +306,7 @@ def test_bowl_settles_without_tunnelling(depth, friction, damping):
         for _ in range(30):
             ball = hold(env, 1)
             minimum = min(minimum, ball[2])
-        expected = TASK["ball"]["radius"] + env.bowl["floor"]
+        expected = table_top_task(env) + env.bowl["floor"] + TASK["ball"]["radius"]
         # Impact transient: the softest sweep point (dampratio 1.3) sinks 1.9 mm on a 12 cm
         # drop; tunnelling would mean passing the floor slab, so the bound is half its thickness.
         assert minimum >= expected - env.bowl["floor"] / 2
@@ -336,7 +358,7 @@ def test_record_bowl_physics_measurements():
             for _ in range(30):
                 ball = hold(env, 1)
                 minimum = min(minimum, ball[2])
-            expected = TASK["ball"]["radius"] + env.bowl["floor"]
+            expected = table_top_task(env) + env.bowl["floor"] + TASK["ball"]["radius"]
             record["sink_mm"][str(damping)] = {"impact_transient": round(1e3 * (expected - minimum), 3),
                                                "static": round(1e3 * (expected - ball[2]), 3)}
     for depth in DEPTHS:
@@ -362,7 +384,9 @@ def test_record_bowl_physics_measurements():
         env.step(env.initial_qpos)
         start["first_tick_joint_jump_deg"] = np.rad2deg(env.sim_state() - before).round(2).tolist()
         start["base_z_offset_m"] = float(env.offset[2] - env.table_top)
-        start["note"] = "D-014 pending: clamped dataset rest pose with the base on the table top"
+        start["table_top_z_task_m"] = table_top_task(env)
+        start["note"] = ("D-014 approved: clamped dataset rest pose with the base lifted "
+                         "base_z_offset_m above the table top (sink measured from the table top)")
     record["start_pose"] = start
     record["note"] = ("frustum bowl from task.yaml (base_diameter PROVISIONAL-STANDARD); "
                       "sink measured on a 0.12 m drop with solref timeconst 0.01")
