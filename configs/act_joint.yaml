@@ -1,0 +1,36 @@
+# act_joint_so101 — SO-101-specific joint-space ACT baseline (E1). NOT cross-embodiment.
+# Labels: recorded leader targets (D-003 C). Approved sizes: D-004 (dim 512, batch 16), D-007 (10 Hz, chunk 20/2).
+name: act_joint_so101
+data: .cache/derived_joint
+
+model:                      # field names = LeRobot 0.6.1 ACTConfig
+  chunk_size: 20
+  n_action_steps: 2
+  vision_backbone: resnet18
+  pretrained_backbone_weights: ResNet18_Weights.IMAGENET1K_V1
+  dim_model: 512
+  n_heads: 8
+  dim_feedforward: 3200
+  n_encoder_layers: 4
+  n_decoder_layers: 1
+  use_vae: true
+  latent_dim: 32
+  n_vae_encoder_layers: 4
+  dropout: 0.1
+  kl_weight: 10.0
+  optimizer_lr: 1.0e-5
+  optimizer_lr_backbone: 1.0e-5
+  optimizer_weight_decay: 1.0e-4
+
+train:
+  seed: 0
+  batch_size: 16
+  grad_accum: 1             # set 2 with batch_size 8 if MPS memory forces it (effective 16)
+  steps: 20000
+  grad_clip_norm: 10.0
+  log_every: 50
+  val_every: 1000
+  save_every: 2000
+  val_max_batches: null     # null = full validation split
+  num_workers: 2
+  device: auto              # auto -> cuda, mps, cpu
