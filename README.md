@@ -12,8 +12,7 @@ The main aim is to train an ACT policy with a recovery MLP head in Mujoco and us
 
 Teleoperation with an SO-101 leader/follower pair through LeRobot (dataset format v3.0,
 30 Hz, follower PID P=12 I=0 D=2). Two cameras were recorded; only the iPhone side view is
-usable. Joint values are degrees, gripper 0–100 %. Full observed schema and the action-versus-
-state audit (follower lag 4–16 frames, 13° shoulder offset) are in `docs/data_contract.md`.
+usable. 
 
 ## Install
 
