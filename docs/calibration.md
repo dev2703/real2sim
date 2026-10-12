@@ -53,8 +53,35 @@ in the contact sensitivity sweep.
 | Task frame | Origin on the table top directly below the SO-101 base origin. x away from the robot, y to its left, z up. | design | `docs/architecture.md` §4.3 |
 | `T_task_so101base` | identity | PROVISIONAL-STANDARD | |
 | Black mat | 0.45 × 0.40 m, centre at (0.25, 0.0) m in task frame | PROVISIONAL-STANDARD | Typical large desk mat |
-| Ball start region | disc of radius 0.03 m centred at (0.25, +0.12) m (paper marker) | PROVISIONAL-STANDARD → DATA-DERIVED | Replaced at M2 by the mean gripper FK position at first close-on-ball over training episodes |
-| Bowl centre | (0.22, −0.12) m | PROVISIONAL-STANDARD → DATA-DERIVED | Replaced at M2 by the mean gripper FK position at release |
+| Ball start region | disc of radius 0.03 m centred at (0.34, +0.04) m (paper marker) | DATA-DERIVED (preliminary, see below) | Replaced at M2 by the mean gripper FK position at first close-on-ball over training episodes |
+| Bowl centre | (0.33, −0.10) m | DATA-DERIVED (preliminary, see below) | Replaced at M2 by the mean gripper FK position at release |
+
+### Preliminary DATA-DERIVED estimates (2026-10-12, `real2sim.geometry.so101_fk`)
+
+These come from the provisional joint mapping (§4) and gripper-frame FK on recorded follower
+states. A "sustained hold" means the leader commands closed (< 8 %) while the follower is
+blocked open by the ball (12–60 %) for at least 1 s. Only 12 of the 37 kept episodes contain
+such a hold. In the others the leader gripper was not squeezed fully closed.
+
+| Quantity | Mean (base frame, m) | Std (m) | n |
+|---|---|---|---|
+| Gripper position at grasp (ball centre) | x 0.340, y +0.042, z 0.034 | 0.030, 0.061, 0.042 | 12 |
+| Gripper position at release (above bowl) | x 0.326, y −0.098, z 0.074 | 0.037, 0.076, 0.044 | 12 |
+
+Shoulder pan is about −17° at grasp and +24° at release in 8 of the 12 holds. The mean grasp
+height of 0.034 m matches the 0.0335 m ball radius. This supports the lift, elbow and wrist part
+of the mapping, but does not verify it: pan sign against the camera is unchecked and the spread
+is 3–7 cm.
+
+Two further observations:
+
+- 23 % of `shoulder_lift` readings, mostly the folded rest pose at about −105°, lie beyond the
+  MJCF ±100° limit. Either the real range exceeds the model, or there is a small offset.
+- Separation between the grasp and release clusters is 0.14 m by FK. A rough estimate from the
+  image gives about 0.2 m.
+
+These estimates replace the PROVISIONAL-STANDARD ball start and bowl centre in
+`configs/task.yaml`.
 
 ## 3. Camera `observation.images.iphone`
 
