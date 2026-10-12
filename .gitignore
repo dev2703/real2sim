@@ -11,5 +11,14 @@ wheels/
 .env 
 
 #miscellanous
-*.md*
-!README.md
+.DS_Store
+*.claude*
+
+# Large artifacts stay out of git (keep manifests, metrics, small previews)
+.cache/
+outputs/
+results/media/*.mp4
+*.safetensors
+*.pt
+*.ckpt
+annotations/*.bak

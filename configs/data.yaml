@@ -1,0 +1,51 @@
+# Data contract configuration. Changes require a docs/decisions.md entry (plan rule 8).
+source:
+  repo_id: bottowork/so101_act_pickplace_v1
+  revision: fd65a6600b0cd111a434ece1abfa3d44dc7b4d57   # immutable commit SHA, pinned 2026-10-12
+  codebase_version: v3.0
+  # Byte-identical local copy verified 2026-10-12 (info.json identical, parquet SHA-256 match).
+  local_root_hint: ~/.cache/huggingface/lerobot/local/so101_act_pickplace_v1
+  fps: 30
+  robot_type: so_follower
+  license: apache-2.0
+
+# D-001: exactly one usable stream found by the audit (plan §3.2 single-stream rule).
+camera_keys:
+  - observation.images.iphone
+excluded_cameras:
+  - key: observation.images.top
+    reason: "UNUSABLE in results/audit/camera_quality.json (2026-10-12): aimed at the ceiling, median sharpness 2.3, 37/40 episodes fail; no robot/ball/bowl visible."
+
+# D-010 (PENDING): iphone video has fewer frames than data rows in episodes 25 (-2), 33 (-14),
+# 34 (-1). Recommended exclusion = [33]. Empty until the user decides.
+excluded_episodes: []
+
+# D-004 (delegated): aspect-preserving letterbox, full field of view retained.
+image:
+  mode: letterbox
+  height: 192
+  width: 256
+  pad_value: 114
+  source_width: 1280
+  source_height: 720
+
+# D-007: 10 Hz policy clock, exact 3:1 subsample of the 30 Hz recording.
+policy_hz: 10
+
+# D-003 (approved): joint baseline learns the recorded leader targets; the canonical
+# Cartesian policy learns physically achieved motion (FK of observed states, one-tick lead).
+labels:
+  joint: recorded_action
+  cartesian: achieved_motion
+  cartesian_lead_ticks: 1
+
+# D-006 (approved): 30 train / 10 validation whole episodes, seed 0.
+split:
+  seed: 0
+  n_val: 10
+  manifest: results/audit/split.json
+
+state:
+  joint_names: [shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper]
+  units: degrees            # VERIFY with operator's recording command (use_degrees=True assumed)
+  gripper_units: percent    # 0 = commanded closed (hypothesis; sign verified at M3)

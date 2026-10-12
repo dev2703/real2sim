@@ -1,7 +1,57 @@
 [project]
 name = "real2sim"
 version = "0.1.0"
-description = "Add your description here"
+description = "Real SO-101 demonstrations -> ACT -> MuJoCo SO-101/Panda evaluation with recovery (Real2Sim-RaC)"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "lerobot[dataset]==0.6.1",
+    "torch>=2.7,<2.12",
+    "torchvision>=0.22,<0.27",
+    "numpy>=2.0,<2.3",
+    "mujoco==3.15.0",
+    "av>=15.0.0,<16.0.0",
+    "opencv-python-headless>=4.10",
+    "pandas>=2.2",
+    "pyarrow>=15",
+    "pyyaml>=6",
+    "scipy>=1.13",
+    "huggingface-hub>=0.34",
+]
+
+[project.optional-dependencies]
+# placo 0.9.x wheels fail to import on macOS arm64 (missing liburdfdom_sensor dylib, seen
+# 2026-10-12). Install on Linux for Placo IK; macOS uses the MuJoCo-based FK fallback (D-002).
+kinematics = ["placo>=0.9.6,<0.9.16"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "pytest>=8",
+    "pytest-timeout>=2.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/real2sim"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", ".cache", "outputs", "assets"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+timeout = 600
+addopts = "-ra"
+markers = [
+    "integration: slower tests needing real data, MuJoCo or a policy",
+]
