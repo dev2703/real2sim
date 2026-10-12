@@ -1,0 +1,76 @@
+# Panda MuJoCo scene (plan M5). Task geometry, objects, camera and the task frame are read from
+# configs/task.yaml (single source of truth) so the Panda sees the SAME workspace as the SO-101
+# scene. This file holds simulator-only knobs. The pinned Menagerie panda.xml (actuators,
+# tendon gripper, collision exclusions) is never changed; tests pin its SHA-256.
+robot: panda
+model: assets/menagerie/franka_emika_panda/panda.xml
+model_sha256: 96ad67da03710f17f798c9478fd9e9efdf24a3bf8359f05e456dd9fb158ea273
+manifest: assets/menagerie/manifest.json
+task_config: configs/task.yaml
+data_config: configs/data.yaml
+physics_hz: 500
+control_hz: 10            # must equal data.yaml policy_hz
+joint_names: [joint1, joint2, joint3, joint4, joint5, joint6, joint7]
+finger_joint_names: [finger_joint1, finger_joint2]   # slide joints, 0..0.04 m each
+gripper_actuator: actuator8   # upstream tendon actuator, ctrlrange 0..255 == per-finger 0..0.04 m
+tool_site: panda_tcp
+# Site injected into the assembled XML on the 'hand' body (flange frame): 0.1034 m along hand z
+# = fingertip-pad centre (fingers mount at 0.0584, pads span 0.094..0.111). Axes permuted so the
+# canonical rot6d matches the SO-101 gripperframe: x approach, y hinge-equivalent, z opening.
+tcp_offset_m: 0.1034
+max_finger_opening_m: 0.08    # 2 x 0.04 m slide range; gripper_semantic = opening / this
+
+# Frames: world z up; table top at task.yaml table.height (0.75); link0 on the table top at
+# (0, 0, 0.75), unrotated. Task frame origin = Panda base, so p_task = p_world - (0, 0, 0.75).
+
+# Initial arm pose (native radians, 7 joints): DLS IK solution for the TCP at task
+# (0.30, 0.00, 0.15) pointing straight down (site x = -z_task, site z = +x_task), seeded from
+# the upstream 'home' keyframe (0 0 0 -1.5708 0 1.5708 -0.7854). The env checks at construction
+# that FK of this pose reproduces that target within the IK tolerances.
+initial_qpos: [0.0, -0.397806, 0.0, -3.033296, 0.0, 2.635489, -0.785398]
+initial_tcp_task_xyz: [0.30, 0.0, 0.15]
+initial_gripper_opening_m: 0.08
+
+table_half_size: [0.6, 0.45, 0.025]
+table_center_task_xy: [0.25, 0.0]
+
+control:
+  interface: native_mujoco_absolute_joint_positions
+  units: radians_seven_arm_hinges_plus_total_finger_opening_metres
+  max_velocity: [1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 1.5]   # rad/s rate limit on arm position targets
+  max_gripper_speed_mps: 0.10                        # total opening change per second
+  upstream_actuators: unchanged
+  # The real Franka controller compensates gravity internally; the Menagerie position servos do
+  # not, and sag ~2 mm/tick at the start pose, which a relative-to-observed-pose action contract
+  # integrates into a drift. The env applies qfrc_bias of the 7 arm dofs as qfrc_applied
+  # (gravity + velocity terms); actuator gains/ranges stay upstream. Measured drift with/without
+  # is recorded in results/metrics/panda_ik/scene_measurements.json.
+  gravity_compensation: true
+
+render:
+  width: 640
+  height: 360
+
+observation:
+  joint_key: sim.joint_position      # 9 native values (7 arm rad + 2 finger m), diagnostics only
+  state_key: observation.state       # 13-float canonical proprio (D-008)
+
+contacts:
+  friction: [0.6, 0.005, 0.0001]
+  solref: [0.01, 1.0]
+
+# 7-D action contract limits (docs/architecture.md 4.2, provisional).
+action_limits:
+  max_translation_m: 0.03
+  max_rotation_rad: 0.3
+
+ik:
+  solver: damped_least_squares_full_pose_7dof
+  position_tolerance_m: 0.003
+  orientation_tolerance_rad: 0.05
+  damping: 0.02
+  max_iterations: 100
+  max_joint_step_rad: 0.2
+  workspace_min: [0.05, -0.45, 0.01]   # task frame (base-relative)
+  workspace_max: [0.70, 0.45, 0.60]
+  penetration_tolerance_m: 0.002

@@ -1,0 +1,422 @@
+{
+  "controller_source": "IK_VALIDATION_DIAGNOSTIC",
+  "note": "Plan M5 step 2 retargeting evidence only; no policy, no transfer claim.",
+  "robot": "panda",
+  "model": "assets/menagerie/franka_emika_panda/panda.xml",
+  "model_sha256": "96ad67da03710f17f798c9478fd9e9efdf24a3bf8359f05e456dd9fb158ea273",
+  "sample_box_task_xyz": {
+    "min": [
+      0.25,
+      -0.15,
+      0.03
+    ],
+    "max": [
+      0.4,
+      0.15,
+      0.25
+    ],
+    "tilt_rad": 0.15,
+    "yaw_rad": 0.3
+  },
+  "seed": 0,
+  "action_limits": {
+    "max_translation_m": 0.03,
+    "max_rotation_rad": 0.3
+  },
+  "execution": "IK solutions sent directly as native joint commands for SETTLE_TICKS ticks; the 7-D adapter (clamped deltas) is exercised in tests/integration/test_panda.py",
+  "summary": {
+    "n_targets": 12,
+    "n_accepted": 12,
+    "rejections_by_reason": {},
+    "thresholds": {
+      "position_m": 0.003,
+      "orientation_rad": 0.05
+    },
+    "ik_residual_position_m": {
+      "n": 12,
+      "mean": 6.595276894593996e-05,
+      "max": 0.00021981163810789138,
+      "min": 1.913934605513658e-06
+    },
+    "ik_residual_orientation_rad": {
+      "n": 12,
+      "mean": 4.6100188885420714e-05,
+      "max": 0.0001889699915774378,
+      "min": 3.247964225438816e-07
+    },
+    "executed_position_error_m": {
+      "n": 12,
+      "mean": 6.619784729891838e-05,
+      "max": 0.00021982003089167238,
+      "min": 1.8603429314696626e-06
+    },
+    "executed_orientation_error_rad": {
+      "n": 12,
+      "mean": 4.631302104450339e-05,
+      "max": 0.00018926098828559508,
+      "min": 6.646542326292258e-07
+    }
+  },
+  "targets": [
+    {
+      "index": 0,
+      "target_task_xyz": [
+        0.345544,
+        -0.069064,
+        0.039014
+      ],
+      "target_rotvec_from_down": [
+        -0.145042,
+        0.093981,
+        0.247653
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 3.42189563839201e-05,
+      "ik_residual_orientation_rad": 1.2967207733239247e-05,
+      "ik_iterations": 5,
+      "joint_solution_rad": [
+        -0.149347,
+        0.216152,
+        -0.093933,
+        -2.769247,
+        -0.661739,
+        2.898488,
+        -0.625133
+      ],
+      "executed_position_error_m": 3.439502549875092e-05,
+      "executed_orientation_error_rad": 1.8571865029656787e-05,
+      "executed_ticks": 15
+    },
+    {
+      "index": 1,
+      "target_task_xyz": [
+        0.340995,
+        0.068849,
+        0.149597
+      ],
+      "target_rotvec_from_down": [
+        0.130522,
+        0.094756,
+        -0.298357
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 1.913934605513658e-06,
+      "ik_residual_orientation_rad": 1.028302825377741e-06,
+      "ik_iterations": 3,
+      "joint_solution_rad": [
+        0.149927,
+        -0.215301,
+        0.017569,
+        -2.845773,
+        0.2887,
+        2.561653,
+        -0.566802
+      ],
+      "executed_position_error_m": 1.8603429314696626e-06,
+      "executed_orientation_error_rad": 1.0486211406920514e-06,
+      "executed_ticks": 15
+    },
+    {
+      "index": 2,
+      "target_task_xyz": [
+        0.378611,
+        -0.139924,
+        0.190524
+      ],
+      "target_rotvec_from_down": [
+        -0.097303,
+        0.108954,
+        0.024877
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 4.044318412423727e-05,
+      "ik_residual_orientation_rad": 6.105622251262956e-05,
+      "ik_iterations": 3,
+      "joint_solution_rad": [
+        -0.225316,
+        -0.163781,
+        -0.094682,
+        -2.640555,
+        -0.210776,
+        2.394408,
+        -0.967715
+      ],
+      "executed_position_error_m": 4.085536658321676e-05,
+      "executed_orientation_error_rad": 6.127819954622547e-05,
+      "executed_ticks": 15
+    },
+    {
+      "index": 3,
+      "target_task_xyz": [
+        0.294957,
+        -0.023194,
+        0.03623
+      ],
+      "target_rotvec_from_down": [
+        -0.112715,
+        0.051187,
+        0.088314
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 0.00019580253964592207,
+      "ik_residual_orientation_rad": 0.00010331565360925726,
+      "ik_iterations": 6,
+      "joint_solution_rad": [
+        -0.123167,
+        0.160332,
+        -0.091531,
+        -2.912073,
+        -0.871713,
+        3.001079,
+        -0.219579
+      ],
+      "executed_position_error_m": 0.00019783667763887845,
+      "executed_orientation_error_rad": 9.693387928757304e-05,
+      "executed_ticks": 15
+    },
+    {
+      "index": 4,
+      "target_task_xyz": [
+        0.342308,
+        -0.034897,
+        0.249386
+      ],
+      "target_rotvec_from_down": [
+        0.144251,
+        0.055663,
+        0.090276
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 0.00021981163810789138,
+      "ik_residual_orientation_rad": 0.0001889699915774378,
+      "ik_iterations": 3,
+      "joint_solution_rad": [
+        0.01597,
+        -0.48671,
+        -0.179065,
+        -2.756515,
+        0.059075,
+        2.194302,
+        -1.051693
+      ],
+      "executed_position_error_m": 0.00021982003089167238,
+      "executed_orientation_error_rad": 0.00018926098828559508,
+      "executed_ticks": 15
+    },
+    {
+      "index": 5,
+      "target_task_xyz": [
+        0.353267,
+        -0.033324,
+        0.059721
+      ],
+      "target_rotvec_from_down": [
+        0.066447,
+        0.007606,
+        -0.113855
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 9.111606775819542e-06,
+      "ik_residual_orientation_rad": 6.9233747443310005e-06,
+      "ik_iterations": 5,
+      "joint_solution_rad": [
+        -0.000558,
+        0.133005,
+        -0.043944,
+        -2.828532,
+        0.371749,
+        2.941298,
+        -1.080845
+      ],
+      "executed_position_error_m": 7.527281766983322e-06,
+      "executed_orientation_error_rad": 9.467638896614103e-06,
+      "executed_ticks": 15
+    },
+    {
+      "index": 6,
+      "target_task_xyz": [
+        0.322875,
+        0.116846,
+        0.23549
+      ],
+      "target_rotvec_from_down": [
+        -0.042661,
+        0.021459,
+        -0.106878
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 1.953755086707638e-06,
+      "ik_residual_orientation_rad": 7.167432014480006e-07,
+      "ik_iterations": 4,
+      "joint_solution_rad": [
+        0.144225,
+        -0.493859,
+        0.230145,
+        -2.804962,
+        0.102339,
+        2.283078,
+        -0.401233
+      ],
+      "executed_position_error_m": 1.9866201809901795e-06,
+      "executed_orientation_error_rad": 1.0884904718780266e-06,
+      "executed_ticks": 15
+    },
+    {
+      "index": 7,
+      "target_task_xyz": [
+        0.339145,
+        -0.048627,
+        0.116156
+      ],
+      "target_rotvec_from_down": [
+        0.117082,
+        -0.081853,
+        0.073912
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 2.8851885571594306e-05,
+      "ik_residual_orientation_rad": 1.0621232538698382e-05,
+      "ik_iterations": 4,
+      "joint_solution_rad": [
+        0.164558,
+        -0.139595,
+        -0.317166,
+        -2.933698,
+        0.30318,
+        2.847,
+        -1.298739
+      ],
+      "executed_position_error_m": 2.8929220953587695e-05,
+      "executed_orientation_error_rad": 1.0675349491388089e-05,
+      "executed_ticks": 15
+    },
+    {
+      "index": 8,
+      "target_task_xyz": [
+        0.262602,
+        0.099793,
+        0.203162
+      ],
+      "target_rotvec_from_down": [
+        -0.078189,
+        0.112945,
+        -0.264859
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 2.5141065916142413e-05,
+      "ik_residual_orientation_rad": 1.429883833457141e-05,
+      "ik_iterations": 4,
+      "joint_solution_rad": [
+        0.151466,
+        -0.593066,
+        0.255671,
+        -2.95031,
+        0.159252,
+        2.22904,
+        -0.27147
+      ],
+      "executed_position_error_m": 2.5060357831195387e-05,
+      "executed_orientation_error_rad": 1.3623247996915985e-05,
+      "executed_ticks": 15
+    },
+    {
+      "index": 9,
+      "target_task_xyz": [
+        0.300418,
+        -0.104916,
+        0.129075
+      ],
+      "target_rotvec_from_down": [
+        0.088897,
+        -0.080807,
+        -0.268787
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 5.156855269842052e-05,
+      "ik_residual_orientation_rad": 4.101462790653906e-05,
+      "ik_iterations": 3,
+      "joint_solution_rad": [
+        -0.1012,
+        -0.269176,
+        -0.288531,
+        -3.018772,
+        0.093446,
+        2.815439,
+        -0.986031
+      ],
+      "executed_position_error_m": 5.162573660173616e-05,
+      "executed_orientation_error_rad": 4.10800265936442e-05,
+      "executed_ticks": 15
+    },
+    {
+      "index": 10,
+      "target_task_xyz": [
+        0.310683,
+        -0.090446,
+        0.049966
+      ],
+      "target_rotvec_from_down": [
+        0.0241,
+        -0.060391,
+        0.103197
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 0.00018002034235826134,
+      "ik_residual_orientation_rad": 0.0001119652752189752,
+      "ik_iterations": 7,
+      "joint_solution_rad": [
+        -0.211933,
+        0.142744,
+        0.078028,
+        -2.915788,
+        0.690407,
+        3.104334,
+        -1.713035
+      ],
+      "executed_position_error_m": 0.00018180877039909848,
+      "executed_orientation_error_rad": 0.00011206329156122864,
+      "executed_ticks": 15
+    },
+    {
+      "index": 11,
+      "target_task_xyz": [
+        0.279927,
+        0.132634,
+        0.110324
+      ],
+      "target_rotvec_from_down": [
+        -0.118351,
+        0.038732,
+        0.256293
+      ],
+      "accepted": true,
+      "reason": "accepted",
+      "ik_residual_position_m": 2.5957660768493284e-06,
+      "ik_residual_orientation_rad": 3.247964225438816e-07,
+      "ik_iterations": 4,
+      "joint_solution_rad": [
+        0.153426,
+        -0.179077,
+        0.339159,
+        -2.957661,
+        -0.090115,
+        2.709453,
+        -0.473431
+      ],
+      "executed_position_error_m": 2.66873630944124e-06,
+      "executed_orientation_error_rad": 6.646542326292258e-07,
+      "executed_ticks": 15
+    }
+  ]
+}

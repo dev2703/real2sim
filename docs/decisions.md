@@ -19,6 +19,8 @@ Conflict order: latest explicit user approval → plan contracts → approved en
 | D-011 | Architecture / system design documents | **APPROVED** (both documents) | 2026-10-12 |
 | D-012 | Calibration values before measurement | **APPROVED by user: use standard values**, labelled PROVISIONAL in `docs/calibration.md` | 2026-10-12 |
 | D-013 | Gripper channel of the 7-D Cartesian action label | **APPROVED: option A** (leader command / 100) | 2026-10-12 |
+| D-014 | Real-to-sim joint mapping and base height offset | **PENDING APPROVAL** (signs verified; recommend a 1.2 cm provisional base lift) | 2026-10-13 |
+| D-015 | Panda embodiment: gravity compensation, TCP frame, start pose | **IMPLEMENTED as engineering defaults; flagged for review** | 2026-10-13 |
 
 Approvals above were given by the user in chat on 2026-10-12 (evening, AEDT) in answer to the
 option sets below.
@@ -325,3 +327,63 @@ this is approved, `prepare --mode cartesian` refuses to run.
 - Per-tick rotation: median 0.015 rad, max 0.17 rad.
 - No one-tick jumps above 5 cm or 0.5 rad.
 - `|FK(leader) − FK(follower)|`: median 3.2 cm, p95 22 cm, which confirms D-003.
+
+---
+
+## D-014 Joint mapping signs and base height
+
+**Evidence (2026-10-13, FK on 8 sustained-grasp poses and the dataset rest pose).**
+
+| Signs (lift, elbow, wrist_flex) | Rest-pose gripper (x, z) m | Grasp mean (x, y, z) m |
+|---|---|---|
+| **(+, +, +) current** | 0.159, −0.003 | 0.338, 0.014, 0.047 |
+| any single or double flip | gripper 10–30 cm above or behind the base | grasp 12–44 cm above the table |
+
+Only the current signs put the grasp on the table in front of the robot, and the rest pose
+with the gripper resting near the table 16 cm in front of the base matches the real frames
+(`results/audit/montage/iphone/ep000_first.jpg`). The simulated rest pose, however, pushes the
+gripper 2.3 cm into the table (sim M2 report), and the FK grasp height is 1.3 cm above the ball
+radius. Both are consistent with the real base origin sitting about 1–2 cm above the table top
+(mounting plate / clamp), which the provisional identity `T_task_so101base` ignores.
+
+| Option | Benefits | Drawbacks |
+|---|---|---|
+| **A (recommended)** keep signs; add `robot_so101.base_z_offset = 0.012 m` (PROVISIONAL) so the base body sits 1.2 cm above the table top; task frame stays = base frame; the start pose then rests just above the table | removes the reset push-out; grasp height lands at ≈ ball radius; one config line | the 1.2 cm is inferred, not measured |
+| B keep signs and identity; start closed-loop from a physics-settled pose | no new assumption | every rollout starts with a 2 cm jump; data-derived bowl/ball heights stay 1 cm high |
+| C measure the base plate height on the real robot | exact | needs the operator |
+
+Recommendation: A now, C when the operator can measure. Changes: `configs/task.yaml`,
+`src/real2sim/sim/model.py` (place base at table top + offset), `docs/calibration.md`.
+
+**Posture check (2026-10-13 00:20).** Two workflow agents reported that the simulated arm looks
+elbow-down while the real arm is elbow-up at episode 12 frame 769. Forward kinematics with the
+current mapping at that frame puts the elbow at z = 0.203 m and the shoulder at 0.062 m: the
+simulated arm is elbow-up too. An offset grid search (lift, elbow, wrist_flex in ±40°) found no
+offset that keeps the 8 grasp positions fixed while changing the posture; every candidate moves
+the gripper by 1–3 cm for no gain. The visual difference is the camera's weakly constrained
+depth (PnP focal refinement was degenerate), not the joints. Signs and zero offsets stand.
+
+---
+
+## D-015 Panda embodiment engineering defaults (M5)
+
+Implemented in `src/real2sim/panda/` and `configs/sim_panda.yaml`; built by a workflow agent and
+reviewed by two lenses with 2-vote refutation. These are controller-level choices that do not
+change the shared 7-D contract, so they were applied as defaults; the user may veto.
+
+- **Gravity compensation on.** The unmodified Menagerie Panda position servos sag 3.9 mm under
+  gravity at the start pose, and because the contract is relative to the observed pose, five
+  zero-delta ticks drifted 10 mm. The env adds the arm's `qfrc_bias` as `qfrc_applied` each
+  physics substep (what the real Franka controller does internally); actuator gains unchanged.
+  Measured: sag and drift drop to ~1e-15 m.
+- **TCP frame.** A `panda_tcp` site injected into the assembled XML string (upstream file
+  unchanged) at +0.1034 m along the hand z (fingertip-pad centre), with axes permuted to the
+  SO-101 `gripperframe` semantics (x approach, y jaw hinge, z jaw opening).
+- **Gripper.** `actuator8` tendon mapping verified from the XML: g in [0,1] → opening 0–0.08 m.
+- **Start pose.** TCP at task (0.30, 0, 0.15) pointing down, from IK. It is not the SO-101
+  folded rest pose, which the Panda cannot reach; matched seeds match ball starts only.
+- **Reach.** 8 of 40 sampled targets at task x ≤ 0.28 m hit joint 4's limit; the ball start
+  and bowl centre are reachable. Moving the Panda base behind the task origin would widen reach
+  but changes the frame mapping, so it is not done.
+- **Domain gap.** Same camera pose; the Panda is about 3× taller and intrudes into the top of
+  the frame. Any E3 number must carry this caveat.

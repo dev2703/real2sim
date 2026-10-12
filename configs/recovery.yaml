@@ -1,0 +1,83 @@
+# Recovery package (plan §4 M6, docs/architecture.md §4.5). Specialist architecture and inputs
+# are decision D-005 (APPROVED option A). Inputs are observable only: the colour-tracking
+# estimates of ball/bowl geometry and the policy's own state; no simulator ground truth.
+#
+# PROVISIONAL: every detector threshold and FSM timing value below is a first guess that must be
+# re-measured on closed-loop replays (G4 instrumentation) before any E5/E6 result is reported.
+# Units: metres, radians, seconds -> ticks at the 10 Hz policy clock (D-007).
+
+name: recovery_mlp
+
+features:
+  # 29 observable floats, in order (D-005). Names are generated in
+  # real2sim.recovery.detector.FEATURE_NAMES and checked against this list by the tests.
+  input_dim: 29
+  layout:
+    - canonical_proprio: 13      # ee_xyz(3) + ee_rot6d(6) + ee_lin_vel(3) + gripper_obs(1), D-008
+    - ball_rel_ee_task: 3        # estimated ball position relative to EE, task frame
+    - bowl_rel_ee_task: 3        # estimated bowl centre relative to EE, task frame
+    - confidences: 2             # ball_conf, bowl_conf from the colour tracker in [0, 1]
+    - base_proposed_action: 7    # last ACT-proposed 7-D action (dx dy dz d_rx d_ry d_rz gripper)
+    - gripper_contact: 1         # 0/1 flag derived from gripper state (commanded closed, blocked)
+
+mlp:                              # D-005 option A
+  hidden: [256, 256, 128]
+  output_dim: 7
+  activation: relu
+  input_layernorm: true
+  dropout: 0.1
+  loss: huber
+  huber_delta: 0.05               # normalised units
+  optimizer: adamw
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  batch_size: 256
+  max_epochs: 200
+  early_stopping:
+    metric: heldout_loss          # held-out = whole correction episodes never seen in training
+    patience: 10
+    min_delta: 1.0e-5
+  heldout_fraction: 0.2           # fraction of correction episode ids held out (deterministic)
+  seed: 0
+  normalisation:                  # per-column (v - mean) / std from the training rows only
+    std_floor: 1.0e-3             # floor for a varying column's std (raw units)
+    const_tol: 1.0e-6             # std <= this -> column is constant in training: left unscaled
+                                  # (std := 1) and recorded in the checkpoint (x_const / y_const)
+  action_bounds:                  # identical to the ACT per-tick clamp (architecture §4.2)
+    translation_m: 0.03           # |dx|,|dy|,|dz| <= 0.03
+    rotation_rad: 0.3             # |d_rx|,|d_ry|,|d_rz| <= 0.3
+    gripper: [0.0, 1.0]
+
+dataset:
+  allowed_provenance: [scripted_oracle_sim, human_teleop_sim, real_intervention]
+  # rows are only used while the expert is in control: intervention_start <= tick <= intervention_end
+
+detector:                         # PROVISIONAL until measured on replays
+  ball_conf_min: 0.5              # below this the ball estimate is treated as "not visible"
+  ball_lost_ticks: 5              # K consecutive low-confidence ticks -> ball_lost -> STOP
+  rolled_away:
+    displacement_m: 0.04          # ball moved this far (xy, task frame) from its pre-grasp reference
+    release_m: 0.02               # hysteresis: counter resets only once displacement < this
+    ticks: 3                      # N consecutive ticks
+  approach_miss:
+    reach_radius_m: 0.05          # EE within this of the estimated ball ...
+    gripper_closed_cmd: 0.3       # ... while the proposed gripper target is below this (closing)
+    ticks: 8                      # ... for M ticks with no gripper contact
+  ee_drift:
+    ticks: 10                     # N consecutive ticks outside the corridor while not holding
+  pre_grasp_corridor:             # box in task frame around the start region (configs/task.yaml)
+    min_xyz: [0.15, -0.15, 0.00]
+    max_xyz: [0.45, 0.20, 0.25]
+  pre_grasp_phases: [approach, grasp]   # ball rules apply only here when a phase hint is given
+
+fsm:                              # PROVISIONAL until measured on replays
+  # On every takeover tick RecoveryLoop re-arms the detector: counters reset and the
+  # rolled_away reference is re-latched at the ball's current position (recovery/loop.py).
+  max_recovery_ticks: 80          # 8 s at 10 Hz from takeover; longer -> STOP
+  max_retries: 2                  # takeovers per episode; a further deviation -> STOP
+  handoff:
+    ticks: 5                      # H consecutive ticks satisfying every condition below
+    z_min_m: 0.02                 # EE clearance above the table (task frame z)
+    ball_conf_min: 0.5
+    ee_speed_max: 0.05            # |ee_vel| m/s
+    corridor: pre_grasp_corridor  # reuse detector.pre_grasp_corridor

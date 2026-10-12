@@ -1,0 +1,54 @@
+{
+  "table_rest_sink_m": 1.0701429652870686e-05,
+  "bowl_depth_0.0254_contains_ball": {
+    "ball_in_bowl": true,
+    "ball_resting": true,
+    "ball_xyz_task": [
+      0.32999999994557294,
+      -0.1000000000000393,
+      0.03808929857033949
+    ]
+  },
+  "bowl_depth_0.0450_contains_ball": {
+    "ball_in_bowl": true,
+    "ball_resting": true,
+    "ball_xyz_task": [
+      0.32999999994557294,
+      -0.1000000000000393,
+      0.03808929857033949
+    ]
+  },
+  "adapter_zero_delta_drift_m_5_ticks": 2.937965127560784e-15,
+  "gravity_compensation_ablation": {
+    "gravity_compensation_False": {
+      "hold_sag_m_30_ticks": 0.0039435528487891044,
+      "zero_delta_drift_m_5_ticks": 0.010308589873197386
+    },
+    "gravity_compensation_True": {
+      "hold_sag_m_30_ticks": 9.995034153488518e-16,
+      "zero_delta_drift_m_5_ticks": 2.937965127560784e-15
+    }
+  },
+  "adapter_30mm_step_reached_after_one_tick_m": 0.011192338553402403,
+  "adapter_30mm_step_reached_after_hold_m": [
+    0.029893171229816717,
+    -8.550120502493632e-07,
+    -4.699301145771884e-06
+  ],
+  "adapter_rejected_tick_tcp_motion_m": {
+    "rejected_tick": 0.005347866499280574,
+    "subsequent_hold_ticks": [
+      0.0014746097388228633,
+      0.0004068611135956782,
+      0.00011238196813299956,
+      3.1074876113389784e-05,
+      8.602070853923113e-06
+    ],
+    "after_6_rejected_ticks": 0.00419020204418168
+  },
+  "adapter_yaw_0p25rad_reached_error_rad": {
+    "contract": 8.252569084002357e-05,
+    "wrong_order": 0.3530449708796699
+  },
+  "joint4_qpos_minus_lower_limit_after_hold_rad": -2.220446049250313e-15
+}
