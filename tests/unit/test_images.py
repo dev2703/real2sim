@@ -45,7 +45,34 @@ def test_intrinsics_follow_letterbox():
     g = letterbox_geometry(1280, 720, 256, 192)
     K2 = adjust_intrinsics(K, g)
     assert K2[0, 0] == pytest.approx(200) and K2[1, 1] == pytest.approx(200)
-    assert K2[0, 2] == pytest.approx(128) and K2[1, 2] == pytest.approx(72 + 24)
+    # cv2.resize pixel-centre convention: x' = (x + 0.5) s - 0.5
+    assert K2[0, 2] == pytest.approx(640.5 * 0.2 - 0.5) and K2[1, 2] == pytest.approx(360.5 * 0.2 - 0.5 + 24)
+
+
+@pytest.mark.parametrize("src_w,src_h", [(1280, 720), (641, 479), (1920, 1080)])
+def test_adjusted_intrinsics_predict_where_a_blob_lands(src_w, src_h):
+    """Project a point with K, draw a blob there, letterbox; the centroid matches K' projection."""
+    K = np.array([[900.0, 0, src_w / 2 + 3.3], [0, 900.0, src_h / 2 - 7.1], [0, 0, 1]])
+    p_cam = np.array([0.05, -0.02, 1.0])
+    u, v = (K @ p_cam)[:2] / p_cam[2]
+    img = np.zeros((src_h, src_w, 3), np.uint8)
+    yy, xx = np.mgrid[:src_h, :src_w]
+    img[(xx - u) ** 2 + (yy - v) ** 2 <= 30**2] = 255
+    out, g = letterbox_rgb(img, 192, 256, pad_value=0)
+    w = out[..., 0].astype(np.float64)
+    ys, xs = np.mgrid[: out.shape[0], : out.shape[1]]
+    cu, cv = (w * xs).sum() / w.sum(), (w * ys).sum() / w.sum()
+    K2 = adjust_intrinsics(K, g)
+    u2, v2 = (K2 @ p_cam)[:2] / p_cam[2]
+    assert abs(u2 - cu) < 0.15 and abs(v2 - cv) < 0.15, ((u2, v2), (cu, cv))
+
+
+@pytest.mark.parametrize("src", [(1000, 3), (3, 1000), (1, 1), (2000, 1), (1, 2000)])
+def test_letterbox_extreme_aspect_ratios_stay_inside(src):
+    w, h = src
+    g = letterbox_geometry(w, h, 256, 192)
+    assert 1 <= g.resized_w <= 256 and 1 <= g.resized_h <= 192
+    assert g.pad_left + g.resized_w <= 256 and g.pad_top + g.resized_h <= 192
 
 
 def test_data_config_selects_single_audited_camera():
@@ -59,3 +86,10 @@ def test_data_config_selects_single_audited_camera():
     bad = dict(cfg, camera_keys=["observation.images.top"])
     with pytest.raises(ValueError, match="excluded"):
         validate_camera_keys(bad, ["observation.images.top"])
+
+
+def test_letterbox_rejects_non_positive_sizes():
+    with pytest.raises(ValueError):
+        letterbox_geometry(0, 10, 256, 192)
+    out, g = letterbox_rgb(np.zeros((1, 2000, 3), np.uint8), 192, 256)
+    assert out.shape == (192, 256, 3) and g.resized_h == 1

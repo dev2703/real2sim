@@ -240,11 +240,15 @@ def audit_camera(
     lag_median = float(np.median(lags)) if lags else None
     episodes_out: dict[int, dict] = {}
     for ep, v in per_ep_raw.items():
+        expected_ticks = v["n_expected"] // stride + (1 if v["n_expected"] % stride else 0)
+        # The episode table can agree with the data rows while the video itself is short or long;
+        # fall back to the decoded count so either kind of mismatch is flagged.
+        deficit = v["table_deficit"] or (len(v["metrics"]) - expected_ticks) * stride
         s = summarize_episode(
             v["metrics"],
-            n_expected=v["n_expected"] // stride + (1 if v["n_expected"] % stride else 0),
+            n_expected=expected_ticks,
             decode_failures=v["failures"],
-            video_frame_deficit=v["table_deficit"],
+            video_frame_deficit=deficit,
             timing_lag_frames=v["lag"],
             timing_lag_median=lag_median,
         )

@@ -59,6 +59,12 @@ def episode_labels(
     ``poses`` are achieved EE poses ``FK(q_obs)``; ``leader_poses`` (optional) ``FK(q_action)``
     feed only the diagnostic error, never the labels.
     """
+    if int(lead) != lead or lead < 1:
+        raise ValueError(f"lead must be a positive integer number of ticks, got {lead}")
+    if len(poses) == 0:
+        raise ValueError("episode has no poses")
+    if not (np.all(np.isfinite(poses)) and np.all(np.isfinite(gripper_obs_pct)) and np.all(np.isfinite(gripper_cmd_pct))):
+        raise ValueError("poses and gripper values must be finite")
     if gripper_source not in GRIPPER_SOURCES:
         raise ValueError(f"gripper_source must be one of {GRIPPER_SOURCES} (decision D-013)")
     n = len(poses)

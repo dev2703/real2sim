@@ -29,6 +29,17 @@ class JointMapping:
     offset_deg: tuple[float, ...] = (0, 0, 0, 0, 0)
     gripper_sim_range_rad: tuple[float, float] = (-0.1745, 1.7454)
 
+    def __post_init__(self) -> None:
+        if len(self.sign) != 5 or len(self.offset_deg) != 5:
+            raise ValueError("JointMapping needs exactly five signs and five offsets (arm joints)")
+        if any(s not in (1.0, -1.0) for s in map(float, self.sign)):
+            raise ValueError(f"joint signs must be +1 or -1, got {self.sign}")
+        if not all(np.isfinite(self.offset_deg)):
+            raise ValueError("joint offsets must be finite")
+        lo, hi = self.gripper_sim_range_rad
+        if not (np.isfinite(lo) and np.isfinite(hi) and lo < hi):
+            raise ValueError(f"gripper range must be finite with lo < hi, got {self.gripper_sim_range_rad}")
+
     @classmethod
     def from_task_config(cls, task_cfg: dict) -> JointMapping:
         r = task_cfg["robot_so101"]

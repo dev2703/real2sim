@@ -29,14 +29,16 @@ def exp_so3(w: np.ndarray) -> np.ndarray:
 def log_so3(R: np.ndarray) -> np.ndarray:
     """Rotation matrix -> rotation vector (numerically safe near 0 and pi)."""
     R = np.asarray(R, dtype=np.float64)
-    cos = np.clip((np.trace(R) - 1.0) / 2.0, -1.0, 1.0)
-    theta = np.arccos(cos)
+    anti = np.array([R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1]])
+    # atan2 keeps full precision near 0 and pi, where arccos of the trace loses ~1e-8.
+    theta = float(np.arctan2(np.linalg.norm(anti) / 2.0, (np.trace(R) - 1.0) / 2.0))
     if theta < 1e-6:
         # first-order: R ≈ I + hat(w)
         return 0.5 * np.array([R[2, 1] - R[1, 2], R[0, 2] - R[2, 0], R[1, 0] - R[0, 1]])
     if np.pi - theta < 1e-4:
-        # near pi: axis from the symmetric part, sign from the antisymmetric residue
-        B = (R + np.eye(3)) / 2.0
+        # near pi: axis from the symmetric part (R + R^T)/2 = I + (1 - cos) k k^T, sign from the
+        # antisymmetric residue. Using R itself mixes in sin(theta) K and loses ~1e-4 accuracy.
+        B = ((R + R.T) / 2.0 + np.eye(3)) / 2.0
         axis = np.sqrt(np.clip(np.diag(B), 0.0, None))
         i = int(np.argmax(axis))
         axis = B[:, i] / max(axis[i], _EPS)
@@ -59,9 +61,15 @@ def rot6d_from_matrix(R: np.ndarray) -> np.ndarray:
 
 def matrix_from_rot6d(x: np.ndarray) -> np.ndarray:
     a1, a2 = np.asarray(x[:3], np.float64), np.asarray(x[3:6], np.float64)
-    b1 = a1 / np.linalg.norm(a1)
+    n1 = np.linalg.norm(a1)
+    if not np.isfinite(n1) or n1 < 1e-9:
+        raise ValueError("rot6d first column is zero or non-finite")
+    b1 = a1 / n1
     a2 = a2 - np.dot(b1, a2) * b1
-    b2 = a2 / np.linalg.norm(a2)
+    n2 = np.linalg.norm(a2)
+    if not np.isfinite(n2) or n2 < 1e-9:
+        raise ValueError("rot6d columns are collinear or non-finite")
+    b2 = a2 / n2
     return np.stack([b1, b2, np.cross(b1, b2)], axis=1)
 
 

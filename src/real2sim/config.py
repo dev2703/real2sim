@@ -35,7 +35,10 @@ def validate_camera_keys(config: dict[str, Any], available_keys: list[str]) -> l
     missing = [k for k in keys if k not in available_keys]
     if missing:
         raise ValueError(f"camera keys not present in dataset: {missing}; available: {available_keys}")
-    excluded = {e["key"] for e in config.get("excluded_cameras", [])}
+    entries = config.get("excluded_cameras") or []
+    if not all(isinstance(e, dict) and "key" in e for e in entries):
+        raise ValueError("excluded_cameras entries must be mappings with a 'key' field")
+    excluded = {e["key"] for e in entries}
     clash = [k for k in keys if k in excluded]
     if clash:
         raise ValueError(f"camera keys both selected and excluded: {clash}")

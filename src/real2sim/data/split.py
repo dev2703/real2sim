@@ -65,6 +65,8 @@ def make_episode_split(
     val = sorted(ids[i] for i in perm[:n_val] if ids[i] not in excluded)
     train = sorted(ids[i] for i in perm[n_val:] if ids[i] not in excluded)
     assert not set(train) & set(val)
+    if not train:
+        raise ValueError("exclusions leave no training episodes")
     return SplitManifest(
         seed=seed,
         n_train=len(train),

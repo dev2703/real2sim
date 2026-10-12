@@ -84,6 +84,10 @@ class DerivedTickDataset(Dataset):
     def __getitem__(self, i: int) -> dict:
         t = int(self.indices[i])
         idx, pad = chunk_indices(self.arrays["ep_start"], self.arrays["ep_len"], t, self.chunk_size)
+        if "label_is_extrapolated" in self.arrays:
+            # The last tick of each cartesian episode has no successor; its zero-motion label is a
+            # placeholder, so the loss ignores it exactly like padding (labels.py contract).
+            pad = pad | self.arrays["label_is_extrapolated"][idx]
         n = self.normalizer
         item = {
             "observation.state": torch.from_numpy(n.state(self.arrays["state"][t]).astype(np.float32)),

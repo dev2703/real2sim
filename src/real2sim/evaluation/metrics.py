@@ -15,9 +15,11 @@ TRIAL_COLUMNS = [
     "experiment_id", "controller_source", "robot", "seed", "checkpoint_sha256", "checkpoint_step",
     "success", "lifted", "delivered", "released", "rolled_out", "ball_escaped_table",
     "phase_failed", "min_ee_ball_distance_m", "ticks", "ik_rejections", "mean_latency_ms",
-    "max_action_saturation", "video_path",
+    "max_action_saturation", "video_path", "abort",
 ]
-PHASES = ("approach", "grasp", "transport", "release", "none")
+# ``aborted``: the trial stopped on an exception (IK/physics/action error); kept as a row and never
+# merged into ``approach`` so a systematic harness bug cannot masquerade as a policy failure.
+PHASES = ("approach", "grasp", "transport", "release", "none", "aborted")
 
 
 @dataclass
@@ -28,6 +30,10 @@ class TrialTracker:
     ``success_hold_ticks`` consecutive ticks. ``approach_distance_m`` is the tool-site-to-ball-centre
     distance below which a failed trial counts as having reached the ball (``grasp`` rather than
     ``approach``); it must match docs/experiment_protocol.md section 3.
+
+    ``lifted`` means the ball was above the lift height *while held* (plan M7 "lift success"); a
+    ball knocked into the air without a grasp is not a lift. ``rolled_out`` means a released ball
+    left the bowl and the trial did not end in success (a bounce that settles back is not a roll).
     """
 
     success_hold_ticks: int
@@ -50,6 +56,12 @@ class TrialTracker:
     _held_prev: bool = False
     history: list[dict] = field(default_factory=list)
 
+    def __post_init__(self) -> None:
+        if int(self.success_hold_ticks) < 1:
+            raise ValueError("success_hold_ticks must be >= 1 (0 would declare success on tick 1)")
+        if not self.approach_distance_m > 0:
+            raise ValueError("approach_distance_m must be positive")
+
     def update(self, privileged: dict, *, saturation: float = 0.0, ik_rejected: bool = False) -> bool:
         """Record one tick; returns True once the success condition has held long enough."""
         self.ticks += 1
@@ -57,8 +69,8 @@ class TrialTracker:
         self.ik_rejections += int(ik_rejected)
         self.min_ee_ball_distance_m = min(self.min_ee_ball_distance_m,
                                           float(privileged["ee_ball_distance_m"]))
-        self.lifted |= bool(privileged["lifted"])
         held = bool(privileged["ball_held"])
+        self.lifted |= bool(privileged["lifted"]) and held
         self.held_ever |= held
         if self._held_prev and not held:
             self.released = True
@@ -90,20 +102,31 @@ class TrialTracker:
         return self.success
 
     def phase_failed(self) -> str:
+        """Furthest phase reached (docs/experiment_protocol.md section 3).
+
+        approach: never held and never came within ``approach_distance_m``; grasp: reached or
+        touched the ball but never lifted it while held; transport: lifted but never in the bowl;
+        release: in the bowl but not a stable, released success.
+        """
+        # Checked from the furthest phase back, so the label is the furthest phase reached.
         if self.success:
             return "none"
-        if not self.held_ever and not self.lifted:
-            return "approach" if self.min_ee_ball_distance_m > self.approach_distance_m else "grasp"
-        if not self.delivered:
+        if self.delivered:
+            return "release"
+        if self.lifted:
             return "transport"
-        return "release"
+        if self.held_ever or self.min_ee_ball_distance_m <= self.approach_distance_m:
+            return "grasp"
+        return "approach"
 
-    def row(self, **static) -> dict:
+    def row(self, *, abort: str | None = None, **static) -> dict:
         row = dict(static)
         row.update({
             "success": self.success, "lifted": self.lifted, "delivered": self.delivered,
-            "released": self.released, "rolled_out": self.rolled_out,
-            "ball_escaped_table": self.ball_escaped_table, "phase_failed": self.phase_failed(),
+            "released": self.released, "rolled_out": self.rolled_out and not self.success,
+            "ball_escaped_table": self.ball_escaped_table,
+            "phase_failed": "aborted" if abort else self.phase_failed(),
+            "abort": abort or None,
             "min_ee_ball_distance_m": (None if not np.isfinite(self.min_ee_ball_distance_m)
                                        else round(self.min_ee_ball_distance_m, 5)),
             "ticks": self.ticks, "ik_rejections": self.ik_rejections,
@@ -121,6 +144,7 @@ def summarize(rows: list[dict]) -> dict:
     lat = [r["mean_latency_ms"] for r in rows if r["mean_latency_ms"] is not None]
     return {
         "n": n,
+        "aborted": int(sum(bool(r.get("abort")) for r in rows)),
         "successes": count("success"),
         "success_rate": (count("success") / n) if n else None,
         "lifted": count("lifted"), "delivered": count("delivered"), "released": count("released"),

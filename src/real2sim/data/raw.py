@@ -206,6 +206,26 @@ class RawDataset:
                     yield pos, t, frame
                 pos += 1
 
+    def count_frames(self, key: str, episode_index: int, tol: float = 1e-4) -> int:
+        """Number of video frames inside the episode's ``[from_ts, to_ts)`` window (demux only)."""
+        seg = self.video_segment(key, episode_index)
+        if not seg.exists:
+            raise FileNotFoundError(seg.path)
+        n = 0
+        with av.open(str(seg.path)) as container:
+            stream = container.streams.video[0]
+            tb = float(stream.time_base)
+            container.seek(int(seg.from_ts / tb), stream=stream, backward=True, any_frame=False)
+            for packet in container.demux(stream):
+                if packet.pts is None:
+                    continue
+                t = packet.pts * tb
+                if seg.from_ts - tol <= t < seg.to_ts - tol:
+                    n += 1
+                elif t >= seg.to_ts - tol and packet.dts is not None and packet.dts * tb >= seg.to_ts - tol:
+                    break
+        return n
+
     # ------------------------------------------------------------------ provenance
     def file_manifest(self, hash_videos: bool = False, hash_limit_bytes: int = 64 << 20) -> list[dict]:
         rows = []

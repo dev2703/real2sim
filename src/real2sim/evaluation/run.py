@@ -235,12 +235,17 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         adapter_stats = getattr(getattr(ctrl, "action_adapter", None), "stats", None)
         if adapter_stats is not None and adapter_stats["rejected"] != tracker.ik_rejections:
             raise RuntimeError("Panda adapter rejection tally disagrees with the trial tracker")
+        # The first inference includes one-off warm-up (allocation, kernel selection); report it
+        # separately so mean_latency_ms describes steady-state control latency.
+        steady = lat[1:] if len(lat) > 1 else lat
         row = tracker.row(
             experiment_id=exp_id, controller_source=source, robot=robot, seed=seed,
             checkpoint_sha256=meta["checkpoint_sha256"], checkpoint_step=meta["checkpoint_step"],
-            mean_latency_ms=(round(float(np.mean(lat)), 2) if lat else None), video_path=video_path)
+            mean_latency_ms=(round(float(np.mean(steady)), 2) if steady else None), video_path=video_path,
+            abort=abort)
         rows.append(row)
-        trials.append({**row, "abort": abort, "wall_s": round(time.perf_counter() - t0, 2),
+        trials.append({**row, "wall_s": round(time.perf_counter() - t0, 2),
+                       "warmup_latency_ms": (round(float(lat[0]), 2) if lat else None),
                        "policy_calls": getattr(ctrl, "n_policy_calls", 0),
                        "max_latency_ms": (round(float(np.max(lat)), 2) if lat else None),
                        "adapter_stats": _compact_stats(adapter_stats),

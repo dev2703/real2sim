@@ -57,6 +57,18 @@ def compute_stats(x: np.ndarray) -> dict:
     }
 
 
+def check_episode_integrity(g, ep: int, expected_len: int, fps: float) -> None:
+    """Refuse episodes whose rows are missing, out of order or unevenly timed (raw data contract)."""
+    if len(g) != expected_len:
+        raise ValueError(f"episode {ep}: {len(g)} rows but episode table says {expected_len}")
+    fi = g["frame_index"].to_numpy()
+    if len(fi) == 0 or fi[0] != 0 or np.any(np.diff(fi) != 1):
+        raise ValueError(f"episode {ep}: frame_index is not contiguous from 0")
+    ts = g["timestamp"].to_numpy(dtype=np.float64)
+    if len(ts) > 1 and not np.allclose(np.diff(ts), 1.0 / fps, atol=1e-3):
+        raise ValueError(f"episode {ep}: timestamps are not uniform at {fps} fps")
+
+
 def prepare_joint(root: Path, cfg: dict, out_dir: Path, repo_id: str | None, revision: str | None, episodes: list[int] | None = None) -> dict:
     return prepare(root, cfg, out_dir, repo_id, revision, episodes=episodes, mode="joint")
 
@@ -102,6 +114,7 @@ def prepare(
     ticks = []
     for ep in keep:
         g = ds.episode_rows(ep)
+        check_episode_integrity(g, ep, ds.episode_length(ep), ds.fps)
         rows = episode_tick_rows(len(g), stride)
         ticks.append((ep, g, rows))
     N = sum(len(r) for _, _, r in ticks)
@@ -153,10 +166,29 @@ def prepare(
         offset = 0
         for ep, _, rows in ticks:
             want = set(rows.tolist())
+            g_rows = ds.episode_rows(ep)
+            row_ts = g_rows["timestamp"].to_numpy(dtype=np.float64)
+            seg = ds.video_segment(key, ep)
+            # A frame dropped at the segment start shifts every image while keeping the tick count
+            # (at stride 3) and the relative timestamps intact; only absolute counts reveal it.
+            table_frames = int(round((seg.to_ts - seg.from_ts) * ds.fps))
+            if table_frames != len(g_rows):
+                raise RuntimeError(f"{key} episode {ep}: video segment spans {table_frames} frames for "
+                                   f"{len(g_rows)} data rows (image/state misalignment)")
+            video_frames = ds.count_frames(key, ep)
+            if video_frames != len(g_rows):
+                raise RuntimeError(f"{key} episode {ep}: video holds {video_frames} frames for "
+                                   f"{len(g_rows)} data rows (image/state misalignment)")
             got = 0
-            for pos, _pts, frame in ds.iter_frames(key, ep, stride=stride):
+            for pos, pts, frame in ds.iter_frames(key, ep, stride=stride):
                 if pos not in want:
                     raise RuntimeError(f"unexpected frame position {pos} in episode {ep}")
+                # Count alone cannot detect a frame dropped at the start of a segment (at stride 3
+                # the tick count is unchanged 2/3 of the time); compare each frame's timestamp.
+                if abs((pts - seg.from_ts) - row_ts[pos]) > 0.5 / ds.fps:
+                    raise RuntimeError(
+                        f"{key} episode {ep}: frame {pos} at t={pts - seg.from_ts:.4f}s does not match "
+                        f"data row timestamp {row_ts[pos]:.4f}s (image/state misalignment)")
                 rgb = frame.to_ndarray(format="rgb24")
                 img, geometry = letterbox_rgb(rgb, H, W, pad_value=pad_value)
                 mm[offset + got] = img
@@ -170,12 +202,20 @@ def prepare(
         image_files[key] = path.name
         print(f"{key}: {N} frames in {time.time() - t0:.1f}s", file=sys.stderr)
 
+    for name in ("state", "action"):
+        if not np.all(np.isfinite(arrays[name])):
+            bad = np.unique(arrays["episode_index"][~np.isfinite(arrays[name]).all(axis=1)])
+            raise ValueError(f"non-finite {name} values in episodes {bad.tolist()}")
     np.savez(out_dir / "arrays.npz", **arrays)
 
     train_mask = np.isin(arrays["episode_index"], split.train)
+    if not train_mask.any():
+        raise ValueError("no training ticks selected; statistics would be undefined")
+    # Extrapolated end-of-episode labels (cartesian) are not demonstrations: keep them out of stats.
+    action_mask = train_mask & ~arrays.get("label_is_extrapolated", np.zeros_like(train_mask))
     stats = {
         "observation.state": compute_stats(arrays["state"][train_mask]),
-        "action": compute_stats(arrays["action"][train_mask]),
+        "action": compute_stats(arrays["action"][action_mask]),
         "image_normalization": {"mode": "imagenet", "mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]},
         "computed_on": "train episodes only",
         "train_episodes": split.train,

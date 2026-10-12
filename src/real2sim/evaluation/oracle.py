@@ -373,9 +373,9 @@ def run_trials(*, config: Path, eval_config: Path, n_trials: int, seed_start: in
         row = tracker.row(experiment_id=EXPERIMENT_ID, controller_source=CONTROLLER_SOURCE,
                           robot="so101", seed=seed, checkpoint_sha256=None, checkpoint_step=None,
                           mean_latency_ms=(round(float(np.mean(lat)), 2) if lat else None),
-                          video_path=video_path)
+                          video_path=video_path, abort=abort)
         rows.append(row)
-        trials.append({**row, "abort": abort, "wall_s": round(time.perf_counter() - t0, 2),
+        trials.append({**row, "wall_s": round(time.perf_counter() - t0, 2),
                        "policy_calls": ctrl.n_policy_calls, "final_phase": ctrl.phase,
                        "first_held_tick": ctrl._first_held_tick, "phase_log": ctrl.phase_log,
                        "start_pose": settle, "history": tracker.history, "ticks_detail": tick_log})

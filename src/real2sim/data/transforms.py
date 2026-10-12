@@ -32,9 +32,11 @@ class LetterboxGeometry:
 
 
 def letterbox_geometry(src_w: int, src_h: int, dst_w: int, dst_h: int) -> LetterboxGeometry:
+    if min(src_w, src_h, dst_w, dst_h) <= 0:
+        raise ValueError("image sizes must be positive")
     scale = min(dst_w / src_w, dst_h / src_h)
-    rw = int(round(src_w * scale))
-    rh = int(round(src_h * scale))
+    rw = min(dst_w, max(1, int(round(src_w * scale))))  # never 0 (cv2.resize would fail)
+    rh = min(dst_h, max(1, int(round(src_h * scale))))
     return LetterboxGeometry(
         src_w=src_w,
         src_h=src_h,
@@ -69,10 +71,16 @@ def to_chw_float(img_hwc_uint8: np.ndarray) -> np.ndarray:
 
 
 def adjust_intrinsics(K: np.ndarray, g: LetterboxGeometry) -> np.ndarray:
-    """Map a 3x3 pinhole matrix from the source image to the letterboxed image."""
+    """Map a 3x3 pinhole matrix from the source image to the letterboxed image.
+
+    Uses the per-axis scale actually applied (``resized/src``, which differs from ``g.scale`` by
+    rounding) and the pixel-centre convention of ``cv2.resize``: ``x' = (x + 0.5) s - 0.5``.
+    """
     K2 = np.array(K, dtype=np.float64).copy()
-    K2[0, 0] *= g.scale
-    K2[1, 1] *= g.scale
-    K2[0, 2] = K2[0, 2] * g.scale + g.pad_left
-    K2[1, 2] = K2[1, 2] * g.scale + g.pad_top
+    sx = g.resized_w / g.src_w
+    sy = g.resized_h / g.src_h
+    K2[0, 0] *= sx
+    K2[1, 1] *= sy
+    K2[0, 2] = (K2[0, 2] + 0.5) * sx - 0.5 + g.pad_left
+    K2[1, 2] = (K2[1, 2] + 0.5) * sy - 0.5 + g.pad_top
     return K2
