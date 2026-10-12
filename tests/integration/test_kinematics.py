@@ -10,7 +10,7 @@ from real2sim.config import load_yaml
 from real2sim.geometry.so101_fk import So101FK
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics, xml_forward_kinematics
-from real2sim.sim.model import DEFAULT_CONFIG, ROOT, scene_xml, task_frame_offset
+from real2sim.sim.model import DEFAULT_CONFIG, ROOT, base_z_offset, scene_xml, task_frame_offset
 
 pytestmark = pytest.mark.integration
 
@@ -93,18 +93,22 @@ def test_invalid_ik_input(env):
 
 
 def test_base_relative_fk_is_invariant_to_base_z_offset(env):
-    """With task.yaml robot_so101.base_z_offset set (D-014 option A), base-relative poses from
-    NativeKinematics and the dataset-side FK are unchanged; only the world placement moves."""
+    """With task.yaml robot_so101.base_z_offset set (D-014 option A, approved), base-relative poses
+    from NativeKinematics and the dataset-side FK are unchanged versus a base placed directly on
+    the table top; only the world placement moves by the offset."""
     config = load_yaml(DEFAULT_CONFIG)
-    task = copy.deepcopy(load_yaml(ROOT / config["task_config"]))
-    task["robot_so101"]["base_z_offset"] = 0.012
-    model = mujoco.MjModel.from_xml_string(scene_xml(config, task))
-    lifted = NativeKinematics(model, config)
-    reference = NativeKinematics(env.model, config)
-    np.testing.assert_allclose(lifted.base_pos - reference.base_pos, [0, 0, 0.012])
+    task = load_yaml(ROOT / config["task_config"])
+    lift = base_z_offset(task)
+    assert lift > 0  # D-014 approved: the env fixture is the lifted scene
+    flat = copy.deepcopy(task)
+    del flat["robot_so101"]["base_z_offset"]
+    reference = NativeKinematics(mujoco.MjModel.from_xml_string(scene_xml(config, flat)), config)
+    lifted = NativeKinematics(env.model, config)
+    np.testing.assert_allclose(lifted.base_pos - reference.base_pos, [0, 0, lift])
     np.testing.assert_allclose(lifted.base_pos, task_frame_offset(task))
+    np.testing.assert_allclose(reference.base_pos, task_frame_offset(flat))
     rng = np.random.default_rng(5)
     for q in rng.uniform(env.limits[:, 0], env.limits[:, 1], size=(5, 6)):
         np.testing.assert_allclose(lifted.forward(q), reference.forward(q), atol=1e-12)
         np.testing.assert_allclose(lifted.data.site_xpos[lifted.site] - reference.data.site_xpos[reference.site],
-                                   [0, 0, 0.012], atol=1e-12)
+                                   [0, 0, lift], atol=1e-12)
