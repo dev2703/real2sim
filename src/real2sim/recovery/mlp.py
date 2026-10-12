@@ -160,9 +160,18 @@ class RecoveryMLP(nn.Module):
         return self.net((x_raw - self.x_mean) / self.x_std)
 
     def forward(self, x_raw: torch.Tensor) -> torch.Tensor:
-        """Raw 7-D action, de-normalised and clamped to the per-tick bounds."""
+        """Raw 7-D action, de-normalised and clamped exactly like the ACT action adapters.
+
+        Translation and rotation are clamped by vector *norm* (direction preserved), as
+        ``CartesianActionAdapter`` / ``PandaCartesianActionAdapter`` do; a per-component box would
+        let a diagonal step reach sqrt(3) x the limit and change its direction. Gripper in [lo, hi].
+        """
         y = self.forward_normalised(x_raw) * self.y_std + self.y_mean
-        return torch.maximum(torch.minimum(y, self.bound_hi), self.bound_lo)
+        dp, dr, g = y[..., :3], y[..., 3:6], y[..., 6:7]
+        dp = dp * torch.clamp(self.spec.translation_m / dp.norm(dim=-1, keepdim=True).clamp_min(1e-12), max=1.0)
+        dr = dr * torch.clamp(self.spec.rotation_rad / dr.norm(dim=-1, keepdim=True).clamp_min(1e-12), max=1.0)
+        g = g.clamp(self.spec.gripper[0], self.spec.gripper[1])
+        return torch.cat([dp, dr, g], dim=-1)
 
     def check_feature_names(self, feature_names: list[str]) -> None:
         if list(feature_names) != self.feature_names:

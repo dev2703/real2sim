@@ -44,7 +44,7 @@ def sample_targets(n: int, seed: int) -> list[np.ndarray]:
 
 def validate(n: int = 12, seed: int = 0, config_path=DEFAULT_CONFIG) -> dict:
     env = PandaPickPlaceEnv(config_path, render_images=False)
-    ik = PandaIK(env.model, env.config)
+    ik = PandaIK(env.model, env.config, task_origin=env.offset)
     cfg = env.config["ik"]
     rows = []
     for i, target in enumerate(sample_targets(n, seed)):

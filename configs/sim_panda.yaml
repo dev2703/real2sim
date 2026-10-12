@@ -27,7 +27,7 @@ max_finger_opening_m: 0.08    # 2 x 0.04 m slide range; gripper_semantic = openi
 # (0.30, 0.00, 0.15) pointing straight down (site x = -z_task, site z = +x_task), seeded from
 # the upstream 'home' keyframe (0 0 0 -1.5708 0 1.5708 -0.7854). The env checks at construction
 # that FK of this pose reproduces that target within the IK tolerances.
-initial_qpos: [0.0, -0.397806, 0.0, -3.033296, 0.0, 2.635489, -0.785398]
+initial_qpos: [0.0, -0.447344, 0.0, -3.028278, 0.0, 2.580955, -0.785398]  # re-solved 2026-10-13 in the shared task frame (base lift D-014)
 initial_tcp_task_xyz: [0.30, 0.0, 0.15]
 initial_gripper_opening_m: 0.08
 

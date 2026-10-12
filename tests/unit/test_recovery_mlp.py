@@ -80,8 +80,30 @@ def test_forward_shape_and_bounds(cfg):
     assert y.shape == (64, 7)
     lo, hi = model.spec.bounds()
     assert torch.all(y >= lo - 1e-7) and torch.all(y <= hi + 1e-7)
-    assert torch.any(y[:, :3].abs() == 0.03) or torch.any(y[:, 3:6].abs() == 0.3)  # clamp is active
+    # Clamp is by norm, exactly like the ACT action adapters, and it is active here.
+    assert torch.all(y[:, :3].norm(dim=1) <= 0.03 + 1e-6) and torch.all(y[:, 3:6].norm(dim=1) <= 0.3 + 1e-6)
+    assert torch.any((y[:, :3].norm(dim=1) - 0.03).abs() < 1e-6)
     assert torch.all(y[:, 6] >= 0) and torch.all(y[:, 6] <= 1)
+
+
+def test_norm_clamp_preserves_direction_and_leaves_small_steps_alone(cfg):
+    model = RecoveryMLP(MLPSpec.from_config(cfg))
+    model.set_normalisation(np.zeros(29), np.ones(29), np.zeros(7), np.ones(7))
+    with torch.no_grad():
+        for p in model.parameters():
+            p.zero_()
+        big = torch.tensor([0.3, 0.3, 0.3, 1.0, -1.0, 0.0, 2.0])
+        small = torch.tensor([0.001, -0.002, 0.0, 0.01, 0.0, 0.0, 0.5])
+        for target, expect_clamped in ((big, True), (small, False)):
+            model.y_mean.copy_(target)
+            y = model(torch.zeros(1, 29))[0]
+            if expect_clamped:
+                assert y[:3].norm() == pytest.approx(0.03, rel=1e-5) and y[3:6].norm() == pytest.approx(0.3, rel=1e-5)
+                cos = torch.dot(y[:3], target[:3]) / (y[:3].norm() * target[:3].norm())
+                assert cos == pytest.approx(1.0, abs=1e-6)  # direction unchanged
+                assert y[6] == pytest.approx(1.0)
+            else:
+                torch.testing.assert_close(y, target)
 
 
 def test_save_load_round_trip_and_name_mismatch(cfg, tmp_path):

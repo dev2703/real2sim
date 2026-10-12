@@ -16,6 +16,7 @@ import copy
 import csv
 import json
 import math
+import os
 import platform
 import random
 import sys
@@ -33,6 +34,14 @@ from real2sim.policy.act import build_act_config, resolve_device, save_checkpoin
 from real2sim.policy.dataset import DerivedTickDataset
 
 HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "l1_raw_mean", "l1_raw_per_dim", "lr", "sec_per_step", "wall_s", "samples"]
+
+
+def update_last_link(checkpoints: Path, target_name: str) -> None:
+    """Point ``checkpoints/last`` at ``target_name`` atomically (no window without a ``last``)."""
+    tmp = checkpoints / f".last.tmp.{os.getpid()}"
+    tmp.unlink(missing_ok=True)
+    tmp.symlink_to(target_name)
+    os.replace(tmp, checkpoints / "last")
 
 
 def seed_everything(seed: int) -> None:
@@ -141,11 +150,15 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     }
     (out_dir / "resolved_config.yaml").write_text(yaml.safe_dump(resolved, sort_keys=False))
     hist_path = out_dir / "training_history.csv"
-    new_file = not hist_path.exists() or resume is None
-    hist_f = hist_path.open("w" if new_file else "a", newline="")
+    kept: list[dict] = []
+    if resume is not None and hist_path.exists():
+        # Drop rows logged after the resumed checkpoint so steps are never duplicated.
+        with hist_path.open(newline="") as f:
+            kept = [r for r in csv.DictReader(f) if int(r["step"]) <= start_step]
+    hist_f = hist_path.open("w", newline="")
     writer = csv.DictWriter(hist_f, fieldnames=HISTORY_FIELDS)
-    if new_file:
-        writer.writeheader()
+    writer.writeheader()
+    writer.writerows(kept)
 
     action_std = np.asarray(train_ds.normalizer.action_std, np.float64)
     it = infinite(train_loader)
@@ -202,8 +215,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         if step % int(tcfg["save_every"]) == 0 or step == steps:
             ck = out_dir / "checkpoints" / f"{step:06d}"
             save_checkpoint(ck, policy, data_dir / "stats.json", manifest, {"step": step, "name": cfg.get("name"), "device": device, "last_val": last_val, "wall_s": round(time.time() - t_start, 1)}, optimizer)
-            (out_dir / "checkpoints" / "last").unlink(missing_ok=True)
-            (out_dir / "checkpoints" / "last").symlink_to(ck.name)
+            update_last_link(out_dir / "checkpoints", ck.name)
             print(f"  saved {ck}", file=sys.stderr)
             t_window = time.time()
     hist_f.close()

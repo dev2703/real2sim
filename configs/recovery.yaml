@@ -43,9 +43,9 @@ mlp:                              # D-005 option A
     std_floor: 1.0e-3             # floor for a varying column's std (raw units)
     const_tol: 1.0e-6             # std <= this -> column is constant in training: left unscaled
                                   # (std := 1) and recorded in the checkpoint (x_const / y_const)
-  action_bounds:                  # identical to the ACT per-tick clamp (architecture §4.2)
-    translation_m: 0.03           # |dx|,|dy|,|dz| <= 0.03
-    rotation_rad: 0.3             # |d_rx|,|d_ry|,|d_rz| <= 0.3
+  action_bounds:                  # identical to the ACT per-tick clamp (architecture §4.2): by NORM
+    translation_m: 0.03           # ||(dx, dy, dz)|| <= 0.03
+    rotation_rad: 0.3             # ||(d_rx, d_ry, d_rz)|| <= 0.3
     gripper: [0.0, 1.0]
 
 dataset:

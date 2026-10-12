@@ -151,9 +151,9 @@ class So101PickPlaceEnv:
         mujoco.mj_forward(self.model, self.data)
         self.steps = 0
         self._ready = True
-        # Known limitation (docs/decisions.md D-014, pending): with the base on the table top the
-        # clamped dataset rest pose puts gripper geoms into the table, so the first control tick
-        # is a contact-driven jump. Recorded here so every trial carries the confound explicitly.
+        # Known limitation: the clamped dataset rest pose still puts gripper geoms 11.4 mm into the
+        # table with the D-014 lift, so the first control tick is a contact-driven jump. Recorded
+        # here so every trial carries the confound explicitly.
         self.start_pose = self._robot_table_penetration()
         return self.observation(), self.info()
 

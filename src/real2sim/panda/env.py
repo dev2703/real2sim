@@ -270,11 +270,11 @@ class PandaPickPlaceEnv:
 
     def ee_pose(self) -> np.ndarray:
         """``T_task_tcp`` (4x4) of the ``panda_tcp`` site from the current MjData."""
-        R_base = self.data.xmat[self.base_body].reshape(3, 3)
-        p_base = self.data.xpos[self.base_body]
+        # The task frame is the shared SO-101 task frame (world translated by ``self.offset``, no
+        # rotation), NOT the Panda base frame: the Panda base sits base_z_offset below the origin.
         T = np.eye(4)
-        T[:3, :3] = R_base.T @ self.data.site_xmat[self.site_id].reshape(3, 3)
-        T[:3, 3] = R_base.T @ (self.data.site_xpos[self.site_id] - p_base)
+        T[:3, :3] = self.data.site_xmat[self.site_id].reshape(3, 3)
+        T[:3, 3] = self.data.site_xpos[self.site_id] - self.offset
         return T
 
     def canonical_proprio(self) -> np.ndarray:

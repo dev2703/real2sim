@@ -231,3 +231,45 @@ def test_project_path_resolution(tmp_path):
     assert project_path("configs/data.yaml") == REPO_ROOT / "configs/data.yaml"
     assert project_path(tmp_path) == tmp_path  # absolute paths pass through
     assert project_path("~/x").is_absolute() and "~" not in str(project_path("~/x"))
+
+
+# ------------------------------------------------------------------ contract clock / image
+class _EnvStub:
+    control_hz = 10
+    data_config = {"image": {"height": 192, "width": 256}}
+
+
+def _contract(**over):
+    c = {"policy_hz": 10.0, "letterbox": {"src_w": 1280, "src_h": 720, "dst_w": 256, "dst_h": 192}}
+    c.update(over)
+    return c
+
+
+def test_contract_timing_and_image_accepts_matching_checkpoint():
+    from real2sim.evaluation.run import check_contract_timing_and_image
+
+    check_contract_timing_and_image(_contract(), _EnvStub())
+
+
+@pytest.mark.parametrize("over,match", [
+    ({"policy_hz": 30.0}, "policy_hz"),
+    ({"policy_hz": None}, "policy_hz"),
+    ({"letterbox": {"src_w": 1280, "src_h": 720, "dst_w": 320, "dst_h": 240}}, "letterbox"),
+    ({"letterbox": {"src_w": 640, "src_h": 480, "dst_w": 256, "dst_h": 192}}, "aspect"),
+])
+def test_contract_timing_and_image_rejects_mismatch(over, match):
+    from real2sim.evaluation.run import check_contract_timing_and_image
+
+    with pytest.raises(ContractError, match=match):
+        check_contract_timing_and_image(_contract(**over), _EnvStub())
+
+
+# ------------------------------------------------------------------ checkpoint link
+def test_update_last_link_is_atomic_and_repointable(tmp_path):
+    from real2sim.policy.train import update_last_link
+
+    for name in ("000002", "000004"):
+        (tmp_path / name).mkdir()
+        update_last_link(tmp_path, name)
+        assert (tmp_path / "last").resolve() == (tmp_path / name).resolve()
+    assert not list(tmp_path.glob(".last.tmp.*"))

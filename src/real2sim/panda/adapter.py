@@ -55,7 +55,7 @@ class PandaIK:
     Both residuals are hard acceptance criteria (no soft orientation).
     """
 
-    def __init__(self, model: mujoco.MjModel, config: dict):
+    def __init__(self, model: mujoco.MjModel, config: dict, *, task_origin=None):
         self.model = model
         self.data = mujoco.MjData(model)
         self.config = config["ik"]
@@ -69,7 +69,11 @@ class PandaIK:
         base = model.body(BASE_BODY).id
         if not np.allclose(model.body_quat[base], [1, 0, 0, 0]):
             raise ValueError("base-frame kinematics assume an unrotated robot base")
-        self.base_pos = model.body_pos[base].copy()
+        # Poses are expressed in the shared task frame: world minus the task origin (which is NOT
+        # the Panda base position; see real2sim.panda.model.panda_base_world).
+        if task_origin is None:
+            raise ValueError("PandaIK needs the task-frame origin (env.offset)")
+        self.task_origin = np.asarray(task_origin, float).reshape(3)
         self.ball_geoms = {g for g in range(model.ngeom)
                           if model.body(model.geom_bodyid[g]).name == "ball"}
         self.finger_geoms = {g for g in range(model.ngeom)
@@ -87,7 +91,7 @@ class PandaIK:
                 self.data.qpos[self.model.jnt_qposadr[self.model.joint(name).id]] = finger_opening / 2
         mujoco.mj_forward(self.model, self.data)
         return make_T(self.data.site_xmat[self.site].reshape(3, 3),
-                      self.data.site_xpos[self.site] - self.base_pos)
+                      self.data.site_xpos[self.site] - self.task_origin)
 
     def set_finger_opening(self, finger_opening: float) -> None:
         """Pose the IK data's fingers (total opening, m) so penetration checks see them."""
@@ -196,7 +200,7 @@ class PandaCartesianActionAdapter:
 
     def __init__(self, env: PandaPickPlaceEnv):
         self.env = env
-        self.ik = PandaIK(env.model, env.config)
+        self.ik = PandaIK(env.model, env.config, task_origin=env.offset)
         limits = env.config["action_limits"]
         self.max_translation = float(limits["max_translation_m"])
         self.max_rotation = float(limits["max_rotation_rad"])

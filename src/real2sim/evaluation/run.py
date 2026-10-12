@@ -107,11 +107,31 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def check_contract_timing_and_image(contract: dict, env) -> None:
+    """The checkpoint's clock and image transform must equal the simulator's (plan section 7).
+
+    A 30 Hz checkpoint at 10 Hz control would mis-scale the velocity feature and action timing; a
+    different letterbox would change the image geometry. Both pass the shape checks silently.
+    """
+    hz = contract.get("policy_hz")
+    if hz is None or abs(float(hz) - float(env.control_hz)) > 1e-9:
+        raise ContractError(f"checkpoint policy_hz {hz} != simulator control_hz {env.control_hz}")
+    lb = contract.get("letterbox") or {}
+    img = env.data_config["image"]
+    if (lb.get("dst_h"), lb.get("dst_w")) != (img["height"], img["width"]):
+        raise ContractError(f"checkpoint letterbox {lb.get('dst_h')}x{lb.get('dst_w')} != simulator "
+                            f"{img['height']}x{img['width']}")
+    src_aspect = lb.get("src_w", 0) / max(lb.get("src_h", 1), 1)
+    if abs(src_aspect - 16 / 9) > 1e-3:
+        raise ContractError(f"checkpoint was trained on a {src_aspect:.3f} aspect source; the simulator renders 16:9")
+
+
 def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
                              robot: str = "so101") -> tuple[ChunkExecutor, dict, dict]:
     from real2sim.policy.act import load_checkpoint
 
     policy, normalizer, contract = load_checkpoint(checkpoint, device)
+    check_contract_timing_and_image(contract, env)
     cart = eval_cfg["cartesian"]
     if robot == "panda":
         from real2sim.panda.adapter import PandaCartesianActionAdapter

@@ -36,6 +36,8 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from real2sim.config import REPO_ROOT, load_yaml, project_path
+from real2sim.sim.model import camera_xyaxes as so101_camera_xyaxes
+from real2sim.sim.model import task_frame_offset as so101_task_frame_offset
 
 ROOT = REPO_ROOT
 DEFAULT_CONFIG = ROOT / "configs/sim_panda.yaml"
@@ -77,17 +79,18 @@ def _numbers(values) -> str:
     return " ".join(f"{float(v):.12g}" for v in values)
 
 
-def camera_xyaxes(position, target) -> np.ndarray:
-    """MuJoCo ``xyaxes`` for a camera at ``position`` looking at ``target`` (world z up)."""
-    z = np.asarray(position, dtype=float) - np.asarray(target, dtype=float)
-    z /= np.linalg.norm(z)
-    x = np.cross([0.0, 0.0, 1.0], z)
-    x /= np.linalg.norm(x)
-    return np.concatenate([x, np.cross(z, x)])
-
-
 def task_frame_offset(task: dict) -> np.ndarray:
-    """``p_world = p_task + offset``. The Panda base is placed where the SO-101 base is."""
+    """``p_world = p_task + offset``: the SAME task frame as the SO-101 scene (the SO-101 base,
+    ``base_z_offset`` above the table top, D-014). Shared so the two embodiments cannot drift."""
+    return so101_task_frame_offset(task)
+
+
+def panda_base_world(task: dict) -> np.ndarray:
+    """World position of the Panda base body: on the table top under the task origin.
+
+    The SO-101 mounting lift (``base_z_offset``) is a property of that robot's base plate, not of
+    the task frame, so the Panda stands on the table and sits ``-base_z_offset`` below the origin.
+    """
     frame = task["frames"]["T_task_so101base"]
     if np.any(np.asarray(frame["xyz"], float) != 0) or np.any(np.asarray(frame["rpy"], float) != 0):
         raise ValueError("scene assembly assumes the identity T_task_so101base from task.yaml")
@@ -173,7 +176,7 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     offset = task_frame_offset(task)
     world = root.find("worldbody")
     base = next(b for b in world.findall("body") if b.get("name") == BASE_BODY)
-    base.set("pos", _numbers(offset))
+    base.set("pos", _numbers(panda_base_world(task)))
     if base.get("quat", "1 0 0 0").split() != ["1", "0", "0", "0"]:
         raise ValueError("expected an unrotated upstream base body")
     hand = next(b for b in base.iter("body") if b.get("name") == HAND_BODY)
@@ -186,7 +189,7 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     cam_pos = np.asarray(camera["approx_position_task"], float) + offset
     cam_at = np.asarray(camera["look_at_task"], float) + offset
     ET.SubElement(world, "camera", name="iphone", pos=_numbers(cam_pos),
-                  xyaxes=_numbers(camera_xyaxes(cam_pos, cam_at)), fovy=str(camera["fovy_deg"]))
+                  xyaxes=_numbers(so101_camera_xyaxes(camera, cam_pos, cam_at)), fovy=str(camera["fovy_deg"]))
     table = task["table"]
     top = float(table["height"])
     physics = dict(config["contacts"])

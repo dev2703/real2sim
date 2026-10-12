@@ -61,3 +61,17 @@ def test_domain_gap_report_schema(tmp_path, ck, data, dim):
         assert len(rep[key]) == dim and all(v >= 0 for v in rep[key])
     assert rep["error_ratio_sim_over_real"] > 0
     assert "Diagnostic only" in rep["note"]
+
+
+def test_check_refuses_re_prepared_data_with_different_hashes(tmp_path):
+    """Same split, different derived files: the checkpoint was not trained on this data."""
+    copy = tmp_path / "derived"
+    copy.mkdir()
+    for f in JOINT_DATA.iterdir():
+        (copy / f.name).symlink_to(f.resolve())
+    (copy / "manifest.json").unlink()
+    m = json.loads((JOINT_DATA / "manifest.json").read_text())
+    m["files_sha256"]["arrays.npz"] = "0" * 64
+    (copy / "manifest.json").write_text(json.dumps(m))
+    with pytest.raises(ValueError, match="derived data files differ"):
+        check(JOINT_CK, copy, device="cpu", max_batches=1)

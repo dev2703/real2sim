@@ -164,7 +164,7 @@ def test_ik_validation_accepts_at_least_ten_poses():
 
 
 def test_ik_rejects_outside_workspace_and_unreachable(env):
-    ik = PandaIK(env.model, env.config)
+    ik = PandaIK(env.model, env.config, task_origin=env.offset)
     far = make_T(POINTING_DOWN, [1.5, 0.0, 0.1])
     assert ik.solve(far, env.initial_qpos).reason == "outside_workspace"
     unreachable = make_T(POINTING_DOWN, [0.69, 0.44, 0.59])  # inside the box, beyond reach
@@ -303,7 +303,7 @@ def test_adapter_rotation_delta_follows_left_multiplied_contract(env):
 
 
 def test_ik_seed_a_few_ulp_past_a_joint_limit_is_clipped_not_fatal(env):
-    ik = PandaIK(env.model, env.config)
+    ik = PandaIK(env.model, env.config, task_origin=env.offset)
     seed = env.initial_qpos.copy()
     seed[3] = ik.limits[3, 0] - 2.2e-15  # what arm_qpos() returns after holding at the limit
     T = ik.forward(env.initial_qpos)
@@ -329,7 +329,7 @@ def test_ik_seed_a_few_ulp_past_a_joint_limit_is_clipped_not_fatal(env):
 def test_ik_penetration_check_sees_the_commanded_finger_opening(env):
     """Open fingers (0.08 m) inside the 0.05 m-radius bowl hit the wall; closed ones do not."""
     env.reset(seed=0)
-    ik = PandaIK(env.model, env.config)
+    ik = PandaIK(env.model, env.config, task_origin=env.offset)
     bowl_xy = TASK["bowl"]["center_task_xy"]
     inside = make_T(POINTING_DOWN, [*bowl_xy, 0.02])  # TCP below the 0.03 m rim
     closed = ik.solve(inside, env.initial_qpos, finger_opening=0.0)

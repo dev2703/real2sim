@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+E0_hold_pose_null_panda,HOLD_POSE,panda,0,,,False,False,False,False,False,False,approach,0.18164,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,1,,,False,False,False,False,False,False,approach,0.1681,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,2,,,False,False,False,False,False,False,approach,0.17521,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,3,,,False,False,False,False,False,False,approach,0.17232,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,4,,,False,False,False,False,False,False,approach,0.16228,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,5,,,False,False,False,False,False,False,approach,0.15508,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,6,,,False,False,False,False,False,False,approach,0.17665,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,7,,,False,False,False,False,False,False,approach,0.16341,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,8,,,False,False,False,False,False,False,approach,0.17008,300,0,,0.0,,
+E0_hold_pose_null_panda,HOLD_POSE,panda,9,,,False,False,False,False,False,False,approach,0.18353,300,0,,0.0,,

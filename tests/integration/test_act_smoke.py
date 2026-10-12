@@ -35,6 +35,12 @@ def test_real_train_save_resume_reload_infer(tmp_path):
     r2 = train(cfg, DATA, out, smoke_steps=3, resume=ck2, overrides={"num_workers": 0})
     assert (out / "checkpoints" / "000003" / "model.safetensors").is_file()
     assert r2["steps"] == 3
+    import csv
+
+    with (out / "training_history.csv").open() as f:
+        train_steps = [int(r["step"]) for r in csv.DictReader(f) if r["split"] == "train"]
+    assert train_steps == sorted(set(train_steps)) == [1, 2, 3], train_steps  # no duplicates on resume
+    assert (out / "checkpoints" / "last").resolve().name == "000003"
 
     policy, norm, contract = load_checkpoint(out / "checkpoints" / "000003", device="cpu")
     assert contract["camera_keys"] == ["observation.images.iphone"]

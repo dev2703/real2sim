@@ -34,6 +34,8 @@ def check(checkpoint: Path, data: Path, device: str = "auto", max_batches: int |
             problems.append(f"{key} differs between checkpoint and data")
     if contract["split"]["sha256"] != manifest["split"]["sha256"]:
         problems.append("split hash differs")
+    if contract.get("derived_files_sha256") != manifest.get("files_sha256"):
+        problems.append("derived data files differ from the ones the checkpoint was trained on")
     if problems:
         raise ValueError("; ".join(problems))
     val = DerivedTickDataset(data, manifest["split"]["val"], policy.config.chunk_size, normalizer=norm)
