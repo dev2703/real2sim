@@ -72,6 +72,6 @@ ik:
   damping: 0.001
   max_iterations: 150
   max_joint_step_rad: 0.12
-  workspace_min: [-0.10, -0.45, 0.015]  # task frame (base-relative)
+  workspace_min: [-0.10, -0.45, -0.012]  # task frame (base-relative); z = table top (-base_z_offset): the lifted start pose sits 2 mm above the table and was rejected by the old 0.015 floor
   workspace_max: [0.55, 0.45, 0.60]
   penetration_tolerance_m: 0.002
