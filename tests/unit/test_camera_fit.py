@@ -391,16 +391,32 @@ def test_refine_detections_feeds_backprojection():
 
 
 def test_rest_planes_follow_base_z_offset(tmp_path):
-    """With D-014's base lift the table top is at z_task = -base_z_offset; the planes (and the
-    fit's 3-D points) must move with it, and a fit on the unlifted planes is visibly biased."""
+    """With D-014's base lift the table top is at z_task = -base_z_offset; the back-projection
+    planes (in-bowl: table top + bowl floor + radius; start: table top + radius) and the fit's 3-D
+    points must follow the offset, and a fit on planes 1.2 cm too high is visibly biased."""
+    import re
+
     from real2sim.config import load_yaml
+    from real2sim.sim.model import base_z_offset
 
     text = cf.DEFAULT_TASK.read_text()
-    assert "base_z_offset" not in text
-    lifted = tmp_path / "task.yaml"
-    lifted.write_text(text.replace("robot_so101:\n", "robot_so101:\n  base_z_offset: 0.012\n"))
-    task0, task1 = load_yaml(cf.DEFAULT_TASK), load_yaml(lifted)
+    assert re.search(r"^  base_z_offset: ", text, re.M), "D-014 approved: task.yaml carries the lift"
+
+    def task_with_offset(value: float) -> dict:
+        path = tmp_path / f"task_{value}.yaml"
+        path.write_text(re.sub(r"^(  base_z_offset: )\S+", rf"\g<1>{value}", text, count=1, flags=re.M))
+        task = load_yaml(path)
+        assert base_z_offset(task) == pytest.approx(value)
+        return task
+
+    task0, task1 = task_with_offset(0.0), task_with_offset(0.012)
     assert cf.table_top_z_task(task0) == 0.0 and cf.table_top_z_task(task1) == pytest.approx(-0.012)
+    for task in (task0, task1, load_yaml(cf.DEFAULT_TASK)):
+        lift = base_z_offset(task)
+        floor = task["bowl"]["outer_height"] - task["bowl"]["inner_depth"]
+        assert cf.table_top_z_task(task) == pytest.approx(-lift)
+        assert cf.ball_rest_height_in_bowl(task) == pytest.approx(-lift + floor + task["ball"]["radius"])
+        assert cf.ball_rest_height_on_mat(task) == pytest.approx(-lift + task["ball"]["radius"])
     assert cf.ball_rest_height_in_bowl(task1) == pytest.approx(cf.ball_rest_height_in_bowl(task0) - 0.012)
     assert cf.ball_rest_height_on_mat(task1) == pytest.approx(0.0335 - 0.012)
     rng = np.random.default_rng(9)

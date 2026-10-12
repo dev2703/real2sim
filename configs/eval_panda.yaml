@@ -1,0 +1,25 @@
+# Closed-loop evaluation knobs for the Panda MuJoCo scene (plan M5, experiment E3). Mirrors
+# configs/eval_so101.yaml so both robots are scored with identical thresholds. Success, timeout and
+# geometry come from configs/task.yaml (episode.success_hold_s, episode.timeout_s); this file holds
+# evaluation-only settings. Controller labels: LEARNED_ACT (checkpoint predictions), HOLD_POSE
+# (null baseline that holds the initial pose; never a policy result). Video caption for the
+# learned controller: 'PANDA FROZEN ACT (sim)'.
+task_config: configs/task.yaml
+
+cartesian:
+  max_step_m: 0.03          # per-tick translation clamp; MUST equal sim_panda.yaml action_limits.max_translation_m
+  max_step_rad: 0.3         # per-tick rotation clamp; MUST equal sim_panda.yaml action_limits.max_rotation_rad
+
+phase:
+  # Tool-site-to-ball-centre distance (ball radius 0.0335 m). A failed trial whose minimum distance
+  # stays above this is 'approach', otherwise 'grasp'. Must equal the 3 cm stated in
+  # docs/experiment_protocol.md section 3.
+  approach_distance_m: 0.03
+
+inference:
+  device: cpu               # keep MPS free for training; override with --device
+
+video:
+  fps: 10                   # one frame per policy tick
+  upscale: 2                # 256x192 policy view -> 512x384
+  codec: mp4v

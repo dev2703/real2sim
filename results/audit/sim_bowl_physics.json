@@ -1,16 +1,16 @@
 {
   "sink_mm": {
     "0.7": {
-      "impact_transient": 12.054,
-      "static": 12.053
+      "impact_transient": 0.054,
+      "static": 0.053
     },
     "1.0": {
-      "impact_transient": 12.618,
-      "static": 12.108
+      "impact_transient": 0.618,
+      "static": 0.108
     },
     "1.3": {
-      "impact_transient": 13.929,
-      "static": 12.178
+      "impact_transient": 1.929,
+      "static": 0.178
     }
   },
   "largest_contained_speed_mps": {
@@ -40,7 +40,8 @@
       0.33
     ],
     "base_z_offset_m": 0.01200000000000001,
-    "note": "D-014 pending: clamped dataset rest pose with the base on the table top"
+    "table_top_z_task_m": -0.01200000000000001,
+    "note": "D-014 approved: clamped dataset rest pose with the base lifted base_z_offset_m above the table top (sink measured from the table top)"
   },
   "note": "frustum bowl from task.yaml (base_diameter PROVISIONAL-STANDARD); sink measured on a 0.12 m drop with solref timeconst 0.01"
 }

@@ -17,14 +17,19 @@ radially away from the base, with the jaw-opening axis (site z) pointing up: the
 the ball, the moving jaw closing from above. In the simulated model that orientation cannot grasp a
 67 mm ball resting on the table: the fixed jaw is 2.7 cm thick below its finger surface, so for
 tilts >= 45 deg the IK rejects the grasp pose for table penetration ('collision'); the dataset
-poses are consistent with the 1.2 cm base lift pending in D-014. A pure top-down pose (tilt 0) is
+poses are consistent with the 1.2 cm base lift approved in D-014. A pure top-down pose (tilt 0) is
 grasped but the 8 cm lifted poses are unreachable (IK 'residual_rejected'). The oracle therefore
 uses a near-vertical approach, ``approach_tilt_deg`` = 15 from vertical in the vertical plane
 through the ball, pinching the ball near the fingertips (``ball_in_site``).
 
-Start pose: the clamped dataset rest pose penetrates the table (D-014 pending). Each trial starts
-from ``scenario['joint_positions']`` = that rest pose after 30 ticks of physics settling under the
-held initial target (``settle_start_pose``), which has zero robot-table contacts.
+Start pose: the clamped dataset rest pose still penetrates the table with the approved 1.2 cm
+base lift (D-014; ``robot_so101.base_z_offset`` in task.yaml, table top at
+``z_task = -base_z_offset``). Each trial starts from ``scenario['joint_positions']`` = that rest
+pose after 30 ticks of physics settling under the held initial target (``settle_start_pose``),
+which has zero robot-table contacts.
+
+Outcome flags (``success``, ``rolled_out``, ...) come unchanged from
+:class:`real2sim.evaluation.metrics.TrialTracker`; the oracle keeps no outcome logic of its own.
 
     uv run python -m real2sim.evaluation.oracle --config configs/sim_so101.yaml \
         --n-trials 10 --seed-start 0 --out results/metrics/oracle_so101 --video results/media/oracle
@@ -84,8 +89,9 @@ class OracleParams:
     close_hold_ticks: int = 3            # consecutive ball_held ticks before lifting
     # sim_so101.yaml ik.workspace_min z (0.015) keeps policy targets off the table; a grasp of a
     # 67 mm ball on the table needs the fingertips lower than that. Overridden in the oracle's own
-    # IK copy only (the IK collision check still rejects table penetration > 2 mm).
-    ik_workspace_min_z: float = 0.0
+    # IK copy only (the IK collision check still rejects table penetration > 2 mm). ``None`` =
+    # the table top in task coordinates (``-base_z_offset``, D-014), resolved per env.
+    ik_workspace_min_z: float | None = None
     # Per-tick Cartesian waypoint clamp towards the phase target (architecture section 4.2 uses
     # the same 3 cm for the learned controller). Without it the IK can jump to a far joint
     # configuration whose rate-limited execution drags the ball into the table (measured).
@@ -143,7 +149,9 @@ class OracleGeometryController:
         self.env = env
         self.p = params or OracleParams()
         cfg = copy.deepcopy(env.config)
-        cfg["ik"]["workspace_min"] = [*cfg["ik"]["workspace_min"][:2], self.p.ik_workspace_min_z]
+        z_min = self.p.ik_workspace_min_z
+        self.ik_workspace_min_z = float(env.table_top - env.offset[2]) if z_min is None else float(z_min)
+        cfg["ik"]["workspace_min"] = [*cfg["ik"]["workspace_min"][:2], self.ik_workspace_min_z]
         self.ik_grasp = NativeKinematics(env.model, cfg)
         carry = copy.deepcopy(cfg)
         carry["ik"]["orientation_tolerance_rad"] = self.p.carry_orientation_tolerance_rad
@@ -301,26 +309,6 @@ class OracleGeometryController:
 
 
 # ---------------------------------------------------------------------- trials
-ROLLED_OUT_NOTE = (
-    "rolled_out = an in_bowl True->False transition at a tick where the ball was not held "
-    "(computed from the tracker history). TrialTracker.rolled_out latches any such transition, "
-    "including the held ball crossing the rim+radius z band during LOWER/RELEASE; that raw value "
-    "is kept per trial as tracker_rolled_out_raw.")
-
-
-def rolled_out_unheld(history: list[dict]) -> bool:
-    """True if the ball left the bowl (in_bowl True -> False) while not held by the gripper.
-
-    ``history`` is ``TrialTracker.history``: one dict per tick with ``in_bowl`` and ``held``. A
-    transition is counted only when the ball is unheld on both the tick before and the tick after,
-    so a grasped ball carried through the bowl's in/out boundary during placement is ignored.
-    """
-    for prev, cur in zip(history, history[1:], strict=False):
-        if prev["in_bowl"] and not cur["in_bowl"] and not prev["held"] and not cur["held"]:
-            return True
-    return False
-
-
 def run_oracle_trial(env: So101PickPlaceEnv, ctrl: OracleGeometryController, *, seed: int,
                      start_qpos: np.ndarray, max_ticks: int, tracker: TrialTracker,
                      video: CaptionedVideo | None = None, upscale: int = 2) -> list[dict]:
@@ -386,11 +374,8 @@ def run_trials(*, config: Path, eval_config: Path, n_trials: int, seed_start: in
                           robot="so101", seed=seed, checkpoint_sha256=None, checkpoint_step=None,
                           mean_latency_ms=(round(float(np.mean(lat)), 2) if lat else None),
                           video_path=video_path)
-        tracker_rolled_out_raw = bool(row["rolled_out"])
-        row["rolled_out"] = rolled_out_unheld(tracker.history)
         rows.append(row)
         trials.append({**row, "abort": abort, "wall_s": round(time.perf_counter() - t0, 2),
-                       "tracker_rolled_out_raw": tracker_rolled_out_raw,
                        "policy_calls": ctrl.n_policy_calls, "final_phase": ctrl.phase,
                        "first_held_tick": ctrl._first_held_tick, "phase_log": ctrl.phase_log,
                        "start_pose": settle, "history": tracker.history, "ticks_detail": tick_log})
@@ -409,7 +394,9 @@ def run_trials(*, config: Path, eval_config: Path, n_trials: int, seed_start: in
         "caption": CAPTION,
         "note": ("Scripted controller on simulator ground truth (privileged ball/bowl positions). "
                  "Not a policy; never an upper bound for a learned result."),
-        "rolled_out_note": ROLLED_OUT_NOTE,
+        "rolled_out_note": ("rolled_out is TrialTracker.rolled_out (real2sim.evaluation.metrics): an "
+                            "in_bowl True->False transition with the ball unheld on both ticks; a held "
+                            "ball lowered through the rim band never counts."),
         "ik_rejections_note": ("ik_rejections count IK solves rejected during PRE_GRASP..RETREAT "
                                "only; the DONE phase holds the current pose without solving IK."),
         "summary": summarize(rows),
@@ -418,7 +405,9 @@ def run_trials(*, config: Path, eval_config: Path, n_trials: int, seed_start: in
         "checkpoint": {"checkpoint": None, "checkpoint_sha256": None, "checkpoint_step": None,
                        "kind": "oracle"},
         "contract": None,
-        "oracle_params": {**params.__dict__, "ball_in_site": list(params.ball_in_site)},
+        "oracle_params": {**params.__dict__, "ball_in_site": list(params.ball_in_site),
+                          "ik_workspace_min_z_resolved": ctrl.ik_workspace_min_z,
+                          "table_top_z_task_m": float(env.table_top - env.offset[2])},
         "contacts_override": contacts,
         "resolved": {"sim_config": env.config, "task_config": task, "eval_config": eval_cfg,
                      "data_config": env.data_config, "max_ticks": ticks_cap,

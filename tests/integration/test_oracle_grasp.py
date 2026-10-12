@@ -1,8 +1,8 @@
 """E4b / gate G2: the scripted ORACLE_GEOMETRY_DIAGNOSTIC can grasp the simulated ball.
 
-Measured with ``real2sim.evaluation.oracle`` (seed 0, start pose = clamped dataset rest pose after
-30 settling ticks, approach tilt 15 deg, ball pinched near the fingertips): ``ball_held`` becomes
-True inside the CLOSE phase at tick ~32 with both jaw tip geoms in contact. These tests pin that
+Measured with ``real2sim.evaluation.oracle`` (seed 0, D-014 base lift 1.2 cm, start pose =
+clamped dataset rest pose after 30 settling ticks, approach tilt 15 deg, ball pinched near the
+fingertips): ``ball_held`` becomes True inside the CLOSE phase with both jaw tip geoms in contact. These tests pin that
 result, the mandatory labels, and the absence of any policy batch. Runtime well under 60 s.
 """
 
@@ -91,9 +91,9 @@ def test_trials_csv_rows_are_labelled_oracle(tmp_path):
     assert summary["trials"][0]["policy_calls"] == 0
     assert summary["trials"][0]["abort"] is None
     assert "rolled_out_note" in summary and "ik_rejections_note" in summary
-    assert "tracker_rolled_out_raw" in summary["trials"][0]
+    assert "tracker_rolled_out_raw" not in summary["trials"][0]  # no oracle-side re-scoring
     # Seed 0 delivers the ball and it never leaves the bowl unheld: rolled_out must be False even
-    # though the tracker's raw flag latches the held ball crossing the rim band during LOWER.
+    # though the held ball crosses the rim band during LOWER (metrics.TrialTracker semantics).
     assert rows[0]["success"] == "True"
     assert rows[0]["rolled_out"] == "False", rows[0]
     assert summary["summary"]["rolled_out"] == 0
@@ -165,24 +165,30 @@ def test_done_phase_holds_pose_without_ik_and_counts_no_rejections(env):
     assert np.allclose(env.sim_state()[:5], q_hold[:5], atol=1e-2), (env.sim_state(), q_hold)
 
 
-def test_rolled_out_unheld_ignores_held_transitions():
-    def h(in_bowl, held):
-        return {"in_bowl": in_bowl, "held": held}
+def test_rolled_out_counts_only_unheld_departures():
+    """The oracle reports TrialTracker.rolled_out unchanged (real2sim.evaluation.metrics is the
+    single scorer): an in_bowl True -> False transition counts only when the ball is unheld on
+    both ticks, so a held ball toggling across the rim band during placement is not a roll-out."""
+    def pm(in_bowl, held):
+        return {"ee_ball_distance_m": 0.0, "lifted": True, "ball_held": held, "ball_in_bowl": in_bowl,
+                "ball_resting": False, "ball_xyz": [0, 0, 0.1], "ball_xyz_task": [0, 0, 0.1],
+                "tool_xyz_task": [0, 0, 0.1]}
+
+    def rolled_out(sequence):
+        t = TrialTracker(success_hold_ticks=1, approach_distance_m=0.03, table_top_z=0.0, ball_radius_m=0.03)
+        for in_bowl, held in sequence:
+            t.update(pm(in_bowl, held))
+        assert len(t.history) == len(sequence)
+        return t.rolled_out
 
     # Held ball toggling across the bowl boundary during placement (seed 0 pattern): not rolled out.
-    assert not oracle.rolled_out_unheld([h(True, True), h(False, True), h(True, True), h(True, False)])
+    assert not rolled_out([(True, True), (False, True), (True, True), (True, False)])
     # Transition on the release tick (held -> unheld): still the gripper's doing, not a roll-out.
-    assert not oracle.rolled_out_unheld([h(True, True), h(False, False), h(True, False)])
-    # Ball resting in the bowl then leaving it unheld: rolled out.
-    assert oracle.rolled_out_unheld([h(True, False), h(True, False), h(False, False)])
-    assert not oracle.rolled_out_unheld([])
-    assert not oracle.rolled_out_unheld([h(True, False)])
-    # Tracker raw flag latches the held transition; the oracle row must not.
-    t = TrialTracker(success_hold_ticks=1, approach_distance_m=0.03, table_top_z=0.0, ball_radius_m=0.03)
-    pm = lambda in_bowl, held: {"ee_ball_distance_m": 0.0, "lifted": True, "ball_held": held,  # noqa: E731
-                                "ball_in_bowl": in_bowl, "ball_resting": False, "ball_xyz": [0, 0, 0.1],
-                                "ball_xyz_task": [0, 0, 0.1], "tool_xyz_task": [0, 0, 0.1]}
-    for in_bowl, held in [(True, True), (False, True), (True, True), (True, False)]:
-        t.update(pm(in_bowl, held))
-    assert t.rolled_out is True
-    assert oracle.rolled_out_unheld(t.history) is False
+    assert not rolled_out([(True, True), (False, False), (True, False)])
+    # Ball resting in the bowl then leaving it unheld: rolled out, and it latches.
+    assert rolled_out([(True, False), (True, False), (False, False)])
+    assert rolled_out([(True, False), (False, False), (True, False)])
+    assert not rolled_out([])
+    assert not rolled_out([(True, False)])
+    assert not rolled_out([(False, False), (False, False)])
+    assert not hasattr(oracle, "rolled_out_unheld")
