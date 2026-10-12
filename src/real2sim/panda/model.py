@@ -35,9 +35,9 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from real2sim.config import load_yaml
+from real2sim.config import REPO_ROOT, load_yaml, project_path
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = REPO_ROOT
 DEFAULT_CONFIG = ROOT / "configs/sim_panda.yaml"
 TCP_SITE = "panda_tcp"
 # Site x = hand z, site y = hand x, site z = hand y (rotation of -120 deg about (1,1,1)).
@@ -50,11 +50,6 @@ BASE_BODY = "link0"
 HAND_BODY = "hand"
 FINGER_BODIES = ("left_finger", "right_finger")
 MIN_WALL_BOXES = 12
-
-
-def project_path(path: str | Path) -> Path:
-    path = Path(path).expanduser()
-    return path if path.is_absolute() else ROOT / path
 
 
 def sha256_of(path: str | Path) -> str:

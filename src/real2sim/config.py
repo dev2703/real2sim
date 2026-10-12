@@ -7,6 +7,14 @@ from typing import Any
 
 import yaml
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def project_path(path: str | Path) -> Path:
+    """Resolve ``path`` against the repository root unless it is already absolute (``~`` expanded)."""
+    path = Path(path).expanduser()
+    return path if path.is_absolute() else REPO_ROOT / path
+
 
 def load_yaml(path: str | Path) -> dict[str, Any]:
     with Path(path).open() as f:

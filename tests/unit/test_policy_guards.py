@@ -222,3 +222,12 @@ def test_empty_camera_keys_are_rejected():
     for cfg in ({}, {"camera_keys": []}, {"camera_keys": None}):
         with pytest.raises(ValueError, match="at least one"):
             validate_camera_keys(cfg, ["observation.images.iphone"])
+
+
+def test_project_path_resolution(tmp_path):
+    from real2sim.config import REPO_ROOT, project_path
+
+    assert (REPO_ROOT / "pyproject.toml").is_file()
+    assert project_path("configs/data.yaml") == REPO_ROOT / "configs/data.yaml"
+    assert project_path(tmp_path) == tmp_path  # absolute paths pass through
+    assert project_path("~/x").is_absolute() and "~" not in str(project_path("~/x"))

@@ -49,11 +49,11 @@ import av
 import cv2
 import numpy as np
 
-from real2sim.config import load_yaml
+from real2sim.config import REPO_ROOT, load_yaml
 from real2sim.data.raw import RawDataset, VideoSegment, resolve_dataset_root
 from real2sim.geometry.so101_fk import JointMapping, So101FK
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = REPO_ROOT
 DEFAULT_TASK = ROOT / "configs" / "task.yaml"
 DEFAULT_DATA = ROOT / "configs" / "data.yaml"
 OUT_DIR = ROOT / "results" / "audit" / "camera_fit"

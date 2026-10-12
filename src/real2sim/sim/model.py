@@ -26,16 +26,13 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from real2sim.config import load_yaml
+from real2sim.config import REPO_ROOT, load_yaml, project_path
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = REPO_ROOT
 DEFAULT_CONFIG = ROOT / "configs/sim_so101.yaml"
 MIN_WALL_BOXES = 12
 
 
-def project_path(path: str | Path) -> Path:
-    path = Path(path).expanduser()
-    return path if path.is_absolute() else ROOT / path
 
 
 def verify_assets(manifest_path: str | Path) -> dict:

@@ -15,7 +15,9 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-REPO = Path(__file__).resolve().parents[3]
+from real2sim.config import REPO_ROOT
+
+REPO = REPO_ROOT
 DEFAULT_MJCF = REPO / "assets" / "menagerie" / "robotstudio_so101" / "so101.xml"
 ARM_JOINTS = ("shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll")
 EE_SITE = "gripperframe"
