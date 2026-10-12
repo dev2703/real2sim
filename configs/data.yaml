@@ -38,12 +38,16 @@ labels:
   joint: recorded_action
   cartesian: achieved_motion
   cartesian_lead_ticks: 1
+  # D-013 (APPROVED option A): gripper_target = recorded leader gripper command / 100.
+  cartesian_gripper_source: leader_action
 
 # D-006 + D-010 (approved): seed-0 split of all 40 episodes (10 val), then exclusions removed -> 28 / 9.
 split:
   seed: 0
   n_val: 10
   manifest: results/audit/split.json
+
+task_config: configs/task.yaml
 
 state:
   joint_names: [shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper]

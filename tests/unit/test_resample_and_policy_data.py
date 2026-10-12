@@ -82,3 +82,39 @@ def test_act_config_files_parse():
     cfg = yaml.safe_load(open("configs/act_joint.yaml"))
     assert cfg["model"]["dim_model"] == 512 and cfg["train"]["batch_size"] == 16
     assert cfg["model"]["chunk_size"] == 20 and cfg["model"]["n_action_steps"] == 2
+
+
+def _cart_cfg(source):
+    return {
+        "camera_keys": ["observation.images.cam_good"],
+        "excluded_cameras": [],
+        "excluded_episodes": [],
+        "image": {"height": 48, "width": 64, "pad_value": 114},
+        "policy_hz": 10,
+        "split": {"seed": 0, "n_val": 1},
+        "labels": {"cartesian_lead_ticks": 1, "cartesian_gripper_source": source},
+        "task_config": "configs/task.yaml",
+    }
+
+
+def test_cartesian_prepare_refuses_until_d013(tmp_path, synthetic_root):
+    from real2sim.data.prepare import prepare
+
+    with pytest.raises(ValueError, match="D-013"):
+        prepare(synthetic_root, _cart_cfg("PENDING"), tmp_path / "c", "s", "r", mode="cartesian")
+
+
+def test_cartesian_prepare_shapes(tmp_path, synthetic_root):
+    from real2sim.data.prepare import prepare
+    from real2sim.geometry.so101_fk import DEFAULT_MJCF
+
+    if not DEFAULT_MJCF.is_file():
+        pytest.skip("Menagerie SO-101 not fetched")
+    m = prepare(synthetic_root, _cart_cfg("leader_action"), tmp_path / "c", "s", "r", mode="cartesian")
+    a = np.load(tmp_path / "c" / "arrays.npz")
+    assert a["state"].shape == (m["n_ticks"], 13) and a["action"].shape == (m["n_ticks"], 7)
+    assert a["joint_state"].shape == (m["n_ticks"], 6)
+    assert m["label_diagnostics"]["extrapolated_ticks"] == 3  # one per episode
+    assert len(m["state_names"]) == 13 and m["action_names"][-1] == "gripper_target"
+    ds = DerivedTickDataset(tmp_path / "c", m["split"]["train"], chunk_size=20)
+    assert ds[0]["action"].shape == (20, 7) and ds[0]["observation.state"].shape == (13,)

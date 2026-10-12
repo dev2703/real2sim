@@ -18,6 +18,7 @@ Conflict order: latest explicit user approval → plan contracts → approved en
 | D-010 | Handling of the 17 dropped iphone frames (episodes 25, 33, 34) | **APPROVED: option B** — exclude all three (train 28 / val 9) | 2026-10-12 |
 | D-011 | Architecture / system design documents | **APPROVED** (both documents) | 2026-10-12 |
 | D-012 | Calibration values before measurement | **APPROVED by user: use standard values**, labelled PROVISIONAL in `docs/calibration.md` | 2026-10-12 |
+| D-013 | Gripper channel of the 7-D Cartesian action label | **APPROVED: option A** (leader command / 100) | 2026-10-12 |
 
 Approvals above were given by the user in chat on 2026-10-12 (evening, AEDT) in answer to the
 option sets below.
@@ -291,3 +292,36 @@ Menagerie joint ranges, typical iPhone main-lens field of view). Every such valu
 PROVISIONAL-STANDARD, is never described as measured, and is replaced if the operator measures
 it. Ball start and bowl positions will additionally be estimated from the recorded data (FK of
 the gripper at grasp and release) at M2; those estimates are labelled DATA-DERIVED.
+
+---
+
+## D-013 Gripper channel of the canonical 7-D action
+
+**Evidence (training split, 10,692 ticks at 10 Hz, `real2sim.data.labels`).** D-003 makes the six
+pose dimensions achieved motion. The gripper is different because the ball physically blocks
+it. While holding, the leader commands about 0–20 % but the follower reads 25–46 %.
+
+- Follower-state targets pile up between 0.25 and 0.45 (4,656 ticks).
+- Leader-command targets spread across the range, with 3,461 ticks below 0.05.
+
+The simulated gripper is a stiff position servo. A target of 0.35 would stop at 0.35 open
+whether or not a ball is there, so grip force would depend on the provisional bowl/ball sizes
+rather than on the policy.
+
+| Option | Label | Benefits | Drawbacks |
+|---|---|---|---|
+| **A (recommended)** leader command | `gripper_target = action.gripper[k] / 100` | Encodes intent to squeeze; sim position control then produces a real grasp force on the ball; same semantics on Panda ("close") | Mixes semantics: pose is achieved, gripper is commanded. Must be documented. |
+| B follower state | `gripper_target = state.gripper[k+1] / 100` | Fully consistent with D-003 achieved motion | Teaches "stop at 35 % open", which encodes the real ball size; on Panda or a different ball it may not grip |
+| C binarised leader command | 0 if leader < 10 % else 1 | Simplest, robust to operator squeeze variation | Loses partial opening used during approach and release |
+
+**Recommendation:** A. Changes: `configs/data.yaml` `labels.cartesian_gripper_source`. Until
+this is approved, `prepare --mode cartesian` refuses to run.
+
+**Approved (user, 2026-10-12): A — leader command.**
+
+**Other label evidence, no decision needed:**
+
+- Per-tick translation: median 3.7 mm, p99 18 mm, max 29 mm.
+- Per-tick rotation: median 0.015 rad, max 0.17 rad.
+- No one-tick jumps above 5 cm or 0.5 rad.
+- `|FK(leader) − FK(follower)|`: median 3.2 cm, p95 22 cm, which confirms D-003.
