@@ -11,15 +11,15 @@ It changes only when work is verified or a decision in `docs/decisions.md` is ap
 |---|---|---|---|
 | M0 scaffold + audit | G0 | **PASS**: env, package, audit CLI, full audit artifacts in `results/audit/`, final split 28/9 | none |
 | M0.5 docs | G0.5 | **PASS**: all docs exist; architecture and system design approved | none |
-| M1 joint ACT baseline | G1 | **IN PROGRESS**: derived dataset built, smoke/resume/reload test passes, 20k-step MPS run launched 12 Oct ~23:00 | none |
+| M1 joint ACT baseline | G1 | **G1 PASS** on step-2000 checkpoint (open-loop val L1 0.337); 20k-step MPS run continuing | none |
 | M2 SO-101 MuJoCo | G2 | **IN PROGRESS by another writer** in this working tree (`src/real2sim/sim/`, `assets/`, sim tests; 4 sim tests failing at 22:50) | ownership/worktree clarification |
-| M3 Cartesian dataset | G3 | not started | none (D-008 approved) |
-| M4 Cartesian ACT + closed loop | G4 | not started | none (D-009: Modal USD 30, vast.ai/Kaggle backup) |
+| M3 Cartesian dataset | G3 | **PASS**: 7-D labels and 13-float proprio built, 2-step train/infer round trip OK; full run queued on MPS | joint-map verification at M2 |
+| M4 Cartesian ACT + closed loop | G4 | training queued on MPS; closed loop needs the M2 env | Modal needs a payment method (fallback MPS) |
 | M5 Panda | G5 | not started | G4 |
 | M6 recovery | G6 | not started | D-005, G4 |
 | M7 packaging | G7 | not started | all |
 
-Skills under `.agents/skills/`: **DEFERRED until after G1** (plan §10). Not required for P0.
+Skills under `.agents/skills/`: G1 reached; still **DEFERRED** in favour of M2/M4 (plan §10 allows skipping). Not required for P0.
 
 ## 1. Evidence-driven changes to the original schedule
 

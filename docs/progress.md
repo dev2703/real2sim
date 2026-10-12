@@ -182,3 +182,65 @@ settings.
 
 `outputs/act_joint_so101` — 20,000 steps on MPS, validation every 1,000 steps on all 9 held-out
 episodes, checkpoints every 2,000. Log: `outputs/act_joint_so101/train.log`. Expected ≈2 h.
+
+---
+
+## 2026-10-13 (~00:30 AEDT) — M3 labels, G1 reached, Modal blocked
+
+**Decision approved:** D-013 A (gripper target = leader command / 100).
+
+**Commits:** `61711b7` (geometry + FK), `aa1fce4` (labels, cartesian prepare, Modal script), and
+this docs commit.
+
+### Gate G1: PASS on an intermediate checkpoint
+
+`outputs/act_joint_so101/checkpoints/002000` (model.safetensors SHA-256 `f788bcbd14a704297c11aa605e194e440da92c5bdcc916659b84767da8459fc4`).
+This is a joint-space ACT trained on real recordings, 2,000 of 20,000 steps.
+
+```
+uv run python -m real2sim.policy.check --checkpoint outputs/act_joint_so101/checkpoints/002000 \
+  --data .cache/derived_joint --out results/metrics/act_joint_g1_check_step2000.json
+```
+
+- Contract matches the data: camera `observation.images.iphone`, image [3,192,256], split SHA `94880378…`.
+- Predicts finite action chunks of shape [16, 20, 6].
+- Open-loop validation L1 on the 9 held-out episodes (4,064 ticks): 0.337 normalised. Per joint
+  in degrees / %: pan 3.4, lift 13.8, elbow 12.4, wrist_flex 15.1, wrist_roll 2.5, gripper 9.5.
+- Step 1,000 was slightly better (0.325). Watch for overfitting; select by validation.
+- **This is offline prediction error on recorded episodes, not closed-loop or task success.**
+
+Deliverables: `results/metrics/act_joint_training_history.csv` (snapshot),
+`results/configs/act_joint_resolved.yaml`, `results/metrics/act_joint_g1_check_step2000.json`.
+
+Reproduce:
+
+```
+uv run python -m real2sim.data.prepare --mode joint --config configs/data.yaml --local-root <dataset> --out-dir .cache/derived_joint
+uv run python -m real2sim.policy.train --config configs/act_joint.yaml --out outputs/act_joint_so101
+```
+
+### M3 Cartesian data
+
+`.cache/derived_cartesian`: 14,756 ticks, 13-float state, 7-D action, same split.
+Diagnostics: 0 jump flags; 37 extrapolated end-of-episode ticks; leader-vs-follower EE error
+median 3.7 cm, p95 27.6 cm. A 2-step Cartesian smoke train and the check CLI both pass.
+
+### FK sanity check (joint mapping)
+
+Gripper FK height at sustained grasp is 0.034 m against the 0.0335 m ball radius (n = 12).
+This supports the provisional mapping but does not verify it. See `docs/calibration.md`.
+
+### Blocked
+
+Modal refused GPU functions: "Please add a payment method to use A10G GPU functions."
+Only the CPU image build ran. GPU training needs the user to add a card on Modal, or to use
+vast.ai/Kaggle. Fallback in use: MPS.
+
+### Running (background, MPS)
+
+1. `outputs/act_joint_so101`: 20k steps, about 0.42 s/step, expected to finish around 02:30 AEDT.
+2. `outputs/act_cartesian`: queued by `outputs/act_cartesian/queue.sh`. It starts automatically
+   when the joint run writes step 20,000 and takes a similar time.
+
+Skills: G1 is reached, so the three optional skills (plan §10) may now be proposed. They are
+deferred because the core milestones (M2 sim, M4 closed loop) matter more.
