@@ -80,9 +80,9 @@ chunk 20 / execute 2, image tensor delegated → `[3,192,256]` letterbox, D-005 
 D-006 30/10 split, D-007 10 Hz, D-009 B in principle (provider/budget still missing).
 Pending: D-008, D-010, D-011.
 
-**Branch:** `m0-scaffold-audit` (created from `main` at `d207dfa`); commit `81bb6e9`
-"M0: scaffold, uv environment, dataset audit CLI, docs and decisions" (amended to include this
-line). Not merged to `main`; the user merges after review.
+**Branch:** `m0-scaffold-audit` (created from `main` at `d207dfa`); commit `e51bd05`
+"M0: scaffold, uv environment, dataset audit CLI, docs and decisions", followed by a one-line
+docs commit recording this SHA. Not merged to `main`; the user merges after review.
 
 ### Environment (built)
 
