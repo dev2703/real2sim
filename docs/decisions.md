@@ -367,6 +367,8 @@ depth (PnP focal refinement was degenerate), not the joints. Signs and zero offs
 Supporting evidence from the E4b oracle: the dataset's grasp style (fixed jaw under the ball,
 tilt 45–76°) is infeasible in sim with the base on the table because the fixed jaw body extends
 2.7 cm below its finger surface; a lift of this size is what lets the fixed jaw get under the ball.
+After applying the lift: 248 tests pass; the PnP camera refit with the lowered table planes has
+37/43 inliers (was 27/43); the oracle still succeeds 3/3 on the new geometry.
 
 ---
 

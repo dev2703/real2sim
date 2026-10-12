@@ -62,10 +62,10 @@ a vertical-wall model and is withdrawn; the result now depends on the unmeasured
 |---|---|---|---|
 | Table height | 0.75 m (world z of table top) | PROVISIONAL-STANDARD | Standard desk |
 | Task frame | Origin on the table top directly below the SO-101 base origin. x away from the robot, y to its left, z up. | design | `docs/architecture.md` §4.3 |
-| `T_task_so101base` | identity | PROVISIONAL-STANDARD | |
+| `T_task_so101base` | identity rotation; base origin 0.012 m above the table top (`base_z_offset`, D-014) so the table top is at z_task = −0.012 | PROVISIONAL (inferred) | |
 | Black mat | 0.45 × 0.40 m, centre at (0.25, 0.0) m in task frame | PROVISIONAL-STANDARD | Typical large desk mat |
-| Ball start region | disc of radius 0.03 m centred at (0.34, +0.04) m (paper marker) | DATA-DERIVED (preliminary, see below) | Replaced at M2 by the mean gripper FK position at first close-on-ball over training episodes |
-| Bowl centre | (0.33, −0.10) m | DATA-DERIVED (preliminary, see below) | Replaced at M2 by the mean gripper FK position at release |
+| Ball start region | disc of radius 0.03 m centred at (0.332, +0.101) m (paper marker) | DATA-DERIVED v3 (camera back-projection, §3) | Replaced at M2 by the mean gripper FK position at first close-on-ball over training episodes |
+| Bowl centre | (0.330, −0.169) m | DATA-DERIVED v3 (camera back-projection, §3) | Replaced at M2 by the mean gripper FK position at release |
 
 ### Preliminary DATA-DERIVED estimates (2026-10-12, `real2sim.geometry.so101_fk`)
 
@@ -114,9 +114,9 @@ start marker, ball in the bowl) with the provisional intrinsics held fixed:
 
 | Quantity | Value |
 |---|---|
-| Camera position (task frame) | (0.324, −0.419, 0.377) m |
+| Camera position (task frame) | (0.329, −0.444, 0.385) m after the D-014 refit (was 0.324, −0.419, 0.377) |
 | Optical axis | pitched 42.1° down, rolled −10.9° |
-| Inliers / RMS | 27 of 43 points, 17.2 px (all points 51.9 px) |
+| Inliers / RMS | 37 of 43 points after the D-014 refit (27 of 43 before; 17.2 px inlier RMS before) |
 | Held-ball points | 23/27 inliers, 21.8 px |
 | Start-marker points | 4/8 inliers, 36.6 px |
 | In-bowl points | 0/8 inliers, 107 px: reprojection sits 104 px above the detections |
@@ -127,10 +127,14 @@ The full axes are stored as `camera_iphone.xyaxes_task`; the scene uses them (th
 look-at form costs 61.6 px). Label: DATA-DERIVED, approximate. Report and overlays:
 `results/audit/camera_fit/`.
 
-The in-bowl outliers mean the preliminary bowl centre (0.33, −0.10) from release FK is about
-6–7 cm off (the real bowl is closer to the camera and/or lower). Re-deriving the bowl centre by
-back-projecting the in-bowl detections through the fitted camera is the next step; until then
-the bowl position stays labelled preliminary.
+**Bowl and start region, DATA-DERIVED v3** (`python -m real2sim.sim.camera_fit backproject`,
+after the 1.2 cm base lift of D-014): in-bowl ball detections (known-radius circle fit on the
+ball outline) back-projected to the plane z = −0.012 + 0.0046 + 0.0335 give the bowl centre
+**(0.330, −0.169) m**; start-marker detections at z = −0.012 + 0.0335 give the start region
+**(0.332, 0.101) m**; both n = 8/8 with 1–2 cm spread. The FK-at-release value (0.33, −0.10) was
+6–7 cm off because it marks where the gripper opened, not the bowl. Focal/depth uncertainty
+adds about ±1 cm per axis. The refit with the lifted heights moved the camera by about 2.5 cm
+and raised the inlier count from 27 to 37 of 43.
 
 ## 4. Robot joint conventions
 
