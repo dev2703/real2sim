@@ -136,3 +136,49 @@ the working tree by something outside this session; left out of the commit.
 
 Next action: D-010 answer → regenerate split with exclusions → M1 loader/transform + ACT smoke
 test on MPS.
+
+---
+
+## 2026-10-12 (late evening) — decisions round 2 + M1 pipeline
+
+**Decisions approved in chat:** D-008 A (13-float proprioception), D-009 B (Modal USD 30, then
+vast.ai/Kaggle), D-010 B (exclude episodes 25, 33, 34), D-011 (architecture and system design
+approved), D-012 (standard calibration values). The user also supplied bowl dimensions in
+`docs/calibration.md`. An image cross-check suggests the bowl is larger (≈12 cm outer diameter,
+≈5–6 cm tall) than the supplied 10.4 cm / 3 cm; re-measurement requested, supplied values in use.
+
+**Commits on `m0-scaffold-audit`:** `bf2060f` (decisions, split, calibration), `7bd8691` (M1).
+
+**Incident:** `bf2060f` was staged with `git add -A <dirs>` and swept in another writer's
+in-progress simulation files (`src/real2sim/sim/{__init__,env,kinematics,model}.py`,
+`configs/sim_so101.yaml`). History was not rewritten while that writer is active. From `7bd8691`
+on, only explicit paths are staged. Remaining untracked sim work (`assets/`, `scripts/`,
+`configs/task_m2_diagnostic.yaml`, `tests/integration/test_{kinematics,so101_scene}.py`) is
+left to its owner; 4 of its scene tests were failing at 22:50.
+
+### Verified
+
+```
+uv run python -m real2sim.data.audit ... --exclude-episodes 25,33,34   # split 28/9, SHA 94880378…
+uv run python -m real2sim.data.prepare --mode joint --config configs/data.yaml \
+  --local-root ~/.cache/huggingface/lerobot/local/so101_act_pickplace_v1 --out-dir .cache/derived_joint
+    # 59 s; 14,756 ticks (10,692 train / 4,064 val); images [14756,192,256,3] uint8
+uv run pytest -q tests/unit                                         # 28 passed
+uv run pytest -q tests/integration/test_act_smoke.py                # 1 passed (real data:
+    # 2 steps, save, resume to step 3, reload, predict [2,20,6], select_action [2,6])
+```
+
+MPS timing (ACT dim 512, batch 16, 51.6 M params, ResNet-18 ImageNet init): **≈0.31 s/step**,
+first step ≈0.6–5 s (warm-up / worker start). CPU: ≈0.85 s/step. Batch 16 fits on MPS without
+accumulation.
+
+**Bug found and fixed:** `to_device` used `non_blocking=True` for host→MPS copies of unpinned
+tensors that were freed immediately. With in-process loading this produced corrupted batches
+(L1 5.9 M at step 2 in one run, NaN in another, a plausible-looking but wrong value in a
+third). Copies are now blocking; step-2 loss is identical across repeated runs and loader
+settings.
+
+### Running
+
+`outputs/act_joint_so101` — 20,000 steps on MPS, validation every 1,000 steps on all 9 held-out
+episodes, checkpoints every 2,000. Log: `outputs/act_joint_so101/train.log`. Expected ≈2 h.

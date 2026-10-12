@@ -9,12 +9,12 @@ It changes only when work is verified or a decision in `docs/decisions.md` is ap
 
 | Milestone | Gate | Status | Blocking decisions |
 |---|---|---|---|
-| M0 scaffold + audit | G0 | **PASS (conditional on D-010)**: env, package, audit CLI, 21 unit tests, full audit artifacts in `results/audit/` (12 Oct 22:26) | D-010 fixes the final episode list |
-| M0.5 docs | G0.5 | all docs exist; drafts updated with approvals | D-011 document-level approval |
-| M1 joint ACT baseline | G1 | not started; pipeline code can start now, training launch waits for D-010 | D-010 |
-| M2 SO-101 MuJoCo | G2 | not started | none; measurements requested |
-| M3 Cartesian dataset | G3 | not started | D-008 (proprioception vector) |
-| M4 Cartesian ACT + closed loop | G4 | not started | D-009 provider + budget cap |
+| M0 scaffold + audit | G0 | **PASS**: env, package, audit CLI, full audit artifacts in `results/audit/`, final split 28/9 | none |
+| M0.5 docs | G0.5 | **PASS**: all docs exist; architecture and system design approved | none |
+| M1 joint ACT baseline | G1 | **IN PROGRESS**: derived dataset built, smoke/resume/reload test passes, 20k-step MPS run launched 12 Oct ~23:00 | none |
+| M2 SO-101 MuJoCo | G2 | **IN PROGRESS by another writer** in this working tree (`src/real2sim/sim/`, `assets/`, sim tests; 4 sim tests failing at 22:50) | ownership/worktree clarification |
+| M3 Cartesian dataset | G3 | not started | none (D-008 approved) |
+| M4 Cartesian ACT + closed loop | G4 | not started | none (D-009: Modal USD 30, vast.ai/Kaggle backup) |
 | M5 Panda | G5 | not started | G4 |
 | M6 recovery | G6 | not started | D-005, G4 |
 | M7 packaging | G7 | not started | all |

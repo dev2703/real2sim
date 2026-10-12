@@ -2,7 +2,7 @@
 
 **Status:** AUDITED 2026-10-12 22:26 AEDT with `python -m real2sim.data.audit` (full decode of
 every frame of both cameras; artifacts in `results/audit/`). Items marked VERIFY still need the
-operator. The episode list for training is fixed by decision D-010 (pending).
+operator. Episodes 25, 33 and 34 are excluded (D-010, approved).
 
 Reproduce:
 
@@ -158,14 +158,16 @@ and are expected for teleoperation pauses, not a defect.
 
 ## 4. Preliminary observation contract (not frozen)
 
-- `camera_keys = ["observation.images.iphone"]` — audit-driven single-stream rule per plan §3.2:
-  `top` is UNUSABLE, `iphone` is USABLE in 37/40 episodes. Final once D-010 fixes the handling
-  of episodes 25/33/34 (the audit tool itself reports "requires user decision" for that reason).
+- `camera_keys = ["observation.images.iphone"]` — **FINAL**. Audit-driven single-stream rule per
+  plan §3.2: `top` is UNUSABLE; `iphone` is USABLE in all 37 kept episodes (the three partial
+  episodes are excluded by D-010).
 - Model image tensor: candidate `[3, 192, 256]` from aspect-preserving resize of 16:9 source with
   letterbox to 4:3 (decision D-004 covers the alternative sizes). Padding geometry and scale
   factors are recorded alongside the checkpoint.
 - Proprioception: raw 6-joint state (degrees, gripper %) for the joint baseline; canonical 13-float
-  EEF state for the Cartesian policy (decision D-008).
+  EEF state for the Cartesian policy (D-008, approved).
+- Image/joint timing: the iphone image trails the joint state by about 2 frames (67 ms). This is
+  kept as recorded; no shift is applied.
 - Action: raw 6-joint target for the joint baseline; canonical 7-D task-frame delta for the
   Cartesian policy; label semantics are decision D-003.
 - Policy clock: 10 Hz resampled from the 30 Hz recording, episode boundaries preserved
@@ -173,11 +175,15 @@ and are expected for teleoperation pauses, not a defect.
 
 ## 5. Split (generated, `results/audit/split.json`)
 
-Deterministic whole-episode split, seed 0, 30 train / 10 validation (D-006 approved).
-Validation episodes: 1, 2, 3, 4, 11, 18, 23, 24, 27, 34. Manifest SHA-256
-`bb8bfb57499ce13346b5a5927f87dfaa21f4f70e6f7718f6a69e617486803c4a`. Will be regenerated with
-the exclusion list once D-010 is approved (the manifest records the source revision). Validation
-episodes never enter normalisation statistics or training.
+Seed-0 whole-episode draw over all 40 episodes (10 validation), then episodes 25, 33 and 34
+removed (D-006, D-010): **28 train / 9 validation**.
+
+- Validation: 1, 2, 3, 4, 11, 18, 23, 24, 27
+- Excluded: 25, 33, 34 (iphone frame deficits)
+- Manifest SHA-256: `948803789de23605f85378917c40680be567764c17df0774979a6f5f50091717`
+
+At the 10 Hz policy clock this gives 14,756 ticks: 10,692 train and 4,064 validation
+(`.cache/derived_joint/manifest.json`). Normalisation statistics use training episodes only.
 
 ## 6. Episode outcomes
 
@@ -188,7 +194,6 @@ is recorded as an operator statement, not as a label.
 
 ## 7. Known gaps
 
-- D-010 (episodes 25/33/34) pending; episode list and split not final until then.
 - Dataset license is recorded from the Hugging Face card (apache-2.0); the local copy has no
   README, so `dataset_report.json` shows `license: null`.
 - The ball detector is a plain HSV threshold; it is a visibility signal for the audit, not a
