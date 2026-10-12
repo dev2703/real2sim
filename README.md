@@ -1,31 +1,12 @@
 # Real2Sim-RaC: real SO-101 demonstrations → ACT → MuJoCo evaluation
 
-Status board: `docs/implementation_plan.md`. Progress log with every verified command:
-`docs/progress.md`. Decisions and their evidence: `docs/decisions.md`.
-
 ## What this is
 
 Forty teleoperated pick-and-place demonstrations were recorded on a real SO-101 arm (tennis
-ball into a bowl) and published as
-[bottowork/so101_act_pickplace_v1](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v1),
-pinned at revision `fd65a6600b0cd111a434ece1abfa3d44dc7b4d57`. This repository audits that
-data, trains Action Chunking Transformer (ACT) policies on it, and evaluates them closed-loop in
-a MuJoCo simulation of the same task. Nothing here claims sim-to-real or real-to-sim success;
-every number is labelled with where it came from.
+ball into a bowl) and published at [Hugging Face](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v1). 
 
-## Verified so far (2026-10-13)
+The main aim is to train an ACT policy with a recovery MLP head in Mujoco and use the frozen ACT weights for cross embodiment and use trained policy to work on 7DOF panda arm in MujOco
 
-| Item | Evidence |
-|---|---|
-| Dataset audit, every frame of both cameras | `results/audit/camera_quality.json`, `camera_montage.html` |
-| Camera selection: `top` unusable (points at ceiling), `iphone` usable in 37/40 episodes | `docs/data_contract.md` |
-| Episode split 28 train / 9 validation, 3 excluded for dropped frames | `results/audit/split.json` |
-| Joint-space ACT trained on real data (gate G1) | `results/metrics/act_joint_g1_check_step2000.json` |
-| Canonical 7-D Cartesian labels and 13-float proprioception | `src/real2sim/data/labels.py`, `tests/unit/test_labels.py` |
-| SO-101 forward kinematics consistent across two implementations | `tests/integration/test_fk_consistency.py` |
-
-Not yet verified: closed-loop task success in simulation, Panda transfer, recovery. See
-`docs/limitations.md`.
 
 ## Data collection
 
@@ -70,30 +51,8 @@ uv run python -m real2sim.evaluation.run --help
 
 - ACT (LeRobot 0.6.1): ResNet-18, `dim_model` 512, chunk 20 at 10 Hz, 2 actions executed per
   inference, batch 16. Joint baseline learns the recorded leader targets; the Cartesian policy
-  learns achieved end-effector motion from forward kinematics (decision D-003).
-- Simulation: MuJoCo Menagerie `robotstudio_so101` and `franka_emika_panda`, pinned at commit
-  `0059d433…`, actuators unmodified. Ball and bowl are compound primitives. Physical values are
-  provisional standards, not measurements; see `docs/calibration.md`.
+  learns achieved end-effector motion from forward kinematics.
+- Simulation: MuJoCo Menagerie `robotstudio_so101` and `franka_emika_panda`. Ball and bowl are compound primitives. Physical values are
+  provisional standards not precise measurement 
 
-## Evaluation
 
-Not yet run. The protocol, metrics and captions are fixed in `docs/experiment_protocol.md`.
-Results will appear in `results/metrics/<experiment>/trials.csv` with one row per attempt,
-failures included.
-
-## Failures and limitations
-
-`docs/limitations.md`. Highlights: one usable camera; three episodes dropped; provisional
-calibration; the supplied bowl depth is shallower than the ball radius; GPU training blocked
-until a Modal payment method exists, so training runs on Apple MPS.
-
-## Layout
-
-`src/real2sim/{data,geometry,policy,sim,evaluation,recovery}`, `configs/`, `tests/`,
-`docs/`, `results/` (small artifacts only), `assets/menagerie` (pinned, licensed).
-
-## Licence and sources
-
-Code Apache-2.0. Dataset apache-2.0 (card). Menagerie models under their own licences, see
-`assets/LICENSES.md`. LeRobot, MuJoCo and the original ACT paper (Zhao et al. 2023) are the
-upstream sources listed in `plan.md` §11.
