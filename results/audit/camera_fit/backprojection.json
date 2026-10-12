@@ -1,0 +1,811 @@
+{
+  "generated_by": "real2sim.sim.camera_fit backproject",
+  "method": "ray through each detected ball centre from the PnP camera (pose and intrinsics of report.json held fixed) intersected with a horizontal plane of known height in the task frame; centre = mean over the detections that pass the outline/area checks",
+  "detection_source": "known-radius circle fit of the ball outline (refine_ball_circle)",
+  "table_top_z_task_m": 0.0,
+  "area_ratio_band": [
+    0.8,
+    1.25
+  ],
+  "camera_position_task": [
+    0.32411176581988305,
+    -0.41904429742516036,
+    0.3771344124197611
+  ],
+  "intrinsics_used": {
+    "fx": 924.0,
+    "fy": 924.0,
+    "cx": 640.0,
+    "cy": 360.0
+  },
+  "accept_std_m": 0.02,
+  "estimates": {
+    "bowl": {
+      "n": 8,
+      "z_plane_m": 0.0381,
+      "mean_xy": [
+        0.3267144056600043,
+        -0.17392598228306422
+      ],
+      "std_xy_m": [
+        0.008264001808672698,
+        0.010208810521964585
+      ],
+      "max_abs_dev_xy_m": [
+        0.011403679040473846,
+        0.020028076368669823
+      ],
+      "points_xy": [
+        [
+          0.33811808470047816,
+          -0.1538979059143944
+        ],
+        [
+          0.31726052660574616,
+          -0.1789859719407688
+        ],
+        [
+          0.3249196847444113,
+          -0.1784774189925415
+        ],
+        [
+          0.31850057962042777,
+          -0.18326156441042799
+        ],
+        [
+          0.32264727796596215,
+          -0.18102462690460383
+        ],
+        [
+          0.3218037726451355,
+          -0.16565288353816765
+        ],
+        [
+          0.3341907252791072,
+          -0.16898892383993924
+        ],
+        [
+          0.33627459371876633,
+          -0.1811185627236704
+        ]
+      ],
+      "n_detections": 8,
+      "episodes_frames": [
+        [
+          0,
+          1793
+        ],
+        [
+          1,
+          1793
+        ],
+        [
+          2,
+          1034
+        ],
+        [
+          3,
+          1369
+        ],
+        [
+          4,
+          1781
+        ],
+        [
+          5,
+          1223
+        ],
+        [
+          6,
+          1364
+        ],
+        [
+          7,
+          973
+        ]
+      ],
+      "ball_area_px": [
+        10725,
+        13450,
+        14262,
+        12873,
+        13389,
+        23875,
+        22967,
+        15385
+      ],
+      "detections": [
+        {
+          "episode": 0,
+          "frame": 1793,
+          "pixel_centroid": [
+            858.6731002331003,
+            481.5672727272727
+          ],
+          "ball_area_px": 10725,
+          "area_ratio": 0.6368505342459544,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 74.8051785518383,
+            "n_edge": 584,
+            "n_inliers": 207,
+            "arc_coverage": 0.4166666666666667,
+            "rms_px": 1.0217682308195926,
+            "disc_fill": 0.679781669319991,
+            "ok": true
+          },
+          "pixel_refined": [
+            855.9257577262364,
+            505.62970313407243
+          ],
+          "shift_px": [
+            -2.7473425068639017,
+            24.062430406799706
+          ],
+          "used": true
+        },
+        {
+          "episode": 1,
+          "frame": 1793,
+          "pixel_centroid": [
+            815.2088475836431,
+            532.7582899628253
+          ],
+          "ball_area_px": 13450,
+          "area_ratio": 0.7348467059688624,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 77.44452660195276,
+            "n_edge": 758,
+            "n_inliers": 217,
+            "arc_coverage": 0.4444444444444444,
+            "rms_px": 1.2782983603539957,
+            "disc_fill": 0.7699453261850416,
+            "ok": true
+          },
+          "pixel_refined": [
+            808.4867448777022,
+            550.8484191785091
+          ],
+          "shift_px": [
+            -6.72210270594087,
+            18.09012921568376
+          ],
+          "used": true
+        },
+        {
+          "episode": 2,
+          "frame": 1034,
+          "pixel_centroid": [
+            828.3585752348899,
+            535.1326602159585
+          ],
+          "ball_area_px": 14262,
+          "area_ratio": 0.771970700316609,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 77.58075167103554,
+            "n_edge": 716,
+            "n_inliers": 185,
+            "arc_coverage": 0.3611111111111111,
+            "rms_px": 1.0062865033642294,
+            "disc_fill": 0.7993761894692324,
+            "ok": true
+          },
+          "pixel_refined": [
+            826.4976380142803,
+            550.3851614573961
+          ],
+          "shift_px": [
+            -1.860937220609685,
+            15.252501241437585
+          ],
+          "used": true
+        },
+        {
+          "episode": 3,
+          "frame": 1369,
+          "pixel_centroid": [
+            816.2113726404101,
+            537.731764157539
+          ],
+          "ball_area_px": 12873,
+          "area_ratio": 0.6964466781170482,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 78.08145319880576,
+            "n_edge": 597,
+            "n_inliers": 203,
+            "arc_coverage": 0.3611111111111111,
+            "rms_px": 1.0591996126943344,
+            "disc_fill": 0.7238731916227085,
+            "ok": true
+          },
+          "pixel_refined": [
+            811.385745146864,
+            559.214117812748
+          ],
+          "shift_px": [
+            -4.825627493546108,
+            21.482353655208954
+          ],
+          "used": true
+        },
+        {
+          "episode": 4,
+          "frame": 1781,
+          "pixel_centroid": [
+            822.2310105310329,
+            536.9666890731197
+          ],
+          "ball_area_px": 13389,
+          "area_ratio": 0.723820237626468,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 77.94934401541258,
+            "n_edge": 818,
+            "n_inliers": 188,
+            "arc_coverage": 0.3611111111111111,
+            "rms_px": 1.1304601886843761,
+            "disc_fill": 0.7615706806282723,
+            "ok": true
+          },
+          "pixel_refined": [
+            821.1798669982127,
+            555.1537287260917
+          ],
+          "shift_px": [
+            -1.0511435328202197,
+            18.187039652971976
+          ],
+          "used": true
+        },
+        {
+          "episode": 5,
+          "frame": 1223,
+          "pixel_centroid": [
+            822.2231204188481,
+            498.6067434554974
+          ],
+          "ball_area_px": 23875,
+          "area_ratio": 1.3899255134030586,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 75.80261033798664,
+            "n_edge": 745,
+            "n_inliers": 224,
+            "arc_coverage": 0.4444444444444444,
+            "rms_px": 1.088829222787314,
+            "disc_fill": 0.9238137423177011,
+            "ok": true
+          },
+          "pixel_refined": [
+            819.0108193127047,
+            526.0774813269747
+          ],
+          "shift_px": [
+            -3.2123011061434,
+            27.470737871477354
+          ],
+          "used": true
+        },
+        {
+          "episode": 6,
+          "frame": 1364,
+          "pixel_centroid": [
+            843.0851656724866,
+            508.1965864065834
+          ],
+          "ball_area_px": 22967,
+          "area_ratio": 1.3019837924235207,
+          "area_consistent": false,
+          "circle_fit": {
+            "radius_px": 76.61936851988158,
+            "n_edge": 971,
+            "n_inliers": 203,
+            "arc_coverage": 0.3888888888888889,
+            "rms_px": 1.1022060878270317,
+            "disc_fill": 0.914936297099485,
+            "ok": true
+          },
+          "pixel_refined": [
+            847.8728094462246,
+            532.9559332656977
+          ],
+          "shift_px": [
+            4.787643773737955,
+            24.759346859114316
+          ],
+          "used": true
+        },
+        {
+          "episode": 7,
+          "frame": 973,
+          "pixel_centroid": [
+            858.9634709132272,
+            543.2768930776731
+          ],
+          "ball_area_px": 15385,
+          "area_ratio": 0.8110012638726675,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 78.53259428804033,
+            "n_edge": 739,
+            "n_inliers": 224,
+            "arc_coverage": 0.4166666666666667,
+            "rms_px": 0.9956375851152495,
+            "disc_fill": 0.8252928125483722,
+            "ok": true
+          },
+          "pixel_refined": [
+            853.636169321131,
+            556.2943423541662
+          ],
+          "shift_px": [
+            -5.327301592096205,
+            13.017449276493153
+          ],
+          "used": true
+        }
+      ],
+      "previous_task_yaml_xy": [
+        0.3267,
+        -0.1739
+      ],
+      "shift_from_previous_xy_m": [
+        1.4405660004324083e-05,
+        -2.598228306421868e-05
+      ],
+      "focal_sensitivity": {
+        "fx_x0.9": {
+          "mean_xy": [
+            0.33541205354518133,
+            -0.18404162321689882
+          ],
+          "shift_xy_m": [
+            0.008697647885177018,
+            -0.010115640933834602
+          ]
+        },
+        "fx_x1.1": {
+          "mean_xy": [
+            0.3192993388418718,
+            -0.16529971858153492
+          ],
+          "shift_xy_m": [
+            -0.007415066818132532,
+            0.008626263701529302
+          ]
+        }
+      },
+      "accepted": true
+    },
+    "start": {
+      "n": 8,
+      "z_plane_m": 0.0335,
+      "mean_xy": [
+        0.3329153215520075,
+        0.07278407313406268
+      ],
+      "std_xy_m": [
+        0.010612063609504297,
+        0.015981837469005705
+      ],
+      "max_abs_dev_xy_m": [
+        0.016459328987048882,
+        0.0359126077139251
+      ],
+      "points_xy": [
+        [
+          0.3455709072693876,
+          0.10869668084798778
+        ],
+        [
+          0.3244941735426227,
+          0.06273816530870518
+        ],
+        [
+          0.33564435010894533,
+          0.06621975357073545
+        ],
+        [
+          0.3164559925649586,
+          0.07259990493227347
+        ],
+        [
+          0.3215215162383742,
+          0.08070246759038857
+        ],
+        [
+          0.33976574219250166,
+          0.06643628511534888
+        ],
+        [
+          0.33859754647561835,
+          0.06675040890927991
+        ],
+        [
+          0.3412723440236511,
+          0.058128918797782314
+        ]
+      ],
+      "n_detections": 8,
+      "episodes_frames": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ]
+      ],
+      "ball_area_px": [
+        9319,
+        10241,
+        10642,
+        10710,
+        10788,
+        10666,
+        10790,
+        10801
+      ],
+      "detections": [
+        {
+          "episode": 0,
+          "frame": 0,
+          "pixel_centroid": [
+            848.698036269986,
+            197.26247451443288
+          ],
+          "ball_area_px": 9319,
+          "area_ratio": 1.1072743943956014,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 51.292221184349415,
+            "n_edge": 658,
+            "n_inliers": 213,
+            "arc_coverage": 0.6111111111111112,
+            "rms_px": 1.118366760087319,
+            "disc_fill": 0.9672031949655089,
+            "ok": true
+          },
+          "pixel_refined": [
+            854.0498013191988,
+            189.91560501826817
+          ],
+          "shift_px": [
+            5.351765049212759,
+            -7.3468694961647145
+          ],
+          "used": true
+        },
+        {
+          "episode": 1,
+          "frame": 0,
+          "pixel_centroid": [
+            819.0654232985061,
+            234.28620251928524
+          ],
+          "ball_area_px": 10241,
+          "area_ratio": 1.118163594862926,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 53.886599981528406,
+            "n_edge": 688,
+            "n_inliers": 245,
+            "arc_coverage": 0.6666666666666666,
+            "rms_px": 1.0065557981840378,
+            "disc_fill": 0.9979175800087681,
+            "ok": true
+          },
+          "pixel_refined": [
+            821.6938228166775,
+            232.2976905788668
+          ],
+          "shift_px": [
+            2.628399518171477,
+            -1.988511940418448
+          ],
+          "used": true
+        },
+        {
+          "episode": 2,
+          "frame": 0,
+          "pixel_centroid": [
+            837.2490133433565,
+            232.10787445968802
+          ],
+          "ball_area_px": 10642,
+          "area_ratio": 1.1578805617346113,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 53.85559825133892,
+            "n_edge": 767,
+            "n_inliers": 276,
+            "arc_coverage": 0.8055555555555556,
+            "rms_px": 1.123206538919507,
+            "disc_fill": 1.0,
+            "ok": true
+          },
+          "pixel_refined": [
+            839.8917718572203,
+            228.35085331670436
+          ],
+          "shift_px": [
+            2.6427585138637824,
+            -3.7570211429836604
+          ],
+          "used": true
+        },
+        {
+          "episode": 3,
+          "frame": 0,
+          "pixel_centroid": [
+            808.1550887021475,
+            223.85546218487394
+          ],
+          "ball_area_px": 10710,
+          "area_ratio": 1.2091166335037524,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 53.08472049435762,
+            "n_edge": 871,
+            "n_inliers": 203,
+            "arc_coverage": 0.6388888888888888,
+            "rms_px": 1.1583152412093793,
+            "disc_fill": 1.0,
+            "ok": true
+          },
+          "pixel_refined": [
+            808.6245164486016,
+            223.63669983990596
+          ],
+          "shift_px": [
+            0.4694277464541301,
+            -0.21876234496798475
+          ],
+          "used": true
+        },
+        {
+          "episode": 4,
+          "frame": 0,
+          "pixel_centroid": [
+            815.1873377827216,
+            222.6263440860215
+          ],
+          "ball_area_px": 10788,
+          "area_ratio": 1.2175087458357632,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 53.04164956448645,
+            "n_edge": 713,
+            "n_inliers": 226,
+            "arc_coverage": 0.6388888888888888,
+            "rms_px": 1.1219279147341397,
+            "disc_fill": 1.0,
+            "ok": true
+          },
+          "pixel_refined": [
+            816.7434254290996,
+            215.9605297382417
+          ],
+          "shift_px": [
+            1.556087646378046,
+            -6.665814347779815
+          ],
+          "used": true
+        },
+        {
+          "episode": 5,
+          "frame": 0,
+          "pixel_centroid": [
+            843.9761860116257,
+            231.366304144009
+          ],
+          "ball_area_px": 10666,
+          "area_ratio": 1.158792842723145,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 53.89731283485477,
+            "n_edge": 599,
+            "n_inliers": 272,
+            "arc_coverage": 0.75,
+            "rms_px": 1.1706183716779013,
+            "disc_fill": 1.0,
+            "ok": true
+          },
+          "pixel_refined": [
+            846.6580829721005,
+            227.89335166880704
+          ],
+          "shift_px": [
+            2.6818969604747736,
+            -3.4729524752019643
+          ],
+          "used": true
+        },
+        {
+          "episode": 6,
+          "frame": 0,
+          "pixel_centroid": [
+            841.9144578313253,
+            231.82956441149213
+          ],
+          "ball_area_px": 10790,
+          "area_ratio": 1.1720610150175415,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 53.8707938974003,
+            "n_edge": 585,
+            "n_inliers": 256,
+            "arc_coverage": 0.75,
+            "rms_px": 1.1146323177173345,
+            "disc_fill": 1.0,
+            "ok": true
+          },
+          "pixel_refined": [
+            844.7236801687486,
+            227.6719945787811
+          ],
+          "shift_px": [
+            2.809222337423307,
+            -4.157569832711033
+          ],
+          "used": true
+        },
+        {
+          "episode": 7,
+          "frame": 0,
+          "pixel_centroid": [
+            847.0187945560597,
+            239.01833163595964
+          ],
+          "ball_area_px": 10801,
+          "area_ratio": 1.1483626475293975,
+          "area_consistent": true,
+          "circle_fit": {
+            "radius_px": 54.50424286579983,
+            "n_edge": 874,
+            "n_inliers": 280,
+            "arc_coverage": 0.8611111111111112,
+            "rms_px": 1.1388808604164362,
+            "disc_fill": 1.0,
+            "ok": true
+          },
+          "pixel_refined": [
+            849.5201844350795,
+            235.6574489411806
+          ],
+          "shift_px": [
+            2.5013898790198255,
+            -3.3608826947790362
+          ],
+          "used": true
+        }
+      ],
+      "previous_task_yaml_xy": [
+        0.3329,
+        0.0728
+      ],
+      "shift_from_previous_xy_m": [
+        1.5321552007507844e-05,
+        -1.592686593732129e-05
+      ],
+      "focal_sensitivity": {
+        "fx_x0.9": {
+          "mean_xy": [
+            0.346735485827396,
+            0.08874696637431591
+          ],
+          "shift_xy_m": [
+            0.013820164275388513,
+            0.015962893240253226
+          ]
+        },
+        "fx_x1.1": {
+          "mean_xy": [
+            0.3219096121182655,
+            0.06007819691432139
+          ],
+          "shift_xy_m": [
+            -0.011005709433741961,
+            -0.012705876219741292
+          ]
+        }
+      },
+      "accepted": true
+    }
+  },
+  "held_ball_check": {
+    "note": "held detections back-projected onto their own FK height, minus the FK point: metre-scale residual of the camera on the points that constrained it",
+    "n": 27,
+    "n_inliers": 23,
+    "rms_xy_m_all": [
+      0.007924953027860157,
+      0.009755306122035253
+    ],
+    "rms_xy_m_inliers": [
+      0.007127014397870027,
+      0.008253890577753522
+    ],
+    "mean_signed_xy_m_all": [
+      -0.0012829871925792004,
+      -0.0004512831470001005
+    ],
+    "fk_mean_xyz_m": [
+      0.34114242227628694,
+      -0.07248862567086846,
+      0.06673746809380882
+    ],
+    "fk_std_xyz_m": [
+      0.03401940656031272,
+      0.08602729017377041,
+      0.03587150780214412
+    ]
+  },
+  "notes": [
+    "Simulator ground truth is not involved: inputs are real-image detections and the fitted camera.",
+    "The PnP camera was fitted with the start/bowl 3-D points at their *previous* task.yaml values (4 start inliers, 0 bowl inliers), so the start estimate is weakly circular; the held-ball FK points dominate the fit.",
+    "Depth along the optical axis is weakly constrained (focal refinement diverged); the focal_sensitivity entries bound the resulting shift of the planar estimates.",
+    "The in-bowl ball may rest off the bowl centre; the spread over episodes includes that.",
+    "The HSV centroid of a ball in the bowl is biased (near rim and shadow cut the lower half; the pale interior leaks into the mask in some frames). The estimate therefore uses the centre of a circle of the camera-predicted radius fitted to the ball outline; area_ratio records how far each raw blob is from a full ball."
+  ],
+  "report_path": "/Users/deveshvyas/Downloads/real2sim/results/audit/camera_fit/report.json",
+  "refined": true,
+  "config_written": {
+    "bowl": true,
+    "start": true
+  },
+  "renders": {
+    "sim_task_path": "/Users/deveshvyas/Downloads/real2sim/configs/task.yaml",
+    "table_top_z_task_m": 0.0,
+    "reset_seed0": "/Users/deveshvyas/Downloads/real2sim/results/audit/sim_vs_real_iphone.jpg",
+    "grasp": "/Users/deveshvyas/Downloads/real2sim/results/audit/camera_fit/sim_vs_real_grasp_012_00769.jpg",
+    "grasp_state_deg": [
+      26.55,
+      28.04,
+      35.65,
+      -60.62,
+      -12.26,
+      38.04
+    ],
+    "grasp_joint_positions_rad": [
+      0.46338491640449453,
+      0.48939032225921,
+      0.6222098783359784,
+      -1.0580185925589625,
+      -0.2139773662945048,
+      0.5558299600000001
+    ],
+    "grasp_ball_fk_task": [
+      0.3343490548760308,
+      -0.1515743074793123,
+      0.08713350175714221
+    ]
+  }
+}

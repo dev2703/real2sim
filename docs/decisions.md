@@ -19,7 +19,7 @@ Conflict order: latest explicit user approval → plan contracts → approved en
 | D-011 | Architecture / system design documents | **APPROVED** (both documents) | 2026-10-12 |
 | D-012 | Calibration values before measurement | **APPROVED by user: use standard values**, labelled PROVISIONAL in `docs/calibration.md` | 2026-10-12 |
 | D-013 | Gripper channel of the 7-D Cartesian action label | **APPROVED: option A** (leader command / 100) | 2026-10-12 |
-| D-014 | Real-to-sim joint mapping and base height offset | **PENDING APPROVAL** (signs verified; recommend a 1.2 cm provisional base lift) | 2026-10-13 |
+| D-014 | Real-to-sim joint mapping and base height offset | **APPROVED: option A** (signs kept; `base_z_offset` 0.012 m PROVISIONAL) | 2026-10-13 |
 | D-015 | Panda embodiment: gravity compensation, TCP frame, start pose | **IMPLEMENTED as engineering defaults; flagged for review** | 2026-10-13 |
 
 Approvals above were given by the user in chat on 2026-10-12 (evening, AEDT) in answer to the
@@ -362,6 +362,11 @@ simulated arm is elbow-up too. An offset grid search (lift, elbow, wrist_flex in
 offset that keeps the 8 grasp positions fixed while changing the posture; every candidate moves
 the gripper by 1–3 cm for no gain. The visual difference is the camera's weakly constrained
 depth (PnP focal refinement was degenerate), not the joints. Signs and zero offsets stand.
+
+**Approved (user, 2026-10-13): A.** `configs/task.yaml robot_so101.base_z_offset = 0.012`.
+Supporting evidence from the E4b oracle: the dataset's grasp style (fixed jaw under the ball,
+tilt 45–76°) is infeasible in sim with the base on the table because the fixed jaw body extends
+2.7 cm below its finger surface; a lift of this size is what lets the fixed jaw get under the ball.
 
 ---
 
