@@ -1,0 +1,176 @@
+{
+  "rows": [
+    {
+      "seed": 0,
+      "before_m": 0.06873,
+      "no_handoff_m": 0.06826,
+      "closest_tick": 98,
+      "gripper_target_at_closest": 63.368682861328125,
+      "max_gripper_target": 69.97017669677734,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.01847772706846279,
+        -0.06176018942027839,
+        0.022439418583843462
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 1,
+      "before_m": 0.04973,
+      "no_handoff_m": 0.0502,
+      "closest_tick": 99,
+      "gripper_target_at_closest": 41.60346984863281,
+      "max_gripper_target": 65.69864654541016,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        0.01866473370165117,
+        -0.04154029920914143,
+        0.0211213121528937
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 2,
+      "before_m": 0.0525,
+      "no_handoff_m": 0.05104,
+      "closest_tick": 116,
+      "gripper_target_at_closest": 63.557090759277344,
+      "max_gripper_target": 66.51881408691406,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.006377510952053911,
+        -0.049086265860159656,
+        0.012442759052837093
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 3,
+      "before_m": 0.0527,
+      "no_handoff_m": 0.0526,
+      "closest_tick": 94,
+      "gripper_target_at_closest": 65.09403228759766,
+      "max_gripper_target": 69.22248077392578,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.01648096694284984,
+        -0.0474616577726476,
+        0.015563684127660626
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 4,
+      "before_m": 0.11498,
+      "no_handoff_m": 0.11198,
+      "closest_tick": 93,
+      "gripper_target_at_closest": 48.493133544921875,
+      "max_gripper_target": 51.24873733520508,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.03113907645775782,
+        -0.10322439881892133,
+        0.03024917599710275
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 5,
+      "before_m": 0.04666,
+      "no_handoff_m": 0.04854,
+      "closest_tick": 92,
+      "gripper_target_at_closest": 53.11760711669922,
+      "max_gripper_target": 65.9679946899414,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        0.015675530750625166,
+        -0.04587004381152057,
+        -0.002480614131344372
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 6,
+      "before_m": 0.13605,
+      "no_handoff_m": 0.13332,
+      "closest_tick": 189,
+      "gripper_target_at_closest": 52.22223663330078,
+      "max_gripper_target": 53.258304595947266,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.05314845071780411,
+        -0.11641063441072026,
+        0.03739844885784427
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 7,
+      "before_m": 0.25148,
+      "no_handoff_m": 0.25148,
+      "closest_tick": 13,
+      "gripper_target_at_closest": -0.1358795166015625,
+      "max_gripper_target": 1.1258068084716797,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.18535585520141146,
+        -0.16990030706768866,
+        0.004615293204330517
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 8,
+      "before_m": 0.26918,
+      "no_handoff_m": 0.26918,
+      "closest_tick": 3,
+      "gripper_target_at_closest": 0.8782863616943359,
+      "max_gripper_target": 0.8988285064697266,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        -0.19091858635213893,
+        -0.18958203333483814,
+        0.008211532874261462
+      ],
+      "ever_held": false
+    },
+    {
+      "seed": 9,
+      "before_m": 0.07839,
+      "no_handoff_m": 0.08221,
+      "closest_tick": 114,
+      "gripper_target_at_closest": 41.31167984008789,
+      "max_gripper_target": 65.7826156616211,
+      "prefix_max_state_difference": 0.0,
+      "closest_tool_minus_ball": [
+        0.0364691802382478,
+        -0.06893861267591747,
+        0.026007331365562103
+      ],
+      "ever_held": false
+    }
+  ],
+  "summary": {
+    "n": 10,
+    "aborted": 0,
+    "successes": 0,
+    "success_rate": 0.0,
+    "lifted": 0,
+    "delivered": 0,
+    "released": 0,
+    "rolled_out": 0,
+    "ball_escaped_table": 0,
+    "phase_failed_counts": {
+      "approach": 10,
+      "grasp": 0,
+      "transport": 0,
+      "release": 0,
+      "none": 0,
+      "aborted": 0
+    },
+    "ik_rejections_total": 0,
+    "mean_latency_ms": 14.992,
+    "max_action_saturation": 0.3333
+  }
+}

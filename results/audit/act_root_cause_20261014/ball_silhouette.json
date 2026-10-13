@@ -1,0 +1,598 @@
+{
+  "kind": "CACHED_FIRST_FRAME_BALL_SILHOUETTE_DIAGNOSTIC",
+  "rows": [
+    {
+      "split": "train",
+      "episode": 0,
+      "real_detection": [
+        169.14864864864865,
+        63.22432432432432,
+        370
+      ],
+      "sim_detection": [
+        168.65463917525773,
+        62.634020618556704,
+        388
+      ],
+      "diameter_ratio_sim_real": 1.0240354723585745,
+      "centroid_difference_policy_px": 0.7697427004155047
+    },
+    {
+      "split": "train",
+      "episode": 5,
+      "real_detection": [
+        168.44626168224298,
+        69.89252336448598,
+        428
+      ],
+      "sim_detection": [
+        168.0774818401937,
+        69.23970944309927,
+        413
+      ],
+      "diameter_ratio_sim_real": 0.9823203505109916,
+      "centroid_difference_policy_px": 0.7497763585617866
+    },
+    {
+      "split": "train",
+      "episode": 6,
+      "real_detection": [
+        167.9862385321101,
+        70.03899082568807,
+        436
+      ],
+      "sim_detection": [
+        167.6318407960199,
+        69.31592039800995,
+        402
+      ],
+      "diameter_ratio_sim_real": 0.9602178651867779,
+      "centroid_difference_policy_px": 0.8052506434200959
+    },
+    {
+      "split": "train",
+      "episode": 7,
+      "real_detection": [
+        169.03863636363636,
+        71.37727272727273,
+        440
+      ],
+      "sim_detection": [
+        168.7439024390244,
+        70.64634146341463,
+        410
+      ],
+      "diameter_ratio_sim_real": 0.9653072991634227,
+      "centroid_difference_policy_px": 0.7881171225156596
+    },
+    {
+      "split": "train",
+      "episode": 8,
+      "real_detection": [
+        168.117903930131,
+        75.63973799126637,
+        458
+      ],
+      "sim_detection": [
+        167.83916083916083,
+        74.96270396270397,
+        429
+      ],
+      "diameter_ratio_sim_real": 0.9678229294180953,
+      "centroid_difference_policy_px": 0.7321699164777582
+    },
+    {
+      "split": "train",
+      "episode": 9,
+      "real_detection": [
+        176.83624454148472,
+        75.7707423580786,
+        458
+      ],
+      "sim_detection": [
+        176.6164705882353,
+        75.16470588235295,
+        425
+      ],
+      "diameter_ratio_sim_real": 0.9633003676181563,
+      "centroid_difference_policy_px": 0.6446555672891175
+    },
+    {
+      "split": "train",
+      "episode": 10,
+      "real_detection": [
+        179.40869565217392,
+        75.89565217391305,
+        460
+      ],
+      "sim_detection": [
+        179.0,
+        75.33333333333333,
+        432
+      ],
+      "diameter_ratio_sim_real": 0.9690874237046979,
+      "centroid_difference_policy_px": 0.6951507854967769
+    },
+    {
+      "split": "train",
+      "episode": 12,
+      "real_detection": [
+        176.22596153846155,
+        76.79326923076923,
+        416
+      ],
+      "sim_detection": [
+        175.92773892773891,
+        76.16783216783217,
+        429
+      ],
+      "diameter_ratio_sim_real": 1.015504800579495,
+      "centroid_difference_policy_px": 0.6928984378980441
+    },
+    {
+      "split": "train",
+      "episode": 13,
+      "real_detection": [
+        164.16626506024096,
+        74.73734939759036,
+        415
+      ],
+      "sim_detection": [
+        164.1355140186916,
+        74.02570093457943,
+        428
+      ],
+      "diameter_ratio_sim_real": 1.015541875653003,
+      "centroid_difference_policy_px": 0.7123125447878842
+    },
+    {
+      "split": "train",
+      "episode": 14,
+      "real_detection": [
+        169.28157894736842,
+        76.18947368421053,
+        380
+      ],
+      "sim_detection": [
+        168.93953488372094,
+        75.43953488372092,
+        430
+      ],
+      "diameter_ratio_sim_real": 1.063756996389881,
+      "centroid_difference_policy_px": 0.8242586644714528
+    },
+    {
+      "split": "train",
+      "episode": 15,
+      "real_detection": [
+        167.50782997762863,
+        74.94630872483222,
+        447
+      ],
+      "sim_detection": [
+        167.1545667447307,
+        74.24824355971897,
+        427
+      ],
+      "diameter_ratio_sim_real": 0.9773726365586016,
+      "centroid_difference_policy_px": 0.7823617363228439
+    },
+    {
+      "split": "train",
+      "episode": 16,
+      "real_detection": [
+        163.55384615384617,
+        74.24395604395605,
+        455
+      ],
+      "sim_detection": [
+        163.13002364066193,
+        73.5224586288416,
+        423
+      ],
+      "diameter_ratio_sim_real": 0.9641941348454313,
+      "centroid_difference_policy_px": 0.8367700058550267
+    },
+    {
+      "split": "train",
+      "episode": 17,
+      "real_detection": [
+        164.67770419426049,
+        75.0242825607064,
+        453
+      ],
+      "sim_detection": [
+        164.20185614849188,
+        74.29930394431554,
+        431
+      ],
+      "diameter_ratio_sim_real": 0.9754152339322963,
+      "centroid_difference_policy_px": 0.8671939557479613
+    },
+    {
+      "split": "train",
+      "episode": 19,
+      "real_detection": [
+        170.35698924731182,
+        78.75483870967741,
+        465
+      ],
+      "sim_detection": [
+        170.0,
+        78.0,
+        437
+      ],
+      "diameter_ratio_sim_real": 0.9694250596289324,
+      "centroid_difference_policy_px": 0.834998682827537
+    },
+    {
+      "split": "train",
+      "episode": 20,
+      "real_detection": [
+        170.06277056277057,
+        77.71428571428571,
+        462
+      ],
+      "sim_detection": [
+        169.7716894977169,
+        77.02511415525115,
+        438
+      ],
+      "diameter_ratio_sim_real": 0.9736795920896915,
+      "centroid_difference_policy_px": 0.748121396709726
+    },
+    {
+      "split": "train",
+      "episode": 21,
+      "real_detection": [
+        168.10920770877945,
+        75.21841541755889,
+        467
+      ],
+      "sim_detection": [
+        167.74704491725768,
+        74.60520094562648,
+        423
+      ],
+      "diameter_ratio_sim_real": 0.9517255826037467,
+      "centroid_difference_policy_px": 0.7121754532067102
+    },
+    {
+      "split": "train",
+      "episode": 22,
+      "real_detection": [
+        167.38839285714286,
+        75.52232142857143,
+        448
+      ],
+      "sim_detection": [
+        167.06542056074767,
+        74.80607476635514,
+        428
+      ],
+      "diameter_ratio_sim_real": 0.9774237273860007,
+      "centroid_difference_policy_px": 0.7856973879139245
+    },
+    {
+      "split": "train",
+      "episode": 26,
+      "real_detection": [
+        152.65764023210832,
+        100.85106382978724,
+        517
+      ],
+      "sim_detection": [
+        152.251953125,
+        99.375,
+        512
+      ],
+      "diameter_ratio_sim_real": 0.9951526617137967,
+      "centroid_difference_policy_px": 1.5307992874573992
+    },
+    {
+      "split": "train",
+      "episode": 28,
+      "real_detection": [
+        157.02217741935485,
+        95.6350806451613,
+        496
+      ],
+      "sim_detection": [
+        156.60665362035226,
+        94.7436399217221,
+        511
+      ],
+      "diameter_ratio_sim_real": 1.0150083425686072,
+      "centroid_difference_policy_px": 0.983527625917709
+    },
+    {
+      "split": "train",
+      "episode": 29,
+      "real_detection": [
+        181.4364640883978,
+        105.60405156537753,
+        543
+      ],
+      "sim_detection": [
+        181.44901960784313,
+        104.04509803921569,
+        510
+      ],
+      "diameter_ratio_sim_real": 0.9691369971975152,
+      "centroid_difference_policy_px": 1.5590040852419176
+    },
+    {
+      "split": "train",
+      "episode": 30,
+      "real_detection": [
+        172.69072164948454,
+        63.621134020618555,
+        388
+      ],
+      "sim_detection": [
+        172.2729658792651,
+        62.84776902887139,
+        381
+      ],
+      "diameter_ratio_sim_real": 0.9909383244615165,
+      "centroid_difference_policy_px": 0.8789842399109015
+    },
+    {
+      "split": "train",
+      "episode": 31,
+      "real_detection": [
+        177.57635467980296,
+        68.29064039408867,
+        406
+      ],
+      "sim_detection": [
+        177.31829573934837,
+        67.74937343358395,
+        399
+      ],
+      "diameter_ratio_sim_real": 0.9913418283769,
+      "centroid_difference_policy_px": 0.5996368394975053
+    },
+    {
+      "split": "train",
+      "episode": 32,
+      "real_detection": [
+        165.28297872340426,
+        76.11276595744681,
+        470
+      ],
+      "sim_detection": [
+        165.0115207373272,
+        75.27880184331798,
+        434
+      ],
+      "diameter_ratio_sim_real": 0.9609392568311219,
+      "centroid_difference_policy_px": 0.8770322581636879
+    },
+    {
+      "split": "train",
+      "episode": 35,
+      "real_detection": [
+        160.86595744680852,
+        77.52127659574468,
+        470
+      ],
+      "sim_detection": [
+        160.45291479820628,
+        76.88340807174887,
+        446
+      ],
+      "diameter_ratio_sim_real": 0.9741335484484486,
+      "centroid_difference_policy_px": 0.7599213666353539
+    },
+    {
+      "split": "train",
+      "episode": 36,
+      "real_detection": [
+        159.01089324618735,
+        78.20479302832244,
+        459
+      ],
+      "sim_detection": [
+        158.59459459459458,
+        77.23873873873873,
+        444
+      ],
+      "diameter_ratio_sim_real": 0.9835244081556433,
+      "centroid_difference_policy_px": 1.0519341508578581
+    },
+    {
+      "split": "train",
+      "episode": 37,
+      "real_detection": [
+        162.4295010845987,
+        76.77440347071584,
+        461
+      ],
+      "sim_detection": [
+        162.0,
+        76.05057471264368,
+        435
+      ],
+      "diameter_ratio_sim_real": 0.9713912021832186,
+      "centroid_difference_policy_px": 0.8416645725488
+    },
+    {
+      "split": "train",
+      "episode": 38,
+      "real_detection": [
+        173.01982378854626,
+        78.45154185022027,
+        454
+      ],
+      "sim_detection": [
+        172.77397260273972,
+        77.81050228310502,
+        438
+      ],
+      "diameter_ratio_sim_real": 0.9822208047333865,
+      "centroid_difference_policy_px": 0.6865672087784135
+    },
+    {
+      "split": "train",
+      "episode": 39,
+      "real_detection": [
+        159.77292576419214,
+        80.36681222707423,
+        458
+      ],
+      "sim_detection": [
+        159.2483660130719,
+        79.5838779956427,
+        459
+      ],
+      "diameter_ratio_sim_real": 1.0010911077986544,
+      "centroid_difference_policy_px": 0.942416544444459
+    },
+    {
+      "split": "val",
+      "episode": 1,
+      "real_detection": [
+        163.76253298153034,
+        69.71767810026385,
+        379
+      ],
+      "sim_detection": [
+        163.42926829268293,
+        68.96585365853659,
+        410
+      ],
+      "diameter_ratio_sim_real": 1.0400933589109487,
+      "centroid_difference_policy_px": 0.8223778596308838
+    },
+    {
+      "split": "val",
+      "episode": 2,
+      "real_detection": [
+        167.10416666666666,
+        69.98379629629629,
+        432
+      ],
+      "sim_detection": [
+        166.61330049261085,
+        69.33251231527093,
+        406
+      ],
+      "diameter_ratio_sim_real": 0.9694404648119527,
+      "centroid_difference_policy_px": 0.8155491553379404
+    },
+    {
+      "split": "val",
+      "episode": 3,
+      "real_detection": [
+        161.3148148148148,
+        68.43981481481481,
+        432
+      ],
+      "sim_detection": [
+        160.84520884520884,
+        67.55528255528256,
+        407
+      ],
+      "diameter_ratio_sim_real": 0.9706336227586749,
+      "centroid_difference_policy_px": 1.001462473007744
+    },
+    {
+      "split": "val",
+      "episode": 4,
+      "real_detection": [
+        162.6037296037296,
+        68.22144522144522,
+        429
+      ],
+      "sim_detection": [
+        162.0778588807786,
+        67.48661800486617,
+        411
+      ],
+      "diameter_ratio_sim_real": 0.9787961779869995,
+      "centroid_difference_policy_px": 0.9036100129382797
+    },
+    {
+      "split": "val",
+      "episode": 11,
+      "real_detection": [
+        174.1868131868132,
+        74.66373626373627,
+        455
+      ],
+      "sim_detection": [
+        173.89695550351288,
+        74.0023419203747,
+        427
+      ],
+      "diameter_ratio_sim_real": 0.9687422456265332,
+      "centroid_difference_policy_px": 0.7221218415190743
+    },
+    {
+      "split": "val",
+      "episode": 18,
+      "real_detection": [
+        163.21428571428572,
+        75.40178571428571,
+        448
+      ],
+      "sim_detection": [
+        162.82638888888889,
+        74.74305555555556,
+        432
+      ],
+      "diameter_ratio_sim_real": 0.9819805060619657,
+      "centroid_difference_policy_px": 0.7644536409577719
+    },
+    {
+      "split": "val",
+      "episode": 23,
+      "real_detection": [
+        174.76442307692307,
+        79.67307692307692,
+        416
+      ],
+      "sim_detection": [
+        174.47427293064877,
+        78.99328859060402,
+        447
+      ],
+      "diameter_ratio_sim_real": 1.0365901942278013,
+      "centroid_difference_policy_px": 0.7391206155623572
+    },
+    {
+      "split": "val",
+      "episode": 24,
+      "real_detection": [
+        166.4923076923077,
+        104.21346153846154,
+        520
+      ],
+      "sim_detection": [
+        166.36996336996336,
+        103.36630036630036,
+        546
+      ],
+      "diameter_ratio_sim_real": 1.02469507659596,
+      "centroid_difference_policy_px": 0.8559498728473516
+    },
+    {
+      "split": "val",
+      "episode": 27,
+      "real_detection": [
+        168.73593073593074,
+        87.71428571428571,
+        462
+      ],
+      "sim_detection": [
+        168.425,
+        87.0,
+        480
+      ],
+      "diameter_ratio_sim_real": 1.019294382875251,
+      "centroid_difference_policy_px": 0.7790263180272325
+    }
+  ],
+  "caveat": "HSV segmentation and perspective affect area; this is not a physical radius measurement."
+}

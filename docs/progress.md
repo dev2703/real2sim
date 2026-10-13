@@ -1098,3 +1098,76 @@ policy training is justified by these implementation checks: the current failure
 requires isolating response-adapter handoff and terminal alignment first. Nothing
 is training in the background. Publication includes the augmentation/loss, paired
 image, response identification and online-adapter code/tests plus measured results.
+
+
+## 2026-10-14 — Remaining 0/10: handoff ablation and geometry consistency
+
+User requested investigation of the remaining ACT failures. Ran one bounded,
+frozen-checkpoint diagnostic with the response adapter active for all 300 ticks,
+using unchanged geometry, seeds 0–9, scoring and policy inputs. No retraining,
+calibration edits, hardware access or dataset/split changes. The extended horizon
+extrapolates beyond the response model's fitted approach window and is a diagnostic,
+not a validated replacement controller. `scripts/eval_act_response.py` retains its
+original 78-tick default; `--diagnostic-active-ticks 300` labels this ablation.
+
+**Handoff is not the main explanation in these trials.** All ten observed-state
+prefixes through the first 78 ticks matched the prior run exactly. Removing the
+handoff still gives 0/10, no holds/lifts and no aborts. Mean closest distance is
+11.188 cm versus 11.204 cm previously; median 7.524 versus 7.356 cm. The escaped
+ball in the earlier run no longer escapes, so the switch can affect later contact
+without explaining the shared failure to grasp. Five seeds still get within
+4.85–6.83 cm. All ten closest tool positions are on the negative-task-y side of
+the ball. Seeds 7 and 8 stay at rest with maximum gripper targets only 1.13% and
+0.90%; their ball positions are within approximately 1.4 cm of an estimated training
+start, so simply being far outside the training ball-position range is insufficient
+as an explanation. Other trials approach, miss and stall/retreat without holding.
+
+**Initial ball alignment does not establish robot alignment.** Checked cached
+first-frame pairs for all 28 train and nine validation episodes with the same HSV
+detector. All balls were detected; median real/sim centroid difference is 0.79
+policy pixels and median sim/real equivalent diameter ratio is 0.977 (range
+0.952–1.064). This checks the cache, not physical ball radius: positioning was
+derived from those detections. It argues against a gross initial silhouette error.
+
+Reprojected the 11 existing hand-read robot-joint landmarks from episode 5 at four
+recorded states, excluding the ambiguous gripper-tip landmark. With the fixed
+camera and unclamped recorded joints, error is **60.5 native pixels RMS**; individual
+moving wrist/elbow errors reach 102.7/117.1 pixels (about 20.5/23.4 policy pixels).
+Annotation uncertainty is approximately 15 native pixels. The saved real/sim
+approach montage visibly shows different arm alignment despite matching ball centres.
+These reused training-episode observations are diagnostic, not independent camera
+validation; camera extrinsics/intrinsics, joint zero mapping and image timing remain
+confounded. Do not assign the entire error to camera colour/material or one joint.
+
+Held-ball reprojection additionally needs a ball-in-gripper offset. The site-centre
+proxy gives train/validation RMS 140.9/134.4 native pixels. Using the oracle's
+[-1, 0, 3] cm site offset still gives 112.3/112.3 pixels. Fitting only a constant
+offset on 15 TRAIN held correspondences reduces RMS to 42.2 train / 42.7 on 12
+validation correspondences, but requires a 7.52 cm offset norm. This is a nuisance
+fit, **not a measured grasp offset**, and was not applied to any config or renderer.
+Repeated frames are correlated and validation has been reused. The median minimum
+distance from the tool site to the observed camera ray is 5.76 cm, illustrating why
+the tool-site-as-ball-centre assumption is inadequate. Three of 27 recorded held
+poses also produce robot-table penetration (1.8, 4.0 and 14.0 mm) in static FK;
+this is further inconsistency, not evidence that hardware actually penetrated a table.
+
+**Interpretation and next priority:** evidence supports multiple interacting gaps,
+not a proven single cause. Recorded leader-target versus follower-response mismatch
+remains demonstrated by the earlier replay audits. Paired fine-tuning improves
+approach image behavior but deliberately supplies no simulated contact/transport
+observations; it stops on ball motion/occlusion, proximity or the time cap. Therefore
+it cannot be claimed to have solved the simulated grasp/recovery distribution gap.
+First resolve camera/robot correspondence across multiple poses using independent
+landmarks, with measured constraints and separate validation. Then validate recorded
+motion/contact replay before regenerating pairs through grasp and considering a
+bounded retrain. A longer run on the same inconsistent approach pairs is not justified.
+Oracle 10/10 demonstrates one feasible simulated trajectory, not correspondence of
+the real demonstrations to that trajectory or proof that all physics is correct.
+
+Evidence: `results/metrics/act_root_cause_20261014/` (ten full histories, targets,
+protocol and exact-prefix comparison), `results/audit/act_root_cause_20261014/`
+(ball silhouettes, independent robot landmarks, held-offset audit and montage).
+Geometry audit command: `.venv/bin/python scripts/diag_act_geometry_residuals.py`;
+output paths refuse overwrite. Original ball-only audit retained before adding
+landmarks. Ruff and diff whitespace checks passed; the response-model/adapter
+regression suite passed all 17 tests. No training is running.

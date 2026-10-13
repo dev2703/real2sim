@@ -10,7 +10,9 @@ from real2sim.policy.paired import file_sha256
 from real2sim.sim.follower_response import FollowerResponse
 
 
-def main(out):
+def main(out, diagnostic_active_ticks=None):
+    if diagnostic_active_ticks is not None and diagnostic_active_ticks < 1:
+        raise ValueError("diagnostic active ticks must be positive")
     if out.exists():
         raise FileExistsError("refusing to overwrite response evaluation")
     out.mkdir(parents=True)
@@ -31,6 +33,9 @@ def main(out):
     # End at the last known state in the shortest TRAINING stationary-ball prefix.
     # This is a fixed early window, not a claim of online phase recognition.
     active_ticks = min(r["eligible_ticks"] for r in prefixes) - 1
+    training_supported_ticks = active_ticks
+    if diagnostic_active_ticks is not None:
+        active_ticks = diagnostic_active_ticks
     provenance = {"kind": "FROZEN_ACT_EARLY_WINDOW_RESPONSE_DIAGNOSTIC",
         "active_ticks": active_ticks, "horizon_seconds": active_ticks / 10,
         "horizon_rule": "shortest training stationary-ball prefix minus one tick; fixed before evaluation",
@@ -40,6 +45,14 @@ def main(out):
         "checkpoint_sha256": file_sha256(checkpoint / "model.safetensors"),
         "note": "No privileged gate/inputs or new training. Fixed window may not match policy phase. "
                 "Online measured-state feedback differs from precomputed response replay; test it explicitly."}
+    if diagnostic_active_ticks is not None:
+        provenance.update({
+            "kind": "FROZEN_ACT_RESPONSE_HORIZON_ABLATION",
+            "training_supported_ticks": training_supported_ticks,
+            "horizon_rule": "explicit diagnostic override; extrapolates beyond fitted approach data",
+            "note": "Causal handoff diagnostic only. Full-task response validity is unestablished. "
+                    "No privileged gate/inputs or new training; original benchmark scoring retained.",
+        })
     (out / "protocol.json").write_text(json.dumps(provenance, indent=2) + "\n")
     original = run.build_learned_controller
     adapters = []
@@ -60,7 +73,9 @@ def main(out):
             config=Path("results/metrics/geometry_3988577/configs/sim_so101.yaml"),
             eval_config=Path("results/metrics/geometry_3988577/configs/eval_so101.yaml"),
             n_trials=10, seed_start=0, out=out, video=False, controller="learned", device="cpu",
-            experiment_id="DIAGNOSTIC_PAIRED_ACT_EARLY_RESPONSE")
+            experiment_id=("DIAGNOSTIC_PAIRED_ACT_RESPONSE_HORIZON_ABLATION"
+                           if diagnostic_active_ticks is not None
+                           else "DIAGNOSTIC_PAIRED_ACT_EARLY_RESPONSE"))
         if file_sha256(model_path) != provenance["response_model_sha256"]:
             raise RuntimeError("response model changed during evaluation")
         if file_sha256(checkpoint / "model.safetensors") != provenance["checkpoint_sha256"]:
@@ -75,4 +90,7 @@ def main(out):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=Path("results/metrics/act_response_20261013"))
-    main(parser.parse_args().out)
+    parser.add_argument("--diagnostic-active-ticks", type=int, default=None,
+                        help="Override the frozen early horizon for a labelled diagnostic ablation")
+    args = parser.parse_args()
+    main(args.out, args.diagnostic_active_ticks)

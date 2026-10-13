@@ -1,0 +1,18 @@
+{
+  "kind": "FROZEN_ACT_ROOT_CAUSE_REVIEW",
+  "checkpoint_unchanged": true,
+  "response_model_unchanged": true,
+  "n_trials": 10,
+  "successes": 0,
+  "aborts": 0,
+  "prefix_match_through_78_ticks": true,
+  "mean_closest_m": 0.11188099999999998,
+  "training_started": false,
+  "tests": "17 response-model/adapter tests passed",
+  "conclusion": "Handoff removal does not resolve failure. Robot/camera correspondence and contact-phase coverage remain unresolved; prior command-response mismatch is also demonstrated. No single root cause established.",
+  "implementation_sha256": {
+    "scripts/eval_act_response.py": "0dd35575066474d2c177947aa652672dc6f407cf1a35b67b0514611463955216",
+    "scripts/diag_act_geometry_residuals.py": "6cc80459d290bf4bcc7e0412e584381a43f48042105f51fac7bb6e18d8fe4464",
+    "src/real2sim/evaluation/response_adapter.py": "d36da387b0d61bca911f90ce41cd573c07f72095f14597d3392a8bcdede55947"
+  }
+}
