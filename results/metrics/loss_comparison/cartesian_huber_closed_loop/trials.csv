@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,0,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.18232,300,3,14.13,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,1,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.18596,300,3,14.18,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,2,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.17552,300,3,14.15,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,3,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.17653,300,3,14.21,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,4,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.14598,300,3,14.16,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,5,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.16846,300,3,14.18,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,6,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.17176,300,3,14.16,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,7,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.18133,300,3,14.28,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,8,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.18538,300,3,14.19,0.1429,,
+LOSS_cartesian_huber_real_only,LEARNED_ACT,so101,9,172e091031500e9e6e76f3eeb1eb4cb19b15a448c28b8ad6794b998c9bd8276c,2000,False,False,False,False,False,False,approach,0.18183,300,3,14.21,0.1429,,

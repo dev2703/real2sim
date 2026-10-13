@@ -90,6 +90,11 @@ def save_checkpoint(
         "derived_files_sha256": manifest["files_sha256"],
         "prepare_version": manifest["prepare_version"],
     }
+    if run_info.get("paired_images"):
+        contract["training_provenance"] = {
+            "paired_images": run_info["paired_images"],
+            "initial_checkpoint": run_info.get("initial_checkpoint"),
+        }
     (out / "real2sim_contract.json").write_text(json.dumps(contract, indent=2) + "\n")
     (out / "run_info.json").write_text(json.dumps(run_info, indent=2) + "\n")
     if optimizer is not None:

@@ -11,7 +11,7 @@ It changes only when work is verified or a decision in `docs/decisions.md` is ap
 |---|---|---|---|
 | M0 scaffold + audit | G0 | **PASS**: env, package, audit CLI, full audit artifacts in `results/audit/`, final split 28/9 | none |
 | M0.5 docs | G0.5 | **PASS**: all docs exist; architecture and system design approved | none |
-| M1 joint ACT baseline | G1 | **G1 PASS** on step-2000 checkpoint (open-loop val L1 0.337); 20k-step MPS run continuing | none |
+| M1 joint ACT baseline | G1 | **PASS**: original 20k-step MPS run completed; frozen checkpoint 020000. D-016 augmentation remedy launched separately on MPS (see progress/status file) | none |
 | M2 SO-101 MuJoCo | G2 | **PASS**: scene from task.yaml, 48 sim tests, bowl physics measured, replay diagnostic (E0), PnP camera fit applied | D-014 base height |
 | M3 Cartesian dataset | G3 | **PASS**: 7-D labels and 13-float proprio built, 2-step train/infer round trip OK; full run queued on MPS | joint-map verification at M2 |
 | M4 Cartesian ACT + closed loop | G4 | **PASS (0/10 measured)**: frozen checkpoint 006000, 10 instrumented learned trials, causes isolated (domain-gap diagnostic, oracle 10/10) | none |
@@ -20,6 +20,21 @@ It changes only when work is verified or a decision in `docs/decisions.md` is ap
 | M7 packaging | G7 | **IN PROGRESS**: README results table, protocol §5, limitations; videos untracked | public links |
 
 Skills under `.agents/skills/`: G1 reached; still **DEFERRED** in favour of M2/M4 (plan §10 allows skipping). Not required for P0.
+
+**2026-10-13 D-016 follow-up:** frozen-policy vision and familiar-start diagnostics completed;
+both models depend on images and both remain 0/4 per familiar-start condition. Separate bounded
+augmentation/regularisation retrains are managed by `scripts/run_act_remedies.py`; actual phase,
+completion/failure, and eventual comparisons are in `outputs/act_remedies/status.json`.
+The original M1/M4 checkpoints and primary experiment results remain unchanged.
+
+**2026-10-13 D-017 follow-up:** approved matched L1/L2/Huber diagnostic. The existing D-016
+L1 models serve as controls; all four fresh L2/Huber runs and both controls are now **complete**.
+All joint runs stopped at 4,000 steps (best 1,000); Cartesian at 5,000 (best 2,000).
+L1 has the lowest held-out MAE in both representations. L2 slightly lowers Cartesian RMSE/p95,
+but every checkpoint remains **0/10** in simulation. Full results:
+`results/metrics/loss_comparison/summary.json`. Configuration:
+`configs/act_loss_comparison.yaml`; queue state: `outputs/act_loss_comparison/status.json`.
+New wrist-camera recording is proposed; adding that stream to training awaits a new data audit.
 
 ## 1. Evidence-driven changes to the original schedule
 
@@ -114,3 +129,29 @@ short, M6 ships FSM + deterministic comparator and marks the learned specialist 
 Each milestone ends with the §9 report block in chat and a `docs/progress.md` entry listing exact
 commands and artifacts. Failed experiments are reported as failures. Scripted or replayed motion
 is always captioned `SCRIPTED REPLAY` and never presented as learned behaviour.
+
+
+### D-020 paired pilot review (2026-10-13)
+
+Completed 1,000-step MPS pilot, real/paired validation and ten unchanged trials.
+Still 0/10; mean closest distance improved 24.2 → 14.0 cm. Completed the approved
+recorded-command/follower replay diagnostic; control and mapping discrepancies
+remain. No larger run queued. See `docs/progress.md` and
+`results/metrics/paired_approach_3988577/review.json` for measured results.
+
+
+### D-022 follower-response diagnostic completed (2026-10-13)
+
+Full-episode response fit rejected; approach-only response reduced held-out
+scripted replay tool error 3.06 → 2.20 cm, eight of nine episodes improved.
+No production adoption or ACT integration. Online approach-only adapter evaluation
+is the next candidate; grasp/transport remain unvalidated. See progress and
+`results/audit/follower_response_approach_20261013/review.json`.
+
+
+### D-023 online response trial completed (2026-10-14)
+
+Ten frozen-ACT trials: still 0/10; closest-distance mean 14.0 → 11.2 cm, median
+13.1 → 7.4 cm; seven seeds improve, one ball escapes. Production unchanged.
+Contact/trace audit identifies handoff timing and lateral terminal error as
+unresolved. No retraining launched. See `results/metrics/act_response_20261013/review.json`.

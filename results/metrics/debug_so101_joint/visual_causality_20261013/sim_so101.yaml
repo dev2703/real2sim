@@ -1,0 +1,100 @@
+# SO-101 MuJoCo scene (plan M2). Geometry, objects, camera and the real->sim joint mapping are
+# read from configs/task.yaml (single source of truth, provenance labels there and in
+# docs/calibration.md). This file holds simulator-only knobs. Upstream Menagerie actuator gains
+# and collision exclusions are never changed (plan rule 3; tests pin the so101.xml SHA).
+robot: so101
+model: assets/menagerie/robotstudio_so101/so101.xml
+manifest: assets/menagerie/manifest.json
+task_config: configs/task.yaml
+data_config: configs/data.yaml
+physics_hz: 500
+control_hz: 10            # must equal data.yaml policy_hz; episode length = task.yaml timeout_s * control_hz
+joint_names: [shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper]
+tool_site: gripperframe
+
+# Frames: world z up; table top at z = task.yaml table.height (0.75); robot base body placed at
+# (0, 0, 0.75 + task.yaml robot_so101.base_z_offset = 0.012, D-014). Task frame origin = robot base
+# (T_task_so101base identity), so p_task = p_world - (0, 0, 0.75 + base_z_offset). Policy-relevant
+# poses (ee_pose, canonical proprio) are base/task-relative. The iphone camera uses task.yaml
+# camera_iphone.xyaxes_task (fitted roll) when present, else the roll-free look-at form.
+
+# Dataset-typical start pose in dataset units (LeRobot degrees, gripper %). shoulder_lift -104.7 deg
+# lies outside the MJCF range (+-100 deg) and is clamped to -100 deg (clamp 4.7 deg = 0.082 rad);
+# see docs/calibration.md section 2 (23 % of shoulder_lift readings exceed the model limit).
+initial_qpos_real_deg: [-5, -104.7, 96.7, 75, 3, 1.2]
+# Native radians of the clamped pose under task.yaml robot_so101 (sign +1, offset 0, gripper
+# -0.1745..1.7454 rad over 0..100 %). The env checks consistency at construction.
+initial_qpos: [-0.0872665, -1.7453293, 1.6877334, 1.3089969, 0.0523599, -0.1514612]
+# KNOWN LIMITATION: even with the D-014 base lift (0.012 m) this pose starts with gripper geoms
+# 11.4 mm into the table (21 robot-table contacts, measured 2026-10-13; 2.3 cm / 29 before the
+# lift), so the first control tick is a contact-driven jump. The env reports it in
+# info['privileged_metrics']['start_pose'] for every trial.
+
+table_half_size: [0.6, 0.45, 0.025]     # collision box; top at task.yaml table.height
+table_center_task_xy: [0.25, 0.0]
+
+control:
+  interface: native_mujoco_absolute_joint_positions
+  units: radians_all_six_hinges_including_gripper
+  max_velocity: [1, 1, 1, 1, 1, 1.5]    # rad/s rate limit on the position targets
+  upstream_actuators: unchanged
+
+render:
+  # Offscreen render size. The real stream is 1280x720 (task.yaml camera_iphone); 640x360 keeps the
+  # same aspect ratio and the letterbox output is identical in size (192x256) either way.
+  width: 640
+  height: 360
+
+observation:
+  joint_key: sim.joint_position          # native radians, diagnostics only
+  state_key: observation.state           # 6 dataset-unit joints (deg, gripper %) via the inverse mapping
+  image_normalization: float32_0_to_1_before_policy_normalizer
+
+# Physics-diagnostic knobs (contact softness and the sensitivity sweeps of plan M2.3).
+contacts:
+  friction: [0.6, 0.005, 0.0001]        # sliding (task.yaml ball.friction.nominal), torsional, rolling
+  solref: [0.01, 1.0]                   # timeconst s, dampratio; MuJoCo default solimp
+  sweep_sliding_friction: [0.3, 0.6, 1.0]
+  sweep_damping_ratio: [0.7, 1.0, 1.3]
+  # Bound on the static contact sink of a resting ball, asserted by tests/integration/
+  # test_so101_scene.py at every sweep point (MuJoCo's default solimp width is 1 mm). Measured
+  # values (results/audit/sim_bowl_physics.json, recorded by the same tests): 0.053 / 0.108 /
+  # 0.178 mm static at dampratio 0.7 / 1.0 / 1.3 (scales with dampratio^2); impact transient
+  # on a 0.12 m drop up to 1.93 mm at dampratio 1.3.
+  static_sink_tolerance_m: 0.0005
+
+ik:
+  solver: mujoco_damped_least_squares_diagnostic
+  position_tolerance_m: 0.003
+  orientation_tolerance_rad: 0.35
+  orientation_weight_m_per_rad: 0.025
+  damping: 0.001
+  max_iterations: 150
+  max_joint_step_rad: 0.12
+  workspace_min: [-0.10, -0.45, -0.012]  # task frame (base-relative); z = table top (-base_z_offset): the lifted start pose sits 2 mm above the table and was rejected by the old 0.015 floor
+  workspace_max: [0.55, 0.45, 0.60]
+  penetration_tolerance_m: 0.002
+
+# VISUAL ONLY (2026-10-13): colours, lighting and scenery matched to the recorded iphone frames so the
+# policy's camera input resembles training data. Targets are median RGB values of the real first frames
+# (results/metrics/debug_so101_joint/first_frame_gap). No physics, geometry, camera or contact change;
+# the upstream so101.xml is untouched (materials are recoloured in the parsed scene tree only).
+# Remove this section to recover the pre-2026-10-13 look.
+appearance:
+  robot_plastic_rgba: [0.75, 0.68, 0.55, 1]     # real robot plastic ~ (191,173,141)
+  table_rgba: [0.82, 0.74, 0.65, 0]             # collision box hidden (alpha 0); the desk is drawn by desk_extension
+  mat_rgba: [0.24, 0.24, 0.235, 1]              # mat ~ (62,61,60)
+  bowl_rgba: [0.62, 0.62, 0.58, 1]              # grey bowl
+  ball_rgba: [0.83, 0.87, 0.20, 1]              # tennis ball ~ (212,222,51)
+  lighting:
+    headlight_ambient: [0.45, 0.45, 0.45]
+    headlight_diffuse: [0.45, 0.45, 0.45]
+    headlight_specular: [0.1, 0.1, 0.1]
+    sun_diffuse: [0.4, 0.4, 0.4]
+    shadows: false
+  background_boxes:   # task frame metres (base origin, table top at z = -base_z_offset); visual only
+    - {name: desk_extension, pos_task: [0.25, -0.05, -0.0225], half_size: [1.2, 0.32, 0.01], rgba: [0.82, 0.74, 0.65, 1]}
+    - {name: floor, pos_task: [0.3, 0.5, -0.76], half_size: [3.0, 3.0, 0.01], rgba: [0.35, 0.33, 0.30, 1]}
+    - {name: wood_shelf_left, pos_task: [-0.1, 0.55, -0.15], half_size: [0.5, 0.05, 0.2], rgba: [0.53, 0.40, 0.15, 1]}
+    - {name: back_wall, pos_task: [0.3, 1.3, 0.3], half_size: [2.0, 0.01, 1.5], rgba: [0.83, 0.80, 0.76, 1]}
+    - {name: cabinet_right, pos_task: [1.0, 0.6, -0.1], half_size: [0.02, 0.5, 0.5], rgba: [0.55, 0.42, 0.18, 1]}

@@ -1,0 +1,4 @@
+# csv.DictWriter emits standard CRLF records; preserve recorded experiment bytes.
+results/**/*.csv whitespace=cr-at-eol
+# Pinned diagnostic XML retains upstream formatting; its SHA is in the audit report.
+results/audit/control_contract_20261013/so101_shoulder_range_diagnostic.xml -whitespace

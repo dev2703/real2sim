@@ -51,9 +51,16 @@ class Normalizer:
 
 
 class DerivedTickDataset(Dataset):
-    def __init__(self, root: str | Path, episodes: list[int], chunk_size: int, normalizer: Normalizer | None = None):
+    def __init__(self, root: str | Path, episodes: list[int], chunk_size: int, normalizer: Normalizer | None = None, augmentation: dict | None = None):
         self.root = Path(root)
         self.manifest = json.loads((self.root / "manifest.json").read_text())
+        self.augmentation = None
+        if augmentation is not None:
+            if not set(episodes) <= set(self.manifest["split"]["train"]):
+                raise ValueError("image augmentation is restricted to training episodes")
+            from real2sim.policy.augmentation import ImageAugmentation
+
+            self.augmentation = ImageAugmentation(augmentation, self.manifest["letterbox"])
         self.normalizer = normalizer or Normalizer.from_json(self.root / "stats.json")
         a = np.load(self.root / "arrays.npz")
         self.arrays = {k: a[k] for k in a.files}
@@ -97,5 +104,8 @@ class DerivedTickDataset(Dataset):
             "tick": t,
         }
         for k in self.camera_keys:
-            item[k] = torch.from_numpy(np.ascontiguousarray(n.image(np.asarray(self.images[k][t]))))
+            image = np.asarray(self.images[k][t])
+            if self.augmentation is not None:
+                image = self.augmentation(image)
+            item[k] = torch.from_numpy(np.ascontiguousarray(n.image(image)))
         return item

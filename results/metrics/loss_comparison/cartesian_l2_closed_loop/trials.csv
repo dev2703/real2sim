@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,0,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.14216,300,3,14.17,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,1,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.19132,300,1,14.28,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,2,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.17951,300,2,14.12,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,3,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.18076,300,2,14.14,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,4,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.14598,300,2,14.18,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,5,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.13918,300,4,14.09,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,6,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.17561,300,2,14.06,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,7,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.18681,300,2,14.13,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,8,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.19054,300,1,14.06,0.1429,,
+LOSS_cartesian_l2_real_only,LEARNED_ACT,so101,9,c16ef45abbc5610149e4fc71c58f844304549ef3c307a0f059c787d46bb4697d,2000,False,False,False,False,False,False,approach,0.18569,300,2,14.14,0.1429,,

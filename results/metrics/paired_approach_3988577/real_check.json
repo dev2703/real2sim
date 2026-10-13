@@ -1,0 +1,85 @@
+{
+  "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/act_joint_paired_approach/checkpoints/000500",
+  "checkpoint_resolved": "/Users/deveshvyas/Downloads/real2sim/outputs/act_joint_paired_approach/checkpoints/000500",
+  "checkpoint_sha256": "8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409",
+  "step": 500,
+  "device": "cpu",
+  "contract_ok": true,
+  "camera_keys": [
+    "observation.images.iphone"
+  ],
+  "image_shape_chw": [
+    3,
+    192,
+    256
+  ],
+  "chunk_shape": [
+    16,
+    20,
+    6
+  ],
+  "action_names": [
+    "shoulder_pan.pos",
+    "shoulder_lift.pos",
+    "elbow_flex.pos",
+    "wrist_flex.pos",
+    "wrist_roll.pos",
+    "gripper.pos"
+  ],
+  "first_chunk_first_action_raw": [
+    -2.2723,
+    -105.8859,
+    97.1935,
+    85.3047,
+    2.5775,
+    0.6895
+  ],
+  "all_finite": true,
+  "val_episodes": [
+    1,
+    2,
+    3,
+    4,
+    11,
+    18,
+    23,
+    24,
+    27
+  ],
+  "val_open_loop_l1_normalised": 0.31321535359893765,
+  "val_open_loop_l1_raw_per_dim": [
+    3.0769,
+    13.0307,
+    9.8521,
+    14.3484,
+    2.5502,
+    9.1055
+  ],
+  "val_open_loop_rmse_normalised": 0.5039549014314247,
+  "val_open_loop_rmse_raw_per_dim": [
+    4.609544652659717,
+    20.279973953524117,
+    17.053742806134462,
+    20.346455684853016,
+    3.87450917300948,
+    14.061075422627585
+  ],
+  "val_open_loop_p95_abs_normalised": 1.0735639691352845,
+  "val_open_loop_p95_abs_raw_per_dim": [
+    9.341080324875207,
+    46.77663017238497,
+    40.66901629977406,
+    40.726343143913965,
+    8.088084120023781,
+    31.32577479252087
+  ],
+  "valid_action_components": 477420,
+  "reconstruction_loss": {
+    "kind": "l1",
+    "huber_delta": 1.0
+  },
+  "val_samples": 4064,
+  "dataset_revision": "fd65a6600b0cd111a434ece1abfa3d44dc7b4d57",
+  "split_sha256": "948803789de23605f85378917c40680be567764c17df0774979a6f5f50091717",
+  "note": "Offline open-loop prediction error on held-out recorded episodes; not closed-loop success. RMSE and absolute-error p95 pool valid chunk action components; raw-unit metrics are per dimension. Overlapping chunks are not independent samples."
+}

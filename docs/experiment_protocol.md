@@ -65,6 +65,57 @@ Definitions (tightened 2026-10-13 after a logic review; see `tests/unit/test_met
 
 ## 5. Results (2026-10-13)
 
+### Current SO-101 geometry (`3988577`)
+
+Regenerated with snapshot configs under `results/metrics/geometry_3988577/configs/`.
+Same seeds 0–9, original frozen ACT weights, 10 Hz, timeout and success rules;
+no paired-image training in these baselines. All 40 trials completed without aborts.
+
+| Controller | Success | Failed phase | Minimum tool–ball distance across trials | IK rejections total |
+|---|---:|---|---|---:|
+| Hold (no policy) | 0/10 | approach ×10 | 24.4–28.1 cm | 0 |
+| Joint ACT 020000 | 0/10 | approach ×10 | 22.6–25.8 cm | 0 |
+| Cartesian ACT 006000 | 0/10 | approach ×10 | 23.9–27.6 cm | 13 |
+| Privileged scripted oracle | 10/10 | none | 1.4–2.0 cm | 40 |
+
+Evidence: `results/metrics/geometry_3988577/{E0_hold,E1_joint,E2_cartesian,E4_oracle}/`.
+The fixed-camera reprojection audit is `results/audit/paired_approach_3988577/report.json`;
+it does not refit or overwrite the camera. Its existing held-ball correspondences have
+138 px RMS under the current camera, so this is not a claim of precise calibration.
+
+### Paired approach-image pilot (mixed real/sim appearance, D-020)
+
+Separate from the real-image-only baselines: 1,000 MPS fine-tuning steps, checkpoint
+500 selected by real validation L1. Same geometry, seeds 0–9 and success rules.
+All ten completed without aborts: **0/10 success, approach failure ×10, no lifts**.
+Mean closest tool–ball distance improved 24.15 → 14.00 cm; median 24.12 → 13.12 cm;
+9/10 seeds improved, seed 8 worsened (24.20 → 26.39 cm). This is partial approach
+progress, not task completion. Geometry and real-to-sim mapping remain provisional.
+
+Full real validation L1: 0.31161 → 0.31322. On 144 fixed held-out approach ticks,
+first-two-action normalized MAE: real 0.13204 → 0.12992; sim 0.20661 → 0.13821;
+real/sim prediction gap 0.16469 → 0.09612. These sampled offline errors are separate
+from the closed-loop success metric and are not independent episode counts.
+Artifacts: `results/metrics/paired_approach_3988577/`, including `review.json`.
+
+Follow-up SCRIPTED REPLAY on all 1,134 held-out paired-prefix ticks compares
+recorded leader commands with recorded next-tick follower motion, without policy
+inference. Model-based tool-path mean discrepancy was 3.06 cm (p95 8.23 cm);
+privileged follower-next-position setpoints reduced it to 1.03 cm (p95 3.80 cm).
+Leader commands hit the shoulder joint limit on 40.9% of ticks. These results
+include reset transients, fixed provisional mapping and episode-estimated ball
+positions; they neither measure physical tool trajectories nor prove a faulty
+servo. See `results/audit/paired_command_tracking_3988577/report.json` and traces.
+No labels, limits, hardware settings or primary metrics were changed. No further
+training is queued pending command/frame/timing audit.
+
+### Historical results before the operator-anchored SO-101 correction
+
+The following table, combined CSV and failure discussion describe their original
+scene snapshots. They are retained for comparison, not presented as current geometry
+results. In particular, an oracle success does not rule out learned-policy control
+or contact mismatch. Panda has not been rerun as part of the SO-101 correction.
+
 | Experiment | Controller | Robot | Checkpoint | Success | Lifted | Phase failed | Notes |
 |---|---|---|---|---|---|---|---|
 | E0 `hold_pose_null` | HOLD_POSE (no policy) | SO-101 | — | **0/10** | 0 | approach ×10 | null floor |

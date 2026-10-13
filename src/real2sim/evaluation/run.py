@@ -171,8 +171,9 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
 
 def run_trial(env, controller, *, seed: int, max_ticks: int, tracker: TrialTracker,
               caption_prefix: str, video: CaptionedVideo | None = None,
-              upscale: int = 2) -> TrialTracker:
-    obs, _ = env.reset(seed=seed)
+              upscale: int = 2, reset_scenario: dict | None = None) -> TrialTracker:
+    obs, _ = (env.reset(seed=seed) if reset_scenario is None
+              else env.reset(seed=seed, scenario=reset_scenario))
     controller.reset()
     if video is not None:
         video.write(policy_view_to_bgr(obs[IPHONE_KEY], upscale), f"{caption_prefix} seed={seed} tick=0")
@@ -191,11 +192,14 @@ def run_trial(env, controller, *, seed: int, max_ticks: int, tracker: TrialTrack
 
 def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config: Path, n_trials: int,
                seed_start: int, out: Path, video: bool, controller: str, device: str,
-               max_ticks: int | None = None, experiment_id: str | None = None) -> dict:
+               max_ticks: int | None = None, experiment_id: str | None = None,
+               reset_scenarios: list[dict] | None = None) -> dict:
     if robot not in ROBOTS:
         raise ValueError(f"robot must be one of {ROBOTS}")
     if controller not in CONTROLLER_SOURCES:
         raise ValueError(f"controller must be one of {sorted(CONTROLLER_SOURCES)}")
+    if reset_scenarios is not None and len(reset_scenarios) != n_trials:
+        raise ValueError("one reset scenario is required for every diagnostic trial")
     eval_cfg = load_yaml(eval_config)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -242,7 +246,8 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         t0 = time.perf_counter()
         try:
             run_trial(env, ctrl, seed=seed, max_ticks=ticks_cap, tracker=tracker,
-                      caption_prefix=caption, video=writer, upscale=int(vcfg["upscale"]))
+                      caption_prefix=caption, video=writer, upscale=int(vcfg["upscale"]),
+                      reset_scenario=None if reset_scenarios is None else reset_scenarios[i])
             abort = None
         except ContractError:  # a checkpoint/observation contract mismatch is a setup bug: stop
             raise
@@ -284,6 +289,7 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         "summary": summarize(rows), "trials": trials,
         "checkpoint": meta,
         "contract": contract,
+        "reset_scenarios": reset_scenarios,
         "resolved": {"sim_config": env.config, "task_config": task, "eval_config": eval_cfg,
                      "data_config": env.data_config, "max_ticks": ticks_cap,
                      "success_hold_ticks": hold_ticks},

@@ -1,0 +1,84 @@
+{
+  "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/act_joint_augmented/checkpoints/001000",
+  "checkpoint_resolved": "/Users/deveshvyas/Downloads/real2sim/outputs/act_joint_augmented/checkpoints/001000",
+  "checkpoint_sha256": "0baf09f8addd63ca1a84361ab43ce9ac00fadd8a4d4d96036d5caaca17f5b6d6",
+  "step": 1000,
+  "device": "cpu",
+  "contract_ok": true,
+  "camera_keys": [
+    "observation.images.iphone"
+  ],
+  "image_shape_chw": [
+    3,
+    192,
+    256
+  ],
+  "chunk_shape": [
+    16,
+    20,
+    6
+  ],
+  "action_names": [
+    "shoulder_pan.pos",
+    "shoulder_lift.pos",
+    "elbow_flex.pos",
+    "wrist_flex.pos",
+    "wrist_roll.pos",
+    "gripper.pos"
+  ],
+  "first_chunk_first_action_raw": [
+    -2.4273,
+    -124.2968,
+    101.8647,
+    96.4893,
+    3.9533,
+    -1.4897
+  ],
+  "all_finite": true,
+  "val_episodes": [
+    1,
+    2,
+    3,
+    4,
+    11,
+    18,
+    23,
+    24,
+    27
+  ],
+  "val_open_loop_l1_normalised": 0.3544540722166097,
+  "val_open_loop_l1_raw_per_dim": [
+    4.3693,
+    17.2514,
+    11.037,
+    14.3392,
+    2.2342,
+    11.4129
+  ],
+  "val_open_loop_rmse_normalised": 0.516133146734387,
+  "val_open_loop_rmse_raw_per_dim": [
+    6.341753091316805,
+    22.61481907465338,
+    16.341587885977628,
+    19.724955529568113,
+    3.561286477851985,
+    15.061873191229818
+  ],
+  "val_open_loop_p95_abs_normalised": 1.1117403864860531,
+  "val_open_loop_p95_abs_raw_per_dim": [
+    12.918201479920869,
+    49.671596486267944,
+    34.9697302038187,
+    38.90759094452371,
+    8.109506510209373,
+    31.89847521424672
+  ],
+  "valid_action_components": 477420,
+  "reconstruction_loss": {
+    "kind": "l1"
+  },
+  "val_samples": 4064,
+  "dataset_revision": "fd65a6600b0cd111a434ece1abfa3d44dc7b4d57",
+  "split_sha256": "948803789de23605f85378917c40680be567764c17df0774979a6f5f50091717",
+  "note": "Offline open-loop prediction error on held-out recorded episodes; not closed-loop success. RMSE and absolute-error p95 pool valid chunk action components; raw-unit metrics are per dimension. Overlapping chunks are not independent samples."
+}

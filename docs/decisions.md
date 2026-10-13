@@ -395,6 +395,99 @@ change the shared 7-D contract, so they were applied as defaults; the user may v
 - **Domain gap.** Same camera pose; the Panda is about 3× taller and intrudes into the top of
   the frame. Any E3 number must carry this caveat.
 
+---
+
+## D-016 Real-only diagnostics and bounded augmentation/regularisation retrains
+
+**Approved (user, 2026-10-13):** perform the two suggested diagnostics and cheap retraining
+remedy, run MPS training in the background, and avoid spending agent tokens waiting. The
+alternatives in the user's proposal were more unchanged training steps, modest augmentation /
+regularisation, and additional real versus mixed real/simulator data. Selected here: the
+diagnostics plus augmentation/regularisation. No choice of a new data source was made.
+
+- Frozen original joint and Cartesian policies: clean, blank-grey, and cross-episode shuffled
+  image checks with unchanged proprioception/labels; 32 evenly spaced ticks per episode.
+  Also compare clean train/validation under the same inference mode (zero VAE latent).
+- Familiar-start diagnostics: existing estimated ball positions for training episodes 0, 5,
+  6, 7 only; compare random starts, familiar ball, familiar ball plus recorded initial joints.
+  Reset poses are clamped to model limits and the collision/displacement confound is logged.
+  These are approximate scene matches, not a calibrated reconstruction or a primary benchmark.
+- Separate fresh joint and Cartesian runs keep the approved 512/ResNet-18, batch 16, camera,
+  action labels, 10 Hz clock, split, derived arrays, and normalization. No simulator examples.
+- Implementation settings for the requested remedy: brightness/contrast ±20%, saturation ±15%,
+  reflected image shifts ≤4 pixels on the image content, preserved letterbox padding, train
+  only. Dropout 0.1→0.2, AdamW weight decay 1e-4→1e-3. No architecture/backbone change.
+- Sequential MPS runs: maximum 6,000 steps each, validation every 1,000, early stopping after
+  three checks without ≥0.001 improvement (minimum 3,000 steps). Save every new validation best;
+  final checks and 10 closed-loop SO-101 trials per model run automatically in the background.
+- Original checkpoints and primary results stay frozen. New results are under
+  `results/metrics/remedies/`; configs `configs/act_{joint,cartesian}_augmented.yaml`; training
+  outputs `outputs/act_{joint,cartesian}_augmented`; job status `outputs/act_remedies/status.json`.
+
+Limits: one training seed and several regularisation changes together cannot establish which
+change caused an improvement. Existing geometry calibration and reset penetration remain
+confounds; the previously reported moderate open-loop visual gap does not rule them out.
+
+---
+
+## D-017 Matched ACT reconstruction-loss comparison after D-016
+
+**Approved (user, 2026-10-13):** "setup that experiment as well line it up after the previous
+ones", referring to the proposed L1/L2/Huber comparison. Additional real recording is proposed
+by the operator; a new wrist-camera training schema or data split has not yet been selected.
+
+- Reuse the two completed D-016 L1 runs as controls. Four fresh sequential MPS runs: joint L2,
+  joint Huber, Cartesian L2, Cartesian Huber. No additional unchanged L1 run or larger sweep.
+- Copy each control's resolved configuration. Identical model, augmentation, seed 0, batch 16,
+  optimizer, learning rate, real data, 10 Hz semantics, camera, normalization and episode split.
+  Same maximum 6,000 steps, validation every 1,000, early-stopping rule and validation-MAE
+  checkpoint selection. Actual step counts may differ under the shared stopping rule.
+- Reconstruction is averaged over valid action components, excluding padding/extrapolation:
+  L1 = |e|; L2 = e² (MSE, not vector norm); Huber = 0.5e² for |e|≤1, |e|−0.5 otherwise.
+  Huber delta 1 is in per-dimension normalized action units. KL beta stays 10; reconstruction,
+  weighted KL and gradient norm are logged separately. These objective scales are different,
+  so this first sweep tests the loss substitution at fixed beta, not independently tuned losses.
+- Existing/default L1 training delegates to the installed LeRobot 0.6.1 forward method. New
+  losses use the same model/VAE forward and KL reduction; inference/checkpoint architecture
+  stays identical. Resume rejects switching objectives.
+- Compare every selected checkpoint on full held-out MAE, RMSE and absolute-error p95 (also
+  raw-unit values per action dimension), plus the same 10 SO-101 simulation seeds 0–9.
+  Reuse the completed L1 simulation trials; recompute L1-control open-loop metrics to include
+  RMSE/p95. Never compare raw training objective numbers across losses as a quality ranking.
+- `scripts/run_act_loss_comparison.py` waits on the remedies manager's process lock until all
+  its training/check/evaluation phases complete. A failed predecessor stops the new queue.
+  Status/logs/config snapshots: `outputs/act_loss_comparison/`; results:
+  `results/metrics/loss_comparison/`. It runs independently of the chat turn with no agent polling.
+- New runs retain only their best and last checkpoints to bound disk use; other runs are not
+  pruned. The queue checks free space before each model and refuses existing output directories.
+
+Limits: a single seed is exploratory evidence. MAE-based checkpoint selection is common across
+the runs but can miss a different checkpoint with better RMSE or task success. Simulation
+calibration/reset confounds remain. No hardware motion, data merge, camera-schema change or
+new calibration is part of this approval.
+
+## D-018 Hourly background monitoring and evidence-driven follow-up
+
+**Approved (user, 2026-10-13):** check background jobs every hour, fix failures/issues, leave
+healthy work running without spending model tokens waiting, and experiment with new suggestions.
+Operational implementation: `scripts/monitor_act_jobs.py`, a detached local Python process
+checking the two existing managers hourly. It reads status, process locks, active-log freshness,
+disk space and newly completed comparisons. Healthy unchanged checks make no model calls.
+Issues or new results enqueue a follow-up into this same chat through the installed CLI's
+`codex queue`; fixes and experiment decisions retain the current chat's permissions/context.
+Repeated unchanged issues/results are deduplicated. Delivery failures are logged and retried
+at the next hour. No other person or external messaging service is contacted.
+
+The IDE does not expose native scheduled-task controls; this is a local monitor, not a cloud
+schedule. The Mac must be available; sleeping delays checks. The monitor coalesces missed
+intervals instead of replaying them. State/logs/config: `outputs/act_monitor/`; create its
+`STOP` file to stop. After all queued work and results are reviewed, the follow-up should stop
+the monitor unless a justified additional experiment was started and added to its job list.
+
+New follow-ups should be small, based on measured results and recorded with their configurations.
+This instruction does not silently change approved camera/action/frame/split/benchmark or
+hardware constraints. No new training run was added at monitor setup: existing jobs were healthy.
+
 
 ## D-019 Geometry correction snapshot
 
@@ -415,3 +508,93 @@ Primary benchmark results and previous camera audits are historical until rerun.
 This commit adds neither synthetic training examples nor a mixed-data checkpoint;
 any paired training must retain real-label provenance, training-only pairs,
 unchanged held-out episodes and an explicit mixed-appearance training label.
+
+
+## D-020 Approved paired approach-image pilot
+
+User explicitly approved the proposed priority order: regenerate corrected-geometry
+baselines; build verified approach pairs; fine-tune a copy; evaluate early; inspect
+command/motion transfer if approach improves but execution fails. User requested
+no model polling during training, with a completion-triggered follow-up.
+
+Implementation: preserve original joint 020000; fresh optimizer, weights-only
+initialization, 1,000 additional MPS steps, seed 0, batch 16, LR 5e-6 for model and
+backbone, original dropout 0.1 / decay 1e-4 / L1+KL10. Validate on unchanged real
+held-out episodes every 250 steps and select by real validation MAE. Keep best/last.
+`configs/act_joint_paired_approach.yaml` records settings. Mixed real/sim appearance
+is explicitly recorded in checkpoint provenance; this is not real-images-only training.
+
+At each eligible training tick, substitute its static simulated image with probability
+0.5; labels, state, normalizer, camera schema, 10 Hz and original episode split stay
+unchanged. Of 10,692 training ticks, 3,299 have eligible pairs, so expected overall
+sim-image fraction is about 15.4%, not 50% of all samples. Remaining images stay real.
+The 1,134 validation renders reside in a separate guarded cache and are evaluation-only.
+
+Stationary-ball prefix: stable first five detections; stop at missing detection,
+>3 policy-pixel movement, area ratio outside 0.7–1.3, tool–ball distance <8 cm, or
+20 seconds. Ball pose is an estimate from the recorded image and fixed-camera
+backprojection, not fabricated measured ground truth. Recorded joints are applied
+for static FK/rendering without limit clamping or physics steps. Original image/state
+timing is retained. Transport/contact trajectories are not invented. Human-supplied
+geometry remains approximate; preview review and fixed-camera residuals are recorded.
+
+After training: full real held-out check; parent/pilot comparison of first-two-action
+errors on held-out real and paired images; ten unchanged closed-loop seeds. One local
+`codex queue` notification after completion or failure; no hourly monitor or LLM wait loop.
+Notification setup uses the installed CLI help and OpenAI Docs guidance; previous
+same-thread delivery was verified. If approach improves but execution fails, compare
+recorded leader-command replay to follower motion before changing labels/controllers.
+
+
+## D-021 Joint/command diagnostic scope and rejected range correction
+
+2026-10-13, user approved "go for it" for joint-limit/mapping/timing audit, recorded
+replay and frozen-policy evaluation. This authorizes isolated sensitivity tests,
+not an assertion that unmeasured physical alignment is known. Tested one local
+calibration-derived shoulder lower bound (-105.5824 degrees) in a copied model;
+primary model/config and hardware untouched. Only joint range/control range and
+the corresponding unclamped reset differ. Ten frozen paired-policy trials remain
+0/10 and mean closest distance worsens 14.0 → 16.1 cm. Decision: retain original
+primary settings; diagnostic range is not an adopted correction. No global lag,
+joint-zero or training-label change is supported. Evidence and limitations:
+`results/audit/control_contract_20261013/review.json`, `docs/progress.md`.
+
+
+## D-022 Bounded follower-response experiment (approved diagnostic scope)
+
+2026-10-13 user approved train-only follower-response fitting and held-out replay
+before connecting it to ACT. Added a bounded per-joint gain/momentum/delay model
+at nominal recording frequency. Internal candidate selection and refit use only
+training episodes; primary labels, splits and normalizers remain unchanged.
+Full-episode fit worsened replay and was rejected. Adaptive approach-only fit
+improved held-out approach replay error 3.06 → 2.20 cm through unchanged MuJoCo,
+in eight of nine episodes. Reused diagnostic validation episodes are disclosed;
+this does not establish confirmatory generalization or full-task reliability.
+Neither model is a production adapter. Any later online test must retain causal
+state feedback, explicit diagnostic provenance and nonprivileged phase/horizon
+handling. See `results/audit/follower_response_approach_20261013/review.json` and
+`docs/progress.md`. No new ACT training or physical hardware action.
+
+
+## D-023 Frozen ACT online response test (approved isolated diagnostic)
+
+2026-10-13 user approved testing the frozen ACT with the response model and
+requested no active waiting if training becomes necessary. The diagnostic wraps
+only the paired joint checkpoint 000500. Response model remains frozen from D-022.
+Apply it for 78 ticks (7.8 s), ending at the last known state in the shortest
+training stationary-ball prefix; then return to the ordinary joint adapter.
+This fixed early window is not a learned or privileged phase detector. Use only
+current measured joints, velocity estimated from previous joint observation, and
+past executed commands held at the 30 Hz internal response clock. No future chunk
+actions, simulator object positions, contacts or success state enter the adapter.
+Native scene, limits, safety rates, seeds 0–9 and success definitions are unchanged.
+No training/label/normalization change is part of this test. Traces, fixed protocol
+and implementation hashes: `results/metrics/act_response_20261013/`.
+The normal evaluation entry point is unchanged; the runner installs the adapter
+only in its local diagnostic process. Verified 17 response-model/adapter tests.
+
+
+D-023 outcome (14 Oct): 0/10, no aborts; seven seeds approach closer, but handoff
+at 7.8 s precedes most closest points and one ball escapes. Adapter remains an
+isolated diagnostic, not production. No new training was justified/launched.
+See `results/metrics/act_response_20261013/review.json` for all outcomes.

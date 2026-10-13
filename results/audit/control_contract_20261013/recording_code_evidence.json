@@ -1,0 +1,10 @@
+{
+  "local_recording_checkout_commit": "6156e82ad7407fa70be740e42fdc7b8c5bc26d02",
+  "files": {
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/robots/so_follower/so_follower.py": "b542340fe13b6f3987caa0fb6366842dd34a9fb8be0264e77d057cb7d4cfff52",
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/scripts/lerobot_record.py": "c409c082234ae296f6b3c8f405cddac47e6d448d3500efdb1981347bcd28019d",
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/robots/utils.py": "bd74646bb4b59c62b037cad860731984cce902ef9acb5b7f594d44b6d96f71c2"
+  },
+  "finding": "Follower send_action clips relative to measured present position and returns sent command; record_loop discards _sent_action and stores action_values. Local code version not proven to be recording version.",
+  "raw_contract": "Retain recorded leader target label semantics; no relabeling."
+}

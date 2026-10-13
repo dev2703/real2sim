@@ -1,0 +1,195 @@
+{
+  "kind": "SCRIPTED_SAVED_ACT_COMMAND_REPLAY",
+  "trials": [
+    {
+      "seed": 0,
+      "closest": {
+        "tick": 83,
+        "distance_m": 0.06873288431820256,
+        "tool_minus_ball_m": [
+          -0.010067936573761482,
+          -0.06764358436521176,
+          0.006869609455610215
+        ],
+        "policy_gripper": 66.53666687011719,
+        "observed_gripper": 66.54181671142578,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 1,
+      "closest": {
+        "tick": 88,
+        "distance_m": 0.04972504964923139,
+        "tool_minus_ball_m": [
+          0.024057339333994232,
+          -0.037158900470010026,
+          0.02265041065074691
+        ],
+        "policy_gripper": 47.919551849365234,
+        "observed_gripper": 47.9276123046875,
+        "response_active": false
+      },
+      "robot_ball_contacts": [
+        {
+          "tick": 90,
+          "bodies": [
+            "gripper"
+          ],
+          "held": false,
+          "policy_gripper": 43.968597412109375
+        }
+      ],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 2,
+      "closest": {
+        "tick": 91,
+        "distance_m": 0.05249676756317037,
+        "tool_minus_ball_m": [
+          0.003669772817325667,
+          -0.052196059869072386,
+          -0.004244373474962537
+        ],
+        "policy_gripper": 60.633087158203125,
+        "observed_gripper": 60.63836669921875,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 3,
+      "closest": {
+        "tick": 86,
+        "distance_m": 0.052695645915073884,
+        "tool_minus_ball_m": [
+          -0.013628932836280805,
+          -0.050067124548365094,
+          0.009185114458159283
+        ],
+        "policy_gripper": 66.66709899902344,
+        "observed_gripper": 66.67095947265625,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 4,
+      "closest": {
+        "tick": 84,
+        "distance_m": 0.11498486881500528,
+        "tool_minus_ball_m": [
+          -0.03117796905610193,
+          -0.10219299375706516,
+          0.04249760380196943
+        ],
+        "policy_gripper": 49.32733917236328,
+        "observed_gripper": 49.331520080566406,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 5,
+      "closest": {
+        "tick": 83,
+        "distance_m": 0.046658656781323006,
+        "tool_minus_ball_m": [
+          0.024741534973094115,
+          -0.038036111497875724,
+          0.010869265013496832
+        ],
+        "policy_gripper": 56.27704620361328,
+        "observed_gripper": 56.322505950927734,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 6,
+      "closest": {
+        "tick": 286,
+        "distance_m": 0.13605398578038985,
+        "tool_minus_ball_m": [
+          -0.053944493632981094,
+          -0.1177396092741197,
+          0.04169008348983505
+        ],
+        "policy_gripper": 46.805145263671875,
+        "observed_gripper": 46.809104919433594,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 7,
+      "closest": {
+        "tick": 13,
+        "distance_m": 0.25148401207731563,
+        "tool_minus_ball_m": [
+          -0.18535585520141146,
+          -0.16990030706768866,
+          0.004615293204330517
+        ],
+        "policy_gripper": -0.1358795166015625,
+        "observed_gripper": 0.14952488243579865,
+        "response_active": true
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 8,
+      "closest": {
+        "tick": 3,
+        "distance_m": 0.2691815061444896,
+        "tool_minus_ball_m": [
+          -0.19091858635213893,
+          -0.18958203333483814,
+          0.008211532874261462
+        ],
+        "policy_gripper": 0.8782863616943359,
+        "observed_gripper": 0.9251571297645569,
+        "response_active": true
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    },
+    {
+      "seed": 9,
+      "closest": {
+        "tick": 82,
+        "distance_m": 0.07838851774068678,
+        "tool_minus_ball_m": [
+          0.019907822766597694,
+          -0.07543091473730151,
+          0.007656070021208716
+        ],
+        "policy_gripper": 60.676910400390625,
+        "observed_gripper": 60.68056106567383,
+        "response_active": false
+      },
+      "robot_ball_contacts": [],
+      "max_state_replay_error": 0.0,
+      "max_ball_replay_error_m": 0.0
+    }
+  ],
+  "note": "No new policy inference, no training. Privileged contacts are inspected only after saved trajectories were generated. Original benchmark rows are unchanged."
+}

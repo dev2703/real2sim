@@ -1,0 +1,64 @@
+{
+  "observation.state": [
+    {
+      "joint": "shoulder_pan",
+      "degrees_tick_residual_p95": 9.059906005859375e-06,
+      "range_m100_100_tick_residual_p95": 0.47384592771527423
+    },
+    {
+      "joint": "shoulder_lift",
+      "degrees_tick_residual_p95": 4.291534423828125e-05,
+      "range_m100_100_tick_residual_p95": 0.48663871765131717
+    },
+    {
+      "joint": "elbow_flex",
+      "degrees_tick_residual_p95": 3.4332275390625e-05,
+      "range_m100_100_tick_residual_p95": 0.4698891830444154
+    },
+    {
+      "joint": "wrist_flex",
+      "degrees_tick_residual_p95": 4.00543212890625e-05,
+      "range_m100_100_tick_residual_p95": 0.46637788772568456
+    },
+    {
+      "joint": "wrist_roll",
+      "degrees_tick_residual_p95": 3.933906555175781e-06,
+      "range_m100_100_tick_residual_p95": 0.4000016093254999
+    },
+    {
+      "joint": "gripper",
+      "percent_tick_residual_p95": 2.441406240905053e-05
+    }
+  ],
+  "action": [
+    {
+      "joint": "shoulder_pan",
+      "degrees_tick_residual_p95": 9.298324584960938e-06,
+      "range_m100_100_tick_residual_p95": 0.47252820432186127
+    },
+    {
+      "joint": "shoulder_lift",
+      "degrees_tick_residual_p95": 3.528594970703125e-05,
+      "range_m100_100_tick_residual_p95": 0.4738441467288794
+    },
+    {
+      "joint": "elbow_flex",
+      "degrees_tick_residual_p95": 4.100799560546875e-05,
+      "range_m100_100_tick_residual_p95": 0.4668028163910094
+    },
+    {
+      "joint": "wrist_flex",
+      "degrees_tick_residual_p95": 3.814697265625e-05,
+      "range_m100_100_tick_residual_p95": 0.4738423156736644
+    },
+    {
+      "joint": "wrist_roll",
+      "degrees_tick_residual_p95": 4.5299530029296875e-06,
+      "range_m100_100_tick_residual_p95": 0.40000203847898774
+    },
+    {
+      "joint": "gripper",
+      "percent_tick_residual_p95": 2.075195334327873e-05
+    }
+  ]
+}

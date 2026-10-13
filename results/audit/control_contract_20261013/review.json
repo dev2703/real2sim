@@ -1,0 +1,62 @@
+{
+  "status": "reviewed",
+  "calibration_adopted": false,
+  "reason": "Lower shoulder limit improves shoulder replay but does not improve overall leader-command tool replay or learned-policy success. Unknown physical zero/frame calibration cannot be inferred from command/state differences.",
+  "model_attribute_diffs": [
+    {
+      "tag": "joint",
+      "name": "shoulder_lift",
+      "before": {
+        "axis": "0 0 1",
+        "name": "shoulder_lift",
+        "type": "hinge",
+        "range": "-1.7453293 1.7453293",
+        "class": "sts3215"
+      },
+      "after": {
+        "axis": "0 0 1",
+        "name": "shoulder_lift",
+        "type": "hinge",
+        "range": "-1.8427608190287381 1.7453293",
+        "class": "sts3215"
+      }
+    },
+    {
+      "tag": "position",
+      "name": "shoulder_lift",
+      "before": {
+        "class": "sts3215",
+        "name": "shoulder_lift",
+        "joint": "shoulder_lift",
+        "ctrlrange": "-1.74533 1.74533"
+      },
+      "after": {
+        "class": "sts3215",
+        "name": "shoulder_lift",
+        "joint": "shoulder_lift",
+        "ctrlrange": "-1.8427608190287381 1.74533"
+      }
+    }
+  ],
+  "checkpoint_hashes": {
+    "parent": "d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274",
+    "pilot": "8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409"
+  },
+  "replay_tool_mean_m": {
+    "leader_command": {
+      "baseline": 0.03061427858306059,
+      "lower_limit_test": 0.030786796470651825
+    },
+    "follower_next_state": {
+      "baseline": 0.010287262417211797,
+      "lower_limit_test": 0.008716865419720617
+    }
+  },
+  "policy": {
+    "successes": 0,
+    "trials": 10,
+    "aborts": 0,
+    "mean_closest_distance_m": 0.161359
+  },
+  "next": "Model the recorded leader-to-follower execution response on training episodes and validate on held-out replay before any new ACT training or production control change. Do not shift labels or offset joints based solely on these errors."
+}

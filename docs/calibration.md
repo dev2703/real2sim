@@ -138,8 +138,13 @@ and raised the inlier count from 27 to 37 of 43.
 
 ## 4. Robot joint conventions
 
-LeRobot `DEGREES` mode for the five arm joints and `RANGE_0_100` for the gripper. These are
-inferred from the data ranges; the operator's recording command is not yet confirmed.
+LeRobot `DEGREES` mode for the five arm joints and `RANGE_0_100` for the gripper.
+The 2026-10-13 numeric audit strongly supports these units: converting all included
+recorded values back through the local follower/leader calibration yields integer
+encoder ticks within 0.000043 tick at the 95th percentile for arm degrees, versus
+0.40–0.49 tick for the alternative ±100 normalization. Gripper percent also matches
+the encoder lattice. The original recording command and physical zero alignment
+remain unconfirmed. Evidence: `results/audit/control_contract_20261013/normalization.json`.
 
 ```
 arm joint [deg] = (ticks - (range_min + range_max)/2) * 360 / 4095
@@ -165,8 +170,19 @@ q_sim[rad]         = deg2rad(q_real[deg])                   # sign +1, offset 0,
 q_sim_gripper[rad] = -0.1745 + (gripper% / 100) * 1.9199    # Menagerie range -10°..110°
 ```
 
-M2 verifies the sign and offset of each joint by projecting simulated FK onto iPhone frames at
-three distinctive poses.
+Physical joint signs/offsets still require independent image/pose correspondence;
+numeric encoder consistency does not verify the real-to-MJCF zero positions.
+Do not infer a calibration offset from leader/follower tracking errors.
+
+The local follower shoulder calibration spans ±105.5824°, whereas the MJCF is
+limited to ±100°. An isolated diagnostic lowered only the shoulder lower joint
+stop and actuator control bound to −105.5824°, retaining gains, geometry, weights,
+and data. This improved shoulder tracking but did not improve leader-command tool
+trajectory error (3.06 → 3.08 cm mean), and the frozen paired policy remained 0/10
+with mean closest distance worsening 14.0 → 16.1 cm. **Not adopted** as a calibration
+correction. Local calibration files are not proven to be recording-time files;
+their endpoint spans alone do not establish physical joint alignment. See
+`results/audit/control_contract_20261013/review.json`.
 
 Gripper semantics: 0 % = closed. The follower reads about 1.2 % when closed on nothing and
 30–40 % when closed on the ball. In the 7-D action, `gripper_target = gripper% / 100`.

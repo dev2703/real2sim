@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,0,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.18583,300,0,14.09,0.1667,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,1,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.17774,300,0,14.31,0.3333,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,2,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.1775,300,0,14.13,0.1667,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,3,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.17894,300,0,14.09,0.1667,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,4,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.15276,300,0,14.15,0.3333,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,5,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.15662,300,0,14.12,0.3333,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,6,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.17598,300,0,14.08,0.1667,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,7,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.17072,300,0,14.15,0.3333,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,8,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.17771,300,0,14.17,0.1667,,
+LOSS_joint_huber_real_only,LEARNED_ACT,so101,9,6e7743ca715d9caaf3074af0ea3b823cf8366e1239228dda2b579633a34de46c,1000,False,False,False,False,False,False,approach,0.18599,300,0,14.13,0.1667,,

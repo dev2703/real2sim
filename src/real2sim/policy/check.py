@@ -10,6 +10,7 @@ task-success result.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -45,11 +46,14 @@ def check(checkpoint: Path, data: Path, device: str = "auto", max_batches: int |
     with torch.no_grad():
         chunk = policy.predict_action_chunk(obs)
     raw = norm.unaction(chunk).cpu().numpy()
-    metrics = evaluate(policy, loader, device, np.asarray(norm.action_std, np.float64), max_batches)
+    metrics = evaluate(policy, loader, device, np.asarray(norm.action_std, np.float64), max_batches, detailed=True)
     run_info = json.loads((ck / "run_info.json").read_text())
+    with (ck / "model.safetensors").open("rb") as weights:
+        checkpoint_sha256 = hashlib.file_digest(weights, "sha256").hexdigest()
     return {
         "checkpoint": str(checkpoint),
         "checkpoint_resolved": str(ck),
+        "checkpoint_sha256": checkpoint_sha256,
         "step": run_info["step"],
         "device": device,
         "contract_ok": True,
@@ -62,10 +66,16 @@ def check(checkpoint: Path, data: Path, device: str = "auto", max_batches: int |
         "val_episodes": manifest["split"]["val"],
         "val_open_loop_l1_normalised": metrics["l1"],
         "val_open_loop_l1_raw_per_dim": metrics["l1_raw_per_dim"],
+        "val_open_loop_rmse_normalised": metrics["rmse"],
+        "val_open_loop_rmse_raw_per_dim": metrics["rmse_raw_per_dim"],
+        "val_open_loop_p95_abs_normalised": metrics["p95_abs"],
+        "val_open_loop_p95_abs_raw_per_dim": metrics["p95_abs_raw_per_dim"],
+        "valid_action_components": metrics["valid_action_components"],
+        "reconstruction_loss": run_info.get("reconstruction_loss", {"kind": "l1"}),
         "val_samples": metrics["samples"],
         "dataset_revision": contract["source"]["revision"],
         "split_sha256": contract["split"]["sha256"],
-        "note": "Offline open-loop prediction error on held-out recorded episodes; not closed-loop success.",
+        "note": "Offline open-loop prediction error on held-out recorded episodes; not closed-loop success. RMSE and absolute-error p95 pool valid chunk action components; raw-unit metrics are per dimension. Overlapping chunks are not independent samples.",
     }
 
 

@@ -1,0 +1,5 @@
+{
+  "status": "failed_before_inference",
+  "reason": "macOS CoreGraphics invalid connection in sandbox",
+  "successful_retry": "../visual_causality_20261013_render"
+}

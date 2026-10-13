@@ -1,0 +1,5 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+DIAGNOSTIC_familiar_ball,LEARNED_ACT,so101,0,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.21094,300,3,16.24,0.0,,
+DIAGNOSTIC_familiar_ball,LEARNED_ACT,so101,1,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.18142,300,3,15.76,0.0,,
+DIAGNOSTIC_familiar_ball,LEARNED_ACT,so101,2,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.16992,300,2,14.92,0.0,,
+DIAGNOSTIC_familiar_ball,LEARNED_ACT,so101,3,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.17752,300,2,15.89,0.0,,

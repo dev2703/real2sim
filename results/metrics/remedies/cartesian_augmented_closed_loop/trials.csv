@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,0,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.18691,300,3,14.06,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,1,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.19062,300,2,14.25,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,2,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.18026,300,3,13.93,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,3,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.18141,300,3,14.1,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,4,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.14978,300,2,14.01,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,5,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.17271,300,1,14.01,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,6,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.17587,300,3,14.05,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,7,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.18602,300,2,14.03,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,8,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.18996,300,2,14.08,0.1429,,
+REMEDY_cartesian_augmented_real_only,LEARNED_ACT,so101,9,35ce9b858b3cd890225ff755c29286b3d4cb5b8ab842116b4eff42c899d92b44,2000,False,False,False,False,False,False,approach,0.186,300,3,14.01,0.1429,,

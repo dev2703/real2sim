@@ -26,3 +26,5 @@ annotations/*.bak
 .coverage
 .pytest_cache/
 .ruff_cache/
+# Failed pair-preparation previews are retained locally; the failure is documented.
+/results/audit/paired_approach_3988577_failed_metadata/

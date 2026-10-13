@@ -1,0 +1,35 @@
+{
+  "status": "reviewed",
+  "date_local": "2026-10-14",
+  "successes": 0,
+  "n_trials": 10,
+  "aborted": 0,
+  "baseline_mean_closest_m": 0.139951,
+  "response_mean_closest_m": 0.11203999999999999,
+  "baseline_median_closest_m": 0.13123,
+  "response_median_closest_m": 0.07356,
+  "improved_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    9
+  ],
+  "ball_escaped_trials": [
+    5
+  ],
+  "grasped_or_lifted_trials": 0,
+  "fixed_horizon_ticks": 78,
+  "trace_checks": "Exactly 78 adapted ticks per trial, followed by exact ordinary targets; deterministic saved-target replay matched state and ball trajectories.",
+  "findings": [
+    "Seven trials improve closest distance; seeds 6,7,8 worsen.",
+    "Seeds 0,1,2,3,4,5,9 reach closest points at ticks 82\u201391, shortly after handoff at tick 78. Handoff is an unresolved confound.",
+    "Closest tool-to-ball offsets are predominantly along negative task y; policy gripper targets at closest points are 48\u201367 percent in those seven trials.",
+    "A gripper/ball contact was observed at seed 1 tick 90, without a hold. Contact audit samples at policy ticks and can miss between-tick collisions, including the event leading to seed 5 escaping."
+  ],
+  "production_adopted": false,
+  "training_started": false,
+  "next": "Investigate fixed-window handoff and terminal alignment before another ACT retrain. Do not infer task success or change benchmark phase definitions from this diagnostic."
+}

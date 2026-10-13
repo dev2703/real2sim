@@ -24,6 +24,26 @@ uv run pytest -q tests/unit
 
 ## Commands
 
+Latest SO-101 baselines under geometry commit `3988577` (13 Oct): hold **0/10**,
+frozen joint ACT **0/10**, frozen Cartesian ACT **0/10**, privileged scripted oracle
+**10/10**. All 40 trials completed without aborts. See
+[current results](results/metrics/geometry_3988577/summary.json) and
+[protocol/history](docs/experiment_protocol.md). Paired real/sim approach-image
+fine-tuning is a separate mixed-image experiment: still **0/10**, but mean closest
+distance improved from **24.2 to 14.0 cm** (9/10 seeds improved). See the
+[pilot review](results/metrics/paired_approach_3988577/review.json); no larger run is queued.
+
+The subsequent frozen-policy response-adapter diagnostic is also **0/10**, with
+mean closest distance **11.2 cm** and median **7.4 cm**. Seven trials approach
+closer; none grasp, and one ball leaves the table. The adapter remains experimental.
+See [online response review](results/metrics/act_response_20261013/review.json).
+Training caches and model weights remain local and are excluded from Git.
+
+Diagnostic results retain their original paths, source hashes and configuration
+snapshots. Absolute paths inside historical reports describe the recording machine;
+reproduction requires the pinned dataset/assets and locally regenerated caches.
+Use fresh output directories for new experiments so historical results remain intact.
+
 ```
 # 1. audit the dataset (uses a local copy if given; downloads otherwise)
 uv run python -m real2sim.data.audit --repo-id bottowork/so101_act_pickplace_v1 \

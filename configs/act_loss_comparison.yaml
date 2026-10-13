@@ -1,0 +1,16 @@
+# D-017: queued after D-016; reuse its completed L1 runs as the matched controls.
+predecessor: outputs/act_remedies
+job: outputs/act_loss_comparison
+results: results/metrics/loss_comparison
+minimum_free_gib: 3
+controls:
+  joint: outputs/act_joint_augmented
+  cartesian: outputs/act_cartesian_augmented
+losses:
+  - kind: l2
+  - kind: huber
+    huber_delta: 1.0  # each action dimension is normalised using training-only statistics
+# Each new run copies its completed control's resolved config: seed 0, MPS, <=6000
+# steps, identical augmentation/model/split and MAE-based early stopping/selection.
+# KL beta stays 10. Record reconstruction and weighted KL separately: loss scales differ.
+# Retain only best + last checkpoints from each new run to bound disk use.

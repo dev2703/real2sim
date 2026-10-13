@@ -95,6 +95,25 @@ Interpretation (inferred, not asserted):
 
 ### Timing
 
+2026-10-13 follow-up (included 28 train / 9 validation episodes): raw-to-derived
+state/action parity is exact (maximum absolute difference zero). The 3:1
+subsample does not shift either field. A wider moving-frame audit over lags −15
+through +30 raw frames found train minima at 5/30/8/9/4/14 frames in joint order;
+the shoulder minimum is at the search boundary and still has 18.3° MAE (held-out
+23.9° at that train-selected lag). It is not an identified one-second latency.
+There is no supported single global shift that fixes these errors. Dataset
+timestamps are nominal frame timestamps, not a measurement of motor wall time.
+See `results/audit/control_contract_20261013/timing_extended.json`.
+
+The local LeRobot checkout's follower `send_action` clips targets relative to a
+fresh present-position read, then returns the sent target. Its recording loop
+discards `_sent_action` and saves `action_values` instead. This supports the
+existing **recorded leader target** label semantics; it does not prove the local
+checkout is the exact recording-time code. Shoulder action/state gaps exceed
+5.1° on 41.7% of training rows, while no observed joint step exceeds 5.1 units.
+Do not interpret saved commands as executed targets, or silently relabel them.
+Code hashes: `results/audit/control_contract_20261013/recording_code_evidence.json`.
+
 `timestamp` steps are uniformly 1/30 s (min 0.033333, max 0.033337) in all 40 episodes;
 `frame_index` starts at 0 and is contiguous in every episode. No duplicate or missing rows.
 Within-episode per-frame state steps never exceed 4.9° (p99 ≤ 1.4°) on any joint, so there are

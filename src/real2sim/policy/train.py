@@ -19,8 +19,10 @@ import math
 import os
 import platform
 import random
+import shutil
 import sys
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
@@ -30,24 +32,41 @@ from lerobot.policies.act.modeling_act import ACTPolicy
 from torch.utils.data import DataLoader
 
 from real2sim.config import load_yaml
-from real2sim.policy.act import build_act_config, resolve_device, save_checkpoint
+from real2sim.policy.act import build_act_config, load_checkpoint, resolve_device, save_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
+from real2sim.policy.losses import ReconstructionLoss, act_training_loss
+from real2sim.policy.paired import PairedViewDataset, file_sha256
 
-HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "l1_raw_mean", "l1_raw_per_dim", "lr", "sec_per_step", "wall_s", "samples"]
+HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "sec_per_step", "wall_s", "samples"]
 
 
 def update_last_link(checkpoints: Path, target_name: str) -> None:
     """Point ``checkpoints/last`` at ``target_name`` atomically (no window without a ``last``)."""
-    tmp = checkpoints / f".last.tmp.{os.getpid()}"
+    update_checkpoint_link(checkpoints, target_name, "last")
+
+
+def update_checkpoint_link(checkpoints: Path, target_name: str, name: str) -> None:
+    tmp = checkpoints / f".{name}.tmp.{os.getpid()}"
     tmp.unlink(missing_ok=True)
     tmp.symlink_to(target_name)
-    os.replace(tmp, checkpoints / "last")
+    os.replace(tmp, checkpoints / name)
 
 
 def seed_everything(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
+
+def prune_checkpoints(checkpoints: Path, created: set[str]) -> None:
+    """Optional retention, limited to numbered checkpoint directories created by this train call."""
+    keep = {(checkpoints / name).resolve().name for name in ("best", "last")}
+    for name in sorted(created - keep):
+        path = checkpoints / name
+        if not (name.isdigit() and len(name) == 6) or path.is_symlink():
+            raise ValueError(f"refusing to prune unexpected checkpoint: {path}")
+        shutil.rmtree(path)
+        created.remove(name)
 
 
 def to_device(batch: dict, device: str) -> dict:
@@ -57,30 +76,49 @@ def to_device(batch: dict, device: str) -> dict:
 
 
 @torch.no_grad()
-def evaluate(policy: ACTPolicy, loader: DataLoader, device: str, action_std: np.ndarray, max_batches: int | None) -> dict:
+def evaluate(policy: ACTPolicy, loader: DataLoader, device: str, action_std: np.ndarray, max_batches: int | None, detailed: bool = False) -> dict:
     policy.eval()
     abs_sum = torch.zeros(len(action_std), dtype=torch.float64)
     count = 0.0
     n_samples = 0
+    errors = []
     for b, batch in enumerate(loader):
         if max_batches is not None and b >= max_batches:
             break
         batch = to_device(batch, device)
         pred = policy.predict_action_chunk(batch)
+        if not torch.isfinite(pred).all():
+            raise FloatingPointError("non-finite validation prediction")
         valid = (~batch["action_is_pad"]).unsqueeze(-1).float()
         err = (pred - batch["action"]).abs() * valid
         abs_sum += err.sum(dim=(0, 1)).cpu().double()
         count += valid.sum().item()
         n_samples += pred.shape[0]
+        if detailed:
+            errors.append((pred - batch["action"])[~batch["action_is_pad"]].detach().cpu().double().numpy())
     policy.train()
     per_dim_norm = (abs_sum / max(count, 1)).numpy()
     per_dim_raw = per_dim_norm * action_std
-    return {
+    result = {
         "l1": float(per_dim_norm.mean()),
         "l1_raw_per_dim": [round(float(x), 4) for x in per_dim_raw],
         "l1_raw_mean": float(per_dim_raw.mean()),
         "samples": n_samples,
     }
+    if detailed:
+        if not count:
+            raise ValueError("no valid validation actions")
+        error = np.concatenate(errors)
+        if not np.isfinite(error).all():
+            raise FloatingPointError("non-finite validation error")
+        result.update(
+            rmse=float(np.sqrt(np.mean(error ** 2))),
+            rmse_raw_per_dim=(np.sqrt(np.mean(error ** 2, axis=0)) * action_std).tolist(),
+            p95_abs=float(np.percentile(np.abs(error), 95)),
+            p95_abs_raw_per_dim=(np.percentile(np.abs(error), 95, axis=0) * action_std).tolist(),
+            valid_action_components=int(error.size),
+        )
+    return result
 
 
 def make_loader(ds, batch_size: int, shuffle: bool, workers: int, seed: int, drop_last: bool) -> DataLoader:
@@ -105,6 +143,7 @@ def infinite(loader: DataLoader):
 
 def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = None, resume: Path | None = None, overrides: dict | None = None) -> dict:
     cfg = copy.deepcopy(cfg)
+    loss_config = ReconstructionLoss(**cfg.get("reconstruction_loss", {}))
     tcfg = cfg["train"]
     tcfg.update({k: v for k, v in (overrides or {}).items() if v is not None})
     if smoke_steps is not None:
@@ -114,16 +153,41 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
 
     manifest = json.loads((data_dir / "manifest.json").read_text())
     chunk = int(cfg["model"]["chunk_size"])
-    train_ds = DerivedTickDataset(data_dir, manifest["split"]["train"], chunk)
+    train_ds = DerivedTickDataset(data_dir, manifest["split"]["train"], chunk,
+                                 augmentation=cfg.get("augmentation"))
     val_ds = DerivedTickDataset(data_dir, manifest["split"]["val"], chunk, normalizer=train_ds.normalizer)
     assert not set(manifest["split"]["train"]) & set(manifest["split"]["val"])
+    paired_provenance = None
+    if cfg.get("paired_images"):
+        pcfg = cfg["paired_images"]
+        train_ds = PairedViewDataset(train_ds, pcfg["root"], pcfg["probability"])
+        paired_provenance = {**pcfg, "manifest_sha256": file_sha256(Path(pcfg["root"]) / "manifest.json"),
+                             "training_data_kind": "real_labels_with_mixed_real_and_sim_approach_images"}
 
     act_cfg = build_act_config(cfg["model"], manifest, device)
     policy = ACTPolicy(act_cfg).to(device)
+    initial_provenance = None
+    if cfg.get("initial_checkpoint"):
+        if resume is not None:
+            raise ValueError("initial_checkpoint and resume are mutually exclusive")
+        initial = Path(cfg["initial_checkpoint"])
+        parent, parent_norm, parent_contract = load_checkpoint(initial, device="cpu")
+        for key in ("source", "split", "camera_keys", "state_names", "action_names", "policy_hz", "label_semantics"):
+            if parent_contract[key] != manifest[key]:
+                raise ValueError(f"initial checkpoint {key} differs from data")
+        if parent_contract["derived_files_sha256"] != manifest["files_sha256"] or parent_norm.stats != train_ds.normalizer.stats:
+            raise ValueError("initial checkpoint data hashes or normalization differ")
+        policy.load_state_dict(parent.state_dict(), strict=True)
+        del parent
+        initial_provenance = {"path": str(initial), "sha256": file_sha256(initial / "model.safetensors"),
+                              "optimizer": "fresh; weights-only initialization"}
     policy.train()
     optimizer = torch.optim.AdamW(policy.get_optim_params(), lr=act_cfg.optimizer_lr, weight_decay=act_cfg.optimizer_weight_decay)
     start_step = 0
     if resume is not None:
+        previous_loss = json.loads((resume / "run_info.json").read_text()).get("reconstruction_loss", {})
+        if ReconstructionLoss(**previous_loss) != loss_config:
+            raise ValueError("cannot resume with a different reconstruction loss")
         policy.load_state_dict(ACTPolicy.from_pretrained(str(resume)).state_dict())
         state = torch.load(resume / "training_state.pt", map_location=device, weights_only=False)
         optimizer.load_state_dict(state["optimizer"])
@@ -135,6 +199,13 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     train_loader = make_loader(train_ds, bs, True, workers, int(tcfg["seed"]), drop_last=True)
     val_loader = make_loader(val_ds, bs, False, workers, 0, drop_last=False)
     steps = int(tcfg["steps"])
+    if len(train_ds) < bs or bs < 1 or accum < 1 or steps <= start_step:
+        raise ValueError("training requires a full positive batch and steps beyond the resume step")
+    patience = int(tcfg.get("early_stopping_patience", 0))
+    min_steps = int(tcfg.get("early_stopping_min_steps", 0))
+    min_delta = float(tcfg.get("early_stopping_min_delta", 0.0))
+    if patience < 0 or min_steps < 0 or not math.isfinite(min_delta) or min_delta < 0:
+        raise ValueError("invalid early stopping configuration")
 
     out_dir.mkdir(parents=True, exist_ok=True)
     resolved = {
@@ -164,24 +235,36 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     it = infinite(train_loader)
     t_start = time.time()
     t_window = time.time()
-    run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "n": 0}
+    run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "grad_norm": 0.0, "n": 0}
+    created_checkpoints: set[str] = set()
     last_val = None
+    best_l1, patience_reference, bad_validations, best_step = math.inf, math.inf, 0, None
+    if resume is not None:
+        previous = json.loads((resume / "run_info.json").read_text())
+        best_l1 = previous.get("best_val_l1", math.inf)
+        best_step = previous.get("best_step")
+        patience_reference = previous.get("patience_reference", best_l1)
+        bad_validations = previous.get("bad_validations", 0)
+    stopped_early = False
     print(f"device={device} params={resolved['n_params'] / 1e6:.1f}M train_ticks={len(train_ds)} val_ticks={len(val_ds)} bs={bs}x{accum}", file=sys.stderr)
     for step in range(start_step + 1, steps + 1):
+        improved = False
         optimizer.zero_grad(set_to_none=True)
         for _ in range(accum):
             batch = to_device(next(it), device)
-            loss, ld = policy.forward(batch)
+            loss, ld = act_training_loss(policy, batch, loss_config)
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"non-finite loss at step {step}: {ld}")
             (loss / accum).backward()
             run["loss"] += loss.item() / accum
             run["l1"] += ld["l1_loss"] / accum
             run["kld"] += ld.get("kld_loss", 0.0) / accum
+            run["reconstruction"] += ld["reconstruction_loss"] / accum
         grad_norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), float(tcfg["grad_clip_norm"]))
         if not math.isfinite(float(grad_norm)):
             raise FloatingPointError(f"non-finite gradient norm at step {step}")
         optimizer.step()
+        run["grad_norm"] += float(grad_norm)
         run["n"] += 1
 
         if step % int(tcfg["log_every"]) == 0 or step == steps:
@@ -194,6 +277,9 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 "loss": round(run["loss"] / run["n"], 6),
                 "l1": round(run["l1"] / run["n"], 6),
                 "kld": round(run["kld"] / run["n"], 6),
+                "reconstruction": round(run["reconstruction"] / run["n"], 6),
+                "weighted_kl": round(act_cfg.kl_weight * run["kld"] / run["n"], 6),
+                "grad_norm": round(run["grad_norm"] / run["n"], 6),
                 "lr": act_cfg.optimizer_lr,
                 "sec_per_step": round(dt, 4),
                 "wall_s": round(time.time() - t_start, 1),
@@ -201,25 +287,56 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             }
             writer.writerow(row)
             hist_f.flush()
-            print(f"step {step} loss {row['loss']:.4f} l1 {row['l1']:.4f} kld {row['kld']:.4f} {dt:.3f}s/step grad_norm {float(grad_norm):.2f}", file=sys.stderr)
-            run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "n": 0}
+            print(f"step {step} loss {row['loss']:.4f} l1 {row['l1']:.4f} kld {row['kld']:.4f} {dt:.3f}s/step grad_norm {float(grad_norm):.2f} reconstruction[{loss_config.kind}] {row['reconstruction']:.4f} weighted_kl {row['weighted_kl']:.4f}", file=sys.stderr)
+            run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "grad_norm": 0.0, "n": 0}
             t_window = time.time()
 
         if step % int(tcfg["val_every"]) == 0 or step == steps:
             last_val = evaluate(policy, val_loader, device, action_std, tcfg.get("val_max_batches"))
+            if not math.isfinite(last_val["l1"]):
+                raise FloatingPointError("non-finite validation loss")
+            improved = last_val["l1"] < best_l1
+            if improved:
+                best_l1, best_step = last_val["l1"], step
+            if last_val["l1"] < patience_reference - min_delta:
+                patience_reference, bad_validations = last_val["l1"], 0
+            else:
+                bad_validations += 1
+            stopped_early = bool(patience and step >= min_steps and bad_validations >= patience)
             writer.writerow({"step": step, "split": "val", "l1": round(last_val["l1"], 6), "l1_raw_mean": round(last_val["l1_raw_mean"], 4), "l1_raw_per_dim": json.dumps(last_val["l1_raw_per_dim"]), "wall_s": round(time.time() - t_start, 1), "samples": last_val["samples"]})
             hist_f.flush()
             print(f"  val step {step}: l1 {last_val['l1']:.4f} raw mean {last_val['l1_raw_mean']:.3f} per-dim {last_val['l1_raw_per_dim']}", file=sys.stderr)
             t_window = time.time()
 
-        if step % int(tcfg["save_every"]) == 0 or step == steps:
+        if improved or stopped_early or step % int(tcfg["save_every"]) == 0 or step == steps:
             ck = out_dir / "checkpoints" / f"{step:06d}"
-            save_checkpoint(ck, policy, data_dir / "stats.json", manifest, {"step": step, "name": cfg.get("name"), "device": device, "last_val": last_val, "wall_s": round(time.time() - t_start, 1)}, optimizer)
+            save_checkpoint(ck, policy, data_dir / "stats.json", manifest, {
+                "step": step, "name": cfg.get("name"), "device": device, "last_val": last_val,
+                "best_val_l1": best_l1, "best_step": best_step,
+                "patience_reference": patience_reference, "bad_validations": bad_validations,
+                "augmentation": cfg.get("augmentation"),
+                "paired_images": paired_provenance, "initial_checkpoint": initial_provenance,
+                "reconstruction_loss": asdict(loss_config),
+                "wall_s": round(time.time() - t_start, 1)}, optimizer)
             update_last_link(out_dir / "checkpoints", ck.name)
+            if improved:
+                update_checkpoint_link(out_dir / "checkpoints", ck.name, "best")
+            created_checkpoints.add(ck.name)
+            if tcfg.get("keep_only_best_and_last", False):
+                prune_checkpoints(out_dir / "checkpoints", created_checkpoints)
             print(f"  saved {ck}", file=sys.stderr)
             t_window = time.time()
+        if stopped_early:
+            print(f"Early stopping at {step}; best validation {best_l1:.6f} at {best_step}", file=sys.stderr)
+            break
     hist_f.close()
-    return {"steps": steps, "last_val": last_val, "out": str(out_dir), "device": device, "wall_s": round(time.time() - t_start, 1)}
+    result = {"steps": step, "requested_steps": steps, "stopped_early": stopped_early,
+              "reconstruction_loss": asdict(loss_config),
+              "best_step": best_step, "best_val_l1": best_l1, "last_val": last_val,
+              "paired_images": paired_provenance, "initial_checkpoint": initial_provenance,
+              "out": str(out_dir), "device": device, "wall_s": round(time.time() - t_start, 1)}
+    (out_dir / "training_result.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
 
 
 def build_parser() -> argparse.ArgumentParser:
