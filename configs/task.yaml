@@ -3,8 +3,8 @@
 provenance_default: PROVISIONAL-STANDARD
 
 table:
-  height: 0.75
-  mat: {size_xy: [0.45, 0.40], center_task_xy: [0.25, 0.0]}
+  height: 0.737   # OPERATOR-MEASURED 29 in (2026-10-13); was 0.75 provisional
+  mat: {size_xy: [0.305, 0.406], center_task_xy: [0.235, 0.044]}   # OPERATOR-MEASURED 12 x 16 in (2026-10-13); 12 in across the camera view (x), 16 in along it (y); centre fitted from the image
 
 frames:
   T_task_so101base: {xyz: [0.0, 0.0, 0.0], rpy: [0.0, 0.0, 0.0]}
@@ -15,7 +15,7 @@ ball:
   friction: {nominal: 0.6, sweep: [0.4, 0.9]}
   inertia: thin_shell
   restitution_nominal: 0.75
-  start_region: {center_task_xy: [0.3323, 0.1013], radius: 0.03, provenance: "DATA-DERIVED v3: known-radius circle fit of the start-marker ball outline back-projected through the PnP camera, n=8/8, std 1.3/1.8 cm"}
+  start_region: {center_task_xy: [0.3557, 0.2047], radius: 0.03, provenance: "DATA-DERIVED v4 (2026-10-13): ball centroid of the first frame of episodes 0-7 back-projected through the operator-measured camera onto the ball-centre plane, n=8, std 1.0/1.6 cm; operator reports ~15 in from the table edge"}
 
 bowl:
   # OPERATOR-SUPPLIED 2026-10-12 (image cross-check suggests ~12 cm outer diameter, ~5-6 cm height;
@@ -27,8 +27,8 @@ bowl:
   base_diameter: 0.060      # PROVISIONAL-STANDARD
   mass: 0.30                # PROVISIONAL-STANDARD
   static: true
-  center_task_xy: [0.3300, -0.1687]
-  center_provenance: "DATA-DERIVED v3: known-radius circle fit of the in-bowl ball outline back-projected through the PnP camera, n=8/8, std 0.9/1.1 cm"
+  center_task_xy: [0.318, -0.035]   # DATA-DERIVED 2026-10-13: rim centre (hand-read px 840,475 in ep5 f0) back-projected through the operator-measured camera at outer_height; was [0.3300, -0.1687] from the superseded camera
+  center_provenance: "DATA-DERIVED v4 (2026-10-13): rim centre hand-read at pixel (840,475) in episode 5 frame 0, back-projected through the operator-anchored camera at outer_height; supersedes the v3 in-bowl-ball estimate"
   collision: {wall_boxes: 20, base: cylinder}
   depth_sweep: [0.0254, 0.045, 0.060]
 
@@ -36,14 +36,19 @@ camera_iphone:
   key: observation.images.iphone
   width: 1280
   height: 720
-  fovy_deg: 42.57
-  intrinsics_px: {fx: 924.0, fy: 924.0, cx: 640.0, cy: 360.0}
-  extrinsics_provenance: "DATA-DERIVED PnP, reprojection error 17.2 px RMS over 37 inliers of 43 points, provisional intrinsics fixed; 3-D points from provisional FK mapping and preliminary start/bowl centres"
-  # Base/task frame (m). look_at = point on the optical axis nearest the workspace centre; the
-  # roll-free look-at form drops the roll about the optical axis, kept in xyaxes_task below.
-  approx_position_task: [0.3285, -0.4444, 0.3852]
-  look_at_task: [0.2096, -0.0138, -0.0029]
-  xyaxes_task: [0.97959, 0.15245, -0.13098, -0.00469, 0.66887, 0.74337]   # MuJoCo xyaxes (x right, y up); roll -10.0 deg
+  # 2026-10-13 operator-anchored fit: 0.305 x 0.406 m mat; camera 24 in horizontally from the
+  # robot's nearest edge and 21 in above the table (operator uncertainty +/-3%). Orientation,
+  # focal length, camera x and mat placement fitted from hand-read joints and mat corners.
+  # Principal point fixed at image centre, square pixels, no distortion model. The earlier
+  # free-position planar fit (fx ~2200) is superseded; see extrinsics_provenance for residuals.
+  # Previous (superseded) values: fovy_deg 42.57, intrinsics fx=fy=924, approx_position_task [0.3285, -0.4444, 0.3852],
+  # look_at_task [0.2096, -0.0138, -0.0029], xyaxes_task [0.97959, 0.15245, -0.13098, -0.00469, 0.66887, 0.74337].
+  fovy_deg: 22.79
+  intrinsics_px: {fx: 1786.0, fy: 1786.0, cx: 640.0, cy: 360.0}
+  extrinsics_provenance: "OPERATOR-MEASURED position 2026-10-13 (24 in horizontally from the robot's nearest edge, 21 in above the table, +-3 %) with focal length, orientation, camera x and mat placement fitted to hand-read robot joint pixels and the mat outline (scripts/diag_camera_fit_measured.py; joints RMS 78 px dominated by wrist/tip readings, lift/elbow 48 px, mat 41 px). Supersedes the fx=924 fit."
+  approx_position_task: [0.0905, -0.7043, 0.5214]
+  look_at_task: [0.2292, 0.0609, 0.0116]
+  xyaxes_task: [0.98589, -0.08109, 0.14642, -0.07603, 0.56236, 0.82339]   # MuJoCo xyaxes (x right, y up)
 
 robot_so101:
   # D-014 APPROVED 2026-10-13: PROVISIONAL inferred base lift (real base origin above table top)

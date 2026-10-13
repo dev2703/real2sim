@@ -95,7 +95,7 @@ def test_scene_uses_task_yaml_single_source(env):
     roll_free = camera_xyaxes({k: v for k, v in TASK["camera_iphone"].items() if k != "xyaxes_task"},
                               cam.pos, np.array(TASK["camera_iphone"]["look_at_task"]) + env.offset)
     roll_deg = np.degrees(np.arccos(np.clip(roll_free[:3] @ compiled[:, 0], -1, 1)))
-    assert 5 < roll_deg < 20  # the fit's -10.9 deg roll is really applied
+    assert 5 < roll_deg < 30  # the fitted roll is really applied (-10.9 deg in the 2026-10-12 fit, 22.5 deg after the 2026-10-13 refit)
 
 
 def test_camera_axes_validation():

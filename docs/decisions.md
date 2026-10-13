@@ -394,3 +394,24 @@ change the shared 7-D contract, so they were applied as defaults; the user may v
   but changes the frame mapping, so it is not done.
 - **Domain gap.** Same camera pose; the Panda is about 3× taller and intrudes into the top of
   the frame. Any E3 number must carry this caveat.
+
+
+## D-019 Geometry correction snapshot
+
+**Approved for commit (user, 2026-10-13):** preserve the current corrected camera,
+mat, table, ball and bowl configuration, scene-builder appearance support, oracle
+adjustments and diagnostics as a separate reviewable commit, message
+`Sim geometry changes`, before paired-image training. This records the explicit
+request to publish the existing correction; no new measurements are inferred.
+
+Configuration: operator-supplied table/mat sizes and camera-position constraints;
+image-fitted camera orientation/focal length, mat placement, and object centres.
+See `configs/task.yaml` provenance and the operator-anchored camera snapshot in
+`results/audit/camera_fit/operator_anchored_20261013/`. The existing frame and
+camera feature schema remain unchanged. Oracle carry changes apply only to the
+labelled privileged diagnostic, not to the primary ACT controller.
+
+Primary benchmark results and previous camera audits are historical until rerun.
+This commit adds neither synthetic training examples nor a mixed-data checkpoint;
+any paired training must retain real-label provenance, training-only pairs,
+unchanged held-out episodes and an explicit mixed-appearance training label.

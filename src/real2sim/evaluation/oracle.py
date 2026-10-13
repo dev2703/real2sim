@@ -96,11 +96,18 @@ class OracleParams:
     # the same 3 cm for the learned controller). Without it the IK can jump to a far joint
     # configuration whose rate-limited execution drags the ball into the table (measured).
     max_step_m: float = 0.03
-    # Orientation tolerance for the carry phases (the 5-DOF arm cannot hold the 15 deg tilt
-    # everywhere above the table; position is what matters once the ball is pinched). The
-    # grasp phases keep sim_so101.yaml ik.orientation_tolerance_rad.
-    carry_orientation_tolerance_rad: float = 0.7
-    carry_orientation_weight_m_per_rad: float = 0.01
+    # Carry phases prioritize position with a weak orientation penalty (the 5-DOF arm cannot hold the 15 deg tilt everywhere above
+    # the table; position is what matters once the ball is pinched). Measured 2026-10-13 under the
+    # operator-measured geometry (ball start radius 0.41 m, wrist_flex at its 95 deg limit during
+    # transport): tolerance 0.7 rad / weight 0.01 stalled 3 of 4 seeds at 8 mm position residual;
+    # 1.5 rad / 0.001 delivers 4 of 4. The grasp phases keep sim_so101.yaml ik.orientation_tolerance_rad.
+    carry_orientation_tolerance_rad: float = 1.5
+    carry_orientation_weight_m_per_rad: float = 0.001
+    # Position tolerance for the carry phases. With the 2026-10-13 measured geometry (ball start
+    # (0.356, 0.205), bowl (0.318, -0.035)) the damped-least-squares carry solve settles at
+    # 3.1-3.2 mm, just over sim_so101.yaml's 3 mm, and the transport stalls on
+    # ``residual_rejected``; 5 mm is well inside the 12 mm reach tolerance of the FSM.
+    carry_position_tolerance_m: float = 0.005
     # A phase whose IK is rejected this many consecutive ticks has reached the arm's limit for
     # that target; move on instead of waiting for the tick limit (the ball slips slowly while
     # the gripper stalls).
@@ -156,6 +163,7 @@ class OracleGeometryController:
         carry = copy.deepcopy(cfg)
         carry["ik"]["orientation_tolerance_rad"] = self.p.carry_orientation_tolerance_rad
         carry["ik"]["orientation_weight_m_per_rad"] = self.p.carry_orientation_weight_m_per_rad
+        carry["ik"]["position_tolerance_m"] = self.p.carry_position_tolerance_m
         self.ik_carry = NativeKinematics(env.model, carry)
         self.latencies_ms: list[float] = []
         self.n_policy_calls = 0  # there is no policy; stays 0 by construction

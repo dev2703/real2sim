@@ -138,7 +138,7 @@ def bowl_dimensions(task: dict, inner_depth: float | None = None) -> dict:
     return dims
 
 
-def _add_bowl(world: ET.Element, dims: dict, origin, contacts: dict) -> None:
+def _add_bowl(world: ET.Element, dims: dict, origin, contacts: dict, rgba: str = "0.85 0.86 0.9 1") -> None:
     """Static bowl: base cylinder plus ``wall_boxes`` tilted boxes forming a truncated cone.
 
     The inner wall runs from ``base_radius`` at the floor to ``rim_radius`` at the rim, following
@@ -146,7 +146,6 @@ def _add_bowl(world: ET.Element, dims: dict, origin, contacts: dict) -> None:
     profile). Geoms in one static body never collide with each other, so overlaps are harmless.
     """
     body = ET.SubElement(world, "body", name="bowl", pos=_numbers(origin))
-    rgba = "0.85 0.86 0.9 1"
     slope = (dims["rim_radius"] - dims["base_radius"]) / dims["depth"]  # dr/dz of the inner wall
     phi = float(np.arctan(slope))  # tilt from vertical
     # Extend the wall segment down to the table so no gap opens at the floor/wall junction.
@@ -169,6 +168,56 @@ def _add_bowl(world: ET.Element, dims: dict, origin, contacts: dict) -> None:
                       quat=_numbers([w, x, y, z]), rgba=rgba, **contacts)
 
 
+UPSTREAM_PLASTIC_RGBA = "1 0.82 0.12 1"  # Menagerie so101.xml plastic material colour
+# Pre-2026-10-13 appearance (kept as the default when sim config has no ``appearance`` section).
+LEGACY_APPEARANCE = {
+    "robot_plastic_rgba": None,
+    "table_rgba": [0.65, 0.50, 0.34, 1],
+    "mat_rgba": [0.08, 0.09, 0.1, 1],
+    "bowl_rgba": [0.85, 0.86, 0.9, 1],
+    "ball_rgba": [0.72, 0.9, 0.06, 1],
+    "background_boxes": [],
+    "textures": {},
+    "lighting": {"headlight_ambient": [0.3, 0.3, 0.3], "headlight_diffuse": [0.6, 0.6, 0.6],
+                 "headlight_specular": [0.3, 0.3, 0.3], "sun_diffuse": [0.8, 0.8, 0.8], "shadows": True},
+}
+
+
+def _appearance(config: dict) -> dict:
+    """Visual-only scene appearance (colours, lighting, scenery); never a physics parameter."""
+    look = {**LEGACY_APPEARANCE, **(config.get("appearance") or {})}
+    look["lighting"] = {**LEGACY_APPEARANCE["lighting"], **(look.get("lighting") or {})}
+    look["textures"] = dict(look.get("textures") or {})
+    for key in ("table_rgba", "mat_rgba", "bowl_rgba", "ball_rgba"):
+        if len(look[key]) != 4 or not all(0 <= float(v) <= 1 for v in look[key]):
+            raise ValueError(f"appearance.{key} must be four values in [0, 1]")
+    if look["robot_plastic_rgba"] is not None and len(look["robot_plastic_rgba"]) != 4:
+        raise ValueError("appearance.robot_plastic_rgba must be four values or null")
+    for box in look["background_boxes"]:
+        if set(box) - {"name", "pos_task", "half_size", "rgba"} or len(box["half_size"]) != 3:
+            raise ValueError(f"invalid appearance.background_boxes entry: {box}")
+    return look
+
+
+def _textured(root: ET.Element, look: dict, name: str, rgba) -> dict:
+    """Return geom attributes for ``name``: a speckled builtin texture if configured, else plain rgba.
+
+    Visual only. The texture is a flat colour with random marks (MuJoCo builtin), which gives the
+    camera image the fine-grained detail that real surfaces have and flat shading lacks.
+    """
+    spec = look["textures"].get(name)
+    if not spec:
+        return {"rgba": _numbers(rgba)}
+    asset = root.find("asset")
+    rgb = [float(v) for v in rgba[:3]]
+    ET.SubElement(asset, "texture", name=f"tex_{name}", type="2d", builtin="flat", rgb1=_numbers(rgb),
+                  rgb2=_numbers(rgb), mark="random", markrgb=_numbers(spec.get("markrgb", [0, 0, 0])),
+                  random=str(float(spec.get("random", 0.02))), width="512", height="512")
+    ET.SubElement(asset, "material", name=f"mat_{name}", texture=f"tex_{name}",
+                  texrepeat=_numbers(spec.get("repeat", [1, 1])), texuniform="true", rgba="1 1 1 1")
+    return {"material": f"mat_{name}"}
+
+
 def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None,
               contacts: dict | None = None) -> str:
     source = project_path(config["model"])
@@ -185,12 +234,23 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     if visual is None:
         visual = ET.SubElement(root, "visual")
     ET.SubElement(visual, "global", offwidth=str(render["width"]), offheight=str(render["height"]))
-    ET.SubElement(visual, "headlight", ambient="0.3 0.3 0.3", diffuse="0.6 0.6 0.6")
+    look = _appearance(config)
+    light = look["lighting"]
+    ET.SubElement(visual, "headlight", ambient=_numbers(light["headlight_ambient"]),
+                  diffuse=_numbers(light["headlight_diffuse"]), specular=_numbers(light["headlight_specular"]))
+    if look["robot_plastic_rgba"] is not None:
+        # Visual only: recolour the upstream plastic materials (yellow in Menagerie, white on the
+        # recorded robot). The asset block lives in the parsed tree; the pinned so101.xml file and
+        # every physics field are untouched (tests/integration/test_so101_scene.py).
+        for material in root.find("asset").findall("material"):
+            if material.get("rgba", "").split() == UPSTREAM_PLASTIC_RGBA.split():
+                material.set("rgba", _numbers(look["robot_plastic_rgba"]))
     world = root.find("worldbody")
     base = next(b for b in world.findall("body") if b.get("name") == "base")
     base.set("pos", _numbers(offset))  # robot base on the table top; task frame origin
     ET.SubElement(world, "light", pos=_numbers(offset + [0.3, -0.4, 1.2]), dir="0 0 -1",
-                  directional="true")
+                  directional="true", castshadow="true" if light["shadows"] else "false",
+                  diffuse=_numbers(light["sun_diffuse"]))
     cam_pos = np.asarray(camera["approx_position_task"], float) + offset
     cam_at = np.asarray(camera["look_at_task"], float) + offset
     ET.SubElement(world, "camera", name="iphone", pos=_numbers(cam_pos),
@@ -203,23 +263,36 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     contact_attrs = dict(friction=_numbers(physics["friction"]), solref=_numbers(physics["solref"]),
                          condim="6")
     half = config["table_half_size"]
+    table_rgba = list(look["table_rgba"])
+    # alpha 0 means "hide the collision box" (the desk is drawn by appearance.background_boxes). Hiding
+    # by geom group 3 (not rendered by the default MjvOption) avoids MuJoCo's transparency pass, which
+    # produced 1/255 pixel flicker between identical resets. Physics is unaffected by group.
+    table_extra = {"group": "3"} if float(table_rgba[3]) == 0.0 else {}
+    if table_extra:
+        table_rgba[3] = 1.0
     ET.SubElement(world, "geom", name="table", type="box", size=_numbers(half),
                   pos=_numbers([*config["table_center_task_xy"], top - half[2]]),
-                  rgba="0.65 0.50 0.34 1", **contact_attrs)
+                  rgba=_numbers(table_rgba), **table_extra, **contact_attrs)
     mat = table["mat"]
     ET.SubElement(world, "geom", name="mat_visual", type="box",
                   size=_numbers([mat["size_xy"][0] / 2, mat["size_xy"][1] / 2, 0.0001]),
-                  pos=_numbers([*mat["center_task_xy"], top + 0.0001]), rgba="0.08 0.09 0.1 1",
-                  contype="0", conaffinity="0")
+                  pos=_numbers([*mat["center_task_xy"], top + 0.0001]), contype="0", conaffinity="0",
+                  **_textured(root, look, "mat", look["mat_rgba"]))
+    for i, box in enumerate(look["background_boxes"]):
+        # Visual-only scenery (desk extension, wall, furniture) seen by the camera; no collisions.
+        ET.SubElement(world, "geom", name=f"scenery_{i:02d}_{box.get('name', 'box')}", type="box",
+                      size=_numbers(box["half_size"]), pos=_numbers(np.asarray(box["pos_task"], float) + offset),
+                      contype="0", conaffinity="0", group="2",
+                      **_textured(root, look, box.get("name", f"box{i}"), box["rgba"]))
     dims = bowl_dimensions(task, bowl_inner_depth)
-    _add_bowl(world, dims, [*dims["center_xy"], top], contact_attrs)
+    _add_bowl(world, dims, [*dims["center_xy"], top], contact_attrs, rgba=_numbers(look["bowl_rgba"]))
     ball = task["ball"]
     start = ball["start_region"]["center_task_xy"]
     body = ET.SubElement(world, "body", name="ball",
                          pos=_numbers([*start, top + ball["radius"] + 0.001]))
     ET.SubElement(body, "freejoint", name="ball_free")
     ET.SubElement(body, "geom", name="ball_geom", type="sphere", size=str(ball["radius"]),
-                  mass=str(ball["mass"]), rgba="0.72 0.9 0.06 1", **contact_attrs)
+                  mass=str(ball["mass"]), rgba=_numbers(look["ball_rgba"]), **contact_attrs)
     return ET.tostring(root, encoding="unicode")
 
 

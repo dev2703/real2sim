@@ -416,3 +416,73 @@ grasp-phase trials, HOLD 0/10 on both robots, oracle 10/10, 0 aborted trials.
 
 **Cleanup:** one `REPO_ROOT`/`project_path` (was four copies); dead constants removed; videos
 untracked (the ignore pattern missed subdirectories); `.coverage`/cache artefacts ignored.
+
+
+## 2026-10-13 — Operator measurements adopted; camera, mat, table, ball and bowl geometry corrected
+
+Operator measurements (+-3 %): camera 24 in horizontally from the robot's nearest edge and 21 in above
+the table; mat 12 x 16 in; table 29 in; ball ~15 in from the table edge. With the camera position fixed
+from these, focal length, orientation, camera x and mat placement were fitted to hand-read robot joint
+pixels and the mat outline (`scripts/diag_camera_fit_measured.py`): fx 1786 px (fovy 22.8 deg), camera
+at task (0.091, -0.704, 0.521) m, pitch 33 deg. The mat must be 12 in across the view (x) and 16 in along
+it (y) to reproduce its apparent shape at that pitch. Independent check: the ball's apparent diameter in
+the eight start frames implies a camera distance within 4 % of the geometric one. Projected skeleton and
+mat outline land on the real frames (`outputs/tmp_appearance/measured_camera_overlay.jpg`); the earlier
+wrist/tip residuals were hand-reading errors, not model errors.
+
+`configs/task.yaml`: camera_iphone (operator-measured position + fitted orientation/focal), table.height
+0.737, mat 0.305 x 0.406 at (0.235, 0.044), ball.start_region (0.356, 0.205) (v4: 8 start frames
+back-projected through the new camera, std 1.0/1.6 cm; 10 cm further in y than v3), bowl centre
+(0.318, -0.035) (rim centre back-projected; was (0.330, -0.169)). Old values kept in comments.
+
+Oracle: under the corrected geometry the carry solve stalled (`residual_rejected`, wrist_flex at its
+95 deg limit, 8 mm residual) and delivered 1/4. `OracleParams` carry phases are now position-only
+(orientation tolerance 1.5 rad, weight 0.001, position tolerance 5 mm): **10/10** again
+(`outputs/tmp_appearance/oracle_check4`). The E4 oracle result in the primary tables was measured under
+the old geometry and should be regenerated before being cited.
+
+Joint ACT under the corrected scene: first-frame test still returns the return-to-rest chunk (feature
+distance 12.1-12.7 vs real-to-real 3.2-8.5); closed loop 0/10, min ball distance 22-26 cm
+(`results/metrics/debug_so101_joint/settled_start_measured_camera`; larger than before because the ball
+start moved 10 cm further away). Scene/oracle/closed-loop/domain-gap/unit tests: 362 passed.
+
+Milestone: M2 calibration correction + M4 follow-up
+Status: geometry now operator-anchored; policy failure unchanged (render domain gap)
+Unverified assumptions: hand-read mat corners and joint pixels (+-15 px); principal point at the image
+  centre; no lens distortion; mat orientation inferred from the image, operator quoted 12 x 16 as height x width
+Next: regenerate E0/E4 baselines and the camera-fit audit under the new geometry; paired real/sim-render
+  training for the policy
+
+
+## 2026-10-13 — Geometry snapshot prepared for GitHub
+
+User requested committing the corrected geometry and related diagnostics separately
+from paired real/sim training, with commit message `Sim geometry changes`.
+Selected files: task/sim configuration, scene-builder appearance support, oracle
+carry tolerances, scene integration test and `scripts/diag_*.py`; diagnostic
+reports/traces and operator-anchored camera-fit evidence accompany the change.
+Unrelated ACT augmentation/loss/monitor work remains uncommitted in the workspace.
+
+The measured table/mat dimensions and camera-position constraints anchor this
+configuration; focal length, orientation, mat placement, ball and bowl positions
+remain fitted estimates. The oracle retains a weak orientation penalty (it is
+not strictly position-only). Fixed contradictory camera/bowl provenance comments
+without changing numeric settings. Diagnostic scripts were formatted/linted;
+no camera keys, action labels, frequency, split or policy weights changed.
+
+Existing primary hold/oracle/learned tables and legacy camera-fit audit files
+predate this correction. They are preserved as historical results and must be
+regenerated under this snapshot before being cited as current. The visual input
+is implicated in failed initial commands, but exclusive causality of all 0/10
+outcomes is unproven; command/dynamics mismatch remains unresolved. No paired
+training or primary benchmark rerun was performed as part of the commit request.
+
+Verification: `UV_CACHE_DIR=/tmp/real2sim-uv-cache uv run --offline ruff check .`
+passed; `uv run --offline pytest -q tests/unit` 301 passed and
+`uv run --offline pytest -q tests/integration` 109 passed (same cache override).
+Both suites used approved macOS rendering access; the initial sandboxed unit
+run had 300 passes and one CoreGraphics-access failure, then passed on retry.
+`uv run --offline python -m real2sim.sim.camera_fit --help` passed.
+These counts describe the current workspace, including pending training tests.
+Next: regenerate baselines and camera audit under the corrected geometry, then
+assess the proposed approach-phase paired-image training as a separate change.
