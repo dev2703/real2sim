@@ -1,0 +1,360 @@
+"""Full recorded grasps: pose reference, dynamic follower and Cartesian controls.
+
+Privileged diagnostic only. No policy weights, labels, benchmark configurations,
+actuator gains, contact parameters, action bounds or safety thresholds are edited.
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+from collections import Counter
+from contextlib import contextmanager
+from pathlib import Path
+
+import cv2
+import mujoco
+import numpy as np
+
+from real2sim.data.paired_approach import camera_parameters
+from real2sim.data.raw import RawDataset
+from real2sim.evaluation.metrics import TrialTracker
+from real2sim.geometry.so3 import delta_action
+from real2sim.policy.adapters import CartesianActionAdapter
+from real2sim.policy.paired import file_sha256
+from real2sim.sim.camera_fit import backproject_to_plane, ball_centroid_px
+from real2sim.sim.env import GRIPPER_BODIES, So101PickPlaceEnv, sim_from_real
+from real2sim.sim.kinematics import NativeKinematics
+
+DEFAULT_CONFIG = Path('results/metrics/dinov2_act_pilot_20261015/configs/sim_so101.yaml')
+MODES = ('follower_next', 'cartesian_legacy', 'cartesian_polished',
+         'cartesian_reference_feedback', 'cartesian_leader_gripper')
+# Coarse review windows, not fitted to simulation outcomes. All episodes show a
+# real grasp, carried ball, release and ball remaining in the bowl in real_review_1_3.jpg.
+REVIEW = {
+    1: {'closure': [13., 15.5], 'lift_transport': [15.5, 38.5], 'release': [38.5, 41.]},
+    2: {'closure': [12.8, 14.5], 'lift_transport': [14.5, 22.5], 'release': [22.5, 24.]},
+    3: {'closure': [13.8, 15.5], 'lift_transport': [15.5, 32.5], 'release': [32.5, 35.]},
+}
+
+
+def describe(values):
+    a = np.asarray(values, dtype=float)
+    if not a.size:
+        return {'n': 0}
+    return {'n': len(a), 'mean': float(a.mean()), 'median': float(np.median(a)),
+            'p95': float(np.quantile(a, .95)), 'max': float(a.max())}
+
+
+def phase(time, review):
+    if time < review['closure'][0]:
+        return 'approach'
+    for name, (start, stop) in review.items():
+        if start <= time < stop:
+            return name
+    return 'after_release'
+
+
+def jaw(env, data):
+    tips = [env.model.geom(f'{name}_jaw_sph_tip1').id for name in ('fixed', 'moving')]
+    points = data.geom_xpos[tips].copy()
+    gap = np.linalg.norm(points[1] - points[0]) - env.model.geom_size[tips, 0].sum()
+    return float(gap), points
+
+
+@contextmanager
+def contact_trace(env):
+    """Inspect the contacts used by every physics step, preserving solver state."""
+    original = mujoco.mj_step
+    records = []
+
+    def step(model, data):
+        touching = set()
+        pairs = []
+        for c in data.contact[:data.ncon]:
+            a, b = int(c.geom1), int(c.geom2)
+            if env.ball_geom not in (a, b):
+                continue
+            g = b if a == env.ball_geom else a
+            touching.add(g)
+            if g != env.table_geom:
+                pairs.append({'geom': model.geom(g).name or f'geom_{g}',
+                              'distance_m': float(c.dist)})
+        fixed, moving = [bool(touching & env.gripper_geoms[n]) for n in GRIPPER_BODIES]
+        if pairs:
+            records.append({'time_s': float(data.time), 'fixed': fixed, 'moving': moving,
+                            'two_jaw': fixed and moving, 'pairs': pairs,
+                            'ball_height_above_rest_m': float(data.xpos[env.ball_body, 2]
+                                - env.table_top - env.task['ball']['radius'])})
+        return original(model, data)
+
+    mujoco.mj_step = step
+    try:
+        yield records
+    finally:
+        mujoco.mj_step = original
+
+
+def simulate(config, joint, cart, indices, scenario, reference, reference_gap, mode, review):
+    with So101PickPlaceEnv(config, render_images=False) as env:
+        # Dedicated full-episode replay horizon; no early stop on task success.
+        env.max_episode_steps = len(indices) - 1
+        env.reset(seed=0, scenario=scenario)
+        cfg = copy.deepcopy(env.config)
+        if mode not in ('follower_next', 'cartesian_legacy'):
+            cfg['ik'].update(position_convergence_m=1e-5, orientation_convergence_rad=1e-4)
+        kin = NativeKinematics(env.model, cfg)
+        adapter = CartesianActionAdapter(env, kin)
+        tracker = TrialTracker(int(env.task['episode']['success_hold_s'] * env.control_hz),
+                               .03, env.table_top, env.task['ball']['radius'])
+        rows, states = [], [env.data.qpos.copy()]
+        initial = env.info()['privileged_metrics']
+        with contact_trace(env) as contacts:
+            for k, (t, nxt) in enumerate(zip(indices[:-1], indices[1:], strict=True)):
+                before = env.ee_pose()
+                recorded_delta = cart['action'][t, :6].astype(float)
+                requested = recorded_delta.copy()
+                gripper = float(joint['state'][nxt, 5] / 100.)
+                if mode == 'follower_next':
+                    _, _, _, _, info = env.step_real_joint_targets(joint['state'][nxt])
+                    rejected, reason, iterations, residual = False, 'joint_control', 0, None
+                else:
+                    if mode == 'cartesian_reference_feedback':
+                        requested = delta_action(before, reference[k + 1])
+                    if mode == 'cartesian_leader_gripper':
+                        gripper = float(cart['action'][t, 6])
+                    result = adapter.apply(np.r_[requested, gripper])
+                    info = result.info
+                    solved = adapter.residuals[-1]
+                    rejected, reason = result.ik_rejected, solved['reason']
+                    iterations, residual = solved['iterations'], solved['position_error_m']
+                achieved = delta_action(before, env.ee_pose())
+                bounded = requested.copy()
+                for s, bound in ((slice(0, 3), adapter.max_step_m), (slice(3, 6), adapter.max_step_rad)):
+                    bounded[s] *= min(1., bound / max(np.linalg.norm(bounded[s]), 1e-12))
+                m = info['privileged_metrics']
+                tracker.update(m, ik_rejected=rejected)
+                gap, _ = jaw(env, env.data)
+                pose_error = delta_action(env.ee_pose(), reference[k + 1])
+                control = info['control']
+                applied_pose = kin.forward(np.array(control['applied_radians']))
+                servo_error = delta_action(env.ee_pose(), applied_pose)
+                # Separate geometric/reference feasibility from IK and servo tracking.
+                row = {'tick': k + 1, 'source_tick': int(t), 'frame': int(joint['frame_index'][nxt]),
+                       'time_s': float(joint['timestamp'][nxt]),
+                       'phase': phase(float(joint['timestamp'][nxt]), review),
+                       'recorded_delta': recorded_delta.tolist(), 'requested_delta': requested.tolist(),
+                       'bounded_delta': bounded.tolist(), 'achieved_delta': achieved.tolist(),
+                       'pose_error_m': float(np.linalg.norm(pose_error[:3])),
+                       'pose_error_rad': float(np.linalg.norm(pose_error[3:])),
+                       'movement_error_m': float(np.linalg.norm(achieved[:3] - recorded_delta[:3])),
+                       'bounded_command_error_m': float(np.linalg.norm(achieved[:3] - bounded[:3])),
+                       'servo_pose_error_m': float(np.linalg.norm(servo_error[:3])),
+                       'joint_error_deg_pct': (env.real_state() - joint['state'][nxt]).tolist(),
+                       'jaw_tip_gap_m': gap, 'reference_jaw_tip_gap_m': float(reference_gap[k + 1]),
+                       'jaw_gap_error_m': abs(gap - reference_gap[k + 1]),
+                       'gripper_observed_pct': float(env.real_state()[5]),
+                       'gripper_reference_pct': float(joint['state'][nxt, 5]),
+                       'gripper_command_pct': gripper * 100.,
+                       'ik_rejected': rejected, 'ik_reason': reason,
+                       'ik_iterations': iterations, 'ik_position_residual_m': residual,
+                       'joint_rate_limited': control['rate_limited'],
+                       'joint_limit_clipped': control['limit_clipped'],
+                       'ball_xyz_task': m['ball_xyz_task'], 'tool_xyz_task': m['tool_xyz_task'],
+                       'ball_held': m['ball_held'], 'lifted': m['lifted'], 'ball_in_bowl': m['ball_in_bowl'],
+                       'robot_table_penetration_m': m['robot_table_penetration_m']}
+                rows.append(row)
+                states.append(env.data.qpos.copy())
+        fields = ('pose_error_m', 'pose_error_rad', 'movement_error_m', 'bounded_command_error_m',
+                  'servo_pose_error_m', 'jaw_gap_error_m')
+        summary = {'mode': mode, 'ticks': len(rows), 'duration_s': float(joint['timestamp'][indices[-1]]),
+                   'start_robot_table_penetration_m': initial['robot_table_penetration_m'],
+                   'initial_ball_contacts': [c for c in initial['contacts'] if 'ball_geom' in (c['geom1'], c['geom2'])],
+                   'success': tracker.success, 'held': tracker.held_ever, 'lifted_while_held': tracker.lifted,
+                   'min_ee_ball_distance_m': tracker.min_ee_ball_distance_m,
+                   'ik_reasons': dict(Counter(r['ik_reason'] for r in rows)),
+                   'rate_limited_ticks': sum(any(r['joint_rate_limited']) for r in rows),
+                   'two_jaw_substeps': sum(r['two_jaw'] for r in contacts),
+                   'contact_substeps_by_geom': dict(Counter(p['geom'] for r in contacts for p in r['pairs'])),
+                   'first_ball_contact_s': contacts[0]['time_s'] if contacts else None,
+                   'metrics': {f: describe([r[f] for r in rows]) for f in fields},
+                   'phases': {p: {f: describe([r[f] for r in rows if r['phase'] == p]) for f in fields}
+                              for p in ('approach', 'closure', 'lift_transport', 'release', 'after_release')}}
+        return summary, rows, np.array(states), contacts
+
+
+def panel(rgb, text):
+    out = np.full((308, 480, 3), 245, np.uint8)
+    out[:270] = cv2.resize(rgb, (480, 270))
+    for y, line in enumerate(text):
+        cv2.putText(out, line, (6, 285 + y * 16), cv2.FONT_HERSHEY_SIMPLEX, .40, (15, 15, 15), 1, cv2.LINE_AA)
+    return out
+
+
+def video(config, raw, joint, indices, scenario, qrefs, runs, destination):
+    ep = int(joint['episode_index'][indices[0]])
+    selected = {int(joint['frame_index'][t]): k for k, t in enumerate(indices)}
+    key = 'observation.images.iphone'
+    frames = {}
+    for f, _, frame in raw.iter_frames(key, ep, stride=3):
+        if f in selected:
+            frames[selected[f]] = cv2.resize(frame.to_ndarray(format='rgb24'), (480, 270))
+    if len(frames) != len(indices):
+        raise ValueError('source video does not cover every selected tick')
+    image_rows = []
+    with So101PickPlaceEnv(config, render_images=False) as env:
+        env.reset(seed=0, scenario=scenario)
+        rv, tv, K, _, _ = camera_parameters(env)
+        def project(points):
+            return cv2.projectPoints(np.asarray(points) - env.offset, rv, tv, K, None)[0].reshape(-1, 2) * (480 / 1280)
+        writer = cv2.VideoWriter(str(destination / f'episode{ep}_complete.mp4'),
+                                 cv2.VideoWriter_fourcc(*'mp4v'), 10., (960, 616))
+        if not writer.isOpened():
+            raise RuntimeError('video encoder unavailable')
+        captures = set(np.linspace(0, len(indices)-1, 9).astype(int))
+        for a, b in REVIEW[ep].values():
+            captures.add(min(len(indices)-1, round((a+b)*5)))
+        montage = []
+        try:
+            for k, t in enumerate(indices):
+                env.data.qpos[env.qadr] = qrefs[k]
+                env.data.qvel[:] = 0
+                mujoco.mj_forward(env.model, env.data)
+                gap, points = jaw(env, env.data)
+                tips = project(points)
+                real = frames[k].copy()
+                for point in tips:
+                    cv2.circle(real, tuple(np.rint(point).astype(int)), 3, (255, 40, 40), 1)
+                cv2.line(real, tuple(np.rint(tips[0]).astype(int)), tuple(np.rint(tips[1]).astype(int)), (255, 40, 40), 1)
+                detected = ball_centroid_px(frames[k], min_area=25)
+                image_rows.append({'tick': k, 'frame': int(joint['frame_index'][t]),
+                                   'time_s': float(joint['timestamp'][t]),
+                                   'projected_reference_jaw_tips_480px': tips.tolist(),
+                                   'real_ball_centroid_480px': list(detected) if detected else None})
+                # Static reference is expressly kinematic. Hide ball: its real 3-D
+                # path is not known from the single image and is never synthesized.
+                alpha = env.model.geom_rgba[env.ball_geom, 3]
+                env.model.geom_rgba[env.ball_geom, 3] = 0
+                ref = env.render()
+                env.model.geom_rgba[env.ball_geom, 3] = alpha
+                time = float(joint['timestamp'][t])
+                panels = [panel(real, [f'Real ep{ep} t={time:.1f}s | {phase(time, REVIEW[ep])}',
+                                       'Red = projected reference jaw tips (not fitted)']),
+                          panel(ref, ['Recorded pose reference | NO PHYSICS / ball hidden',
+                                      f'Follower g={joint["state"][t,5]:.1f}% | tip gap={gap*1000:.1f}mm'])]
+                for mode in ('follower_next', 'cartesian_polished'):
+                    _, rows, states, _ = runs[mode]
+                    env.data.qpos[:] = states[k]
+                    env.data.qvel[:] = 0
+                    mujoco.mj_forward(env.model, env.data)
+                    r = rows[max(0, k-1)]
+                    panels.append(panel(env.render(), [f'{mode} | dynamic ball / unchanged physics',
+                        f'pose err={r["pose_error_m"]*1000:.1f}mm gap={r["jaw_tip_gap_m"]*1000:.1f}mm held={r["ball_held"]}']))
+                canvas = np.vstack([np.hstack(panels[:2]), np.hstack(panels[2:])])
+                writer.write(cv2.cvtColor(canvas, cv2.COLOR_RGB2BGR))
+                if k in captures:
+                    cv2.imwrite(str(destination / f'episode{ep}_tick{k:04d}.jpg'), cv2.cvtColor(canvas, cv2.COLOR_RGB2BGR))
+                    montage.append(cv2.resize(canvas, (480, 308)))
+        finally:
+            writer.release()
+        (destination / f'episode{ep}_image_trace.json').write_text(json.dumps(image_rows, allow_nan=False) + '\n')
+        # Still sheet remains useful without a video player.
+        while len(montage) % 3:
+            montage.append(np.full_like(montage[0], 245))
+        sheet = np.vstack([np.hstack(montage[i:i+3]) for i in range(0, len(montage), 3)])
+        cv2.imwrite(str(destination / f'episode{ep}_comparison.jpg'), cv2.cvtColor(sheet, cv2.COLOR_RGB2BGR))
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument('--out', type=Path, default=Path('results/audit/recorded_grasp_control_20261015/full_replay'))
+    parser.add_argument('--no-video', action='store_true')
+    args = parser.parse_args()
+    args.out.mkdir(parents=True, exist_ok=False)
+    (args.out / 'executed_script.txt').write_text(Path(__file__).read_text())
+    manifest = json.loads(Path('.cache/derived_joint/manifest.json').read_text())
+    cart_manifest = json.loads(Path('.cache/derived_cartesian/manifest.json').read_text())
+    for path, m in ((Path('.cache/derived_joint'), manifest), (Path('.cache/derived_cartesian'), cart_manifest)):
+        if file_sha256(path / 'arrays.npz') != m['files_sha256']['arrays.npz']:
+            raise ValueError('recorded array checksum changed')
+    joint = dict(np.load('.cache/derived_joint/arrays.npz', allow_pickle=False))
+    cart = dict(np.load('.cache/derived_cartesian/arrays.npz', allow_pickle=False))
+    for key in ('episode_index', 'frame_index', 'timestamp'):
+        np.testing.assert_array_equal(joint[key], cart[key])
+    prep = json.loads(Path('.cache/paired_refit_20261014/preparation.json').read_text())
+    setups = {r['episode']: r for r in prep['episodes']}
+    raw = RawDataset(manifest['source']['root'])
+    report = {'kind': 'PRIVILEGED_COMPLETE_RECORDED_GRASP_CONTROL_AUDIT_NOT_ACT',
+              'script_sha256': file_sha256(Path(__file__)), 'config_sha256': file_sha256(args.config),
+              'source_sha256': {p: file_sha256(Path(p)) for p in (
+                  'src/real2sim/sim/kinematics.py', 'src/real2sim/sim/env.py',
+                  'src/real2sim/policy/adapters.py', 'src/real2sim/evaluation/metrics.py')},
+              'source': manifest['source'], 'joint_arrays_sha256': manifest['files_sha256']['arrays.npz'],
+              'cartesian_arrays_sha256': cart_manifest['files_sha256']['arrays.npz'],
+              'review': REVIEW,
+              'protocol': {
+                  'selection': 'Held-out episodes 1,2,3 visually show real grasp, transport and ball deposited in bowl. Local diagnostic review; original unknown outcome annotations unchanged.',
+                  'duration': 'Every 10Hz tick through the final recorded frame; replay-only horizon extended, all safety/action/velocity/contact settings unchanged.',
+                  'objects': 'Ball and bowl initialized from existing first-frame image evidence using fixed camera; then ball is fully dynamic, never attached or reset.',
+                  'reference': 'Unclipped recorded joints posed without physics for visual and FK comparison; limit violations explicitly counted. Not a grasp feasibility or success test.',
+                  'cartesian': 'Recorded achieved Cartesian deltas, applied relative to actual current pose; next recorded follower gripper for matched jaw motion. leader_gripper variant alone uses unchanged policy-label gripper commands.',
+                  'feedback': 'Privileged next recorded absolute pose converted to bounded Cartesian delta, with polished IK. Tests accumulated execution error; not a learned policy or changed label.',
+                  'jaw_gap': 'Distance between fixed/moving sph_tip1 sphere surfaces. A reproducible aperture proxy, not measured real jaw clearance.',
+                  'contact': 'All 500Hz physics substeps inspected before integration; task success/lift scored using unchanged 10Hz TrialTracker.',
+                  'images': 'Exact recorded source frames at derived frame indices. Overlaid jaw tips use fixed camera; no per-frame fit. Ball centroid is a 2-D color detection and not a measured 3-D trajectory.',
+                  'phases': 'Coarse reviewed closure/lift-transport/release windows; boundaries approximate and independent of simulated outcome.'},
+              'episodes': {}}
+    for ep in REVIEW:
+        if ep not in manifest['split']['val']:
+            raise ValueError('expected held-out episode')
+        indices = np.flatnonzero(joint['episode_index'] == ep)
+        with So101PickPlaceEnv(args.config, render_images=False) as env:
+            env.reset(seed=0)
+            rv, tv, K, _, _ = camera_parameters(env)
+            fullpixel = (np.array(setups[ep]['first_pixel_policy']) - [0, 24]) / .2
+            xy = backproject_to_plane([fullpixel], rv, tv, K,
+                                      env.table_top-env.offset[2]+env.task['ball']['radius'])[0, :2]
+            qrefs = np.array([sim_from_real(env.mapping, joint['state'][t]) for t in indices])
+            clipped = np.clip(qrefs, *env.limits.T)
+            scenario = {'joint_positions': clipped[0], 'ball_xy': xy,
+                        'bowl_xy': np.array(setups[ep]['bowl_xy_estimated'])}
+            env.reset(seed=0, scenario=scenario)
+            kin = NativeKinematics(env.model, env.config)
+            poses, gaps = [], []
+            for q in qrefs:
+                poses.append(kin.forward(q))
+                gaps.append(jaw(env, kin.data)[0])
+            poses, gaps = np.array(poses), np.array(gaps)
+            # Confirm replay's FK is the exact label convention, not a newly fitted mapping.
+            delta_errors = [np.max(np.abs(delta_action(a, b) - cart['action'][t, :6]))
+                            for a, b, t in zip(poses[:-1], poses[1:], indices[:-1], strict=True)]
+            if max(delta_errors) > 1e-5:
+                raise ValueError('recorded Cartesian labels and scene FK disagree')
+            metadata = {'ticks': len(indices), 'duration_s': float(joint['timestamp'][indices[-1]]),
+                        'ball_xy': xy.tolist(), 'bowl_xy': scenario['bowl_xy'].tolist(),
+                        'reference_outside_joint_limits_ticks': int(np.any(abs(qrefs-clipped)>1e-8, axis=1).sum()),
+                        'max_reference_limit_violation_rad': float(np.max(abs(qrefs-clipped))),
+                        'max_recorded_delta_fk_disagreement': float(max(delta_errors)),
+                        'modes': {}}
+        runs = {}
+        for mode in MODES:
+            result = simulate(args.config, joint, cart, indices, scenario, poses, gaps, mode, REVIEW[ep])
+            runs[mode] = result
+            summary, rows, states, contacts = result
+            metadata['modes'][mode] = summary
+            (args.out / f'episode{ep}_{mode}_trace.json').write_text(json.dumps(rows, allow_nan=False) + '\n')
+            (args.out / f'episode{ep}_{mode}_contacts.json').write_text(json.dumps(contacts, allow_nan=False) + '\n')
+            np.savez_compressed(args.out / f'episode{ep}_{mode}_states.npz', qpos=states,
+                                reference_qpos=qrefs, reference_poses=poses, reference_jaw_tip_gap=gaps)
+            print(json.dumps({'episode': ep, 'mode': mode, 'pose_error_mean_mm': summary['metrics']['pose_error_m']['mean']*1000,
+                              'two_jaw_substeps': summary['two_jaw_substeps'], 'lifted': summary['lifted_while_held']}), flush=True)
+        report['episodes'][str(ep)] = metadata
+        (args.out / 'report.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+        if not args.no_video:
+            video(args.config, raw, joint, indices, scenario, qrefs, runs, args.out)
+            print(f'Wrote complete comparison video for episode {ep}', flush=True)
+
+
+if __name__ == '__main__':
+    main()

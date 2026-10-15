@@ -1,0 +1,153 @@
+"""Matched frozen ACT trials: numerical convergence changes, safety stays fixed."""
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+from pathlib import Path
+
+import numpy as np
+import torch
+import yaml
+
+from real2sim.config import load_yaml
+from real2sim.evaluation import run
+from real2sim.geometry.so3 import delta_action
+from real2sim.policy.paired import file_sha256
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--out', type=Path, default=Path('results/audit/ik_polishing_20261015'))
+    parser.add_argument('--n-trials', type=int, default=3)
+    args = parser.parse_args()
+    root = args.out
+    root.mkdir(parents=True, exist_ok=False)
+    (root / 'executed_script.txt').write_text(Path(__file__).read_text())
+    original = Path('results/metrics/dinov2_act_pilot_20261015')
+    configs = root / 'configs'
+    configs.mkdir()
+    checkpoints = {
+        'parent': Path('outputs/act_cartesian/checkpoints/006000'),
+        'pilot': Path('outputs/act_cartesian_dinov2_pilot_20261015/checkpoints/001250'),
+    }
+    torch.set_num_threads(1)
+    report = {'kind': 'MATCHED_FROZEN_POLICY_IK_CONVERGENCE_ABLATION',
+              'script_sha256': file_sha256(Path(__file__)),
+              'source_sha256': {p: file_sha256(Path(p)) for p in (
+                  'src/real2sim/sim/kinematics.py', 'src/real2sim/panda/adapter.py',
+                  'src/real2sim/sim/env.py', 'src/real2sim/panda/env.py',
+                  'src/real2sim/policy/adapters.py')},
+              'protocol': 'Same checkpoints, seeds, physics, camera, action bounds, rate limits and acceptance thresholds. Only numerical IK convergence changes. Closed-loop observations may diverge. Shadow solves compare identical targets and seeds without modifying the environment.',
+              'cases': {}}
+    build = run.build_learned_controller
+    try:
+        for robot in ('so101', 'panda'):
+            base = load_yaml(original / 'configs' / f'sim_{robot}.yaml')
+            for name, checkpoint in checkpoints.items():
+                key = f'{name}_{robot}'
+                report['cases'][key] = {}
+                for variant in ('baseline', 'polished'):
+                    cfg = copy.deepcopy(base)
+                    if variant == 'polished':
+                        cfg['ik'].update(position_convergence_m=1e-5, orientation_convergence_rad=1e-4)
+                    stripped = copy.deepcopy(cfg)
+                    for k in ('position_convergence_m', 'orientation_convergence_rad'):
+                        stripped['ik'].pop(k, None)
+                    if stripped != base:
+                        raise ValueError('a setting other than numerical convergence changed')
+                    path = configs / f'{robot}_{variant}.yaml'
+                    path.write_text(yaml.safe_dump(cfg, sort_keys=False))
+                    rows = []
+
+                    def instrumented(*a, _rows=rows, _robot=robot, _base=base, **kwargs):
+                        ctrl, contract, meta = build(*a, **kwargs)
+                        adapter = ctrl.action_adapter
+                        ik = adapter.ik if _robot == 'so101' else adapter.panda.ik
+                        if _robot == 'so101':
+                            shadow = type(ik)(ik.model, _base)
+                        else:
+                            shadow = type(ik)(ik.model, _base, task_origin=ik.task_origin)
+                        solve, step, reset = ik.solve, ctrl.step, ctrl.reset
+                        trial = -1
+
+                        def traced_solve(target, seed, **options):
+                            result = solve(target, seed, **options)
+                            reference = shadow.solve(target, seed, **options)
+                            n = 5 if _robot == 'so101' else 7
+                            _rows.append({'seed': trial, 'accepted': bool(result.accepted),
+                                          'reason': result.reason, 'iterations': int(result.iterations),
+                                          'arm_command_delta_rad': float(np.max(np.abs(result.qpos[:n] - seed[:n]))),
+                                          'position_residual_m': result.position_error_m,
+                                          'orientation_residual_rad': result.orientation_error_rad,
+                                          'shadow_baseline_accepted': bool(reference.accepted),
+                                          'shadow_baseline_arm_delta_rad': float(np.max(np.abs(reference.qpos[:n] - seed[:n])))})
+                            return result
+
+                        def traced_step(obs, env):
+                            before = env.ee_pose().copy()
+                            result = step(obs, env)
+                            after = env.ee_pose()
+                            action = np.asarray(result.detail['action'])
+                            bounded = action[:6].copy()
+                            max_t, max_r = ((adapter.max_step_m, adapter.max_step_rad) if _robot == 'so101'
+                                            else (adapter.panda.max_translation, adapter.panda.max_rotation))
+                            for s, bound in ((slice(0, 3), max_t), (slice(3, 6), max_r)):
+                                bounded[s] *= min(1., bound / max(np.linalg.norm(bounded[s]), 1e-12))
+                            achieved = delta_action(before, after)
+                            _rows[-1].update(tick=env.steps, action=action.tolist(), bounded_delta=bounded.tolist(),
+                                             achieved_delta=achieved.tolist(),
+                                             requested_translation_m=float(np.linalg.norm(bounded[:3])),
+                                             achieved_translation_m=float(np.linalg.norm(achieved[:3])),
+                                             tracking_error_m=float(np.linalg.norm(achieved[:3]-bounded[:3])),
+                                             tracking_error_rad=float(np.linalg.norm(achieved[3:]-bounded[3:])),
+                                             control=result.info.get('control'))
+                            return result
+
+                        def traced_reset():
+                            nonlocal trial
+                            trial += 1
+                            reset()
+
+                        ik.solve, ctrl.step, ctrl.reset = traced_solve, traced_step, traced_reset
+                        return ctrl, contract, meta
+
+                    run.build_learned_controller = instrumented
+                    destination = root / f'{key}_{variant}'
+                    summary = run.run_trials(
+                        robot=robot, checkpoint=checkpoint, config=path,
+                        eval_config=original / 'configs' / f'eval_{robot}.yaml', n_trials=args.n_trials,
+                        seed_start=0, out=destination, video=False, controller='learned', device='cpu',
+                        experiment_id=f'FROZEN_IK_{key.upper()}_{variant.upper()}')
+                    if any(t['abort'] for t in summary['trials']) or not rows:
+                        raise RuntimeError('aborted experiment; inspect trial report')
+                    (destination / 'execution_trace.json').write_text(json.dumps(rows, allow_nan=False) + '\n')
+                    historical = json.loads((original / key / 'summary.json').read_text())
+                    if summary['checkpoint']['checkpoint_sha256'] != historical['checkpoint']['checkpoint_sha256']:
+                        raise ValueError('checkpoint changed')
+                    baseline_error = None
+                    if variant == 'baseline':
+                        baseline_error = 0.
+                        for trial, old in zip(summary['trials'], historical['trials'][:args.n_trials], strict=True):
+                            for row, ref in zip(trial['history'], old['history'], strict=True):
+                                for field in ('ball_xyz_task', 'tool_xyz_task'):
+                                    baseline_error = max(baseline_error, float(np.max(np.abs(np.array(row[field])-ref[field]))))
+                        if baseline_error > 1e-6:
+                            raise ValueError(f'baseline reproduction failed: {baseline_error}')
+                    stats = {'summary': summary['summary'], 'ticks': len(rows),
+                             'checkpoint_sha256': summary['checkpoint']['checkpoint_sha256'],
+                             'max_historical_baseline_difference_m': baseline_error,
+                             'accepted_unchanged_arm': sum(r['accepted'] and r['arm_command_delta_rad'] < 1e-12 for r in rows),
+                             'rejected': sum(not r['accepted'] for r in rows),
+                             'same_query_baseline_noop_now_moves': sum(r['shadow_baseline_accepted'] and r['shadow_baseline_arm_delta_rad'] < 1e-12 and r['accepted'] and r['arm_command_delta_rad'] > 1e-8 for r in rows),
+                             'mean_closest_ball_m': float(np.mean([t['min_ee_ball_distance_m'] for t in summary['trials']]))}
+                    for field in ('requested_translation_m', 'achieved_translation_m', 'tracking_error_m', 'tracking_error_rad'):
+                        stats[field] = {s: float(f([r[field] for r in rows])) for s, f in (('mean', np.mean), ('median', np.median))}
+                    report['cases'][key][variant] = stats
+                    (root / 'review.json').write_text(json.dumps(report, indent=2, allow_nan=False) + '\n')
+    finally:
+        run.build_learned_controller = build
+
+
+if __name__ == '__main__':
+    main()

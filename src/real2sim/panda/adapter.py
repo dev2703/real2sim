@@ -59,6 +59,14 @@ class PandaIK:
         self.model = model
         self.data = mujoco.MjData(model)
         self.config = config["ik"]
+        self.position_convergence = float(self.config.get(
+            "position_convergence_m", 0.1 * self.config["position_tolerance_m"]))
+        self.orientation_convergence = float(self.config.get(
+            "orientation_convergence_rad", 0.1 * self.config["orientation_tolerance_rad"]))
+        for value, limit in ((self.position_convergence, self.config["position_tolerance_m"]),
+                             (self.orientation_convergence, self.config["orientation_tolerance_rad"])):
+            if not np.isfinite(value) or not 0 < value <= limit:
+                raise ValueError("IK convergence must be positive and no looser than acceptance")
         if len(config["joint_names"]) != N_ARM:
             raise ValueError("PandaIK expects seven arm joints")
         ids = np.array([model.joint(name).id for name in config["joint_names"]])
@@ -149,7 +157,7 @@ class PandaIK:
         iteration = 0
         while iteration < cfg["max_iterations"]:
             pe, re = np.linalg.norm(r[:3]), np.linalg.norm(r[3:])
-            if pe <= 0.1 * pos_tol and re <= 0.1 * rot_tol:
+            if pe <= self.position_convergence and re <= self.orientation_convergence:
                 break  # polished well inside the acceptance thresholds
             iteration += 1
             jp = np.zeros((3, self.model.nv))

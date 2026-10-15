@@ -81,6 +81,18 @@ class NativeKinematics:
         self.model = model
         self.data = mujoco.MjData(model)
         self.config = config["ik"]
+        # Optional numerical convergence is separate from hard residual acceptance.
+        # Legacy configs retain their exact early-stop behavior for frozen benchmarks.
+        self.polish = any(k in self.config for k in
+                          ("position_convergence_m", "orientation_convergence_rad"))
+        self.position_convergence = float(self.config.get(
+            "position_convergence_m", self.config["position_tolerance_m"]))
+        self.orientation_convergence = float(self.config.get(
+            "orientation_convergence_rad", self.config["orientation_tolerance_rad"]))
+        for value, limit in ((self.position_convergence, self.config["position_tolerance_m"]),
+                             (self.orientation_convergence, self.config["orientation_tolerance_rad"])):
+            if not np.isfinite(value) or not 0 < value <= limit:
+                raise ValueError("IK convergence must be positive and no looser than acceptance")
         ids = np.array([model.joint(name).id for name in config["joint_names"]])
         self.qadr = model.jnt_qposadr[ids]
         self.vadr = model.jnt_dofadr[ids]
@@ -147,10 +159,12 @@ class NativeKinematics:
             pe, re = float(np.linalg.norm(dp)), float(np.linalg.norm(dr))
             if outside:
                 return IKResult(seed.copy(), False, pe, re, iteration, "outside_workspace")
-            if pe <= cfg["position_tolerance_m"] and re <= cfg["orientation_tolerance_rad"]:
+            if pe <= self.position_convergence and re <= self.orientation_convergence:
                 if self._collision():
                     return IKResult(seed.copy(), False, pe, re, iteration, "collision")
                 return IKResult(q.copy(), True, pe, re, iteration, "accepted")
+            if iteration == cfg["max_iterations"]:
+                break
             jp = np.zeros((3, self.model.nv))
             jr = np.zeros_like(jp)
             mujoco.mj_jacSite(self.model, self.data, jp, jr, self.site)
@@ -171,5 +185,12 @@ class NativeKinematics:
                 break
         # Residual refers to the final candidate, never to a silently applied fallback target.
         dp, dr = error(self.forward(q))
+        pe, re = float(np.linalg.norm(dp)), float(np.linalg.norm(dr))
+        # A 5-DOF arm may not reach numerical convergence in all six pose dimensions.
+        # Accept a polished result only under the original residual AND collision limits.
+        if self.polish and pe <= cfg["position_tolerance_m"] and re <= cfg["orientation_tolerance_rad"]:
+            if self._collision():
+                return IKResult(seed.copy(), False, pe, re, iteration, "collision")
+            return IKResult(q.copy(), True, pe, re, iteration, "accepted")
         return IKResult(seed.copy(), False, float(np.linalg.norm(dp)), float(np.linalg.norm(dr)),
                         iteration, "residual_rejected")
