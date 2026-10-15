@@ -70,7 +70,16 @@ def contract_kind(contract: dict) -> str:
     if shape != IMAGE_SHAPE_CHW:
         raise ContractError(f"contract image_shape_chw {shape} != {IMAGE_SHAPE_CHW}; refusing to adapt")
     names = list(contract.get("state_names", []))
-    if names == list(PROPRIO_NAMES):
+    if "observation_variant" in contract:
+        from real2sim.policy.observation_variants import ObservationVariant, state_names
+
+        variant = ObservationVariant.from_dict(contract["observation_variant"])
+        if names != state_names(variant):
+            raise ContractError("observation variant state names differ from its saved transform")
+        if variant.policy_hz != float(contract.get("policy_hz", 10)):
+            raise ContractError("observation variant rate differs from the policy contract")
+        kind = "cartesian"
+    elif names == list(PROPRIO_NAMES):
         kind = "cartesian"
     elif names == JOINT_STATE_NAMES or names == list(JOINT_NAMES):
         kind = "joint"
@@ -99,9 +108,22 @@ class ObservationAdapter:
         # EE position observed at the previous control tick (None before the first tick, so the
         # velocity slot is zero exactly as ``labels.episode_labels`` zeroes vel[0]).
         self._prev_ee_pos: np.ndarray | None = None
+        self._transform = None
+        if "observation_variant" in contract:
+            from real2sim.policy.observation_variants import StreamingObservationTransform
+
+            self._transform = StreamingObservationTransform(contract["observation_variant"])
+        self._tick = 0
+        self._cached_tick = None
+        self._cached_state = None
 
     def reset(self) -> None:
         self._prev_ee_pos = None
+        self._tick = 0
+        self._cached_tick = None
+        self._cached_state = None
+        if self._transform is not None:
+            self._transform.reset()
 
     def advance_tick(self, env) -> None:
         """Record the current EE position as ``p_{k-1}`` for the next tick's velocity.
@@ -110,7 +132,14 @@ class ObservationAdapter:
         observation the policy would see at this tick), whether or not inference ran.
         """
         if self.kind == "cartesian":
+            # Filters/history observe every tick, including queued actions without inference.
+            if self._transform is not None:
+                self.state(env)
             self._prev_ee_pos = env.ee_pose()[:3, 3].copy()
+        self._tick += 1
+
+    def _canonical_state(self, env) -> np.ndarray:
+        return np.asarray(env.canonical_proprio(self._prev_ee_pos), np.float32)
 
     def state(self, env) -> np.ndarray:
         """Observable state in contract units; never simulator object poses.
@@ -121,7 +150,13 @@ class ObservationAdapter:
         if self.kind == "joint":
             x = np.asarray(env.real_state(), np.float32)
         else:
-            x = np.asarray(env.canonical_proprio(self._prev_ee_pos), np.float32)
+            if self._transform is not None and self._cached_tick == self._tick:
+                return self._cached_state.copy()
+            x = self._canonical_state(env)
+            if self._transform is not None:
+                joints = env.real_state() if self._transform.config.requires_joints else None
+                x = self._transform.update(x, joints, self._tick / self._transform.config.policy_hz)
+                self._cached_state, self._cached_tick = x.copy(), self._tick
         if x.shape != (self.state_dim,):
             raise ContractError(f"state length {x.shape} != contract {self.state_dim}")
         return x
@@ -316,11 +351,13 @@ class PandaObservationAdapter(ObservationAdapter):
             raise ContractError(
                 "a 6-D SO-101 joint-space checkpoint has no meaning on the 7-joint Panda; only the "
                 "canonical 13-float / 7-D cartesian contract transfers (plan E3)")
+        if self._transform is not None and self._transform.config.requires_joints:
+            raise ContractError("SO-101 measured joint observations cannot be served on Panda")
 
-    def state(self, env) -> np.ndarray:
+    def _canonical_state(self, env) -> np.ndarray:
         x = np.asarray(env.canonical_proprio(), np.float32)
-        if x.shape != (self.state_dim,):
-            raise ContractError(f"state length {x.shape} != contract {self.state_dim}")
+        if x.shape != (13,):
+            raise ContractError(f"canonical state length {x.shape} != (13,)")
         p = env.ee_pose()[:3, 3]
         if self._prev_ee_pos is None:
             vel = np.zeros(3)

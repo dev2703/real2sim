@@ -22,6 +22,7 @@ import random
 import shutil
 import sys
 import time
+from contextlib import nullcontext
 from dataclasses import asdict
 from pathlib import Path
 
@@ -157,6 +158,9 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     if smoke_steps is not None:
         tcfg.update(steps=smoke_steps, log_every=1, val_every=smoke_steps, save_every=smoke_steps, val_max_batches=2)
     device = resolve_device(tcfg.get("device", "auto"))
+    precision = tcfg.get("precision", "float32")
+    if precision not in {"float32", "bfloat16"} or (precision == "bfloat16" and device != "cuda"):
+        raise ValueError("precision must be float32, or bfloat16 on CUDA")
     seed_everything(int(tcfg["seed"]))
 
     manifest = json.loads((data_dir / "manifest.json").read_text())
@@ -282,7 +286,9 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         optimizer.zero_grad(set_to_none=True)
         for _ in range(accum):
             batch = to_device(next(it), device)
-            loss, ld = act_training_loss(policy, batch, loss_config)
+            autocast = torch.autocast("cuda", dtype=torch.bfloat16) if precision == "bfloat16" else nullcontext()
+            with autocast:
+                loss, ld = act_training_loss(policy, batch, loss_config)
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"non-finite loss at step {step}: {ld}")
             (loss / accum).backward()

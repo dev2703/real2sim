@@ -27,7 +27,7 @@ from real2sim.sim.env import GRIPPER_BODIES, So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
 
 DEFAULT_CONFIG = Path('results/metrics/dinov2_act_pilot_20261015/configs/sim_so101.yaml')
-MODES = ('follower_next', 'cartesian_legacy', 'cartesian_polished',
+MODES = ('follower_next', 'follower_arm_leader_gripper', 'cartesian_legacy', 'cartesian_polished',
          'cartesian_reference_feedback', 'cartesian_leader_gripper')
 # Coarse review windows, not fitted to simulation outcomes. All episodes show a
 # real grasp, carried ball, release and ball remaining in the bowl in real_review_1_3.jpg.
@@ -115,8 +115,12 @@ def simulate(config, joint, cart, indices, scenario, reference, reference_gap, m
                 recorded_delta = cart['action'][t, :6].astype(float)
                 requested = recorded_delta.copy()
                 gripper = float(joint['state'][nxt, 5] / 100.)
-                if mode == 'follower_next':
-                    _, _, _, _, info = env.step_real_joint_targets(joint['state'][nxt])
+                if mode in ('follower_next', 'follower_arm_leader_gripper'):
+                    target = joint['state'][nxt].copy()
+                    if mode == 'follower_arm_leader_gripper':
+                        gripper = float(cart['action'][t, 6])
+                        target[5] = gripper * 100.
+                    _, _, _, _, info = env.step_real_joint_targets(target)
                     rejected, reason, iterations, residual = False, 'joint_control', 0, None
                 else:
                     if mode == 'cartesian_reference_feedback':
@@ -270,6 +274,7 @@ def main():
     parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
     parser.add_argument('--out', type=Path, default=Path('results/audit/recorded_grasp_control_20261015/full_replay'))
     parser.add_argument('--no-video', action='store_true')
+    parser.add_argument('--modes', nargs='+', choices=MODES, default=MODES)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     (args.out / 'executed_script.txt').write_text(Path(__file__).read_text())
@@ -299,6 +304,7 @@ def main():
                   'objects': 'Ball and bowl initialized from existing first-frame image evidence using fixed camera; then ball is fully dynamic, never attached or reset.',
                   'reference': 'Unclipped recorded joints posed without physics for visual and FK comparison; limit violations explicitly counted. Not a grasp feasibility or success test.',
                   'cartesian': 'Recorded achieved Cartesian deltas, applied relative to actual current pose; next recorded follower gripper for matched jaw motion. leader_gripper variant alone uses unchanged policy-label gripper commands.',
+                  'follower_arm_leader_gripper': 'Same next recorded follower arm target as follower_next, with current recorded leader gripper command; isolates opening versus command/load semantics without Cartesian arm drift.',
                   'feedback': 'Privileged next recorded absolute pose converted to bounded Cartesian delta, with polished IK. Tests accumulated execution error; not a learned policy or changed label.',
                   'jaw_gap': 'Distance between fixed/moving sph_tip1 sphere surfaces. A reproducible aperture proxy, not measured real jaw clearance.',
                   'contact': 'All 500Hz physics substeps inspected before integration; task success/lift scored using unchanged 10Hz TrialTracker.',
@@ -338,7 +344,7 @@ def main():
                         'max_recorded_delta_fk_disagreement': float(max(delta_errors)),
                         'modes': {}}
         runs = {}
-        for mode in MODES:
+        for mode in args.modes:
             result = simulate(args.config, joint, cart, indices, scenario, poses, gaps, mode, REVIEW[ep])
             runs[mode] = result
             summary, rows, states, contacts = result

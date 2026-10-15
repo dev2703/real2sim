@@ -1,0 +1,203 @@
+robot: so101
+model: assets/menagerie/robotstudio_so101/so101.xml
+manifest: assets/menagerie/manifest.json
+task_config: /Users/deveshvyas/Downloads/real2sim/results/audit/geometry_control_20261016/g2_support_height/task_b0.0.yaml
+data_config: /Users/deveshvyas/Downloads/real2sim/results/metrics/dinov2_act_pilot_20261015/configs/data.yaml
+physics_hz: 500
+control_hz: 10
+joint_names:
+- shoulder_pan
+- shoulder_lift
+- elbow_flex
+- wrist_flex
+- wrist_roll
+- gripper
+tool_site: gripperframe
+initial_qpos_real_deg:
+- -5
+- -104.7
+- 96.7
+- 75
+- 3
+- 1.2
+initial_qpos:
+- -0.0872665
+- -1.7453293
+- 1.6877334
+- 1.3089969
+- 0.0523599
+- -0.1514612
+table_half_size:
+- 0.6
+- 0.45
+- 0.025
+table_center_task_xy:
+- 0.25
+- 0.0
+control:
+  interface: native_mujoco_absolute_joint_positions
+  units: radians_all_six_hinges_including_gripper
+  max_velocity:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1.5
+  upstream_actuators: unchanged
+render:
+  width: 640
+  height: 360
+observation:
+  joint_key: sim.joint_position
+  state_key: observation.state
+  image_normalization: float32_0_to_1_before_policy_normalizer
+contacts:
+  friction:
+  - 0.6
+  - 0.005
+  - 0.0001
+  solref:
+  - 0.01
+  - 1.0
+  sweep_sliding_friction:
+  - 0.3
+  - 0.6
+  - 1.0
+  sweep_damping_ratio:
+  - 0.7
+  - 1.0
+  - 1.3
+  static_sink_tolerance_m: 0.0005
+ik:
+  solver: mujoco_damped_least_squares_diagnostic
+  position_tolerance_m: 0.003
+  orientation_tolerance_rad: 0.35
+  orientation_weight_m_per_rad: 0.025
+  damping: 0.001
+  max_iterations: 150
+  max_joint_step_rad: 0.12
+  workspace_min:
+  - -0.1
+  - -0.45
+  - -0.012
+  workspace_max:
+  - 0.55
+  - 0.45
+  - 0.6
+  penetration_tolerance_m: 0.002
+appearance:
+  robot_plastic_rgba:
+  - 0.75
+  - 0.68
+  - 0.55
+  - 1
+  table_rgba:
+  - 0.82
+  - 0.74
+  - 0.65
+  - 0
+  mat_rgba:
+  - 0.24
+  - 0.24
+  - 0.235
+  - 1
+  bowl_rgba:
+  - 0.62
+  - 0.62
+  - 0.58
+  - 1
+  ball_rgba:
+  - 0.83
+  - 0.87
+  - 0.2
+  - 1
+  lighting:
+    headlight_ambient:
+    - 0.45
+    - 0.45
+    - 0.45
+    headlight_diffuse:
+    - 0.45
+    - 0.45
+    - 0.45
+    headlight_specular:
+    - 0.1
+    - 0.1
+    - 0.1
+    sun_diffuse:
+    - 0.4
+    - 0.4
+    - 0.4
+    shadows: true
+  background_boxes:
+  - name: desk_extension
+    pos_task:
+    - 0.25
+    - -0.05
+    - -0.0225
+    half_size:
+    - 1.2
+    - 0.32
+    - 0.01
+    rgba:
+    - 0.82
+    - 0.74
+    - 0.65
+    - 1
+  - name: floor
+    pos_task:
+    - 0.3
+    - 0.5
+    - -0.76
+    half_size:
+    - 3.0
+    - 3.0
+    - 0.01
+    rgba:
+    - 0.35
+    - 0.33
+    - 0.3
+    - 1
+  - name: wood_shelf_left
+    pos_task:
+    - -0.1
+    - 0.55
+    - -0.15
+    half_size:
+    - 0.5
+    - 0.05
+    - 0.2
+    rgba:
+    - 0.53
+    - 0.4
+    - 0.15
+    - 1
+  - name: back_wall
+    pos_task:
+    - 0.3
+    - 1.3
+    - 0.3
+    half_size:
+    - 2.0
+    - 0.01
+    - 1.5
+    rgba:
+    - 0.83
+    - 0.8
+    - 0.76
+    - 1
+  - name: cabinet_right
+    pos_task:
+    - 1.0
+    - 0.6
+    - -0.1
+    half_size:
+    - 0.02
+    - 0.5
+    - 0.5
+    rgba:
+    - 0.55
+    - 0.42
+    - 0.18
+    - 1

@@ -16,6 +16,8 @@ from lerobot.policies.act.modeling_act import ACTPolicy
 from torch import nn
 from transformers import Dinov2Config, Dinov2Model
 
+from real2sim.policy.attention import enable_sdpa, validate_attention
+
 
 @PreTrainedConfig.register_subclass("act_dinov2")
 @dataclass
@@ -27,6 +29,8 @@ class DinoACTConfig(ACTConfig):
     dinov2_pretrained_path: str = ""
     dinov2_trainable_blocks: int = 2
     dinov2_config: dict = field(default_factory=dict)
+    attention_backend: str = "legacy"
+    freeze_backbone: bool = False
 
     def __post_init__(self):
         if self.vision_backbone != "dinov2" or self.pretrained_backbone_weights is not None:
@@ -42,6 +46,9 @@ class DinoACTConfig(ACTConfig):
             raise ValueError("invalid number of unfrozen DINO blocks")
         if not self.dinov2_config:
             raise ValueError("DINO architecture must be embedded in the saved config")
+        validate_attention(self)
+        if self.freeze_backbone and self.dinov2_trainable_blocks:
+            raise ValueError("freeze_backbone requires dinov2_trainable_blocks=0")
 
 
 class DinoSpatialBackbone(nn.Module):
@@ -106,6 +113,8 @@ class DinoACTPolicy(ACTPolicy):
         self.model.encoder_img_feat_input_proj = nn.Conv2d(
             self.model.backbone.hidden_size, config.dim_model, kernel_size=1,
         )
+        if config.attention_backend == "sdpa":
+            enable_sdpa(self.model)
 
 
 def warmstart_nonvisual(policy, parent):
