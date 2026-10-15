@@ -1,5 +1,6 @@
 """Post-hoc geometry consistency diagnostic; never changes calibration or policy inputs."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -12,13 +13,12 @@ from real2sim.data.paired_approach import camera_parameters, pose_render
 from real2sim.sim.env import So101PickPlaceEnv
 
 
-def main():
-    out = Path("results/audit/act_root_cause_20261014/geometry_residuals.json")
+def main(config, out):
     if out.exists():
         raise FileExistsError(out)
     audit = json.loads(Path("results/audit/paired_approach_3988577/report.json").read_text())
     response = json.loads(Path("results/audit/follower_response_approach_20261013/model.json").read_text())
-    env = So101PickPlaceEnv("results/metrics/geometry_3988577/configs/sim_so101.yaml", render_images=False)
+    env = So101PickPlaceEnv(config, render_images=False)
     try:
         env.reset(seed=0)
         rv, tv, K, camera, _ = camera_parameters(env)
@@ -60,6 +60,7 @@ def main():
             for row, err in zip(rows, errors, strict=True):
                 row[name + "_error_px"] = float(err)
         report = {"kind": "POSTHOC_GEOMETRY_CONSISTENCY_NOT_CALIBRATION",
+                  "config": str(config),
                   "source": "results/audit/paired_approach_3988577/report.json",
                   "n_train": int(train.sum()), "n_val": int((~train).sum()),
                   "scores": scores, "rows": rows,
@@ -105,4 +106,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path,
+                        default=Path("results/metrics/geometry_3988577/configs/sim_so101.yaml"))
+    parser.add_argument("--out", type=Path,
+                        default=Path("results/audit/act_root_cause_20261014/geometry_residuals.json"))
+    args = parser.parse_args()
+    main(args.config, args.out)

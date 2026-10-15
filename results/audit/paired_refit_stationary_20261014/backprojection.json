@@ -1,0 +1,1171 @@
+{
+  "kind": "STATIC_SIM_RENDERS_PAIRED_WITH_REAL_APPROACH",
+  "episodes": [
+    {
+      "episode": 0,
+      "split": "train",
+      "eligible_ticks": 200,
+      "stop_reason": "time_cap",
+      "bowl_xy_estimated": [
+        0.3434057497489948,
+        -0.0924995701474497
+      ],
+      "ball_xy_estimated": [
+        0.3427836624285536,
+        0.14680950350353472
+      ],
+      "first_pixel_policy": [
+        169.12600536193028,
+        63.32266666666667
+      ],
+      "outside_joint_limits_ticks": 52,
+      "moving_ticks": 198
+    },
+    {
+      "episode": 5,
+      "split": "train",
+      "eligible_ticks": 82,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.32697800457554654,
+        -0.13264988343430295
+      ],
+      "ball_xy_estimated": [
+        0.33944184111836995,
+        0.11080871997739739
+      ],
+      "first_pixel_policy": [
+        168.44626168224298,
+        69.87587822014052
+      ],
+      "outside_joint_limits_ticks": 46,
+      "moving_ticks": 53
+    },
+    {
+      "episode": 6,
+      "split": "train",
+      "eligible_ticks": 112,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3265688050466167,
+        -0.1328032303539467
+      ],
+      "ball_xy_estimated": [
+        0.3382014041066907,
+        0.11076534494296042
+      ],
+      "first_pixel_policy": [
+        168.00697674418603,
+        69.88372093023256
+      ],
+      "outside_joint_limits_ticks": 49,
+      "moving_ticks": 83
+    },
+    {
+      "episode": 7,
+      "split": "train",
+      "eligible_ticks": 102,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.33758728918639946,
+        -0.13935476771957567
+      ],
+      "ball_xy_estimated": [
+        0.34084000223482197,
+        0.10277862013947014
+      ],
+      "first_pixel_policy": [
+        169.05442176870747,
+        71.3922902494331
+      ],
+      "outside_joint_limits_ticks": 57,
+      "moving_ticks": 71
+    },
+    {
+      "episode": 8,
+      "split": "train",
+      "eligible_ticks": 98,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.35274765855523194,
+        -0.1618278862995619
+      ],
+      "ball_xy_estimated": [
+        0.3374592391839311,
+        0.0808955534938336
+      ],
+      "first_pixel_policy": [
+        168.13846153846154,
+        75.62800875273523
+      ],
+      "outside_joint_limits_ticks": 46,
+      "moving_ticks": 69
+    },
+    {
+      "episode": 9,
+      "split": "train",
+      "eligible_ticks": 112,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3524113815737231,
+        -0.16145700220447312
+      ],
+      "ball_xy_estimated": [
+        0.3612749279547465,
+        0.08021142954597527
+      ],
+      "first_pixel_policy": [
+        176.8293216630197,
+        75.77899343544858
+      ],
+      "outside_joint_limits_ticks": 58,
+      "moving_ticks": 78
+    },
+    {
+      "episode": 10,
+      "split": "train",
+      "eligible_ticks": 102,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3528934652435415,
+        -0.16108788609851643
+      ],
+      "ball_xy_estimated": [
+        0.36818883369499483,
+        0.07944767567504707
+      ],
+      "first_pixel_policy": [
+        179.37310195227766,
+        75.9349240780911
+      ],
+      "outside_joint_limits_ticks": 54,
+      "moving_ticks": 73
+    },
+    {
+      "episode": 12,
+      "split": "train",
+      "eligible_ticks": 117,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3525739631554816,
+        -0.1606410458520261
+      ],
+      "ball_xy_estimated": [
+        0.3592905443615916,
+        0.07431774055426066
+      ],
+      "first_pixel_policy": [
+        176.22596153846155,
+        76.94951923076923
+      ],
+      "outside_joint_limits_ticks": 59,
+      "moving_ticks": 85
+    },
+    {
+      "episode": 13,
+      "split": "train",
+      "eligible_ticks": 120,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3491278591201127,
+        -0.16048640497744493
+      ],
+      "ball_xy_estimated": [
+        0.32784907050767964,
+        0.085399247317275
+      ],
+      "first_pixel_policy": [
+        164.59855769230768,
+        74.73734939759036
+      ],
+      "outside_joint_limits_ticks": 67,
+      "moving_ticks": 81
+    },
+    {
+      "episode": 14,
+      "split": "train",
+      "eligible_ticks": 151,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3491354739131745,
+        -0.1610948002735163
+      ],
+      "ball_xy_estimated": [
+        0.3404859966918685,
+        0.07800056414137768
+      ],
+      "first_pixel_policy": [
+        169.28157894736842,
+        76.20263157894736
+      ],
+      "outside_joint_limits_ticks": 65,
+      "moving_ticks": 111
+    },
+    {
+      "episode": 15,
+      "split": "train",
+      "eligible_ticks": 123,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3491324614252682,
+        -0.16090753365685317
+      ],
+      "ball_xy_estimated": [
+        0.3358416248484446,
+        0.08433162324627119
+      ],
+      "first_pixel_policy": [
+        167.50554323725055,
+        74.95121951219512
+      ],
+      "outside_joint_limits_ticks": 54,
+      "moving_ticks": 90
+    },
+    {
+      "episode": 16,
+      "split": "train",
+      "eligible_ticks": 128,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34826701462326926,
+        -0.15918646071368836
+      ],
+      "ball_xy_estimated": [
+        0.32509016590260104,
+        0.08786000757028323
+      ],
+      "first_pixel_policy": [
+        163.5770925110132,
+        74.25550660792952
+      ],
+      "outside_joint_limits_ticks": 67,
+      "moving_ticks": 93
+    },
+    {
+      "episode": 17,
+      "split": "train",
+      "eligible_ticks": 132,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34346063698358964,
+        -0.15777543797980376
+      ],
+      "ball_xy_estimated": [
+        0.32788095442598875,
+        0.08368988883496709
+      ],
+      "first_pixel_policy": [
+        164.62800875273524,
+        75.07221006564552
+      ],
+      "outside_joint_limits_ticks": 58,
+      "moving_ticks": 101
+    },
+    {
+      "episode": 19,
+      "split": "train",
+      "eligible_ticks": 104,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34412265430025013,
+        -0.15773865901875883
+      ],
+      "ball_xy_estimated": [
+        0.342892189932734,
+        0.06529772921261379
+      ],
+      "first_pixel_policy": [
+        170.35637149028076,
+        78.75161987041037
+      ],
+      "outside_joint_limits_ticks": 46,
+      "moving_ticks": 76
+    },
+    {
+      "episode": 20,
+      "split": "train",
+      "eligible_ticks": 144,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3428298280821549,
+        -0.15778672748621958
+      ],
+      "ball_xy_estimated": [
+        0.3423157210294234,
+        0.0705456160944441
+      ],
+      "first_pixel_policy": [
+        170.06277056277057,
+        77.69197396963123
+      ],
+      "outside_joint_limits_ticks": 58,
+      "moving_ticks": 107
+    },
+    {
+      "episode": 21,
+      "split": "train",
+      "eligible_ticks": 145,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34176717410770246,
+        -0.15570370751694274
+      ],
+      "ball_xy_estimated": [
+        0.33744256101116615,
+        0.08260989345849268
+      ],
+      "first_pixel_policy": [
+        168.10920770877945,
+        75.29032258064517
+      ],
+      "outside_joint_limits_ticks": 66,
+      "moving_ticks": 133
+    },
+    {
+      "episode": 22,
+      "split": "train",
+      "eligible_ticks": 159,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3420843474182705,
+        -0.15616734154614054
+      ],
+      "ball_xy_estimated": [
+        0.3357942253334132,
+        0.08185885604971166
+      ],
+      "first_pixel_policy": [
+        167.52045454545456,
+        75.4370709382151
+      ],
+      "outside_joint_limits_ticks": 59,
+      "moving_ticks": 120
+    },
+    {
+      "episode": 26,
+      "split": "train",
+      "eligible_ticks": 167,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34099826127028277,
+        -0.18534564417727606
+      ],
+      "ball_xy_estimated": [
+        0.29466149995381274,
+        -0.034319147157700125
+      ],
+      "first_pixel_policy": [
+        152.64660194174758,
+        100.73972602739725
+      ],
+      "outside_joint_limits_ticks": 70,
+      "moving_ticks": 123
+    },
+    {
+      "episode": 28,
+      "split": "train",
+      "eligible_ticks": 167,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34094055696888215,
+        -0.18444156501762043
+      ],
+      "ball_xy_estimated": [
+        0.30579842469130797,
+        -0.01269617435466075
+      ],
+      "first_pixel_policy": [
+        157.02217741935485,
+        95.6350806451613
+      ],
+      "outside_joint_limits_ticks": 74,
+      "moving_ticks": 138
+    },
+    {
+      "episode": 29,
+      "split": "train",
+      "eligible_ticks": 180,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34036878034214585,
+        -0.18362016502042988
+      ],
+      "ball_xy_estimated": [
+        0.3647420385399721,
+        -0.05314580603677921
+      ],
+      "first_pixel_policy": [
+        181.43830570902395,
+        105.60589318600368
+      ],
+      "outside_joint_limits_ticks": 62,
+      "moving_ticks": 154
+    },
+    {
+      "episode": 30,
+      "split": "train",
+      "eligible_ticks": 139,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3403430696214848,
+        -0.18367232825470847
+      ],
+      "ball_xy_estimated": [
+        0.3530833446752324,
+        0.14587345327528278
+      ],
+      "first_pixel_policy": [
+        172.69072164948454,
+        63.48600508905852
+      ],
+      "outside_joint_limits_ticks": 57,
+      "moving_ticks": 108
+    },
+    {
+      "episode": 31,
+      "split": "train",
+      "eligible_ticks": 148,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3436456296144715,
+        -0.18329274621102098
+      ],
+      "ball_xy_estimated": [
+        0.3656480796764042,
+        0.11934043146822726
+      ],
+      "first_pixel_policy": [
+        177.57635467980296,
+        68.29064039408867
+      ],
+      "outside_joint_limits_ticks": 72,
+      "moving_ticks": 109
+    },
+    {
+      "episode": 32,
+      "split": "train",
+      "eligible_ticks": 179,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3394852706937173,
+        -0.18851447320716763
+      ],
+      "ball_xy_estimated": [
+        0.3298749452211083,
+        0.0785077606263136
+      ],
+      "first_pixel_policy": [
+        165.40842105263158,
+        76.09473684210526
+      ],
+      "outside_joint_limits_ticks": 59,
+      "moving_ticks": 177
+    },
+    {
+      "episode": 35,
+      "split": "train",
+      "eligible_ticks": 150,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.33857345391194604,
+        -0.1894153847907789
+      ],
+      "ball_xy_estimated": [
+        0.3172828693514497,
+        0.07113056255400607
+      ],
+      "first_pixel_policy": [
+        160.88260869565218,
+        77.55434782608695
+      ],
+      "outside_joint_limits_ticks": 85,
+      "moving_ticks": 111
+    },
+    {
+      "episode": 36,
+      "split": "train",
+      "eligible_ticks": 158,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3378398688700961,
+        -0.18850628405101477
+      ],
+      "ball_xy_estimated": [
+        0.3121797985524345,
+        0.0685020683486135
+      ],
+      "first_pixel_policy": [
+        159.03225806451613,
+        78.07775377969763
+      ],
+      "outside_joint_limits_ticks": 69,
+      "moving_ticks": 122
+    },
+    {
+      "episode": 37,
+      "split": "train",
+      "eligible_ticks": 147,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.33711760834242216,
+        -0.18942837122477485
+      ],
+      "ball_xy_estimated": [
+        0.3215845201542352,
+        0.07509387553213398
+      ],
+      "first_pixel_policy": [
+        162.4217391304348,
+        76.76637554585153
+      ],
+      "outside_joint_limits_ticks": 67,
+      "moving_ticks": 110
+    },
+    {
+      "episode": 38,
+      "split": "train",
+      "eligible_ticks": 137,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3368231957139768,
+        -0.18935363647228287
+      ],
+      "ball_xy_estimated": [
+        0.3501309599224507,
+        0.06688242733646454
+      ],
+      "first_pixel_policy": [
+        173.0,
+        78.43708609271523
+      ],
+      "outside_joint_limits_ticks": 71,
+      "moving_ticks": 109
+    },
+    {
+      "episode": 39,
+      "split": "train",
+      "eligible_ticks": 143,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.33704905114045436,
+        -0.1893187548055022
+      ],
+      "ball_xy_estimated": [
+        0.3135831567541817,
+        0.05719653980991157
+      ],
+      "first_pixel_policy": [
+        159.61720430107528,
+        80.37580993520518
+      ],
+      "outside_joint_limits_ticks": 67,
+      "moving_ticks": 106
+    },
+    {
+      "episode": 1,
+      "split": "val",
+      "eligible_ticks": 145,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3279912013270628,
+        -0.13137489777448008
+      ],
+      "ball_xy_estimated": [
+        0.32624426737900336,
+        0.111637332044774
+      ],
+      "first_pixel_policy": [
+        163.76253298153034,
+        69.71767810026385
+      ],
+      "outside_joint_limits_ticks": 45,
+      "moving_ticks": 119
+    },
+    {
+      "episode": 2,
+      "split": "val",
+      "eligible_ticks": 113,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.32710842020382275,
+        -0.13288437029703937
+      ],
+      "ball_xy_estimated": [
+        0.3356274834723623,
+        0.11052558778264687
+      ],
+      "first_pixel_policy": [
+        167.09744779582365,
+        69.92807424593967
+      ],
+      "outside_joint_limits_ticks": 45,
+      "moving_ticks": 83
+    },
+    {
+      "episode": 3,
+      "split": "val",
+      "eligible_ticks": 135,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.32704432622043544,
+        -0.13279482816048693
+      ],
+      "ball_xy_estimated": [
+        0.31933738951990315,
+        0.11879848113390701
+      ],
+      "first_pixel_policy": [
+        161.2674418604651,
+        68.38515081206496
+      ],
+      "outside_joint_limits_ticks": 59,
+      "moving_ticks": 97
+    },
+    {
+      "episode": 4,
+      "split": "val",
+      "eligible_ticks": 123,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3269333383411754,
+        -0.13271406901028648
+      ],
+      "ball_xy_estimated": [
+        0.32315003415182375,
+        0.11968058520540525
+      ],
+      "first_pixel_policy": [
+        162.59953703703704,
+        68.22273781902553
+      ],
+      "outside_joint_limits_ticks": 49,
+      "moving_ticks": 94
+    },
+    {
+      "episode": 11,
+      "split": "val",
+      "eligible_ticks": 145,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3527952898893436,
+        -0.16096705824649693
+      ],
+      "ball_xy_estimated": [
+        0.3542318923830793,
+        0.08612163485499214
+      ],
+      "first_pixel_policy": [
+        174.14790286975716,
+        74.61147902869757
+      ],
+      "outside_joint_limits_ticks": 52,
+      "moving_ticks": 116
+    },
+    {
+      "episode": 18,
+      "split": "val",
+      "eligible_ticks": 131,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.34384247181543504,
+        -0.15736401912944764
+      ],
+      "ball_xy_estimated": [
+        0.3239601948025762,
+        0.08209466854516023
+      ],
+      "first_pixel_policy": [
+        163.2227171492205,
+        75.38307349665924
+      ],
+      "outside_joint_limits_ticks": 54,
+      "moving_ticks": 98
+    },
+    {
+      "episode": 23,
+      "split": "val",
+      "eligible_ticks": 142,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.35274819497963994,
+        -0.19044138670573973
+      ],
+      "ball_xy_estimated": [
+        0.3545929307172282,
+        0.06082651301774311
+      ],
+      "first_pixel_policy": [
+        174.76442307692307,
+        79.67307692307692
+      ],
+      "outside_joint_limits_ticks": 47,
+      "moving_ticks": 112
+    },
+    {
+      "episode": 24,
+      "split": "val",
+      "eligible_ticks": 132,
+      "stop_reason": "ball_moved_or_detection_changed",
+      "bowl_xy_estimated": [
+        0.3519934034990966,
+        -0.19040224015553042
+      ],
+      "ball_xy_estimated": [
+        0.3286308724005252,
+        -0.04795833236336888
+      ],
+      "first_pixel_policy": [
+        166.4923076923077,
+        104.19001919385796
+      ],
+      "outside_joint_limits_ticks": 75,
+      "moving_ticks": 102
+    },
+    {
+      "episode": 27,
+      "split": "val",
+      "eligible_ticks": 200,
+      "stop_reason": "time_cap",
+      "bowl_xy_estimated": [
+        0.34085431051617715,
+        -0.18411609432983578
+      ],
+      "ball_xy_estimated": [
+        0.33691460222332925,
+        0.022691070474345376
+      ],
+      "first_pixel_policy": [
+        168.76025917926566,
+        87.71428571428571
+      ],
+      "outside_joint_limits_ticks": 55,
+      "moving_ticks": 162
+    }
+  ],
+  "thresholds": {
+    "max_seconds": 20.0,
+    "max_shift_policy_pixels": 3.0,
+    "min_ball_area_policy_pixels": 60,
+    "area_ratio": [
+      0.7,
+      1.3
+    ],
+    "stop_before_tool_ball_distance_m": 0.0
+  },
+  "timing": "Same derived tick state; recorded image lag is not silently compensated",
+  "config_sha256": "d62e7b802b7c31b84a14da6a48b4d6e94479e3b3a717ea21b80569f1f280659b",
+  "task_config": {
+    "provenance_default": "PROVISIONAL-STANDARD",
+    "table": {
+      "height": 0.737,
+      "mat": {
+        "size_xy": [
+          0.305,
+          0.406
+        ],
+        "center_task_xy": [
+          0.23899045988299789,
+          -0.00797746573428597
+        ],
+        "yaw_deg": 2.86604832975772
+      }
+    },
+    "frames": {
+      "T_task_so101base": {
+        "xyz": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rpy": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "ball": {
+      "radius": 0.0335,
+      "mass": 0.058,
+      "friction": {
+        "nominal": 0.6,
+        "sweep": [
+          0.4,
+          0.9
+        ]
+      },
+      "inertia": "thin_shell",
+      "restitution_nominal": 0.75,
+      "start_region": {
+        "center_task_xy": [
+          0.3414436663239797,
+          0.11589708412303715
+        ],
+        "radius": 0.03,
+        "provenance": "DIAGNOSTIC mean of existing TRAIN-only first-frame detections"
+      }
+    },
+    "bowl": {
+      "inner_rim_radius": 0.05,
+      "inner_depth": 0.0254,
+      "wall_thickness": 0.002,
+      "outer_height": 0.03,
+      "base_diameter": 0.06,
+      "mass": 0.3,
+      "static": true,
+      "center_task_xy": [
+        0.33051948277026316,
+        -0.09997323504888267
+      ],
+      "center_provenance": "DIAGNOSTIC reused hand-read rim pixel (840,475), at rim height",
+      "collision": {
+        "wall_boxes": 20,
+        "base": "cylinder"
+      },
+      "depth_sweep": [
+        0.0254,
+        0.045,
+        0.06
+      ]
+    },
+    "camera_iphone": {
+      "key": "observation.images.iphone",
+      "width": 1280,
+      "height": 720,
+      "fovy_deg": 24.117776485473186,
+      "intrinsics_px": {
+        "fx": 1685.148481713837,
+        "fy": 1685.148481713837,
+        "cx": 640.0,
+        "cy": 360.0
+      },
+      "extrinsics_provenance": "DIAGNOSTIC M1 camera from results/audit/camera_landmark_refit_float64_20261014/report.json; not adopted in primary config",
+      "approx_position_task": [
+        0.29027484360436745,
+        -0.7068437846949642,
+        0.5328132062286439
+      ],
+      "look_at_task": [
+        0.23600626509174644,
+        -0.06496278722522597,
+        0.058425488772264667
+      ],
+      "xyaxes_task": [
+        0.9976789320695226,
+        0.0580803220769162,
+        -0.035544685848361235,
+        -0.005921416265131294,
+        0.5940194886418089,
+        0.8044288557374972
+      ]
+    },
+    "robot_so101": {
+      "base_z_offset": 0.012,
+      "joint_names": [
+        "shoulder_pan",
+        "shoulder_lift",
+        "elbow_flex",
+        "wrist_flex",
+        "wrist_roll"
+      ],
+      "real_to_sim": {
+        "sign": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "offset_deg": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "provenance": "PROVISIONAL-STANDARD; verify at M2"
+      },
+      "gripper": {
+        "real_unit": "percent",
+        "closed_at": 0,
+        "sim_range_rad": [
+          -0.1745,
+          1.7454
+        ]
+      }
+    },
+    "episode": {
+      "success_hold_s": 1.0,
+      "timeout_s": 30.0
+    }
+  },
+  "sim_config": {
+    "robot": "so101",
+    "model": "assets/menagerie/robotstudio_so101/so101.xml",
+    "manifest": "assets/menagerie/manifest.json",
+    "task_config": "/Users/deveshvyas/Downloads/real2sim/results/metrics/camera_refit_verified_20261014/camera_objects/configs/task.yaml",
+    "data_config": "/Users/deveshvyas/Downloads/real2sim/results/metrics/camera_refit_verified_20261014/camera_objects/configs/data.yaml",
+    "physics_hz": 500,
+    "control_hz": 10,
+    "joint_names": [
+      "shoulder_pan",
+      "shoulder_lift",
+      "elbow_flex",
+      "wrist_flex",
+      "wrist_roll",
+      "gripper"
+    ],
+    "tool_site": "gripperframe",
+    "initial_qpos_real_deg": [
+      -5,
+      -104.7,
+      96.7,
+      75,
+      3,
+      1.2
+    ],
+    "initial_qpos": [
+      -0.0872665,
+      -1.7453293,
+      1.6877334,
+      1.3089969,
+      0.0523599,
+      -0.1514612
+    ],
+    "table_half_size": [
+      0.6,
+      0.45,
+      0.025
+    ],
+    "table_center_task_xy": [
+      0.25,
+      0.0
+    ],
+    "control": {
+      "interface": "native_mujoco_absolute_joint_positions",
+      "units": "radians_all_six_hinges_including_gripper",
+      "max_velocity": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1.5
+      ],
+      "upstream_actuators": "unchanged"
+    },
+    "render": {
+      "width": 640,
+      "height": 360
+    },
+    "observation": {
+      "joint_key": "sim.joint_position",
+      "state_key": "observation.state",
+      "image_normalization": "float32_0_to_1_before_policy_normalizer"
+    },
+    "contacts": {
+      "friction": [
+        0.6,
+        0.005,
+        0.0001
+      ],
+      "solref": [
+        0.01,
+        1.0
+      ],
+      "sweep_sliding_friction": [
+        0.3,
+        0.6,
+        1.0
+      ],
+      "sweep_damping_ratio": [
+        0.7,
+        1.0,
+        1.3
+      ],
+      "static_sink_tolerance_m": 0.0005
+    },
+    "ik": {
+      "solver": "mujoco_damped_least_squares_diagnostic",
+      "position_tolerance_m": 0.003,
+      "orientation_tolerance_rad": 0.35,
+      "orientation_weight_m_per_rad": 0.025,
+      "damping": 0.001,
+      "max_iterations": 150,
+      "max_joint_step_rad": 0.12,
+      "workspace_min": [
+        -0.1,
+        -0.45,
+        -0.012
+      ],
+      "workspace_max": [
+        0.55,
+        0.45,
+        0.6
+      ],
+      "penetration_tolerance_m": 0.002
+    },
+    "appearance": {
+      "robot_plastic_rgba": [
+        0.75,
+        0.68,
+        0.55,
+        1
+      ],
+      "table_rgba": [
+        0.82,
+        0.74,
+        0.65,
+        0
+      ],
+      "mat_rgba": [
+        0.24,
+        0.24,
+        0.235,
+        1
+      ],
+      "bowl_rgba": [
+        0.62,
+        0.62,
+        0.58,
+        1
+      ],
+      "ball_rgba": [
+        0.83,
+        0.87,
+        0.2,
+        1
+      ],
+      "lighting": {
+        "headlight_ambient": [
+          0.45,
+          0.45,
+          0.45
+        ],
+        "headlight_diffuse": [
+          0.45,
+          0.45,
+          0.45
+        ],
+        "headlight_specular": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "sun_diffuse": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "shadows": true
+      },
+      "background_boxes": [
+        {
+          "name": "desk_extension",
+          "pos_task": [
+            0.25,
+            -0.05,
+            -0.0225
+          ],
+          "half_size": [
+            1.2,
+            0.32,
+            0.01
+          ],
+          "rgba": [
+            0.82,
+            0.74,
+            0.65,
+            1
+          ]
+        },
+        {
+          "name": "floor",
+          "pos_task": [
+            0.3,
+            0.5,
+            -0.76
+          ],
+          "half_size": [
+            3.0,
+            3.0,
+            0.01
+          ],
+          "rgba": [
+            0.35,
+            0.33,
+            0.3,
+            1
+          ]
+        },
+        {
+          "name": "wood_shelf_left",
+          "pos_task": [
+            -0.1,
+            0.55,
+            -0.15
+          ],
+          "half_size": [
+            0.5,
+            0.05,
+            0.2
+          ],
+          "rgba": [
+            0.53,
+            0.4,
+            0.15,
+            1
+          ]
+        },
+        {
+          "name": "back_wall",
+          "pos_task": [
+            0.3,
+            1.3,
+            0.3
+          ],
+          "half_size": [
+            2.0,
+            0.01,
+            1.5
+          ],
+          "rgba": [
+            0.83,
+            0.8,
+            0.76,
+            1
+          ]
+        },
+        {
+          "name": "cabinet_right",
+          "pos_task": [
+            1.0,
+            0.6,
+            -0.1
+          ],
+          "half_size": [
+            0.02,
+            0.5,
+            0.5
+          ],
+          "rgba": [
+            0.55,
+            0.42,
+            0.18,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "pose_note": "Recorded joints without clamping; forward kinematics only, no physics steps",
+  "review_status": "pending_visual_review",
+  "bowl_placements": {
+    "path": "results/audit/bowl_placements_20261014/placements.json",
+    "sha256": "d7d62ca01cdcfb7cf4be65e58c0b83308276a59c8e316d424f7bbb5918824274"
+  },
+  "counts": {
+    "train": 3846,
+    "val": 1266
+  }
+}

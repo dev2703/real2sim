@@ -1,0 +1,46 @@
+source:
+  repo_id: bottowork/so101_act_pickplace_v1
+  revision: fd65a6600b0cd111a434ece1abfa3d44dc7b4d57
+  codebase_version: v3.0
+  local_root_hint: ~/.cache/huggingface/lerobot/local/so101_act_pickplace_v1
+  fps: 30
+  robot_type: so_follower
+  license: apache-2.0
+camera_keys:
+- observation.images.iphone
+excluded_cameras:
+- key: observation.images.top
+  reason: 'UNUSABLE in results/audit/camera_quality.json (2026-10-12): aimed at the
+    ceiling, median sharpness 2.3, 37/40 episodes fail; no robot/ball/bowl visible.'
+excluded_episodes:
+- 25
+- 33
+- 34
+image:
+  mode: letterbox
+  height: 192
+  width: 256
+  pad_value: 114
+  source_width: 1280
+  source_height: 720
+policy_hz: 10
+labels:
+  joint: recorded_action
+  cartesian: achieved_motion
+  cartesian_lead_ticks: 1
+  cartesian_gripper_source: leader_action
+split:
+  seed: 0
+  n_val: 10
+  manifest: results/audit/split.json
+task_config: /Users/deveshvyas/Downloads/real2sim/results/metrics/joint_offset_candidate_20261014/configs/task.yaml
+state:
+  joint_names:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_flex
+  - wrist_flex
+  - wrist_roll
+  - gripper
+  units: degrees
+  gripper_units: percent

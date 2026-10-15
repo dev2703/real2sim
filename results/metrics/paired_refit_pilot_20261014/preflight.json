@@ -1,0 +1,26 @@
+{
+  "status": "accepted_for_bounded_pilot",
+  "counts": {
+    "train": 3846,
+    "val": 1266
+  },
+  "review": "All 37 last-stationary real/sim pairs inspected in five contact sheets; all four bowl-placement sheets inspected. Extra near-grasp coverage is stationary-ball only, not dynamic contact fidelity.",
+  "constraints": "Same real recorded leader labels, states, stats, 28/9 split; no synthetic demonstrations or privileged policy inputs. No oracle data.",
+  "parent": "outputs/act_joint_paired_approach/checkpoints/000500",
+  "eval_bowl_reference_episode": 5,
+  "eval_bowl_pixel_native": [
+    834.8176574707031,
+    521.7088317871094
+  ],
+  "eval_bowl_xy": [
+    0.32697800457554654,
+    -0.13264988343430295
+  ],
+  "initial_overlap_rejections": [],
+  "manifest_sha256": {
+    "train": "44f5d8641c2b8f73388e8ec8d82f01c42f3292534f1e248964e4bb6fd41a86a9",
+    "val": "5fbbf9122c77c45ea297c44135c2ef34d2b43ff98628be50d451a6b9d558140d"
+  },
+  "task_sha256": "5ebfd92682f02f556b8ebbe41066072b1bba62b488c981a33276fc392131bd31",
+  "note": "Candidate masks/scenes remain approximate; no success claim."
+}

@@ -10,13 +10,15 @@ from real2sim.policy.paired import file_sha256
 from real2sim.sim.follower_response import FollowerResponse
 
 
-def main(out, diagnostic_active_ticks=None):
+def main(out, diagnostic_active_ticks=None, *, checkpoint=None, config=None, eval_config=None):
     if diagnostic_active_ticks is not None and diagnostic_active_ticks < 1:
         raise ValueError("diagnostic active ticks must be positive")
     if out.exists():
         raise FileExistsError("refusing to overwrite response evaluation")
     out.mkdir(parents=True)
-    checkpoint = Path("outputs/act_joint_paired_approach/checkpoints/000500")
+    checkpoint = checkpoint or Path("outputs/act_joint_paired_approach/checkpoints/000500")
+    config = config or Path("results/metrics/geometry_3988577/configs/sim_so101.yaml")
+    eval_config = eval_config or Path("results/metrics/geometry_3988577/configs/eval_so101.yaml")
     model_path = Path("results/audit/follower_response_approach_20261013/model.json")
     prep_path = Path(".cache/paired_approach_3988577/preparation.json")
     record = json.loads(model_path.read_text())
@@ -70,8 +72,8 @@ def main(out, diagnostic_active_ticks=None):
     run.build_learned_controller = build
     try:
         result = run.run_trials(robot="so101", checkpoint=checkpoint,
-            config=Path("results/metrics/geometry_3988577/configs/sim_so101.yaml"),
-            eval_config=Path("results/metrics/geometry_3988577/configs/eval_so101.yaml"),
+            config=config,
+            eval_config=eval_config,
             n_trials=10, seed_start=0, out=out, video=False, controller="learned", device="cpu",
             experiment_id=("DIAGNOSTIC_PAIRED_ACT_RESPONSE_HORIZON_ABLATION"
                            if diagnostic_active_ticks is not None
@@ -92,5 +94,9 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path, default=Path("results/metrics/act_response_20261013"))
     parser.add_argument("--diagnostic-active-ticks", type=int, default=None,
                         help="Override the frozen early horizon for a labelled diagnostic ablation")
+    parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--config", type=Path)
+    parser.add_argument("--eval-config", type=Path)
     args = parser.parse_args()
-    main(args.out, args.diagnostic_active_ticks)
+    main(args.out, args.diagnostic_active_ticks, checkpoint=args.checkpoint,
+         config=args.config, eval_config=args.eval_config)

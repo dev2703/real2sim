@@ -1171,3 +1171,152 @@ Geometry audit command: `.venv/bin/python scripts/diag_act_geometry_residuals.py
 output paths refuse overwrite. Original ball-only audit retained before adding
 landmarks. Ruff and diff whitespace checks passed; the response-model/adapter
 regression suite passed all 17 tests. No training is running.
+
+
+## 2026-10-14 — Landmark refit repaired and evaluated; contact gap remains
+
+Continued the user's pasted landmark-refit work from commit 258e7f1. The original
+snapshot directory was empty after its failed construction; preserved it and all
+prior results, using fresh `camera_landmark_refit_float64_20261014` audit and
+`camera_refit_verified_20261014` metric directories. Primary configs are unchanged.
+
+Found and fixed a second optimizer bug: copying a float32 recorded state and
+adding finite-difference joint offsets in place erased perturbations near zero.
+Before the fix, all four joint-offset derivatives were exactly zero at the
+optimizer's initial step, although larger steps had nonzero derivatives. Cast to
+float64 before adding offsets. Regression tests verify small-step Jacobians and
+recovery of known synthetic offsets from zero initialization.
+
+Re-ran the frozen landmark annotations (96 retained rows: 65 train / 31 validation).
+Current-camera nuisance fit validation RMS is 71.66 px; camera-only M1 is 28.49 px;
+camera + joint-offset M2 is 25.95 px (rounded; see report for exact value). The old
+claim that offsets did not improve the fit was therefore not reliable. M2 estimates
+approximately pan -1.9°, lift -7.7°, elbow -4.6°, wrist 0°. These are jointly fitted,
+confounded parameters, not physical calibration. M1 remains the simpler candidate
+for this experiment; no joint mapping changed. Landmark edits were made after
+reviewing earlier residuals, including a validation-row exclusion: validation is
+exploratory, not an untouched confirmation set. The mat still has 56 px RMS error.
+
+Independent held-ball consistency improves substantially with M1: validation
+tool-site proxy residual 134.44 → 26.33 px; a train-only fitted constant ball offset
+has norm 1.23 cm instead of 7.52 cm and validation RMS 24.24 px. This supports the
+camera correction without proving contact fidelity or a measured grasp offset.
+
+Built two isolated snapshots: `camera_only` changes the camera alone;
+`camera_objects` also reprojects ball/bowl and the fitted visual mat. Ball centre
+uses only existing TRAIN episode first-frame detections {0,5,6,7}, not the pasted
+proposal's mixed train/validation eight-episode average. New mean ball xy is
+(0.34144, 0.11590) m versus old (0.3557, 0.2047); bowl uses the existing hand-read
+rim pixel (840,475). Added optional visual-only mat yaw, zero by default, so the
+snapshot actually represents the fitted mat rotation. Collision geometry unchanged.
+OpenCV/compiled-camera projection round-trip passed <0.001 px. Reused seeds 0–9,
+300 ticks and original scoring; policy/model/config hashes checked after completion.
+
+| Diagnostic scene/controller | Success | Mean closest distance |
+|---|---:|---:|
+| Camera only / frozen paired ACT | 0/10 | 14.14 cm |
+| Camera + reprojected objects / hold | 0/10 | 20.01 cm |
+| Camera + reprojected objects / oracle | 10/10 | 1.35 cm |
+| Camera + reprojected objects / original joint ACT | 0/10 | 17.38 cm |
+| Camera + reprojected objects / frozen paired ACT | 0/10 | 5.19 cm |
+| Camera + reprojected objects / paired ACT + 78-tick response | 0/10 | 3.85 cm |
+
+All 60 trials completed without aborts. Final row closest distances range
+3.235–4.453 cm, median 3.83 cm; no learned trial held/lifted the ball. Compare
+old-scene paired 14.00 cm and paired+response 11.20 cm. Improved distances partly
+reflect changed object geometry; these are diagnostic comparisons, not replacement
+primary benchmark scores. Frozen paired weights were trained on the OLD renders.
+
+Replayed the first 30 seconds of nine held-out recordings using leader commands
+and, separately, privileged next-observed follower positions. Neither mode held
+or lifted the ball. This control excludes ACT prediction errors but retains
+tracking/contact/scene errors and is not a learned benchmark. Eight follower
+replays with valid initial ball setups average 2.96 cm closest distance, yet do
+not grasp. All original rows, including the ninth invalid setup, remain saved.
+
+**New scene-data inconsistency:** bowl placement varies between real episodes.
+For episode 24, using the shared bowl position makes the backprojected ball overlap
+five bowl-wall geoms, up to 28.57 mm penetration, and move 9.95 cm horizontally on
+the first tick. The real first frame shows the bowl farther down/right. Preserved
+the failed replay; a separate hand-read rim centre (890,590 native px, approximate)
+and per-episode bowl reset remove all initial ball overlap. Neither replay then
+grasps: leader minimum 2.98 cm, follower 10.51 cm. Do not attribute this invalid
+original reset to an ACT/dataset-label failure. The original paired renderer
+estimated per-episode ball placement but retained one bowl position, which creates
+an additional correspondence error for these episodes.
+
+Next justified work is per-episode object placement plus demonstrated grasp/contact
+replay, not a longer run on the existing pairs. Camera and object correction clearly
+improve approach, but oracle success alone does not show the recorded grasps are
+represented. No model training launched; no hardware, labels, splits or primary
+geometry changed. Optional mat-yaw support preserves the default scene.
+
+Code: `scripts/run_camera_refit_diagnostic.py`, `diag_refit_recorded_replay.py`,
+updated `diag_camera_landmark_refit.py` and parameterized `diag_act_geometry_residuals.py`.
+Artifacts include full histories, protocol/hashes, refit montage, reset-collision
+audit, per-episode correction and review.json. Verification: 20 numerical/response
+tests plus 19 camera/render/primary-scene tests passed; Ruff and diff checks passed.
+
+
+## 2026-10-14 — Pursuing ≥6/10: contact audit, pairing fixes and bounded retrain
+
+User requested continued fixes toward at least 6/10 ACT success and explicitly
+chose **real-data-only training** when offered a separately labelled oracle-data
+experiment. No oracle/synthetic demonstrations or action labels are permitted.
+Existing paired-image augmentation of recorded real states/actions remains the
+method; no new policy inputs, raw labels, normalization or split changes.
+
+Inspected every physics substep while replaying saved commands from the refitted
+scene's paired+response trials. Trajectories reproduce within 1e-8 m. All ten
+trials contact only the fixed-jaw side, never the moving jaw. Nine push the ball
+by 1 cm shortly after first contact, around 7.1–8.3 s, while gripper observations
+are still roughly 60–77% open. Seed 5 only grazes the fixed side much later. This
+is contact/alignment and closure sequencing failure, not a hidden successful
+grasp missed by the 10 Hz metric. `results/audit/grasp_contacts_20261014/report.json`.
+
+Tested the independently fitted M2 joint-offset/camera candidate in a separate
+snapshot before running learned trials. It worsens follower-position replay:
+eight valid initial setups average 6.40 cm closest distance versus M1's 2.96 cm,
+and still no holds. Rejected; no primary mapping/limits/actuator edits. The invalid
+episode-24 setup remains visible and flagged in the nine-row results.
+`results/metrics/joint_offset_candidate_20261014/` contains configs and rejection.
+
+Implemented reviewed per-episode bowl placement for pair generation. Scene-specific
+ellipse candidates detect 36/37 initial rims; episode 36 uses an explicitly marked
+hand-read fallback. All four review sheets inspected. Placements require matching
+derived-file hashes, review status, episode coverage and exact split identity.
+Rendering now resets each episode's bowl and checks for initial ball/object overlap
+instead of silently producing a physically impossible object setup. No labels or
+episodes are removed from real training; unavailable pairs fall back to real images.
+The original episode-5 rim annotation was also about 46 native pixels too high:
+reviewed rim gives candidate bowl xy (0.32698, -0.13265) m. A fresh evaluation
+snapshot uses this TRAIN-episode reference, with parent reruns under identical
+conditions. It is not silently compared to the previous scene's benchmark score.
+
+The old 8 cm cutoff eliminates every corrected-geometry prefix before grasp.
+Generated both a conservative cache and a separately labelled stationary-ball
+cache that removes only that distance cutoff. The latter still stops at observed
+motion (>3 policy pixels), area change, loss/occlusion or 20 seconds. Thus it adds
+visible stationary-ball near-grasp frames, not invented ball transport trajectories.
+All 37 final stationary real/sim pairs visually reviewed in five sheets. Counts:
+3,846 train / 1,266 validation; all 28/9 episodes retained, zero initial-overlap
+rejections with episode-specific bowl placement. Static contact fidelity remains
+approximate. Artifacts: `results/audit/bowl_placements_20261014/`,
+`results/audit/paired_refit_stationary_20261014/`; cache and review under
+`.cache/paired_refit_stationary_20261014/`.
+
+Launched one bounded MPS pilot: warm-start prior paired checkpoint 000500;
+1,000 steps, LR 5e-6, 50% eligible-image replacement, same real labels and model.
+Best checkpoint selected by real validation L1. Runner then performs real and
+paired-image validation plus matched parent/pilot trials, both ordinary joint
+control and the unchanged 78-tick response adapter (40 trials total). Status:
+`outputs/act_refit_pilot_20261014/status.json`; fresh metrics under
+`results/metrics/paired_refit_pilot_20261014/`. Locked manager refuses duplication
+and queues this thread once on completion/failure. No assistant polling while it
+trains. ≥6/10 has **not** been achieved or claimed; review pilot before more runs,
+and confirm improvements on fresh seeds before claiming generalization.
+
+Verification before launch: 21 placement/pair tests and seven MPS paired-smoke /
+response-adapter tests passed; Ruff and diff checks passed. Real labels/states in
+sampled new pairs equal the original arrays exactly. Placement and pair manifests
+are checksummed; frozen parent/evaluation config hashes are verified by the runner.

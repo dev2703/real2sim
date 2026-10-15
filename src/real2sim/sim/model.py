@@ -274,9 +274,13 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
                   pos=_numbers([*config["table_center_task_xy"], top - half[2]]),
                   rgba=_numbers(table_rgba), **table_extra, **contact_attrs)
     mat = table["mat"]
+    mat_yaw = np.deg2rad(float(mat.get("yaw_deg", 0.0)))
+    if not np.isfinite(mat_yaw):
+        raise ValueError("table.mat.yaw_deg must be finite")
     ET.SubElement(world, "geom", name="mat_visual", type="box",
                   size=_numbers([mat["size_xy"][0] / 2, mat["size_xy"][1] / 2, 0.0001]),
                   pos=_numbers([*mat["center_task_xy"], top + 0.0001]), contype="0", conaffinity="0",
+                  quat=_numbers([np.cos(mat_yaw / 2), 0, 0, np.sin(mat_yaw / 2)]),
                   **_textured(root, look, "mat", look["mat_rgba"]))
     for i, box in enumerate(look["background_boxes"]):
         # Visual-only scenery (desk extension, wall, furniture) seen by the camera; no collisions.

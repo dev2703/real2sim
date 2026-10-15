@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,0,,,False,False,False,False,False,False,approach,0.20721,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,1,,,False,False,False,False,False,False,approach,0.21037,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,2,,,False,False,False,False,False,False,approach,0.20039,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,3,,,False,False,False,False,False,False,approach,0.20134,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,4,,,False,False,False,False,False,False,approach,0.17082,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,5,,,False,False,False,False,False,False,approach,0.19248,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,6,,,False,False,False,False,False,False,approach,0.19664,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,7,,,False,False,False,False,False,False,approach,0.20557,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,8,,,False,False,False,False,False,False,approach,0.20993,300,0,,0.0,,
+DIAGNOSTIC_REFIT_camera_objects_hold,HOLD_POSE,so101,9,,,False,False,False,False,False,False,approach,0.20672,300,0,,0.0,,

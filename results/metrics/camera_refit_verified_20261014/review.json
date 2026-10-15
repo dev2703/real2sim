@@ -1,0 +1,89 @@
+{
+  "kind": "EXPLORATORY_REFIT_REVIEW_NOT_ADOPTED",
+  "all_frozen_hashes_verified": true,
+  "trial_count": 60,
+  "aborts": 0,
+  "rows": [
+    {
+      "scene": "camera_only",
+      "controller": "paired",
+      "successes": 0,
+      "lifted": 0,
+      "mean_closest_m": 0.141427,
+      "median_closest_m": 0.134415,
+      "min_closest_m": 0.04866,
+      "max_closest_m": 0.26526
+    },
+    {
+      "scene": "camera_objects",
+      "controller": "hold",
+      "successes": 0,
+      "lifted": 0,
+      "mean_closest_m": 0.200147,
+      "median_closest_m": 0.203455,
+      "min_closest_m": 0.17082,
+      "max_closest_m": 0.21037
+    },
+    {
+      "scene": "camera_objects",
+      "controller": "oracle",
+      "successes": 10,
+      "lifted": 10,
+      "mean_closest_m": 0.013526000000000002,
+      "median_closest_m": 0.01352,
+      "min_closest_m": 0.01337,
+      "max_closest_m": 0.01369
+    },
+    {
+      "scene": "camera_objects",
+      "controller": "joint",
+      "successes": 0,
+      "lifted": 0,
+      "mean_closest_m": 0.17375500000000002,
+      "median_closest_m": 0.176655,
+      "min_closest_m": 0.15261,
+      "max_closest_m": 0.18582
+    },
+    {
+      "scene": "camera_objects",
+      "controller": "paired",
+      "successes": 0,
+      "lifted": 0,
+      "mean_closest_m": 0.051917000000000005,
+      "median_closest_m": 0.053675,
+      "min_closest_m": 0.0421,
+      "max_closest_m": 0.05569
+    },
+    {
+      "scene": "camera_objects",
+      "controller": "paired_response",
+      "successes": 0,
+      "lifted": 0,
+      "mean_closest_m": 0.038502999999999996,
+      "median_closest_m": 0.038285,
+      "min_closest_m": 0.03235,
+      "max_closest_m": 0.04453
+    }
+  ],
+  "replay_valid_initial_setups": {
+    "n": 8,
+    "held": 0,
+    "mean_closest_m": 0.02960712422910955,
+    "note": "Episode 24 has a separately preserved reset-collision audit and a bowl-corrected rerun."
+  },
+  "training_started": false,
+  "next": "Per-episode bowl/ball placement and grasp/contact correspondence before new paired training. Keep primary geometry and weights unchanged.",
+  "limitations": [
+    "Landmarks were revised with fit residuals, including one validation-row exclusion; exploratory validation.",
+    "Model M1 camera used; M2 joint offsets not adopted.",
+    "Paired weights retain old render-training provenance.",
+    "An attractive overlay and oracle success do not establish demonstrated-contact fidelity."
+  ],
+  "implementation_sha256": {
+    "scripts/diag_camera_landmark_refit.py": "804faa494fe91cacd2390726d59c0243288923fb7ef94c594a90b309abd94221",
+    "scripts/run_camera_refit_diagnostic.py": "7e24c2b2a446c3427af556e29ea59743872ac1c298d6d9276eef7d3765e69e48",
+    "scripts/diag_refit_recorded_replay.py": "348a73bdce47427d7a5d98739922cfde9b7b621e4d3a47741067663e3bf75476",
+    "scripts/diag_act_geometry_residuals.py": "c8b6947df2a3a922fa9871b04367bbcb66c5621e0a46bdf007f99818c11a0847",
+    "src/real2sim/sim/model.py": "b7269118055f62523df6b5b02206543a97883f409b2d65220b9aa875c8452b10"
+  }
+}

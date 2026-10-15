@@ -1,0 +1,24 @@
+{
+  "kind": "TRAIN_LANDMARK_M2_CONTACT_DIAGNOSTIC_NOT_PRIMARY",
+  "fit_sha256": "3a64dc8d20f134e333acdb8d9d8a387c27fb9cdcf399f74dd0994d888ed31c40",
+  "joint_offsets_deg": [
+    -1.8734828872595048,
+    -7.747088447327449,
+    -4.565484141681627,
+    0.00023196412043654808,
+    0.0
+  ],
+  "start_episodes": [
+    0,
+    5,
+    6,
+    7
+  ],
+  "note": "No checkpoint/labels/splits/limits/actuator changes. Camera, joint offsets and object projection co-vary per one externally fitted candidate.",
+  "config_hashes": {
+    "task.yaml": "642299647e637d891256d9218a260bbe331a7ceff1856ece90a70d63564b8c78",
+    "eval_so101.yaml": "45ad87cc9878ecfc0ca7b58e9d34d8859536155cc9a7f497903c74d7b078be5c",
+    "data.yaml": "487d49bec9e9efcbab86ba127ff46e8e756a073136e3110211008e0fa4fd4dc4",
+    "sim_so101.yaml": "7a5123866c6d6ca70c2411d99f35ea887d6983437a3adc9ccedf3fb1608bc2ea"
+  }
+}

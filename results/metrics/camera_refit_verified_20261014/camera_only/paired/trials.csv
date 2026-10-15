@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,0,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.26526,300,0,14.61,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,1,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.16618,300,0,14.52,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,2,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.12294,300,0,14.66,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,3,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.25625,300,0,14.91,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,4,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.04866,300,0,14.58,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,5,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.05597,300,0,14.57,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,6,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.13657,300,0,14.6,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,7,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.13226,300,0,14.57,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,8,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.08434,300,0,14.51,0.3333,,
+DIAGNOSTIC_REFIT_camera_only_paired,LEARNED_ACT,so101,9,8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409,500,False,False,False,False,False,False,approach,0.14584,300,0,14.51,0.3333,,

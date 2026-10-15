@@ -58,7 +58,9 @@ class Model:
         if key not in self._cache:
             anchors, axes, roll_pos, roll_rot = [], [], [], []
             for r in self.rows:
-                q = r["state"].copy()
+                # Float32 erases finite differences near zero-offset starts,
+                # making joint-offset Jacobian columns spuriously zero.
+                q = np.asarray(r["state"], dtype=np.float64).copy()
                 q[:4] += joint_offsets_deg
                 pose_render(self.env, q, self.ball_xy)
                 d = self.env.data
@@ -204,7 +206,7 @@ def main(out):
                 cam_starts.append(np.r_[f0, cam0[1], cam0[2] + [dx, 0, 0], x0])
         x1 = run("M1_refit_camera", True, False, cam_starts)
         # M2: refit camera + joint zero offsets.
-        x2 = run("M2_refit_camera_and_joint_offsets", True, True, [np.r_[x1, np.zeros(4)], np.r_[x1, 0, -5, 0, 0], np.r_[x1, 0, 5, 0, 0]])
+        run("M2_refit_camera_and_joint_offsets", True, True, [np.r_[x1, np.zeros(4)], np.r_[x1, 0, -5, 0, 0], np.r_[x1, 0, 5, 0, 0]])
         # M2b: joint offsets with the current camera fixed (does the camera alone explain it?).
         run("M2b_current_camera_joint_offsets", False, True, [np.r_[x0, np.zeros(4)]])
         report["rows"] = [{k: v for k, v in r.items() if k != "state"} | {"state_deg": r["state"].tolist(), "split": "train" if r["episode"] in train_eps else "val"} for r in rows]
@@ -214,6 +216,7 @@ def main(out):
             "Image/state timing was mitigated by choosing low-velocity ticks but not corrected.",
             "Validation episodes are the approved held-out split; they were never used in fitting here, but the earlier (superseded) episode-5 landmarks were training-only.",
             "No config, dataset, label or checkpoint was changed by this script.",
+            "Landmarks were revised after inspecting earlier fit residuals, including a validation-row exclusion; validation scores are exploratory.",
         ]
         (out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     finally:

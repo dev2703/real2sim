@@ -100,10 +100,17 @@ def audit_camera(env, out):
     return rvec, tvec, K, pos, axes
 
 
-def prepare(config, out, audit_out, *, max_seconds=20.0, max_shift_px=3.0, contact_distance=.08):
+def prepare(config, out, audit_out, *, max_seconds=20.0, max_shift_px=3.0, contact_distance=.08,
+            bowl_placements=None):
+    if not np.isfinite(contact_distance) or contact_distance < 0:
+        raise ValueError("contact distance must be finite and nonnegative")
     if out.exists() or audit_out.exists():
         raise FileExistsError("refusing to overwrite pair cache or camera audit")
     ds = DerivedTickDataset(".cache/derived_joint", list(range(40)), 20)
+    placements = None
+    if bowl_placements is not None:
+        from real2sim.data.bowl_placement import validate_placements
+        placements = validate_placements(json.loads(Path(bowl_placements).read_text()), ds.manifest)
     env = So101PickPlaceEnv(config, render_images=True)
     env.reset(seed=0)
     key = ds.camera_keys[0]
@@ -116,6 +123,8 @@ def prepare(config, out, audit_out, *, max_seconds=20.0, max_shift_px=3.0, conta
               "task_config": env.task, "sim_config": env.config,
               "pose_note": "Recorded joints without clamping; forward kinematics only, no physics steps",
               "review_status": "pending_visual_review"}
+    if placements is not None:
+        report["bowl_placements"] = {"path": str(bowl_placements), "sha256": file_sha256(bowl_placements)}
     out.mkdir(parents=True)
     try:
         rvec, tvec, K, pos, axes = audit_camera(env, audit_out)
@@ -138,6 +147,20 @@ def prepare(config, out, audit_out, *, max_seconds=20.0, max_shift_px=3.0, conta
                     info["stop_reason"] = "backprojection_outside_work_area"
                     report["episodes"].append(info)
                     continue
+                if placements is not None:
+                    bowl_pixel = (np.asarray(placements[ep]["pixel_policy"]) - [lb["pad_left"], lb["pad_top"]]) / lb["scale"]
+                    bowl_xy = backproject_to_plane([bowl_pixel], rvec, tvec, K,
+                        env.table_top - env.offset[2] + env.task["bowl"]["outer_height"])[0, :2]
+                    env.reset(seed=0, scenario={"ball_xy": xyz[:2], "bowl_xy": bowl_xy})
+                    info["bowl_xy_estimated"] = bowl_xy.tolist()
+                    # A kinematic render can otherwise conceal an impossible
+                    # object setup, such as the ball intersecting the bowl wall.
+                    bad = [c for c in env._contact_pairs() if "ball_geom" in (c["geom1"], c["geom2"])
+                           and c["distance_m"] < -.002]
+                    if bad:
+                        info.update(stop_reason="invalid_initial_object_overlap", initial_contacts=bad)
+                        report["episodes"].append(info)
+                        continue
                 ep_pairs = []
                 outside = 0
                 for local in prefix:
@@ -175,6 +198,8 @@ def prepare(config, out, audit_out, *, max_seconds=20.0, max_shift_px=3.0, conta
             manifest = {"split_name": split, "camera_key": key, "derived_manifest": ds.manifest,
                         "n_pairs": len(ticks_out), "sim_config_sha256": file_sha256(config),
                         "sha256": {n: file_sha256(dest / n) for n in ("ticks.npy", "images.npy")}}
+            if placements is not None:
+                manifest["bowl_placements_sha256"] = file_sha256(bowl_placements)
             (dest / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
             # Paginate previews so inspection remains legible (four episodes per page).
             for i in range(0, len(previews), 12):
@@ -197,8 +222,12 @@ def main():
     p.add_argument("--config", type=Path, default=Path("results/metrics/geometry_3988577/configs/sim_so101.yaml"))
     p.add_argument("--out", type=Path, default=Path(".cache/paired_approach_3988577"))
     p.add_argument("--audit-out", type=Path, default=Path("results/audit/paired_approach_3988577"))
+    p.add_argument("--bowl-placements", type=Path)
+    p.add_argument("--contact-distance", type=float, default=.08,
+                   help="Conservative tool-ball cutoff in metres; 0 retains visible stationary-ball frames up to motion/occlusion")
     args = p.parse_args()
-    prepare(args.config, args.out, args.audit_out)
+    prepare(args.config, args.out, args.audit_out, bowl_placements=args.bowl_placements,
+            contact_distance=args.contact_distance)
 
 
 if __name__ == "__main__":

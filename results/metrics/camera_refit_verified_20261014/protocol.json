@@ -1,0 +1,60 @@
+{
+  "kind": "DIAGNOSTIC_CAMERA_REFIT_FROZEN_POLICY_NOT_PRIMARY_BENCHMARK",
+  "camera_model": "M1_refit_camera; no joint offset changes",
+  "start_detection_episodes": [
+    0,
+    5,
+    6,
+    7
+  ],
+  "start_xy_per_episode": [
+    [
+      0.3445351320094435,
+      0.14607311328943273
+    ],
+    [
+      0.3403437820341477,
+      0.10869446610637445
+    ],
+    [
+      0.3391644601236836,
+      0.10820064701906307
+    ],
+    [
+      0.3417312911286441,
+      0.10062011007727834
+    ]
+  ],
+  "start_xy_mean": [
+    0.3414436663239797,
+    0.11589708412303715
+  ],
+  "bowl_xy": [
+    0.33051948277026316,
+    -0.09997323504888267
+  ],
+  "caveats": [
+    "Validation annotations were adaptively reviewed; this is exploratory.",
+    "Mat residual remains 56 px; geometry is not established ground truth.",
+    "camera_only changes only camera; camera_objects also reprojects objects and mat.",
+    "Frozen paired weights were trained on the OLD renderer.",
+    "No policy consumes object pose; all physical geometry changes are labelled diagnostics."
+  ],
+  "source_hashes": {
+    "results/audit/camera_landmark_refit_float64_20261014/report.json": "3a64dc8d20f134e333acdb8d9d8a387c27fb9cdcf399f74dd0994d888ed31c40",
+    "outputs/act_joint_paired_approach/checkpoints/000500/model.safetensors": "8aef203053954598c1b81b7651adfa39686fb370247b6d6bb2f8abb0b0862409",
+    "outputs/act_joint_so101/checkpoints/020000/model.safetensors": "d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274",
+    "results/audit/follower_response_approach_20261013/model.json": "2bee2cade42668b2ac3b17d224994e871db4edc2640f4b4f3eaa4bcc75fc3731"
+  },
+  "camera_roundtrip_max_px": 2.0990569282730576e-09,
+  "config_hashes": {
+    "results/metrics/camera_refit_verified_20261014/camera_only/configs/task.yaml": "2bffe4fd96b4680bd775c4c996c68c9b86f1b07cfffeeeb6ebe52d463652f28f",
+    "results/metrics/camera_refit_verified_20261014/camera_only/configs/eval_so101.yaml": "b214df0804d1c5d46eb154835d127c71deea23ff4b5efb5ae2308ba79b2a7fd2",
+    "results/metrics/camera_refit_verified_20261014/camera_only/configs/data.yaml": "fe40d31fdebc65c577d89fa0ae06fc8876d97ff91578859fc633c95d4161b873",
+    "results/metrics/camera_refit_verified_20261014/camera_only/configs/sim_so101.yaml": "bcf44b90fb0f9d81d957a15f801bed2df67ed793242f4aea77ba95d3f0a26125",
+    "results/metrics/camera_refit_verified_20261014/camera_objects/configs/task.yaml": "5ebfd92682f02f556b8ebbe41066072b1bba62b488c981a33276fc392131bd31",
+    "results/metrics/camera_refit_verified_20261014/camera_objects/configs/eval_so101.yaml": "78d7aabc03bea358b02bc81b4086b22c1bc789582cb950ae781519c7ae0a295d",
+    "results/metrics/camera_refit_verified_20261014/camera_objects/configs/data.yaml": "6b963f19403f2cff0529d13ed541cf81008f6aa5fbf946e01a7639fb05ce1f69",
+    "results/metrics/camera_refit_verified_20261014/camera_objects/configs/sim_so101.yaml": "d62e7b802b7c31b84a14da6a48b4d6e94479e3b3a717ea21b80569f1f280659b"
+  }
+}

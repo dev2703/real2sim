@@ -1,0 +1,8 @@
+{
+  "decision": "rejected_for_control_or_training",
+  "reason": "Candidate offsets improve landmark score slightly but worsen valid-setup follower replay approach; no holds.",
+  "valid_follower_replays": 8,
+  "mean_closest_m": 0.06402643110932502,
+  "held": 0,
+  "primary_changed": false
+}

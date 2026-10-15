@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,0,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.18272,300,0,14.41,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,1,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.17777,300,0,14.38,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,2,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.17794,300,0,14.45,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,3,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.17462,300,0,14.46,0.5,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,4,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.15261,300,0,15.44,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,5,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.15913,300,0,14.47,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,6,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.17554,300,0,14.41,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,7,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.17243,300,0,14.39,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,8,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.17897,300,0,14.4,0.3333,,
+DIAGNOSTIC_REFIT_camera_objects_joint,LEARNED_ACT,so101,9,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.18582,300,0,14.59,0.1667,,

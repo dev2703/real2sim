@@ -598,3 +598,54 @@ D-023 outcome (14 Oct): 0/10, no aborts; seven seeds approach closer, but handof
 at 7.8 s precedes most closest points and one ball escapes. Adapter remains an
 isolated diagnostic, not production. No new training was justified/launched.
 See `results/metrics/act_response_20261013/review.json` for all outcomes.
+
+
+## D-024 Landmark-camera continuation and isolated geometry diagnostics
+
+2026-10-14 user supplied the unfinished landmark-refit transcript and requested
+continuation. Fixed float32 finite-difference loss before trusting its joint-offset
+comparison. Preserved annotations and old results; repeated fitting to a fresh
+directory. Revised annotations/validation exclusions make the scores exploratory.
+Camera-only M1 is tested without adopting fitted joint offsets or changing the
+primary scene. Object reprojection uses TRAIN-only initial ball observations;
+policy inputs, weights, labels, splits, hardware and benchmark scoring are unchanged.
+Visual mat yaw is optional and defaults to zero; it has no collision effect.
+
+Separate camera-only and camera-plus-object snapshots distinguish visual changes
+from moved physical targets. Completed 60 trials, including the unchanged frozen
+paired checkpoint, its 78-tick response diagnostic, original joint ACT, hold and
+oracle. Refitted geometry brings paired+response closest distance to 3.85 cm mean,
+but still no holds/lifts or task successes. Oracle remains 10/10. Do not promote
+these diagnostic scores into primary tables or retrain solely on this result.
+
+Recorded follower-motion replay reveals remaining contact correspondence problems
+and an episode-specific bowl-placement error: the shared bowl intersects episode
+24's initial ball. Preserved that row with an invalid-setup audit; a separately
+labelled approximate bowl-rim annotation removes the overlap but not grasp failure.
+Next calibration/pair-generation work must account for per-episode bowl placement
+and verify initial contacts before interpreting replay failures. No ACT training
+was launched. Evidence: `results/metrics/camera_refit_verified_20261014/review.json`
+and `results/audit/camera_landmark_refit_float64_20261014/`.
+
+
+## D-025 Real-demonstration-only ACT improvement pilot
+
+2026-10-14 user requested further fixes toward ≥6/10 and explicitly rejected the
+offered real-plus-oracle demonstration route. Training remains based on recorded
+real states/actions; simulated images are paired augmentation only. No synthetic
+action targets, privileged policy features, changed split or benchmark rules.
+
+Rejected the fitted M2 joint-offset candidate after worsened recorded-motion
+replay. Retain M1 camera in diagnostic snapshots. Correct pair generation with
+reviewed per-episode bowl pixels and initial object-overlap checks. Test a separate
+near-grasp stationary-ball cache: remove the conservative 8 cm cutoff while keeping
+the image-motion/occlusion/area/time gates. Dynamic ball transport is not inferred.
+The primary simulator/configuration remains untouched by these scene estimates.
+
+Authorize within the user's requested work one bounded 1,000-step warm-start pilot
+from the prior paired checkpoint, unchanged labels and train/validation split,
+with real-validation checkpoint selection and matched parent/pilot evaluation on
+the same corrected snapshot. Keep the fixed response diagnostic separate from
+ordinary ACT. Completion/failure callback resumes review; no active waiting or
+automatic long-run escalation. ≥6/10 remains an objective, not an achieved result.
+See `outputs/act_refit_pilot_20261014/status.json` and docs/progress.md.
