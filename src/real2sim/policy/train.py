@@ -32,12 +32,19 @@ from lerobot.policies.act.modeling_act import ACTPolicy
 from torch.utils.data import DataLoader
 
 from real2sim.config import load_yaml
-from real2sim.policy.act import build_act_config, load_checkpoint, resolve_device, save_checkpoint
+from real2sim.policy.act import (
+    build_act_config,
+    build_policy,
+    load_checkpoint,
+    resolve_device,
+    save_checkpoint,
+)
 from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.losses import ReconstructionLoss, act_training_loss
 from real2sim.policy.paired import PairedViewDataset, file_sha256
+from real2sim.policy.schedule import learning_rate
 
-HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "sec_per_step", "wall_s", "samples"]
+HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "lr_backbone", "sec_per_step", "wall_s", "samples"]
 
 
 def update_last_link(checkpoints: Path, target_name: str) -> None:
@@ -146,6 +153,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     loss_config = ReconstructionLoss(**cfg.get("reconstruction_loss", {}))
     tcfg = cfg["train"]
     tcfg.update({k: v for k, v in (overrides or {}).items() if v is not None})
+    schedule_steps = int(tcfg["steps"])
     if smoke_steps is not None:
         tcfg.update(steps=smoke_steps, log_every=1, val_every=smoke_steps, save_every=smoke_steps, val_max_batches=2)
     device = resolve_device(tcfg.get("device", "auto"))
@@ -165,7 +173,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                              "training_data_kind": "real_labels_with_mixed_real_and_sim_approach_images"}
 
     act_cfg = build_act_config(cfg["model"], manifest, device)
-    policy = ACTPolicy(act_cfg).to(device)
+    policy = build_policy(act_cfg, initialize_backbone=resume is None).to(device)
     initial_provenance = None
     if cfg.get("initial_checkpoint"):
         if resume is not None:
@@ -177,10 +185,18 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 raise ValueError(f"initial checkpoint {key} differs from data")
         if parent_contract["derived_files_sha256"] != manifest["files_sha256"] or parent_norm.stats != train_ds.normalizer.stats:
             raise ValueError("initial checkpoint data hashes or normalization differ")
-        policy.load_state_dict(parent.state_dict(), strict=True)
+        transfer = None
+        if cfg.get("initialization") == "nonvisual_act":
+            from real2sim.policy.dinov2_act import warmstart_nonvisual
+
+            if act_cfg.vision_backbone != "dinov2":
+                raise ValueError("nonvisual initialization is restricted to the DINO pilot")
+            transfer = warmstart_nonvisual(policy, parent)
+        else:
+            policy.load_state_dict(parent.state_dict(), strict=True)
         del parent
         initial_provenance = {"path": str(initial), "sha256": file_sha256(initial / "model.safetensors"),
-                              "optimizer": "fresh; weights-only initialization"}
+                              "optimizer": "fresh; weights-only initialization", "transfer": transfer}
     policy.train()
     optimizer = torch.optim.AdamW(policy.get_optim_params(), lr=act_cfg.optimizer_lr, weight_decay=act_cfg.optimizer_weight_decay)
     start_step = 0
@@ -188,10 +204,20 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         previous_loss = json.loads((resume / "run_info.json").read_text()).get("reconstruction_loss", {})
         if ReconstructionLoss(**previous_loss) != loss_config:
             raise ValueError("cannot resume with a different reconstruction loss")
-        policy.load_state_dict(ACTPolicy.from_pretrained(str(resume)).state_dict())
+        resumed, _, _ = load_checkpoint(resume, device="cpu")
+        policy.load_state_dict(resumed.state_dict(), strict=True)
+        del resumed
         state = torch.load(resume / "training_state.pt", map_location=device, weights_only=False)
         optimizer.load_state_dict(state["optimizer"])
         start_step = int(state["step"])
+        if cfg.get("scheduler") != json.loads((resume / "run_info.json").read_text()).get("scheduler"):
+            raise ValueError("cannot resume with a different scheduler")
+
+    schedule = cfg.get("scheduler")
+    peaks = [act_cfg.optimizer_lr, act_cfg.optimizer_lr_backbone]
+    if schedule:
+        # Validate before beginning; absolute step determines LR on resume.
+        learning_rate(1, schedule_steps, min(peaks), **schedule)
 
     bs = int(tcfg["batch_size"])
     accum = int(tcfg.get("grad_accum", 1))
@@ -216,6 +242,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         "n_train_ticks": len(train_ds),
         "n_val_ticks": len(val_ds),
         "n_params": sum(p.numel() for p in policy.parameters()),
+        "n_trainable_params": sum(p.numel() for p in policy.parameters() if p.requires_grad),
         "platform": {"python": platform.python_version(), "torch": str(torch.__version__), "machine": platform.machine(), "system": platform.system()},
         "smoke_steps": smoke_steps,
     }
@@ -249,6 +276,9 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     print(f"device={device} params={resolved['n_params'] / 1e6:.1f}M train_ticks={len(train_ds)} val_ticks={len(val_ds)} bs={bs}x{accum}", file=sys.stderr)
     for step in range(start_step + 1, steps + 1):
         improved = False
+        if schedule:
+            for group, peak in zip(optimizer.param_groups, peaks, strict=True):
+                group["lr"] = learning_rate(step, schedule_steps, peak, **schedule)
         optimizer.zero_grad(set_to_none=True)
         for _ in range(accum):
             batch = to_device(next(it), device)
@@ -280,7 +310,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 "reconstruction": round(run["reconstruction"] / run["n"], 6),
                 "weighted_kl": round(act_cfg.kl_weight * run["kld"] / run["n"], 6),
                 "grad_norm": round(run["grad_norm"] / run["n"], 6),
-                "lr": act_cfg.optimizer_lr,
+                "lr": optimizer.param_groups[0]["lr"],
+                "lr_backbone": optimizer.param_groups[1]["lr"],
                 "sec_per_step": round(dt, 4),
                 "wall_s": round(time.time() - t_start, 1),
                 "samples": run["n"] * bs * accum,
@@ -317,6 +348,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 "augmentation": cfg.get("augmentation"),
                 "paired_images": paired_provenance, "initial_checkpoint": initial_provenance,
                 "reconstruction_loss": asdict(loss_config),
+                "scheduler": schedule, "scheduler_total_steps": schedule_steps,
                 "wall_s": round(time.time() - t_start, 1)}, optimizer)
             update_last_link(out_dir / "checkpoints", ck.name)
             if improved:

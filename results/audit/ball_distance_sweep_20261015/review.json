@@ -1,0 +1,122 @@
+{
+  "status": "reviewed",
+  "summary": [
+    {
+      "mode": "leader_command",
+      "offset_m": 0.0,
+      "n": 9,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.04260419761294858,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "leader_command",
+      "offset_m": 0.01,
+      "n": 9,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.03735885241043155,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "leader_command",
+      "offset_m": 0.02,
+      "n": 9,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.03388707265640104,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "follower_next_state",
+      "offset_m": 0.0,
+      "n": 9,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.037992020236186946,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "follower_next_state",
+      "offset_m": 0.01,
+      "n": 9,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.03888397302140243,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "follower_next_state",
+      "offset_m": 0.02,
+      "n": 9,
+      "success": 0,
+      "held": 1,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.03726926365460056,
+      "two_jaw_trials_10hz": 1
+    },
+    {
+      "mode": "frozen_ACT_joint",
+      "offset_m": 0.0,
+      "n": 10,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.048602196265309025,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "frozen_ACT_joint",
+      "offset_m": 0.01,
+      "n": 10,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.05236667421096299,
+      "two_jaw_trials_10hz": 0
+    },
+    {
+      "mode": "frozen_ACT_joint",
+      "offset_m": 0.02,
+      "n": 10,
+      "success": 0,
+      "held": 0,
+      "lifted": 0,
+      "abort": 0,
+      "invalid_initial_overlap": 0,
+      "mean_min_distance_m": 0.10602906707022668,
+      "two_jaw_trials_10hz": 0
+    }
+  ],
+  "baseline_max_ball_trajectory_error_m": 0,
+  "frozen_hashes_verified": true,
+  "decision": "Reject outward ball shift alone as an ACT fix. No training or primary geometry change.",
+  "interpretation": "A 2cm shift gives episode11 follower replay 38 consecutive two-jaw ticks (18.4\u201322.1s) but no lift. ACT worsens with outward shift; 3/10 at +2cm remain >20cm away. Does not isolate all geometry vs tracking/policy errors.",
+  "caveats": [
+    "Recorded replay limited to first30s, not necessarily full real task.",
+    "Follower states are dynamically tracked targets, not directly imposed joint positions.",
+    "Shift changes visual policy input as well as physical contact; fixed recorded-target tests isolate command choice."
+  ]
+}

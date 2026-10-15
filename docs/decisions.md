@@ -649,3 +649,84 @@ the same corrected snapshot. Keep the fixed response diagnostic separate from
 ordinary ACT. Completion/failure callback resumes review; no active waiting or
 automatic long-run escalation. ≥6/10 remains an objective, not an achieved result.
 See `outputs/act_refit_pilot_20261014/status.json` and docs/progress.md.
+
+## D-026 Small, separate synthetic demonstration collection
+
+2026-10-15 user offered to record a few simulated demonstrations. This authorizes
+a bounded five-episode oracle collection as a separate synthetic dataset. It does
+not yet authorize replacing the real labels or starting mixed-data ACT training;
+the earlier real-only training constraint remains in force until changed.
+
+Use the refit pilot's frozen diagnostic scene and unchanged oracle/controller,
+seeds 1000–1004, with the existing random ball-start region. Store all attempted
+episode outcomes, including failures. Record pre-action RGB/joint observations,
+requested joint targets and the final observation, at 10 Hz. Keep privileged
+teacher/scoring metadata in separate audit files, never observation features.
+Replay the serialized commands without oracle control to verify temporal
+alignment and action units. Preserve real datasets, split and primary benchmark.
+Oracle success is not ACT success, and the oracle's more vertical grasp does not
+establish that the recorded human grasp geometry is represented faithfully.
+
+Collector: `scripts/collect_sim_demonstrations.py`; local dataset:
+`outputs/sim_demonstrations_20261015/`. No training is launched by collection.
+
+## D-027 Frozen ball-distance sensitivity diagnostic
+
+2026-10-15 user requested moving the ball slightly farther to test geometry.
+Define farther as radial displacement away from the robot's task-frame origin,
+at unchanged table height. Predeclare offsets 0, +1 cm and +2 cm. Run all ten
+seeds of the frozen refit-pilot ACT checkpoint with ordinary joint control, and
+all nine held-out recorded episodes with both leader-command and follower-next-
+state dynamic replay. Use reviewed per-episode bowl placement for recorded
+replays and the frozen pilot bowl for ACT. Preserve all failed runs and flag
+initial overlap; do not select the best displacement as a new primary benchmark.
+
+This experiment changes reset ball placement only: no new weights, real labels,
+split, actuator/contact settings or privileged policy inputs. It tests spatial
+sensitivity, not whether the shifted location is physically calibrated. The
+oracle's successful demonstrations use privileged targets and a different grasp
+orientation, so their success does not validate the human demonstration's pose
+or command-tracking correspondence. Code: `scripts/diag_ball_distance_sweep.py`;
+results: `results/audit/ball_distance_sweep_20261015/`.
+
+## D-028 DINOv2-small Cartesian ACT pilot with partial fine-tuning
+
+2026-10-15 user explicitly selected shared Cartesian state/action representation,
+DINOv2-small partial fine-tuning, existing real demonstrations plus approved
+paired-image augmentation, unchanged split, chunk 20/execution 2, and a bounded
+2,000-step MPS pilot followed by SO-101 and Panda evaluations. Their subsequent
+optimizer specification requests 5–8% linear warmup from factor 0.001, cosine
+decay without restarts, task LR 1e-4–5e-4, backbone LR 1e-5–5e-5, floor 0/1e-7,
+weight decay 0.05 and clipping at norm 1, retaining existing ACT defaults.
+
+Concrete pilot uses the lower range endpoints: 100 warmup steps, peak ACT/DINO
+LRs 1e-4/1e-5, cosine to 1e-7 at step 2000. Both LRs and schedule are logged.
+Retain the proposed final two DINO blocks plus output LayerNorm as trainable;
+embeddings and first ten blocks frozen. Initialize compatible nonvisual ACT
+tensors from Cartesian checkpoint 006000, with a new 384-to-512 image projection.
+Existing chunk, transformer, VAE and L1 objective defaults are retained. No new
+real labels, normalization, dataset split or synthetic action data.
+
+Use official `facebook/dinov2-small` revision
+`ed25f3a31f01632728cabb09d1542f84ab7b0056`, stored locally from Hugging Face.
+The 192x256 ImageNet-normalized image retains its full field of view; replicate
+padding at bottom/right produces a 196x266 input and a 14x19 spatial patch grid.
+Discard the CLS output from ACT inputs. No center crop, double normalization,
+object coordinates or robot-specific joint identifiers enter the policy.
+13-D canonical proprioception feeds ACT's state projection; 7-D Cartesian/gripper
+chunks execute through the existing robot-specific adapters/IK. This supports
+both interfaces but does not establish successful Panda transfer.
+
+Reuse reviewed stationary-ball rendered images with a new Cartesian pair manifest
+only after checking actual file hashes, identical original images, exact episode/
+frame alignment, split, camera and timing. Original pair caches remain untouched.
+Policy checkpoints explicitly identify `act_dinov2`, embed the DINO architecture
+and weights, and reload offline without the original HF snapshot. Transformers
+5.19.0 is locked; 4.x conflicts with LeRobot 0.6.1's Hugging Face Hub requirement.
+
+Select the pilot by full real validation L1; compare the frozen Cartesian parent
+and pilot on held-out paired images and ten seeded trials on each robot using
+isolated corrected-geometry snapshots. These are diagnostic results, not edits to
+primary benchmark tables. Differences include both visual encoder and training
+recipe, so parent comparison alone cannot isolate a causal backbone advantage.
+No automatic longer training. Notify this thread once on completion/failure.

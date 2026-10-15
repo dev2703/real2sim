@@ -12,7 +12,7 @@ from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.paired import PairedViewDataset, file_sha256
 
 
-def run(checkpoints, pairs, out, per_episode=16):
+def run(checkpoints, pairs, out, per_episode=16, data=Path(".cache/derived_joint")):
     if out.exists():
         raise FileExistsError(out)
     report = {"kind": "HELD_OUT_APPROACH_COUNTERFACTUAL_IMAGES", "checkpoints": {},
@@ -21,7 +21,12 @@ def run(checkpoints, pairs, out, per_episode=16):
     torch.set_num_threads(2)
     for name, path in checkpoints.items():
         policy, norm, contract = load_checkpoint(path, device="cpu")
-        real = DerivedTickDataset(".cache/derived_joint", contract["split"]["val"], policy.config.chunk_size, norm)
+        real = DerivedTickDataset(data, contract["split"]["val"], policy.config.chunk_size, norm)
+        for key in ("state_names", "action_names", "camera_keys"):
+            if contract[key] != real.manifest[key]:
+                raise ValueError(f"paired check checkpoint/data {key} mismatch")
+        if contract["derived_files_sha256"] != real.manifest["files_sha256"]:
+            raise ValueError("paired check checkpoint/data hashes mismatch")
         sim = PairedViewDataset(real, pairs, probability=1, evaluation=True)
         ticks = sim.ticks
         chosen = []
@@ -62,8 +67,9 @@ def main():
     p.add_argument("--parent", type=Path, default=Path("outputs/act_joint_so101/checkpoints/020000"))
     p.add_argument("--pairs", type=Path, default=Path(".cache/paired_approach_3988577/val"))
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--data", type=Path, default=Path(".cache/derived_joint"))
     args = p.parse_args()
-    run({"parent": args.parent, "pilot": args.checkpoint}, args.pairs, args.out)
+    run({"parent": args.parent, "pilot": args.checkpoint}, args.pairs, args.out, data=args.data)
 
 
 if __name__ == "__main__":

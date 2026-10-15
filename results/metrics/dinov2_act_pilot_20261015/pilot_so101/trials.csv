@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,0,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.20381,300,2,34.49,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,1,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.20649,300,2,34.34,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,2,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.1969,300,2,34.34,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,3,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.19775,300,2,34.36,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,4,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.16733,300,2,34.29,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,5,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.1885,300,2,34.32,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,6,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.19323,300,2,34.43,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,7,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.20163,300,2,34.37,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,8,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.2061,300,2,34.38,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PILOT_SO101,LEARNED_ACT,so101,9,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.20338,300,2,34.25,0.1429,,

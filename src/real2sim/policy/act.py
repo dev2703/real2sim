@@ -44,16 +44,33 @@ def build_act_config(model_cfg: dict, manifest: dict, device: str) -> ACTConfig:
         input_features[key] = PolicyFeature(type=FeatureType.VISUAL, shape=(3, h, w))
     output_features = {"action": PolicyFeature(type=FeatureType.ACTION, shape=(len(manifest["action_names"]),))}
     kwargs = {k: model_cfg[k] for k in ACT_FIELDS if k in model_cfg}
-    unknown = set(model_cfg) - set(ACT_FIELDS)
+    dino_fields = {"dinov2_model_id", "dinov2_revision", "dinov2_pretrained_path",
+                   "dinov2_trainable_blocks", "dinov2_config"}
+    is_dino = model_cfg.get("vision_backbone") == "dinov2"
+    unknown = set(model_cfg) - set(ACT_FIELDS) - (dino_fields if is_dino else set())
     if unknown:
         raise ValueError(f"unknown ACT fields in config: {sorted(unknown)}")
-    return ACTConfig(
+    config_class = ACTConfig
+    if is_dino:
+        from real2sim.policy.dinov2_act import DinoACTConfig
+
+        config_class = DinoACTConfig
+        kwargs.update({k: model_cfg[k] for k in dino_fields if k in model_cfg})
+    return config_class(
         input_features=input_features,
         output_features=output_features,
         device=device,
         push_to_hub=False,
         **kwargs,
     )
+
+
+def build_policy(config, *, initialize_backbone=True):
+    if config.vision_backbone == "dinov2":
+        from real2sim.policy.dinov2_act import DinoACTPolicy
+
+        return DinoACTPolicy(config, initialize_backbone=initialize_backbone)
+    return ACTPolicy(config)
 
 
 def resolve_device(requested: str) -> str:
@@ -90,6 +107,13 @@ def save_checkpoint(
         "derived_files_sha256": manifest["files_sha256"],
         "prepare_version": manifest["prepare_version"],
     }
+    if policy.config.vision_backbone == "dinov2":
+        contract["vision_encoder"] = {
+            "kind": "dinov2_spatial_patches", "model_id": policy.config.dinov2_model_id,
+            "revision": policy.config.dinov2_revision,
+            "trainable_final_blocks": policy.config.dinov2_trainable_blocks,
+            "preprocessing": "existing ImageNet normalization; right/bottom replicate-pad to patch multiple; no crop",
+        }
     if run_info.get("paired_images"):
         contract["training_provenance"] = {
             "paired_images": run_info["paired_images"],
@@ -103,7 +127,13 @@ def save_checkpoint(
 
 def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[ACTPolicy, Normalizer, dict]:
     path = Path(path)
-    policy = ACTPolicy.from_pretrained(str(path))
+    config_json = json.loads((path / "config.json").read_text())
+    policy_class = ACTPolicy
+    if config_json.get("type") == "act_dinov2":
+        from real2sim.policy.dinov2_act import DinoACTPolicy
+
+        policy_class = DinoACTPolicy
+    policy = policy_class.from_pretrained(str(path), strict=True, local_files_only=True)
     policy.to(device)
     policy.eval()
     contract = json.loads((path / "real2sim_contract.json").read_text())

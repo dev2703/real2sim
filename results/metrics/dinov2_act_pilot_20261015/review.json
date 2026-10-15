@@ -1,0 +1,198 @@
+{
+  "status": "reviewed_no_further_training",
+  "selected_step": 1250,
+  "training_steps": 2000,
+  "training_kind": "real_recorded_cartesian_labels_with_paired_images_no_synthetic_actions",
+  "real_validation": {
+    "parent": {
+      "checkpoint_sha256": "0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0",
+      "val_open_loop_l1_normalised": 0.5345124585474267,
+      "val_open_loop_rmse_normalised": 0.8950759545482262,
+      "val_samples": 4064,
+      "all_finite": true,
+      "contract_ok": true,
+      "val_open_loop_l1_raw_per_dim": [
+        0.0018,
+        0.0016,
+        0.0026,
+        0.005,
+        0.0162,
+        0.0062,
+        0.0959
+      ]
+    },
+    "pilot": {
+      "checkpoint_sha256": "bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d",
+      "val_open_loop_l1_normalised": 0.5156366303362284,
+      "val_open_loop_rmse_normalised": 0.8864668611544482,
+      "val_samples": 4064,
+      "all_finite": true,
+      "contract_ok": true,
+      "val_open_loop_l1_raw_per_dim": [
+        0.0016,
+        0.0015,
+        0.0026,
+        0.0049,
+        0.0155,
+        0.0058,
+        0.1011
+      ]
+    }
+  },
+  "paired_prefix": {
+    "parent": {
+      "samples": 144,
+      "real": 0.39792293310165405,
+      "sim": 0.4092845618724823,
+      "view_gap": 0.1731489896774292
+    },
+    "pilot": {
+      "samples": 144,
+      "real": 0.39899083971977234,
+      "sim": 0.39688393473625183,
+      "view_gap": 0.07020104676485062
+    }
+  },
+  "closed_loop": {
+    "parent_so101": {
+      "n": 10,
+      "aborted": 0,
+      "successes": 0,
+      "success_rate": 0.0,
+      "lifted": 0,
+      "delivered": 0,
+      "released": 0,
+      "rolled_out": 0,
+      "ball_escaped_table": 0,
+      "phase_failed_counts": {
+        "approach": 10,
+        "grasp": 0,
+        "transport": 0,
+        "release": 0,
+        "none": 0,
+        "aborted": 0
+      },
+      "ik_rejections_total": 25,
+      "mean_latency_ms": 14.065999999999999,
+      "max_action_saturation": 0.0,
+      "mean_closest_m": 0.192019
+    },
+    "pilot_so101": {
+      "n": 10,
+      "aborted": 0,
+      "successes": 0,
+      "success_rate": 0.0,
+      "lifted": 0,
+      "delivered": 0,
+      "released": 0,
+      "rolled_out": 0,
+      "ball_escaped_table": 0,
+      "phase_failed_counts": {
+        "approach": 10,
+        "grasp": 0,
+        "transport": 0,
+        "release": 0,
+        "none": 0,
+        "aborted": 0
+      },
+      "ik_rejections_total": 20,
+      "mean_latency_ms": 34.357000000000006,
+      "max_action_saturation": 0.1429,
+      "mean_closest_m": 0.196512
+    },
+    "parent_panda": {
+      "n": 10,
+      "aborted": 0,
+      "successes": 0,
+      "success_rate": 0.0,
+      "lifted": 0,
+      "delivered": 0,
+      "released": 0,
+      "rolled_out": 0,
+      "ball_escaped_table": 0,
+      "phase_failed_counts": {
+        "approach": 10,
+        "grasp": 0,
+        "transport": 0,
+        "release": 0,
+        "none": 0,
+        "aborted": 0
+      },
+      "ik_rejections_total": 0,
+      "mean_latency_ms": 14.116,
+      "max_action_saturation": 0.1429,
+      "mean_closest_m": 0.114442
+    },
+    "pilot_panda": {
+      "n": 10,
+      "aborted": 0,
+      "successes": 0,
+      "success_rate": 0.0,
+      "lifted": 0,
+      "delivered": 0,
+      "released": 0,
+      "rolled_out": 0,
+      "ball_escaped_table": 0,
+      "phase_failed_counts": {
+        "approach": 10,
+        "grasp": 0,
+        "transport": 0,
+        "release": 0,
+        "none": 0,
+        "aborted": 0
+      },
+      "ik_rejections_total": 0,
+      "mean_latency_ms": 33.665000000000006,
+      "max_action_saturation": 0.0,
+      "mean_closest_m": 0.14101
+    }
+  },
+  "execution_diagnostic": {
+    "so101": {
+      "checkpoint": {
+        "checkpoint": "outputs/act_cartesian_dinov2_pilot_20261015/checkpoints/001250",
+        "checkpoint_sha256": "bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d",
+        "checkpoint_step": 1250,
+        "kind": "cartesian",
+        "chunk_size": 20,
+        "n_action_steps": 2,
+        "device": "cpu"
+      },
+      "seed": 0,
+      "ticks": 300,
+      "accepted_unchanged_arm": 297,
+      "rejections": 2,
+      "zero_iteration_solves": 298,
+      "median_translation_m": 0.00011331499881234196,
+      "median_rotation_rad": 0.001275026213534993,
+      "max_baseline_trajectory_difference_m": 0.0
+    },
+    "panda": {
+      "checkpoint": {
+        "checkpoint": "outputs/act_cartesian_dinov2_pilot_20261015/checkpoints/001250",
+        "checkpoint_sha256": "bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d",
+        "checkpoint_step": 1250,
+        "kind": "cartesian",
+        "chunk_size": 20,
+        "n_action_steps": 2,
+        "device": "cpu"
+      },
+      "seed": 0,
+      "ticks": 300,
+      "accepted_unchanged_arm": 42,
+      "rejections": 0,
+      "zero_iteration_solves": 42,
+      "median_translation_m": 0.0005759002386760961,
+      "median_rotation_rad": 0.0012368626477219321,
+      "max_baseline_trajectory_difference_m": 0.0
+    }
+  },
+  "interpretation": [
+    "Real full-chunk validation improves 3.53%; paired-image prediction disagreement improves 59.46%, but paired real-prefix error is essentially unchanged.",
+    "All 40 matched trials fail approach; no lifts, successes or aborts. No evidence for improved task performance.",
+    "SO101 seed-zero IK accepts unchanged arm on 297/300 ticks; median predicted translation 0.113 mm is below 3 mm acceptance tolerance. Panda accepts unchanged arm on 42/300; its polishing threshold is 0.3 mm / 0.005 rad.",
+    "Observed-pose-relative targets discard subthreshold increments each tick; these do not accumulate. This is a verified execution limitation, not proof that correcting it solves the policy.",
+    "Tiny policy commands and Panda failure remain; paired-image agreement alone does not establish object localization or correct approach direction.",
+    "Next bounded experiment: frozen-checkpoint IK polishing ablation, preserving acceptance/rejection safety thresholds and reporting separately from frozen benchmark. No longer training justified yet."
+  ]
+}

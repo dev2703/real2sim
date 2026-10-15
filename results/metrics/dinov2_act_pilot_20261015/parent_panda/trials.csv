@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,0,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.12086,300,0,14.1,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,1,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.09625,300,0,14.05,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,2,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.119,300,0,14.06,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,3,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.1219,300,0,14.47,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,4,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.1019,300,0,14.11,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,5,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.1038,300,0,14.07,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,6,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.1336,300,0,14.09,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,7,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.09264,300,0,14.07,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,8,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.10303,300,0,14.07,0.1429,,
+DINO_PILOT_DIAGNOSTIC_PARENT_PANDA,LEARNED_ACT,panda,9,0a3b22211c9775ca2c28ade4a11627f0f2b8917959fd2eda501dc1d7acd5bff0,6000,False,False,False,False,False,False,approach,0.15144,300,0,14.07,0.1429,,

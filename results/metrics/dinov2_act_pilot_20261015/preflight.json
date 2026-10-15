@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "unit_tests": 352,
+  "existing_ACT_integration_tests": 2,
+  "MPS_smoke_steps": 3,
+  "MPS_batch_size": 16,
+  "smoke_freeze_audit": {
+    "frozen_tensors_unchanged": 185,
+    "trainable_tensors_changed": 36
+  },
+  "interfaces": {
+    "so101": {
+      "n": 1,
+      "aborted": 0,
+      "successes": 0,
+      "success_rate": 0.0,
+      "lifted": 0,
+      "delivered": 0,
+      "released": 0,
+      "rolled_out": 0,
+      "ball_escaped_table": 0,
+      "phase_failed_counts": {
+        "approach": 1,
+        "grasp": 0,
+        "transport": 0,
+        "release": 0,
+        "none": 0,
+        "aborted": 0
+      },
+      "ik_rejections_total": 1,
+      "mean_latency_ms": 48.17,
+      "max_action_saturation": 0.0
+    },
+    "panda": {
+      "n": 1,
+      "aborted": 0,
+      "successes": 0,
+      "success_rate": 0.0,
+      "lifted": 0,
+      "delivered": 0,
+      "released": 0,
+      "rolled_out": 0,
+      "ball_escaped_table": 0,
+      "phase_failed_counts": {
+        "approach": 1,
+        "grasp": 0,
+        "transport": 0,
+        "release": 0,
+        "none": 0,
+        "aborted": 0
+      },
+      "ik_rejections_total": 0,
+      "mean_latency_ms": 47.13,
+      "max_action_saturation": 0.0
+    }
+  },
+  "note": "Interface smoke checks are not benchmark outcomes."
+}

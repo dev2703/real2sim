@@ -1320,3 +1320,186 @@ Verification before launch: 21 placement/pair tests and seven MPS paired-smoke /
 response-adapter tests passed; Ruff and diff checks passed. Real labels/states in
 sampled new pairs equal the original arrays exactly. Placement and pair manifests
 are checksummed; frozen parent/evaluation config hashes are verified by the runner.
+
+## 2026-10-15 — Refit pilot review: image improvement did not produce grasps
+
+The pilot completed all seven phases on October 14 at 07:23 UTC; frozen input
+hashes passed. A one-time process check on review found no pilot training or
+response evaluation jobs still running. The selected checkpoint is step 250,
+SHA256 `80d4b4590a1dc86eb3fa57f155d44ea4949328b816feeba3147bf0bfae6ed085`.
+
+Matched parent and pilot each scored **0/10**, both with ordinary joint control
+and with the original 78-tick response adapter: 40 trials, zero lifts and zero
+aborts. These results use the same corrected scene snapshot; the primary
+benchmark is unchanged. The >=6/10 objective remains unmet.
+
+On 144 held-out paired-image checks, simulated-image executed-prefix error fell
+from 0.162706 to 0.140181 (13.8%) and real/sim prediction disagreement fell from
+0.126313 to 0.090211 (28.6%). Real-image prefix error slightly worsened, from
+0.130053 to 0.130673; full real validation L1 is 0.313893. These are offline
+improvements, not evidence of successful grasp execution. Artifacts:
+`results/metrics/paired_refit_pilot_20261014/`.
+
+Do not promote this checkpoint as a task-success improvement or launch a longer
+run on this evidence. The earlier claim that rendering alone was the root cause
+was too strong: corrected images improve approach, but recorded follower-motion
+replays also fail to grasp, and the prior substep contact audit shows fixed-jaw
+pushes without moving-jaw contact. That audit concerns the prior checkpoint and
+scene, not a new substep analysis of this pilot. The remaining cause is unresolved
+among grasp-pose/object correspondence, gripper mapping/contact geometry, command
+tracking, and learned closure timing.
+
+The next diagnostic gate is reproduction of a recorded grasp in simulation:
+compare directly imposed recorded follower poses with dynamically tracked poses
+at independently reconstructed object placement. This separates geometric
+incompatibility from control tracking before any further training. Such replay
+is a privileged diagnostic only, never an ACT benchmark or training-label source.
+Keep real recorded labels, split, hardware and success criteria unchanged.
+
+## 2026-10-15 — Five separate simulated demonstrations recorded
+
+User subsequently authorized recording a few simulated demonstrations (D-026).
+Collected seeds 1000–1004 using the existing scripted oracle and the frozen refit
+pilot scene, without changing physics, limits or scoring. All five held, lifted
+and placed the ball successfully. Total: 396 action ticks at 10 Hz, with one
+additional terminal observation per episode. These are oracle demonstrations;
+ACT remains 0/10 and no training was launched.
+
+Dataset: `outputs/sim_demonstrations_20261015/`, containing RGB frames, observed
+joints, requested joint targets, timestamps, captioned videos, checksums and
+separate privileged audit files. No synthetic samples were added to real caches
+or their train/validation split. Training permission remains real-only; collection
+does not silently introduce a mixed-data experiment.
+
+Replayed every serialized command without oracle control, matching the collected
+native joint trajectories within 5.6e-12 radians. Checked image dimensions/types,
+finite states/actions and inverse action-unit mapping. Visually reviewed all five
+start/held/carry/placed sequences in
+`results/audit/sim_demonstrations_20261015/preview.jpg`; summary and file hashes in
+the adjacent `review.json`. Ruff and diff checks passed. The working vertical
+oracle grasp supplies a comparison against the failed recorded-human-motion
+replays; it does not establish that the real grasp is physically represented.
+
+## 2026-10-15 — Moving the ball farther does not fix ACT
+
+Completed the user-requested geometry sensitivity check (D-027): original ball
+placement versus +1/+2 cm radially outward, with frozen pilot checkpoint 000250,
+unchanged physics/control and ten matched seeds. ACT scores **0/10 at all three
+placements**, with zero holds or lifts. Mean closest tool-to-ball distance is
+4.86 / 5.24 / 10.60 cm; corresponding medians are 4.78 / 5.22 / 6.01 cm. The +2 cm
+mean includes three runs that never get within 20 cm; these failures are retained.
+The original-position ball trajectories match the prior pilot exactly (max error
+0 m), verifying the baseline and unchanged execution path.
+
+Also completed nine held-out recorded episodes at each displacement under each
+of leader-command and follower-next-state dynamic replay (54 trials). Reviewed
+per-episode bowl setup prevents initial overlap. Leader-command replay never
+holds or lifts; its mean closest distance improves from 4.26 to 3.39 cm with the
+2 cm shift. Follower replay at +2 cm produces both-jaw contact in episode 11 for
+38 consecutive ticks (18.4–22.1 s), but never lifts the ball. Its other eight
+episodes do not hold. No recorded replay achieves task success within the first
+30 seconds. This horizon is not necessarily the full real episode; dynamic
+tracking of recorded follower states is not direct imposition of those poses.
+
+All 84 trials completed without aborts or invalid initial overlaps. Frozen
+checkpoint/config/data hashes verified. Visually reviewed real versus replay
+frames for episode 11: the shifted ball is pinched/dragged at table height, not
+carried. The oracle succeeds using privileged feedback and a more vertical grasp;
+this does not demonstrate that ACT's learned human grasp transfers correctly.
+The position-only hypothesis is insufficient. Do not train on displaced paired
+images with unchanged real actions, or promote an offset into the primary scene.
+No training launched and no hardware, labels, splits or benchmark changes.
+
+Code: `scripts/diag_ball_distance_sweep.py`; results and review:
+`results/audit/ball_distance_sweep_20261015/`. The folder also contains
+`episode11_grasp_comparison.jpg`. Ruff and diff checks passed; serialized results
+checked for complete trial counts and baseline trajectory equivalence.
+
+## 2026-10-15 — DINOv2–Cartesian ACT pilot implementation and preflight
+
+Implemented the user-approved DINOv2-small/Cartesian ACT experiment (D-028).
+The last two DINO blocks plus output normalization are trainable; the remaining
+backbone is frozen. Cartesian ACT checkpoint 006000 supplies 132 compatible
+nonvisual tensors, with a fresh spatial-feature projection. The policy has
+62.39M total / 43.88M trainable parameters. Paired images retain real Cartesian
+labels and use separately verified manifests under
+`.cache/paired_cartesian_refit_20261015/` (3,846 train / 1,266 validation views).
+No synthetic demonstrations are used in training.
+
+Schedule: 100/2000-step linear warmup from 0.001x, peak ACT/DINO learning rates
+1e-4/1e-5, then cosine to 1e-7; weight decay .05 and clipping norm 1. Full real
+validation every 250 steps selects the best checkpoint. Existing ACT architecture,
+20/2 chunk execution, data split and canonical Cartesian labels are unchanged.
+
+Preflight passed: six new DINO/scheduler tests and four pair-rebinding tests;
+all 352 unit tests passed across the normal run and the graphics-permitted rerun
+of one sandbox-blocked camera test. Two existing ACT integration tests passed
+(training/save/resume/reload and paired warm-start). Ruff and diff checks passed.
+The full-size batch-16 three-step MPS smoke run completed with finite loss and
+saved a reloadable checkpoint. Its 185 frozen DINO tensors are bitwise unchanged
+from the pretrained model; 36 trainable tensors changed. Four-tick interface
+checks on both SO-101 and Panda loaded that checkpoint, made two policy calls,
+and completed without abort. These short checks are not success benchmarks.
+
+Preflight artifacts: `outputs/dinov2_preflight_20261015/`. Runner:
+`scripts/run_dinov2_act_pilot.py`; config: `configs/act_cartesian_dinov2_pilot.yaml`.
+Main job status/logs: `outputs/dinov2_act_pilot_20261015/`; weights:
+`outputs/act_cartesian_dinov2_pilot_20261015/`; evaluation snapshots/results:
+`results/metrics/dinov2_act_pilot_20261015/`. Runner uses an exclusive lock and
+refuses duplicate jobs/overwritten trials. After training it runs real validation,
+paired checks, and matched parent/pilot ten-seed evaluations on both robots, then
+queues this thread once on completion/failure. No assistant polling during training
+and no automatic longer run. Task success remains unproven; review outcomes first.
+
+## 2026-10-15 — DINOv2 pilot completed: better offline agreement, still 0/10
+
+The approved 2,000-step MPS run and all seven evaluation phases completed normally
+in about 44 minutes. Full real validation selected step **1,250**, checkpoint
+SHA256 `bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d`.
+The runner verified frozen input hashes. Training used real recorded Cartesian
+actions with paired-image augmentation only; no synthetic actions or split changes.
+
+| Measure | Cartesian parent 006000 | DINOv2 pilot 001250 |
+|---|---:|---:|
+| Full real validation normalized L1 (4,064 ticks) | 0.53451 | 0.51564 |
+| Full real validation normalized RMSE | 0.89508 | 0.88647 |
+| Paired real-image executed-prefix L1 (144 samples) | 0.39792 | 0.39899 |
+| Paired sim-image executed-prefix L1 | 0.40928 | 0.39688 |
+| Real/sim executed-prefix prediction disagreement | 0.17315 | 0.07020 |
+| SO-101 successes / lifts, seeds 0–9 | 0/10 / 0/10 | 0/10 / 0/10 |
+| Panda successes / lifts, seeds 0–9 | 0/10 / 0/10 | 0/10 / 0/10 |
+| SO-101 mean closest tool–ball distance | 19.20 cm | 19.65 cm |
+| Panda mean closest tool–ball distance | 11.44 cm | 14.10 cm |
+
+Real L1 improves 3.53% and paired prediction disagreement drops 59.46%, but
+real-prefix prediction error is essentially unchanged and real gripper MAE worsens
+from 0.0959 to 0.1011. All 40 matched trials fail during approach, with zero aborts.
+SO-101 parent/pilot have 25/20 IK rejections over 3,000 ticks; Panda has none.
+Mean inference latency rises from approximately 14 ms to 34 ms on CPU. These are
+isolated diagnostic scenes, not replacements for primary benchmark results.
+There is no task-success improvement and no basis for a generalization claim.
+
+A subsequent **unchanged-policy, unchanged-controller seed-zero trace** found a
+concrete execution limitation. SO-101 IK accepts the current seed immediately
+when target errors are below 3 mm / 0.35 rad. Its pilot accepted an unchanged arm
+target on **297/300 ticks**, rejected two, and changed the arm target once. Median
+predicted translation was **0.113 mm**, median rotation 0.001275 rad. Targets are
+recomputed relative to the observed pose, so discarded increments never accumulate.
+Panda already polishes inside its acceptance tolerance, but its 0.3 mm / 0.005 rad
+stopping thresholds still accepted an unchanged arm on **42/300 ticks**; its median
+predicted translation was 0.576 mm. Both instrumented trajectories match the saved
+pilot seed-zero tool and ball trajectories exactly (maximum difference 0 m).
+
+This confirms a Cartesian execution deadband, especially severe on SO-101. It does
+**not** establish the sole root cause: the learned commands are tiny, and Panda
+also fails despite moving on most ticks. Better paired agreement does not prove
+correct object localization or approach direction. The next justified experiment
+is a separately reported frozen-checkpoint IK polishing ablation, retaining hard
+acceptance, joint, workspace and collision constraints. Measure commanded versus
+achieved movement before considering more training. No controller/config changes
+or further training were made during this review.
+
+Review: `results/metrics/dinov2_act_pilot_20261015/review.json`; original validation,
+paired and four ten-seed reports remain alongside it. Execution trace and review:
+`results/audit/dinov2_ik_deadband_20261015/`; reproducible diagnostic:
+`scripts/diag_cartesian_ik_deadband.py`. Both 300-tick traces completed; Ruff passed.
