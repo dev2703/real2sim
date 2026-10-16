@@ -56,11 +56,12 @@ def contact_monitor(env, *, capture=False):
               "bilateral_slip_mean_mps": None, "by_geom": {}, "trace": []}
     bilateral_run = lift_run = 0
     slip_sum = 0.0
+    slip_intervals = 0
     previous_local = None
     force = np.zeros(6)
 
     def step(model, data):
-        nonlocal bilateral_run, lift_run, slip_sum, previous_local
+        nonlocal bilateral_run, lift_run, slip_sum, slip_intervals, previous_local
         touching = set()
         by_jaw = [0.0, 0.0]
         names = []
@@ -104,6 +105,7 @@ def contact_monitor(env, *, capture=False):
             local = rotation.T @ (data.xpos[env.ball_body] - data.site_xpos[env.site_id])
             if previous_local is not None:
                 slip_sum += float(np.linalg.norm(local - previous_local) / dt)
+                slip_intervals += 1
             previous_local = local
         else:
             previous_local = None
@@ -118,8 +120,8 @@ def contact_monitor(env, *, capture=False):
         yield result
     finally:
         mujoco.mj_step = original
-        if result["bilateral_substeps"]:
-            result["bilateral_slip_mean_mps"] = slip_sum / result["bilateral_substeps"]
+        if slip_intervals:
+            result["bilateral_slip_mean_mps"] = slip_sum / slip_intervals
 
 
 def replay(config, joint, cart, episode, metadata, review, candidate, mode, capture=False):
@@ -135,7 +137,9 @@ def replay(config, joint, cart, episode, metadata, review, candidate, mode, capt
                         and "table_geom" not in (c["geom1"], c["geom2"])]
         result = {"episode": episode, "mode": mode, "candidate": candidate,
                   "initial_ball_xy": xy.tolist(), "invalid_initial_ball_contacts": bad_contacts,
-                  "initial_robot_table_penetration_m": initial["robot_table_penetration_m"]}
+                  "initial_robot_table_penetration_m": initial["robot_table_penetration_m"],
+                  "initial_penetration_tolerance_m": float(env.config["ik"]["penetration_tolerance_m"]),
+                  "initial_physical_valid": not bad_contacts and initial["robot_table_penetration_m"] <= env.config["ik"]["penetration_tolerance_m"]}
         if bad_contacts:
             return dict(result, valid=False)
         tracker = TrialTracker(int(env.task["episode"]["success_hold_s"] * env.control_hz),
@@ -163,7 +167,8 @@ def replay(config, joint, cart, episode, metadata, review, candidate, mode, capt
                                  "lifted": m["lifted"], "in_bowl": m["ball_in_bowl"],
                                  "joint_rate_limited": info["control"]["rate_limited"],
                                  "joint_limit_clipped": info["control"]["limit_clipped"]})
-        return dict(result, valid=True, duration_s=float(joint["timestamp"][indices[-1]]),
+        return dict(result, valid=result["initial_physical_valid"], execution_completed=True,
+                    duration_s=float(joint["timestamp"][indices[-1]]),
                     success=tracker.success, held=tracker.held_ever, lifted=tracker.lifted,
                     min_ee_ball_distance_m=tracker.min_ee_ball_distance_m,
                     pose_error_mean_m=float(np.mean(pose_errors)),

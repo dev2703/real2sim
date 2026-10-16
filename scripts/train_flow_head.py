@@ -193,6 +193,9 @@ def resolve_split(manifest, path: Path | None):
         raise ValueError("inner training and validation episodes must be nonempty and disjoint")
     if not (set(train) | set(val)) <= set(training):
         raise ValueError("F0 selection may only use the original training episodes")
+    if train == sorted(manifest["split"]["train"]) and val == sorted(manifest["split"]["val"]):
+        # Preserve seed/hash/exclusion metadata for the common experiment audit.
+        return dict(manifest["split"])
     return {"train": train, "val": val, "historical_val": source_split["val"]}
 
 
@@ -240,17 +243,18 @@ def evaluate(policy, dataset, device, batch_size, seed, sampling_steps=4):
     if not np.array_equal(expected, ticks):
         raise ValueError("executed-prefix predictions did not cover each valid action exactly once")
     label = a["action"][ticks]
-    grip_index = dataset.manifest["state_names"].index("gripper_obs")
+    canonical = a.get("canonical_state", a["state"])
+    grip_index = -1 if "canonical_state" in a else dataset.manifest["state_names"].index("gripper_obs")
     zero = np.zeros_like(predictions)
-    zero[:, 6] = a["state"][anchors, grip_index]
+    zero[:, 6] = canonical[anchors, grip_index]
     persistence = zero.copy()
     has_previous = anchors > a["ep_start"][anchors]
     persistence[has_previous, :6] = a["action"][anchors[has_previous] - 1, :6]
     active = (np.linalg.norm(label[:, :3], axis=1) > .001) | (np.linalg.norm(label[:, 3:6], axis=1) > .01)
-    grip = a["state"][ticks, grip_index]
+    grip = canonical[ticks, grip_index]
     masks = {"all": np.ones(len(ticks), bool), "active": active, "stationary": ~active,
              "downward_open_approach_proxy": (label[:, 2] < -.001) & (grip > .45),
-             "closure_proxy": a["state"][ticks + 1, grip_index] - grip <= -.01,
+             "closure_proxy": canonical[ticks + 1, grip_index] - grip <= -.01,
              "upward_closed_lift_proxy": (label[:, 2] > .001) & (grip <= .45)}
     predictions_by_name = {"model": predictions, "zero_motion_hold_gripper": zero, "persistence": persistence}
     report = {
@@ -295,6 +299,8 @@ def train_head(args):
     noise_generator = torch.Generator().manual_seed(args.seed + 73_021)
     iterator = iter(loader)
     started = time.perf_counter()
+    if device.startswith("cuda"):
+        torch.cuda.reset_peak_memory_stats()
     seen, update = 0, 0
     history = []
     while seen < args.examples:
@@ -330,6 +336,10 @@ def train_head(args):
     training_s = time.perf_counter() - started
     contract = {key: manifest[key] for key in ("camera_keys", "letterbox", "state_names", "action_names",
                 "label_semantics", "policy_hz", "source", "prepare_version")}
+    for key in ("observation_variant", "experiment_split", "source_manifest_sha256", "source_split",
+                "canonical_state_names", "source_derived", "observation_semantics"):
+        if key in manifest:
+            contract[key] = manifest[key]
     contract.update(image_shape_chw=[3, *manifest["image_shape_hwc"][:2]], split=split,
                     derived_files_sha256=manifest["files_sha256"],
                     policy_kind=f"frozen_dino_small_{args.objective}_head", vision_encoder={
@@ -342,6 +352,12 @@ def train_head(args):
               "split": split, "trainable_parameters": sum(p.numel() for p in policy.parameters()),
               "feature_cache": str(args.cache.resolve()), "feature_cache_sha256": cache["sha256"],
               "train_wall_s": training_s, "config": asdict(config), "history": history}
+    if device.startswith("cuda"):
+        report["cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated()
+        report["cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved()
+    elif device == "mps":
+        report["mps_current_allocated_bytes"] = torch.mps.current_allocated_memory()
+        report["mps_driver_allocated_bytes"] = torch.mps.driver_allocated_memory()
     for sampling_steps in ((4, 8) if args.objective == "flow" else (4,)):
         result, predictions = evaluate(policy, val, device, args.batch_size, args.seed, sampling_steps)
         key = f"inner_val_{sampling_steps}_steps" if args.objective == "flow" else "inner_val"
@@ -367,6 +383,8 @@ def profile_head(args):
     report = {"device": device, "repeats": args.repeats, "batch_size": 1,
               "latency_includes": "frozen vision, action integration, synchronous output transfer",
               "cadence_ms": 200., "checkpoint": str(args.checkpoint)}
+    if device.startswith("cuda"):
+        torch.cuda.reset_peak_memory_stats()
     for steps in ((4, 8) if policy.config.objective == "flow" else (4,)):
         timings = []
         for i in range(args.repeats + 3):
@@ -384,6 +402,9 @@ def profile_head(args):
     if device == "mps":
         report["mps_current_allocated_bytes"] = torch.mps.current_allocated_memory()
         report["mps_driver_allocated_bytes"] = torch.mps.driver_allocated_memory()
+    elif device.startswith("cuda"):
+        report["cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated()
+        report["cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved()
     write_json(args.out / "profile.json", report)
     return report
 

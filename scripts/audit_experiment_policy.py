@@ -31,7 +31,11 @@ def audit(checkpoint, data, device, split="val"):
     with torch.inference_mode():
         for batch in loader:
             obs = {k: v.to(device) for k, v in batch.items() if k.startswith("observation.")}
-            pred = norm.unaction(policy.predict_action_chunk(obs)[:, :2]).cpu().numpy()
+            kwargs = {}
+            if getattr(policy.config, "type", None) == "small_chunk_head":
+                kwargs["sampling_seed"] = [policy.config.sampling_seed * 1_000_003 + int(t)
+                                           for t in batch["tick"]]
+            pred = norm.unaction(policy.predict_action_chunk(obs, **kwargs)[:, :2]).cpu().numpy()
             valid = (~batch["action_is_pad"][:, :2]).numpy()
             grid = np.broadcast_to(batch["tick"].numpy()[:, None], valid.shape)
             outputs.append(pred[valid])

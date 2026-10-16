@@ -1,0 +1,115 @@
+provenance_default: PROVISIONAL-STANDARD
+table:
+  height: 0.737
+  mat:
+    size_xy:
+    - 0.305
+    - 0.406
+    center_task_xy:
+    - 0.23899045988299789
+    - -0.00797746573428597
+    yaw_deg: 2.86604832975772
+frames:
+  T_task_so101base:
+    xyz:
+    - 0.0
+    - 0.0
+    - 0.0
+    rpy:
+    - 0.0
+    - 0.0
+    - 0.0
+ball:
+  radius: 0.0335
+  mass: 0.058
+  friction:
+    nominal: 0.6
+    sweep:
+    - 0.4
+    - 0.9
+  inertia: thin_shell
+  restitution_nominal: 0.75
+  start_region:
+    center_task_xy:
+    - 0.3414436663239797
+    - 0.11589708412303715
+    radius: 0.03
+    provenance: DIAGNOSTIC mean of existing TRAIN-only first-frame detections
+bowl:
+  inner_rim_radius: 0.05
+  inner_depth: 0.0254
+  wall_thickness: 0.002
+  outer_height: 0.03
+  base_diameter: 0.06
+  mass: 0.3
+  static: true
+  center_task_xy:
+  - 0.32697800457554654
+  - -0.13264988343430295
+  center_provenance: DIAGNOSTIC image-reviewed TRAIN episode 5 detected rim; fixes
+    earlier hand-read (840,475) pixel
+  collision:
+    wall_boxes: 20
+    base: cylinder
+  depth_sweep:
+  - 0.0254
+  - 0.045
+  - 0.06
+camera_iphone:
+  key: observation.images.iphone
+  width: 1280
+  height: 720
+  fovy_deg: 24.117776485473186
+  intrinsics_px:
+    fx: 1685.148481713837
+    fy: 1685.148481713837
+    cx: 640.0
+    cy: 360.0
+  extrinsics_provenance: DIAGNOSTIC M1 camera from results/audit/camera_landmark_refit_float64_20261014/report.json;
+    not adopted in primary config
+  approx_position_task:
+  - 0.29027484360436745
+  - -0.7068437846949642
+  - 0.5328132062286439
+  look_at_task:
+  - 0.23600626509174644
+  - -0.06496278722522597
+  - 0.058425488772264667
+  xyaxes_task:
+  - 0.9976789320695226
+  - 0.0580803220769162
+  - -0.035544685848361235
+  - -0.005921416265131294
+  - 0.5940194886418089
+  - 0.8044288557374972
+robot_so101:
+  base_z_offset: 0.012
+  joint_names:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_flex
+  - wrist_flex
+  - wrist_roll
+  real_to_sim:
+    sign:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    offset_deg:
+    - -4.1707921279126845
+    - -0.2332364377962119
+    - -3.753855339913475
+    - -4.348706844460067
+    - 0.0
+    provenance: PROVISIONAL-STANDARD; verify at M2
+  gripper:
+    real_unit: percent
+    closed_at: 0
+    sim_range_rad:
+    - 0.1308615921638595
+    - 2.084579044128425
+episode:
+  success_hold_s: 1.0
+  timeout_s: 30.0
