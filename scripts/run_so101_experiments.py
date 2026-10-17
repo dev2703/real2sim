@@ -197,6 +197,14 @@ class Runner:
         self.token = hashlib.sha256(str(self.out).encode()).hexdigest()
         self.publication_failures = []
         self.current_phase = "initialization"
+        self.frozen_files = {}
+
+    def verify_inputs(self) -> None:
+        for path, expected in self.frozen_files.items():
+            if hash_file(Path(path)) != expected:
+                raise ValueError(f"frozen experiment input changed: {path}")
+        if shutil.disk_usage(self.out).free < 3 * 1024 ** 3:
+            raise RuntimeError("less than 3 GiB free; stopped before another experiment command")
 
     def notify(self, event: str) -> None:
         """Only terminal invocation events wake the requesting thread, once each."""
@@ -261,6 +269,7 @@ class Runner:
                     print(json.dumps({"publication_warning": failure}), flush=True)
 
     def command(self, phase: str, command: list[str], *, optional: bool = False) -> bool:
+        self.verify_inputs()
         self.current_phase = phase
         stage = self.out / "stages" / phase
         complete = stage / "COMPLETE.json"
@@ -291,6 +300,7 @@ class Runner:
                         pass
             if code:
                 raise subprocess.CalledProcessError(code, command)
+            self.verify_inputs()
             record.update(status="COMPLETE", completed_at=now(), returncode=0)
             atomic_json(complete, record)
             (stage / "FAILED.json").unlink(missing_ok=True)
@@ -442,8 +452,28 @@ class Runner:
     def execute(self) -> None:
         manifest_paths = {name: self.data / name / "manifest.json"
                           for name in ["canonical", *PROPRIO_ARMS.values()]}
+        checked = set()
+        for manifest_path in manifest_paths.values():
+            manifest = read_json(manifest_path)
+            self.frozen_files[str(manifest_path)] = hash_file(manifest_path)
+            for name, expected in manifest["files_sha256"].items():
+                path = (manifest_path.parent / name).resolve(strict=True)
+                if path not in checked:
+                    if hash_file(path) != expected:
+                        raise ValueError(f"data checksum mismatch: {path}")
+                    checked.add(path)
+                if path.suffix != ".npy":
+                    self.frozen_files[str(path)] = expected
+        source_files = list(Path("src/real2sim/policy").glob("*.py"))
+        source_files += [Path(p) for p in ("src/real2sim/data/labels.py", "src/real2sim/data/resample.py",
+                         "scripts/run_so101_experiments.py", "scripts/audit_experiment_policy.py",
+                         "scripts/diag_motion_prediction_audit.py", "scripts/profile_act_attention.py",
+                         "scripts/train_flow_head.py", "configs/act_cartesian.yaml",
+                         "configs/act_cartesian_dinov2_pilot.yaml")]
+        self.frozen_files.update({str(path.resolve()): hash_file(path) for path in source_files})
         identity = {"runner_version": RUNNER_VERSION, "device": self.args.device, "examples": self.args.examples,
                     "data_manifests": {key: hash_file(path) for key, path in manifest_paths.items()},
+                    "frozen_files": self.frozen_files,
                     "no_panda": True, "profile_batches": self.args.profile_batches,
                     "skip_flow": self.args.skip_flow}
         plan_file = self.out / "QUEUE.json"

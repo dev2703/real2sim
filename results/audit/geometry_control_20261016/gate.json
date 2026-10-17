@@ -1,0 +1,10 @@
+{
+  "kind": "EXPLORATORY_COMMON_OFFSET_REPLAY_NOT_CALIBRATION_OR_LEARNED_POLICY",
+  "runs": 75,
+  "three_valid_lift_candidates": 7,
+  "complete_three_episode_placement_candidates": 0,
+  "recorded_complete_grasp_gate_passed": false,
+  "learned_so101_gate_passed": false,
+  "panda_allowed": false,
+  "reason": "No common candidate places all three. Offsets were outcome-tested on historical diagnostic episodes; independent calibration and additional recordings still required."
+}

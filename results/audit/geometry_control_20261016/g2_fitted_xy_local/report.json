@@ -1,0 +1,4860 @@
+{
+  "kind": "EXPLORATORY_RECORDED_CONTROL_GEOMETRY_CONTACT_NOT_POLICY_OR_CALIBRATION",
+  "script_sha256": "33da266b28c6c48915fab799cdd37d0b0a1d9ca7c07e6d1f07ea0428ba737266",
+  "config_sha256": "1487c1d59ed948130d3d2667f26e738f5d4f338eb8b3af4494facc00f4a325cc",
+  "source_hashes": {
+    "joint": "b2f312e3953d2da1e0d1e3fa63735b665564f0d97e544d399ef7adfaa554ff4c",
+    "cartesian": "00f538627342874b7f26f34ae77fd8427b192a07b2c3c44d44c77966a1e87200"
+  },
+  "reference_report": "results/audit/geometry_control_20261016/g0_complete/report.json",
+  "protocol": {
+    "common_parameters": true,
+    "ball_dynamic": true,
+    "safety_limits_unchanged": true,
+    "collision_geometry_unchanged": true,
+    "split": "Reviewed historical validation used for diagnosis; not untouched evaluation",
+    "gripper_scale": "Hypothesis only, scaled about 1.2% empty closure; existing model limits still clip commands",
+    "support": "Fixed table/ball radius and world camera; base height candidates adjust task-relative camera Z consistently; original 1mm ball settle gap",
+    "force": "Read solved mj_contactForce before each physics step",
+    "lift": "Official unchanged score plus independent bilateral contact >30mm above rest"
+  },
+  "runs": [
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31624426737900335,
+        0.101637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.014596814244092118,
+      "pose_error_mean_m": 0.005231646815581717,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5422263171090071,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 5943,
+        "bilateral_substeps": 5755,
+        "longest_bilateral_s": 11.51,
+        "longest_bilateral_lift_s": 2.856,
+        "bilateral_lift_substeps": 1921,
+        "max_bilateral_height_m": 0.1414409943336152,
+        "max_ball_height_m": 0.1414409943336152,
+        "max_contact_penetration_m": 0.0027057934134055266,
+        "max_min_jaw_normal_force_n": 49.894594146457564,
+        "first_contact_s": 14.514000000001516,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.88600000000164,
+        "bilateral_slip_mean_mps": 0.003297641869854581,
+        "by_geom": {
+          "geom_49": 2359,
+          "moving_jaw_box3": 5732,
+          "fixed_jaw_sph_tip3": 5746,
+          "fixed_jaw_box4": 5755,
+          "fixed_jaw_box5": 936,
+          "fixed_jaw_sph_tip1": 4751,
+          "fixed_jaw_sph_tip2": 1818,
+          "moving_jaw_box2": 5679,
+          "fixed_jaw_box3": 4865,
+          "moving_jaw_sph_tip2": 4873,
+          "geom_50": 984,
+          "geom_37": 849
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3256274834723623,
+        0.10052558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013319379748451309,
+      "pose_error_mean_m": 0.005624405252113777,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.782241291830594,
+      "ball_displacement_before_closure_m": 0.008309915525792085,
+      "contact": {
+        "contact_substeps": 10731,
+        "bilateral_substeps": 4525,
+        "longest_bilateral_s": 9.05,
+        "longest_bilateral_lift_s": 4.5280000000000005,
+        "bilateral_lift_substeps": 2264,
+        "max_bilateral_height_m": 0.05539469897209168,
+        "max_ball_height_m": 0.05539469897209168,
+        "max_contact_penetration_m": 0.002716179229691189,
+        "max_min_jaw_normal_force_n": 51.90058337140598,
+        "first_contact_s": 8.05599999999936,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": 13.244000000001092,
+        "bilateral_slip_mean_mps": 0.0019345853270057486,
+        "by_geom": {
+          "fixed_jaw_box3": 3034,
+          "geom_37": 80,
+          "fixed_jaw_box4": 4611,
+          "geom_49": 2720,
+          "moving_jaw_box3": 4569,
+          "fixed_jaw_sph_tip3": 4525,
+          "fixed_jaw_sph_tip2": 4486,
+          "fixed_jaw_sph_tip1": 4488,
+          "fixed_jaw_box5": 296,
+          "moving_jaw_box2": 4476,
+          "moving_jaw_sph_tip2": 3688,
+          "moving_jaw_sph_tip3": 2132,
+          "bowl_wall_08": 45,
+          "bowl_wall_09": 24,
+          "bowl_wall_07": 8,
+          "bowl_base": 5915,
+          "bowl_wall_18": 51,
+          "bowl_wall_19": 28,
+          "bowl_wall_17": 20,
+          "bowl_wall_16": 6,
+          "bowl_wall_05": 17
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.30933738951990314,
+        0.10879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.02016670999032772,
+      "pose_error_mean_m": 0.0045635816316872335,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4767158348398366,
+      "ball_displacement_before_closure_m": 0.07212692120678994,
+      "contact": {
+        "contact_substeps": 212,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0007977731617321603,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.109999999999712,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 210,
+          "fixed_jaw_box4": 208
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31624426737900335,
+        0.10663733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01592561909257889,
+      "pose_error_mean_m": 0.005316384359982067,
+      "pose_error_p95_m": 0.01690955930557918,
+      "arm_joint_error_mean_deg_l2": 1.5560675133501072,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 4589,
+        "bilateral_substeps": 4440,
+        "longest_bilateral_s": 8.88,
+        "longest_bilateral_lift_s": 0.622,
+        "bilateral_lift_substeps": 367,
+        "max_bilateral_height_m": 0.046342739268982996,
+        "max_ball_height_m": 0.046342739268982996,
+        "max_contact_penetration_m": 0.002662822213974469,
+        "max_min_jaw_normal_force_n": 49.62704101917387,
+        "first_contact_s": 14.596000000001544,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.892000000001643,
+        "bilateral_slip_mean_mps": 0.004078718949202238,
+        "by_geom": {
+          "geom_49": 2036,
+          "moving_jaw_box3": 4557,
+          "fixed_jaw_box4": 4440,
+          "fixed_jaw_sph_tip3": 4434,
+          "fixed_jaw_box5": 1803,
+          "fixed_jaw_sph_tip1": 3236,
+          "geom_37": 1724,
+          "moving_jaw_box2": 4155,
+          "fixed_jaw_sph_tip2": 253,
+          "fixed_jaw_box3": 3440,
+          "moving_jaw_sph_tip2": 3385,
+          "geom_50": 484
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3256274834723623,
+        0.10552558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.029731602329526118,
+      "pose_error_mean_m": 0.005612883862079564,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.784210132588492,
+      "ball_displacement_before_closure_m": 0.09409130083851264,
+      "contact": {
+        "contact_substeps": 179,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0009790428322549968,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.031999999999352,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 179,
+          "geom_37": 166,
+          "fixed_jaw_box4": 87
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.30933738951990314,
+        0.113798481133907
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.024476435916087166,
+      "pose_error_mean_m": 0.0046194391898645,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4876337488583065,
+      "ball_displacement_before_closure_m": 0.06521388385151626,
+      "contact": {
+        "contact_substeps": 321,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008665791734571262,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.035999999999687,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 318,
+          "fixed_jaw_box4": 311,
+          "geom_37": 59
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31624426737900335,
+        0.111637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.016933878694693035,
+      "pose_error_mean_m": 0.005434398922938172,
+      "pose_error_p95_m": 0.016909559305579542,
+      "arm_joint_error_mean_deg_l2": 1.5755103990377417,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 3533,
+        "bilateral_substeps": 3427,
+        "longest_bilateral_s": 6.854,
+        "longest_bilateral_lift_s": 0.542,
+        "bilateral_lift_substeps": 271,
+        "max_bilateral_height_m": 0.04337325921346366,
+        "max_ball_height_m": 0.04337325921346366,
+        "max_contact_penetration_m": 0.0026359414948741652,
+        "max_min_jaw_normal_force_n": 49.31291952485469,
+        "first_contact_s": 14.700000000001578,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.908000000001648,
+        "bilateral_slip_mean_mps": 0.005144804069357221,
+        "by_geom": {
+          "geom_49": 1890,
+          "moving_jaw_box3": 3467,
+          "fixed_jaw_box4": 3427,
+          "fixed_jaw_sph_tip3": 3423,
+          "fixed_jaw_box5": 2795,
+          "geom_37": 3331,
+          "fixed_jaw_sph_tip1": 651,
+          "moving_jaw_box2": 2996,
+          "moving_jaw_sph_tip2": 2198,
+          "fixed_jaw_box3": 1595,
+          "geom_50": 715
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3256274834723623,
+        0.11052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.031777495946979824,
+      "pose_error_mean_m": 0.005631745622343633,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7883551475931587,
+      "ball_displacement_before_closure_m": 0.1575248694695903,
+      "contact": {
+        "contact_substeps": 206,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000946799209049203,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.023999999999349,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 206,
+          "geom_37": 200,
+          "fixed_jaw_box4": 13
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.30933738951990314,
+        0.11879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.028264659067003973,
+      "pose_error_mean_m": 0.004668305137319655,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.497865098348493,
+      "ball_displacement_before_closure_m": 0.08500466886779932,
+      "contact": {
+        "contact_substeps": 372,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008893394942784507,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.991999999999672,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 370,
+          "geom_37": 169,
+          "fixed_jaw_box4": 357
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31624426737900335,
+        0.116637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.0156666561249379,
+      "pose_error_mean_m": 0.005131988148152394,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5284217336414698,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 1168,
+        "bilateral_substeps": 993,
+        "longest_bilateral_s": 1.986,
+        "longest_bilateral_lift_s": 0.1,
+        "bilateral_lift_substeps": 74,
+        "max_bilateral_height_m": 0.033147711239378846,
+        "max_ball_height_m": 0.03368032701282672,
+        "max_contact_penetration_m": 0.0016944340258631813,
+        "max_min_jaw_normal_force_n": 42.73730709062535,
+        "first_contact_s": 13.392000000001142,
+        "first_contact_geom": [
+          "fixed_jaw_box4"
+        ],
+        "first_bilateral_s": 15.114000000001717,
+        "bilateral_slip_mean_mps": 0.007876022141048749,
+        "by_geom": {
+          "fixed_jaw_box4": 1067,
+          "fixed_jaw_sph_tip3": 63,
+          "moving_jaw_box3": 905,
+          "moving_jaw_box2": 1083,
+          "moving_jaw_sph_tip3": 990,
+          "fixed_jaw_sph_tip2": 967,
+          "fixed_jaw_box3": 984,
+          "fixed_jaw_sph_tip1": 37,
+          "geom_50": 903
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3256274834723623,
+        0.11552558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.0348695167564564,
+      "pose_error_mean_m": 0.005642437645589835,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.790516712858871,
+      "ball_displacement_before_closure_m": 0.128293708543664,
+      "contact": {
+        "contact_substeps": 218,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008583201497762529,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.02799999999935,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 218,
+          "geom_37": 216
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.30933738951990314,
+        0.12379848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.03174600020162646,
+      "pose_error_mean_m": 0.0047103929234534065,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.5063402160675499,
+      "ball_displacement_before_closure_m": 0.07882837107929608,
+      "contact": {
+        "contact_substeps": 403,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008657805691552089,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.969999999999665,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 401,
+          "geom_37": 271,
+          "fixed_jaw_box4": 380
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31624426737900335,
+        0.12163733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01679767624466955,
+      "pose_error_mean_m": 0.005845013052965251,
+      "pose_error_p95_m": 0.01690955930558384,
+      "arm_joint_error_mean_deg_l2": 1.6443430696906933,
+      "ball_displacement_before_closure_m": 0.019515840040381264,
+      "contact": {
+        "contact_substeps": 3224,
+        "bilateral_substeps": 1482,
+        "longest_bilateral_s": 2.93,
+        "longest_bilateral_lift_s": 0.32,
+        "bilateral_lift_substeps": 160,
+        "max_bilateral_height_m": 0.036261563626633325,
+        "max_ball_height_m": 0.036261563626633325,
+        "max_contact_penetration_m": 0.00275087751996006,
+        "max_min_jaw_normal_force_n": 48.564212759775174,
+        "first_contact_s": 11.718000000000583,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip3"
+        ],
+        "first_bilateral_s": 15.022000000001686,
+        "bilateral_slip_mean_mps": 0.006733341153805084,
+        "by_geom": {
+          "fixed_jaw_sph_tip3": 1686,
+          "fixed_jaw_box4": 1736,
+          "fixed_jaw_sph_tip2": 2,
+          "fixed_jaw_box6": 853,
+          "geom_49": 1679,
+          "moving_jaw_box3": 2095,
+          "fixed_jaw_box5": 1625,
+          "geom_37": 2257,
+          "geom_50": 794,
+          "moving_jaw_sph_tip2": 494,
+          "moving_jaw_box2": 429
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3256274834723623,
+        0.12052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.037832339163522515,
+      "pose_error_mean_m": 0.005636337329009355,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7892412876276413,
+      "ball_displacement_before_closure_m": 0.13554276726776965,
+      "contact": {
+        "contact_substeps": 216,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008716934091838185,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.041999999999355,
+        "first_contact_geom": [
+          "geom_37"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "geom_37": 216,
+          "fixed_jaw_box3": 214
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -10.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.30933738951990314,
+        0.12879848113390702
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.03497286262558975,
+      "pose_error_mean_m": 0.004737547395598627,
+      "pose_error_p95_m": 0.01668561969710927,
+      "arm_joint_error_mean_deg_l2": 1.5119061510503942,
+      "ball_displacement_before_closure_m": 0.07395521429257167,
+      "contact": {
+        "contact_substeps": 421,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008215715294386838,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.961999999999662,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 419,
+          "geom_37": 405,
+          "fixed_jaw_box4": 334
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32124426737900336,
+        0.101637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013094118230088039,
+      "pose_error_mean_m": 0.0051861429927552265,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5347015832490591,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 8801,
+        "bilateral_substeps": 8630,
+        "longest_bilateral_s": 17.26,
+        "longest_bilateral_lift_s": 8.81,
+        "bilateral_lift_substeps": 5319,
+        "max_bilateral_height_m": 0.15529951697353436,
+        "max_ball_height_m": 0.15529951697353436,
+        "max_contact_penetration_m": 0.0025470818873449853,
+        "max_min_jaw_normal_force_n": 48.82718985963409,
+        "first_contact_s": 14.558000000001531,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.898000000001645,
+        "bilateral_slip_mean_mps": 0.002581409875393699,
+        "by_geom": {
+          "geom_49": 1880,
+          "moving_jaw_box3": 4760,
+          "fixed_jaw_sph_tip3": 6632,
+          "fixed_jaw_box4": 8620,
+          "fixed_jaw_sph_tip2": 4788,
+          "fixed_jaw_sph_tip1": 8329,
+          "moving_jaw_box2": 8580,
+          "moving_jaw_sph_tip2": 8111,
+          "fixed_jaw_box3": 7706,
+          "moving_jaw_sph_tip3": 5486,
+          "moving_jaw_sph_tip1": 4770,
+          "geom_50": 2215,
+          "geom_37": 2138
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3306274834723623,
+        0.10052558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01310889661449891,
+      "pose_error_mean_m": 0.005595746261472078,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7770554127327698,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10681,
+        "bilateral_substeps": 4522,
+        "longest_bilateral_s": 9.044,
+        "longest_bilateral_lift_s": 4.534,
+        "bilateral_lift_substeps": 2267,
+        "max_bilateral_height_m": 0.05612627557391345,
+        "max_ball_height_m": 0.05612627557391345,
+        "max_contact_penetration_m": 0.0027020478836622362,
+        "max_min_jaw_normal_force_n": 51.63502074265888,
+        "first_contact_s": 12.972000000001001,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 13.248000000001094,
+        "bilateral_slip_mean_mps": 0.0018817654156550651,
+        "by_geom": {
+          "geom_49": 2620,
+          "moving_jaw_box3": 4592,
+          "fixed_jaw_sph_tip3": 4522,
+          "fixed_jaw_box4": 4513,
+          "fixed_jaw_sph_tip2": 4491,
+          "fixed_jaw_sph_tip1": 4490,
+          "moving_jaw_box2": 4480,
+          "moving_jaw_sph_tip2": 3878,
+          "fixed_jaw_box3": 3118,
+          "moving_jaw_sph_tip3": 2780,
+          "moving_jaw_sph_tip1": 62,
+          "bowl_wall_08": 43,
+          "bowl_wall_09": 40,
+          "bowl_wall_07": 20,
+          "bowl_base": 5916,
+          "bowl_wall_18": 61,
+          "bowl_wall_19": 36,
+          "bowl_wall_17": 19
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31433738951990314,
+        0.10879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.020249980864789078,
+      "pose_error_mean_m": 0.004544189735151839,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4735080937247942,
+      "ball_displacement_before_closure_m": 0.06785782059734767,
+      "contact": {
+        "contact_substeps": 121,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000481527141327164,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.189999999999738,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 121,
+          "fixed_jaw_box4": 76
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32124426737900336,
+        0.10663733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013491973381031894,
+      "pose_error_mean_m": 0.005193661439587032,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5359906679980435,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 7532,
+        "bilateral_substeps": 7408,
+        "longest_bilateral_s": 14.816,
+        "longest_bilateral_lift_s": 6.28,
+        "bilateral_lift_substeps": 3911,
+        "max_bilateral_height_m": 0.15082046719353956,
+        "max_ball_height_m": 0.15082046719353956,
+        "max_contact_penetration_m": 0.00263870035015951,
+        "max_min_jaw_normal_force_n": 49.36813642171656,
+        "first_contact_s": 14.64600000000156,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.890000000001642,
+        "bilateral_slip_mean_mps": 0.002876936890541766,
+        "by_geom": {
+          "geom_49": 2111,
+          "moving_jaw_box3": 5038,
+          "fixed_jaw_sph_tip3": 6383,
+          "fixed_jaw_box4": 7405,
+          "fixed_jaw_sph_tip2": 3521,
+          "fixed_jaw_sph_tip1": 6839,
+          "moving_jaw_box2": 7348,
+          "moving_jaw_sph_tip2": 6937,
+          "fixed_jaw_box3": 6523,
+          "moving_jaw_sph_tip3": 1894,
+          "moving_jaw_sph_tip1": 3117,
+          "geom_50": 1858,
+          "geom_37": 1355
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3306274834723623,
+        0.10552558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013405269598975103,
+      "pose_error_mean_m": 0.0056047138333132065,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7782533659065614,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10636,
+        "bilateral_substeps": 4525,
+        "longest_bilateral_s": 9.05,
+        "longest_bilateral_lift_s": 4.522,
+        "bilateral_lift_substeps": 2261,
+        "max_bilateral_height_m": 0.05509808565060356,
+        "max_ball_height_m": 0.05509808565060356,
+        "max_contact_penetration_m": 0.0027130568083258907,
+        "max_min_jaw_normal_force_n": 51.82266997853984,
+        "first_contact_s": 13.066000000001033,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 13.242000000001092,
+        "bilateral_slip_mean_mps": 0.0019580073628283003,
+        "by_geom": {
+          "geom_49": 2842,
+          "moving_jaw_box3": 4556,
+          "fixed_jaw_sph_tip3": 4525,
+          "fixed_jaw_box4": 4519,
+          "fixed_jaw_sph_tip2": 4483,
+          "fixed_jaw_sph_tip1": 4486,
+          "fixed_jaw_box5": 379,
+          "moving_jaw_box2": 4472,
+          "moving_jaw_sph_tip2": 3624,
+          "fixed_jaw_box3": 2879,
+          "moving_jaw_sph_tip3": 1786,
+          "bowl_wall_08": 46,
+          "bowl_wall_09": 33,
+          "bowl_base": 5918,
+          "bowl_wall_18": 70,
+          "bowl_wall_19": 20,
+          "bowl_wall_17": 13,
+          "bowl_wall_07": 14
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31433738951990314,
+        0.113798481133907
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.022884111897436242,
+      "pose_error_mean_m": 0.0045752220627779385,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4790206175567666,
+      "ball_displacement_before_closure_m": 0.07137159790929694,
+      "contact": {
+        "contact_substeps": 261,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000953233857116941,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.099999999999708,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 261,
+          "fixed_jaw_box4": 239,
+          "geom_37": 102
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32124426737900336,
+        0.111637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.0141111900004657,
+      "pose_error_mean_m": 0.005211614825084708,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5387995855371381,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 6322,
+        "bilateral_substeps": 6277,
+        "longest_bilateral_s": 12.554,
+        "longest_bilateral_lift_s": 3.94,
+        "bilateral_lift_substeps": 2522,
+        "max_bilateral_height_m": 0.14452008305916994,
+        "max_ball_height_m": 0.14452008305916994,
+        "max_contact_penetration_m": 0.0027018166496523173,
+        "max_min_jaw_normal_force_n": 49.833983221951186,
+        "first_contact_s": 14.816000000001617,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.88400000000164,
+        "bilateral_slip_mean_mps": 0.003131676438756281,
+        "by_geom": {
+          "moving_jaw_box3": 5703,
+          "geom_49": 2224,
+          "fixed_jaw_sph_tip3": 6126,
+          "fixed_jaw_box4": 6276,
+          "fixed_jaw_sph_tip2": 2375,
+          "fixed_jaw_sph_tip1": 5416,
+          "fixed_jaw_box5": 616,
+          "moving_jaw_box2": 6207,
+          "moving_jaw_sph_tip2": 5511,
+          "fixed_jaw_box3": 5396,
+          "geom_50": 1261,
+          "geom_37": 737,
+          "bowl_wall_01": 8,
+          "bowl_wall_02": 6
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3306274834723623,
+        0.11052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.034147443573827915,
+      "pose_error_mean_m": 0.008473612393102618,
+      "pose_error_p95_m": 0.023869924448620152,
+      "arm_joint_error_mean_deg_l2": 2.2974840087947133,
+      "ball_displacement_before_closure_m": 0.05430209426108569,
+      "contact": {
+        "contact_substeps": 2719,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.001448553678242613,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.139999999999388,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 2529,
+          "fixed_jaw_box4": 1373,
+          "geom_37": 2681
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31433738951990314,
+        0.11879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.02682361967277294,
+      "pose_error_mean_m": 0.004624029780011649,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4887239077056829,
+      "ball_displacement_before_closure_m": 0.06698805553527322,
+      "contact": {
+        "contact_substeps": 326,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0009376986499389538,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.051999999999692,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 326,
+          "geom_37": 224,
+          "fixed_jaw_box4": 297
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32124426737900336,
+        0.116637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.014684604287583029,
+      "pose_error_mean_m": 0.005129153382690111,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5281159104382078,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 300,
+        "bilateral_substeps": 157,
+        "longest_bilateral_s": 0.314,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 5.4033305133288634e-05,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0015521507979016497,
+        "max_min_jaw_normal_force_n": 29.905510332898714,
+        "first_contact_s": 13.378000000001137,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip2"
+        ],
+        "first_bilateral_s": 15.200000000001745,
+        "bilateral_slip_mean_mps": 0.017324263562381145,
+        "by_geom": {
+          "fixed_jaw_sph_tip2": 185,
+          "fixed_jaw_box4": 231,
+          "moving_jaw_box3": 37,
+          "moving_jaw_box2": 215,
+          "moving_jaw_sph_tip3": 166,
+          "fixed_jaw_box3": 139,
+          "geom_50": 140
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3306274834723623,
+        0.11552558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.03766634834427458,
+      "pose_error_mean_m": 0.0055520679041710765,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7718340543750153,
+      "ball_displacement_before_closure_m": 0.08853481136359302,
+      "contact": {
+        "contact_substeps": 49,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0005808237892629025,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.123999999999382,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 49,
+          "geom_37": 5,
+          "fixed_jaw_box4": 21
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31433738951990314,
+        0.12379848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.030289210061517937,
+      "pose_error_mean_m": 0.0046622809349095035,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4965378282632098,
+      "ball_displacement_before_closure_m": 0.08339809861295339,
+      "contact": {
+        "contact_substeps": 363,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008837825757772135,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.021999999999682,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 363,
+          "geom_37": 339,
+          "fixed_jaw_box4": 278
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32124426737900336,
+        0.12163733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.014973152507634162,
+      "pose_error_mean_m": 0.005445961993727595,
+      "pose_error_p95_m": 0.016909559305579542,
+      "arm_joint_error_mean_deg_l2": 1.57933821641931,
+      "ball_displacement_before_closure_m": 0.008057902173476615,
+      "contact": {
+        "contact_substeps": 3170,
+        "bilateral_substeps": 2193,
+        "longest_bilateral_s": 4.384,
+        "longest_bilateral_lift_s": 0.43,
+        "bilateral_lift_substeps": 215,
+        "max_bilateral_height_m": 0.03953374507827631,
+        "max_ball_height_m": 0.03953374507827631,
+        "max_contact_penetration_m": 0.002562327018547198,
+        "max_min_jaw_normal_force_n": 49.377904279232126,
+        "first_contact_s": 11.71000000000058,
+        "first_contact_geom": [
+          "fixed_jaw_box4"
+        ],
+        "first_bilateral_s": 14.952000000001663,
+        "bilateral_slip_mean_mps": 0.00832829621790611,
+        "by_geom": {
+          "fixed_jaw_box4": 2275,
+          "fixed_jaw_sph_tip3": 2253,
+          "fixed_jaw_box3": 60,
+          "fixed_jaw_sph_tip1": 52,
+          "fixed_jaw_sph_tip2": 33,
+          "geom_49": 2505,
+          "moving_jaw_box3": 2416,
+          "fixed_jaw_box5": 2146,
+          "geom_37": 2481,
+          "geom_50": 652,
+          "moving_jaw_box2": 478,
+          "moving_jaw_sph_tip2": 400
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3306274834723623,
+        0.12052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.04021507624055679,
+      "pose_error_mean_m": 0.005552314205149364,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.77183884606931,
+      "ball_displacement_before_closure_m": 0.10410982984389192,
+      "contact": {
+        "contact_substeps": 38,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0004988890242818599,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 8.14599999999939,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 38,
+          "geom_37": 1
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          -5.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31433738951990314,
+        0.12879848113390702
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.03369302588804993,
+      "pose_error_mean_m": 0.004690401634607046,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.5023905523684058,
+      "ball_displacement_before_closure_m": 0.08393317193322561,
+      "contact": {
+        "contact_substeps": 385,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000857650107453641,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.009999999999678,
+        "first_contact_geom": [
+          "geom_37",
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "geom_37": 374,
+          "fixed_jaw_box3": 385,
+          "fixed_jaw_box4": 217
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32624426737900336,
+        0.101637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012910354673462144,
+      "pose_error_mean_m": 0.005168605991800822,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5323659199115802,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 8490,
+        "bilateral_substeps": 8316,
+        "longest_bilateral_s": 16.632,
+        "longest_bilateral_lift_s": 8.314,
+        "bilateral_lift_substeps": 5290,
+        "max_bilateral_height_m": 0.16086331458577327,
+        "max_ball_height_m": 0.16086331458577327,
+        "max_contact_penetration_m": 0.0022205364523478835,
+        "max_min_jaw_normal_force_n": 47.99658527034249,
+        "first_contact_s": 14.590000000001542,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.936000000001657,
+        "bilateral_slip_mean_mps": 0.0025474432762622,
+        "by_geom": {
+          "moving_jaw_box3": 3781,
+          "fixed_jaw_sph_tip2": 5625,
+          "fixed_jaw_sph_tip3": 5479,
+          "fixed_jaw_box4": 8297,
+          "fixed_jaw_sph_tip1": 8280,
+          "moving_jaw_box2": 8288,
+          "geom_49": 997,
+          "moving_jaw_sph_tip3": 7239,
+          "moving_jaw_sph_tip2": 7373,
+          "fixed_jaw_box3": 8058,
+          "moving_jaw_sph_tip1": 5306,
+          "geom_37": 2888,
+          "geom_50": 2457
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3356274834723623,
+        0.10052558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012740806471125563,
+      "pose_error_mean_m": 0.005578896613420953,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7749817633522522,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10652,
+        "bilateral_substeps": 4501,
+        "longest_bilateral_s": 9.002,
+        "longest_bilateral_lift_s": 4.5440000000000005,
+        "bilateral_lift_substeps": 2272,
+        "max_bilateral_height_m": 0.05852164417610692,
+        "max_ball_height_m": 0.05852164417610692,
+        "max_contact_penetration_m": 0.002438255088194355,
+        "max_min_jaw_normal_force_n": 52.91873827013973,
+        "first_contact_s": 13.020000000001017,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.274000000001102,
+        "bilateral_slip_mean_mps": 0.001798558642631465,
+        "by_geom": {
+          "moving_jaw_box3": 4219,
+          "geom_49": 1406,
+          "fixed_jaw_sph_tip3": 4496,
+          "fixed_jaw_sph_tip2": 4490,
+          "fixed_jaw_box4": 4490,
+          "fixed_jaw_sph_tip1": 4485,
+          "moving_jaw_box2": 4483,
+          "moving_jaw_sph_tip2": 4470,
+          "moving_jaw_sph_tip3": 4464,
+          "fixed_jaw_box3": 3786,
+          "moving_jaw_sph_tip1": 1058,
+          "bowl_wall_08": 34,
+          "bowl_wall_09": 21,
+          "bowl_wall_07": 6,
+          "bowl_base": 5945,
+          "bowl_wall_18": 46,
+          "bowl_wall_19": 37,
+          "bowl_wall_16": 14,
+          "bowl_wall_17": 18,
+          "bowl_wall_03": 16
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31933738951990315,
+        0.10879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.024740628897831563,
+      "pose_error_mean_m": 0.004546396897953342,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4737717455913624,
+      "ball_displacement_before_closure_m": 0.0152848031747394,
+      "contact": {
+        "contact_substeps": 87,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0011253158884291167,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 13.248000000001094,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "geom_49": 72,
+          "moving_jaw_box2": 15,
+          "moving_jaw_sph_tip3": 2
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32624426737900336,
+        0.10663733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012821655436861585,
+      "pose_error_mean_m": 0.0051745470569959946,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5331008860868942,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 8840,
+        "bilateral_substeps": 8716,
+        "longest_bilateral_s": 17.432,
+        "longest_bilateral_lift_s": 9.072000000000001,
+        "bilateral_lift_substeps": 5604,
+        "max_bilateral_height_m": 0.15870714199690814,
+        "max_ball_height_m": 0.15870714199690814,
+        "max_contact_penetration_m": 0.0023563273684017658,
+        "max_min_jaw_normal_force_n": 48.55975566626915,
+        "first_contact_s": 14.678000000001571,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.922000000001653,
+        "bilateral_slip_mean_mps": 0.00247661064579245,
+        "by_geom": {
+          "moving_jaw_box3": 4145,
+          "fixed_jaw_sph_tip3": 6179,
+          "fixed_jaw_sph_tip2": 5702,
+          "fixed_jaw_box4": 8703,
+          "fixed_jaw_sph_tip1": 8631,
+          "geom_49": 1375,
+          "moving_jaw_box2": 8682,
+          "moving_jaw_sph_tip2": 7904,
+          "moving_jaw_sph_tip3": 7440,
+          "fixed_jaw_box3": 8004,
+          "moving_jaw_sph_tip1": 5351,
+          "geom_37": 2904,
+          "geom_50": 2429
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3356274834723623,
+        0.10552558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012779806358611085,
+      "pose_error_mean_m": 0.00558275545706722,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7754233702622457,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10615,
+        "bilateral_substeps": 4508,
+        "longest_bilateral_s": 9.016,
+        "longest_bilateral_lift_s": 4.542,
+        "bilateral_lift_substeps": 2271,
+        "max_bilateral_height_m": 0.057816664722695504,
+        "max_ball_height_m": 0.057816664722695504,
+        "max_contact_penetration_m": 0.0025395655234787123,
+        "max_min_jaw_normal_force_n": 52.312474895378784,
+        "first_contact_s": 13.096000000001043,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.2660000000011,
+        "bilateral_slip_mean_mps": 0.00179249956302726,
+        "by_geom": {
+          "moving_jaw_box3": 4540,
+          "fixed_jaw_sph_tip3": 4505,
+          "fixed_jaw_box4": 4497,
+          "fixed_jaw_sph_tip2": 4494,
+          "geom_49": 1721,
+          "fixed_jaw_sph_tip1": 4488,
+          "moving_jaw_box2": 4484,
+          "moving_jaw_sph_tip2": 4468,
+          "moving_jaw_sph_tip3": 4076,
+          "fixed_jaw_box3": 3461,
+          "moving_jaw_sph_tip1": 734,
+          "bowl_wall_08": 38,
+          "bowl_wall_09": 36,
+          "bowl_wall_07": 7,
+          "bowl_base": 5928,
+          "bowl_wall_18": 65,
+          "bowl_wall_19": 35,
+          "bowl_wall_17": 14,
+          "bowl_wall_06": 18
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31933738951990315,
+        0.113798481133907
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.022832187765728547,
+      "pose_error_mean_m": 0.004544869751306912,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4735801183186632,
+      "ball_displacement_before_closure_m": 0.06837172358393277,
+      "contact": {
+        "contact_substeps": 131,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0006212925640010738,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.19399999999974,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 131
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32624426737900336,
+        0.111637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012895062326302267,
+      "pose_error_mean_m": 0.005180514138391911,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5339161969016968,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 8820,
+        "bilateral_substeps": 8801,
+        "longest_bilateral_s": 17.602,
+        "longest_bilateral_lift_s": 9.198,
+        "bilateral_lift_substeps": 5586,
+        "max_bilateral_height_m": 0.15692683163795004,
+        "max_ball_height_m": 0.15692683163795004,
+        "max_contact_penetration_m": 0.0024481987467872765,
+        "max_min_jaw_normal_force_n": 48.5289921584297,
+        "first_contact_s": 14.876000000001637,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.91200000000165,
+        "bilateral_slip_mean_mps": 0.0024949253472374166,
+        "by_geom": {
+          "moving_jaw_box3": 4363,
+          "fixed_jaw_sph_tip3": 6510,
+          "fixed_jaw_box4": 8791,
+          "fixed_jaw_sph_tip2": 5401,
+          "geom_49": 1618,
+          "fixed_jaw_sph_tip1": 8621,
+          "moving_jaw_box2": 8760,
+          "moving_jaw_sph_tip2": 8129,
+          "moving_jaw_sph_tip3": 6781,
+          "fixed_jaw_box3": 7926,
+          "moving_jaw_sph_tip1": 5164,
+          "geom_37": 2618,
+          "geom_50": 2337
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3356274834723623,
+        0.11052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012842510510296928,
+      "pose_error_mean_m": 0.005587323592790701,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7759302659816414,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10550,
+        "bilateral_substeps": 4513,
+        "longest_bilateral_s": 9.026,
+        "longest_bilateral_lift_s": 4.542,
+        "bilateral_lift_substeps": 2271,
+        "max_bilateral_height_m": 0.05729901173155014,
+        "max_ball_height_m": 0.05729901173155014,
+        "max_contact_penetration_m": 0.002597304411646826,
+        "max_min_jaw_normal_force_n": 51.69866245322213,
+        "first_contact_s": 13.230000000001088,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.260000000001098,
+        "bilateral_slip_mean_mps": 0.0018094287841264984,
+        "by_geom": {
+          "moving_jaw_box3": 4513,
+          "fixed_jaw_sph_tip3": 4511,
+          "fixed_jaw_box4": 4503,
+          "fixed_jaw_sph_tip2": 4492,
+          "geom_49": 1988,
+          "fixed_jaw_sph_tip1": 4490,
+          "moving_jaw_box2": 4485,
+          "moving_jaw_sph_tip2": 4385,
+          "moving_jaw_sph_tip3": 3733,
+          "fixed_jaw_box3": 3328,
+          "moving_jaw_sph_tip1": 517,
+          "bowl_wall_08": 39,
+          "bowl_wall_09": 38,
+          "bowl_wall_07": 27,
+          "bowl_base": 5924,
+          "bowl_wall_18": 64,
+          "bowl_wall_19": 36
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31933738951990315,
+        0.11879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.025328714467617502,
+      "pose_error_mean_m": 0.004569339610043862,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4778472089532209,
+      "ball_displacement_before_closure_m": 0.08722339607619835,
+      "contact": {
+        "contact_substeps": 250,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0009736354547845263,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.131999999999719,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 250,
+          "geom_37": 210,
+          "fixed_jaw_box4": 157
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32624426737900336,
+        0.116637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013460766530727268,
+      "pose_error_mean_m": 0.005193254568245181,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5359178229845916,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 7702,
+        "bilateral_substeps": 7517,
+        "longest_bilateral_s": 15.034,
+        "longest_bilateral_lift_s": 6.502,
+        "bilateral_lift_substeps": 4032,
+        "max_bilateral_height_m": 0.15129164481103793,
+        "max_ball_height_m": 0.15129164481103793,
+        "max_contact_penetration_m": 0.002629576509863285,
+        "max_min_jaw_normal_force_n": 49.31625157574547,
+        "first_contact_s": 13.370000000001134,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip2"
+        ],
+        "first_bilateral_s": 14.890000000001642,
+        "bilateral_slip_mean_mps": 0.0028276669000267796,
+        "by_geom": {
+          "fixed_jaw_sph_tip2": 3628,
+          "geom_49": 2137,
+          "moving_jaw_box3": 5021,
+          "fixed_jaw_sph_tip3": 6403,
+          "fixed_jaw_box4": 7513,
+          "fixed_jaw_sph_tip1": 6986,
+          "moving_jaw_box2": 7458,
+          "moving_jaw_sph_tip2": 7032,
+          "fixed_jaw_box3": 6635,
+          "moving_jaw_sph_tip3": 2162,
+          "moving_jaw_sph_tip1": 3308,
+          "geom_50": 1901,
+          "geom_37": 1396
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3356274834723623,
+        0.11552558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013000697564855761,
+      "pose_error_mean_m": 0.005593672878119654,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7767476042275139,
+      "ball_displacement_before_closure_m": 0.0038899438979570627,
+      "contact": {
+        "contact_substeps": 10891,
+        "bilateral_substeps": 4520,
+        "longest_bilateral_s": 9.040000000000001,
+        "longest_bilateral_lift_s": 4.534,
+        "bilateral_lift_substeps": 2267,
+        "max_bilateral_height_m": 0.056488220101472,
+        "max_ball_height_m": 0.056488220101472,
+        "max_contact_penetration_m": 0.002671406323118821,
+        "max_min_jaw_normal_force_n": 51.49438387691066,
+        "first_contact_s": 12.54800000000086,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip3"
+        ],
+        "first_bilateral_s": 13.248000000001094,
+        "bilateral_slip_mean_mps": 0.0018445157848443504,
+        "by_geom": {
+          "fixed_jaw_sph_tip3": 4869,
+          "fixed_jaw_box4": 4567,
+          "moving_jaw_box3": 4508,
+          "geom_49": 2305,
+          "fixed_jaw_sph_tip2": 4490,
+          "fixed_jaw_sph_tip1": 4489,
+          "moving_jaw_box2": 4482,
+          "moving_jaw_sph_tip2": 4041,
+          "fixed_jaw_box3": 3224,
+          "moving_jaw_sph_tip3": 3219,
+          "moving_jaw_sph_tip1": 246,
+          "bowl_wall_08": 42,
+          "bowl_wall_09": 41,
+          "bowl_wall_07": 10,
+          "bowl_base": 5918,
+          "bowl_wall_18": 63,
+          "bowl_wall_19": 45,
+          "bowl_wall_06": 16,
+          "bowl_wall_11": 12
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31933738951990315,
+        0.12379848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.029054107199020022,
+      "pose_error_mean_m": 0.0046055791244172,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.48519181911318,
+      "ball_displacement_before_closure_m": 0.07616144852168442,
+      "contact": {
+        "contact_substeps": 304,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0009481956384664416,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.095999999999707,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 304,
+          "geom_37": 288,
+          "fixed_jaw_box4": 131
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32624426737900336,
+        0.12163733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.014048492219420068,
+      "pose_error_mean_m": 0.005136376681446838,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5292523404888352,
+      "ball_displacement_before_closure_m": 0.018334999292428496,
+      "contact": {
+        "contact_substeps": 456,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000781843246841829,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 11.71000000000058,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 41,
+          "fixed_jaw_sph_tip1": 49,
+          "fixed_jaw_box4": 39,
+          "fixed_jaw_sph_tip3": 30,
+          "fixed_jaw_sph_tip2": 10,
+          "geom_49": 402
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3356274834723623,
+        0.12052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.017394296232435102,
+      "pose_error_mean_m": 0.007458098049017576,
+      "pose_error_p95_m": 0.016717273400751534,
+      "arm_joint_error_mean_deg_l2": 2.1061432346170927,
+      "ball_displacement_before_closure_m": 0.002277465734633024,
+      "contact": {
+        "contact_substeps": 3744,
+        "bilateral_substeps": 2639,
+        "longest_bilateral_s": 5.2780000000000005,
+        "longest_bilateral_lift_s": 0.168,
+        "bilateral_lift_substeps": 84,
+        "max_bilateral_height_m": 0.035481511559623174,
+        "max_ball_height_m": 0.035481511559623174,
+        "max_contact_penetration_m": 0.0021621369719050307,
+        "max_min_jaw_normal_force_n": 45.83549913465548,
+        "first_contact_s": 11.126000000000385,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip3"
+        ],
+        "first_bilateral_s": 13.352000000001128,
+        "bilateral_slip_mean_mps": 0.005664573135009976,
+        "by_geom": {
+          "fixed_jaw_sph_tip3": 3741,
+          "fixed_jaw_box4": 3465,
+          "moving_jaw_box3": 2638,
+          "moving_jaw_box2": 2633,
+          "moving_jaw_sph_tip2": 2629,
+          "fixed_jaw_sph_tip1": 1749,
+          "fixed_jaw_box3": 2619,
+          "geom_49": 625,
+          "fixed_jaw_box5": 846,
+          "geom_37": 2074,
+          "geom_50": 752
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          0.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.31933738951990315,
+        0.12879848113390702
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.03244592788897596,
+      "pose_error_mean_m": 0.004631647920493946,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4905545978693728,
+      "ball_displacement_before_closure_m": 0.09557365713069552,
+      "contact": {
+        "contact_substeps": 331,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000898880923959174,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.077999999999701,
+        "first_contact_geom": [
+          "geom_37"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "geom_37": 324,
+          "fixed_jaw_box3": 329,
+          "fixed_jaw_box4": 75
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33124426737900337,
+        0.101637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013571223603106326,
+      "pose_error_mean_m": 0.005152481696228876,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5306324687394883,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 5748,
+        "bilateral_substeps": 5557,
+        "longest_bilateral_s": 11.114,
+        "longest_bilateral_lift_s": 2.896,
+        "bilateral_lift_substeps": 2733,
+        "max_bilateral_height_m": 0.17257098871624385,
+        "max_ball_height_m": 0.17257098871624385,
+        "max_contact_penetration_m": 0.0018197624055665274,
+        "max_min_jaw_normal_force_n": 48.94094086515113,
+        "first_contact_s": 14.620000000001552,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.982000000001673,
+        "bilateral_slip_mean_mps": 0.003428364433544255,
+        "by_geom": {
+          "moving_jaw_box3": 2750,
+          "fixed_jaw_sph_tip2": 3936,
+          "moving_jaw_box2": 5554,
+          "fixed_jaw_sph_tip1": 5377,
+          "fixed_jaw_box4": 5540,
+          "moving_jaw_sph_tip3": 5059,
+          "fixed_jaw_sph_tip3": 1447,
+          "fixed_jaw_box3": 5535,
+          "moving_jaw_sph_tip2": 2006,
+          "moving_jaw_sph_tip1": 3571,
+          "geom_50": 2088,
+          "geom_37": 1548
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3406274834723623,
+        0.10052558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01319127018653033,
+      "pose_error_mean_m": 0.005574880782522932,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.774447748145377,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10641,
+        "bilateral_substeps": 4432,
+        "longest_bilateral_s": 8.864,
+        "longest_bilateral_lift_s": 4.476,
+        "bilateral_lift_substeps": 2238,
+        "max_bilateral_height_m": 0.061925396933719096,
+        "max_ball_height_m": 0.061925396933719096,
+        "max_contact_penetration_m": 0.0030520563520947397,
+        "max_min_jaw_normal_force_n": 48.56202556399434,
+        "first_contact_s": 13.038000000001023,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.316000000001116,
+        "bilateral_slip_mean_mps": 0.002354930788635859,
+        "by_geom": {
+          "moving_jaw_box3": 2276,
+          "moving_jaw_box2": 4438,
+          "fixed_jaw_sph_tip2": 4106,
+          "fixed_jaw_sph_tip1": 4429,
+          "fixed_jaw_sph_tip3": 2573,
+          "fixed_jaw_box4": 4425,
+          "moving_jaw_sph_tip3": 4427,
+          "fixed_jaw_box3": 4421,
+          "moving_jaw_sph_tip2": 4411,
+          "moving_jaw_sph_tip1": 3002,
+          "geom_50": 380,
+          "geom_37": 327,
+          "bowl_base": 6067,
+          "bowl_wall_18": 18
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32433738951990315,
+        0.10879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.014237468290368012,
+      "pose_error_mean_m": 0.004584335710570096,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4782638023821524,
+      "ball_displacement_before_closure_m": 0.003624952764890211,
+      "contact": {
+        "contact_substeps": 15710,
+        "bilateral_substeps": 4263,
+        "longest_bilateral_s": 8.522,
+        "longest_bilateral_lift_s": 6.08,
+        "bilateral_lift_substeps": 3042,
+        "max_bilateral_height_m": 0.11075127392417414,
+        "max_ball_height_m": 0.11077871013163895,
+        "max_contact_penetration_m": 0.0026271933245072335,
+        "max_min_jaw_normal_force_n": 52.99505667725785,
+        "first_contact_s": 13.396000000001143,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.25800000000143,
+        "bilateral_slip_mean_mps": 0.003150895196718268,
+        "by_geom": {
+          "geom_49": 1132,
+          "moving_jaw_box3": 3851,
+          "fixed_jaw_sph_tip2": 3897,
+          "fixed_jaw_box4": 4262,
+          "moving_jaw_box2": 4258,
+          "fixed_jaw_sph_tip1": 3699,
+          "moving_jaw_sph_tip3": 4238,
+          "fixed_jaw_sph_tip3": 744,
+          "fixed_jaw_box3": 4052,
+          "geom_50": 241,
+          "bowl_wall_06": 78,
+          "bowl_wall_05": 23,
+          "bowl_wall_07": 30,
+          "bowl_base": 11177,
+          "bowl_wall_16": 127,
+          "bowl_wall_17": 15,
+          "bowl_wall_15": 8
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33124426737900337,
+        0.10663733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013213257283157951,
+      "pose_error_mean_m": 0.005158911694203003,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.531353752623793,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 7118,
+        "bilateral_substeps": 6990,
+        "longest_bilateral_s": 13.98,
+        "longest_bilateral_lift_s": 5.706,
+        "bilateral_lift_substeps": 4100,
+        "max_bilateral_height_m": 0.1656156645356742,
+        "max_ball_height_m": 0.1656156645356742,
+        "max_contact_penetration_m": 0.0018922211810571202,
+        "max_min_jaw_normal_force_n": 49.20647840618984,
+        "first_contact_s": 14.712000000001582,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.960000000001665,
+        "bilateral_slip_mean_mps": 0.0028657480889196394,
+        "by_geom": {
+          "moving_jaw_box3": 2987,
+          "fixed_jaw_sph_tip2": 4719,
+          "fixed_jaw_sph_tip1": 6961,
+          "moving_jaw_box2": 6973,
+          "fixed_jaw_box4": 6965,
+          "fixed_jaw_sph_tip3": 3009,
+          "moving_jaw_sph_tip3": 6177,
+          "fixed_jaw_box3": 6955,
+          "moving_jaw_sph_tip2": 5577,
+          "geom_49": 176,
+          "moving_jaw_sph_tip1": 4792,
+          "geom_50": 2334,
+          "geom_37": 2205
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3406274834723623,
+        0.10552558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013032848985724392,
+      "pose_error_mean_m": 0.005574274645431281,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7744697653003956,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10604,
+        "bilateral_substeps": 4453,
+        "longest_bilateral_s": 8.906,
+        "longest_bilateral_lift_s": 4.506,
+        "bilateral_lift_substeps": 2253,
+        "max_bilateral_height_m": 0.06114842015908925,
+        "max_ball_height_m": 0.06114842015908925,
+        "max_contact_penetration_m": 0.002520727329870104,
+        "max_min_jaw_normal_force_n": 50.05689831480606,
+        "first_contact_s": 13.11600000000105,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.310000000001114,
+        "bilateral_slip_mean_mps": 0.0021282008062669896,
+        "by_geom": {
+          "moving_jaw_box3": 2634,
+          "fixed_jaw_sph_tip2": 4442,
+          "fixed_jaw_sph_tip1": 4450,
+          "fixed_jaw_sph_tip3": 3778,
+          "moving_jaw_box2": 4447,
+          "fixed_jaw_box4": 4444,
+          "moving_jaw_sph_tip3": 4448,
+          "fixed_jaw_box3": 4438,
+          "moving_jaw_sph_tip2": 4435,
+          "moving_jaw_sph_tip1": 2520,
+          "bowl_base": 6050,
+          "bowl_wall_18": 18
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32433738951990315,
+        0.113798481133907
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013751691769922768,
+      "pose_error_mean_m": 0.004626312608590595,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4842774007807624,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 15725,
+        "bilateral_substeps": 7333,
+        "longest_bilateral_s": 14.666,
+        "longest_bilateral_lift_s": 12.132,
+        "bilateral_lift_substeps": 6066,
+        "max_bilateral_height_m": 0.2550825781475874,
+        "max_ball_height_m": 0.2550825781475874,
+        "max_contact_penetration_m": 0.003165082753362164,
+        "max_min_jaw_normal_force_n": 54.752375957404524,
+        "first_contact_s": 14.032000000001355,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.242000000001426,
+        "bilateral_slip_mean_mps": 0.0024530615193153627,
+        "by_geom": {
+          "geom_49": 2340,
+          "moving_jaw_box3": 5137,
+          "fixed_jaw_sph_tip2": 6369,
+          "fixed_jaw_box4": 7244,
+          "fixed_jaw_sph_tip3": 3874,
+          "fixed_jaw_sph_tip1": 6884,
+          "moving_jaw_box2": 7315,
+          "moving_jaw_sph_tip3": 6664,
+          "fixed_jaw_box3": 6237,
+          "moving_jaw_sph_tip2": 2037,
+          "moving_jaw_sph_tip1": 2619,
+          "geom_50": 1113,
+          "geom_37": 321,
+          "bowl_base": 8278,
+          "bowl_wall_11": 20,
+          "bowl_wall_12": 10,
+          "bowl_wall_10": 7,
+          "bowl_wall_13": 4,
+          "bowl_wall_00": 16,
+          "bowl_wall_01": 8,
+          "bowl_wall_07": 15
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33124426737900337,
+        0.111637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013185355101158109,
+      "pose_error_mean_m": 0.005159633383838282,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5314469034223945,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 7167,
+        "bilateral_substeps": 7088,
+        "longest_bilateral_s": 14.176,
+        "longest_bilateral_lift_s": 5.9,
+        "bilateral_lift_substeps": 4194,
+        "max_bilateral_height_m": 0.16525456267605873,
+        "max_ball_height_m": 0.16525456267605873,
+        "max_contact_penetration_m": 0.001910448766334616,
+        "max_min_jaw_normal_force_n": 49.17108398640544,
+        "first_contact_s": 13.706000000001247,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip2"
+        ],
+        "first_bilateral_s": 14.958000000001665,
+        "bilateral_slip_mean_mps": 0.002852999048524116,
+        "by_geom": {
+          "fixed_jaw_sph_tip2": 4803,
+          "moving_jaw_box3": 2970,
+          "fixed_jaw_sph_tip1": 7058,
+          "fixed_jaw_box4": 7064,
+          "moving_jaw_box2": 7069,
+          "fixed_jaw_sph_tip3": 3190,
+          "moving_jaw_sph_tip3": 6256,
+          "fixed_jaw_box3": 7052,
+          "geom_49": 219,
+          "moving_jaw_sph_tip2": 5704,
+          "moving_jaw_sph_tip1": 4856,
+          "geom_50": 2366,
+          "geom_37": 2266
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3406274834723623,
+        0.11052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01297023745290588,
+      "pose_error_mean_m": 0.005574140090077496,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7745234359274358,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10534,
+        "bilateral_substeps": 4470,
+        "longest_bilateral_s": 8.94,
+        "longest_bilateral_lift_s": 4.524,
+        "bilateral_lift_substeps": 2262,
+        "max_bilateral_height_m": 0.06049197813550741,
+        "max_ball_height_m": 0.06049197813550741,
+        "max_contact_penetration_m": 0.00248339615349194,
+        "max_min_jaw_normal_force_n": 51.57525503685419,
+        "first_contact_s": 13.252000000001095,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.300000000001111,
+        "bilateral_slip_mean_mps": 0.0019853885096417514,
+        "by_geom": {
+          "moving_jaw_box3": 2952,
+          "fixed_jaw_sph_tip2": 4461,
+          "fixed_jaw_sph_tip3": 4452,
+          "fixed_jaw_sph_tip1": 4464,
+          "fixed_jaw_box4": 4457,
+          "moving_jaw_box2": 4461,
+          "moving_jaw_sph_tip3": 4459,
+          "moving_jaw_sph_tip2": 4451,
+          "geom_49": 325,
+          "fixed_jaw_box3": 4447,
+          "moving_jaw_sph_tip1": 2140,
+          "bowl_base": 6037,
+          "bowl_wall_08": 8,
+          "bowl_wall_09": 6,
+          "bowl_wall_17": 18
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32433738951990315,
+        0.11879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01348974529962209,
+      "pose_error_mean_m": 0.004630976749608529,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4850632660263512,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 15710,
+        "bilateral_substeps": 8368,
+        "longest_bilateral_s": 16.736,
+        "longest_bilateral_lift_s": 14.186,
+        "bilateral_lift_substeps": 7093,
+        "max_bilateral_height_m": 0.251867433613725,
+        "max_ball_height_m": 0.251867433613725,
+        "max_contact_penetration_m": 0.0027723181471501768,
+        "max_min_jaw_normal_force_n": 54.47251950842391,
+        "first_contact_s": 14.088000000001374,
+        "first_contact_geom": [
+          "geom_49"
+        ],
+        "first_bilateral_s": 14.240000000001425,
+        "bilateral_slip_mean_mps": 0.0021690223071839203,
+        "by_geom": {
+          "geom_49": 2610,
+          "moving_jaw_box3": 5266,
+          "fixed_jaw_sph_tip2": 6965,
+          "fixed_jaw_box4": 8180,
+          "fixed_jaw_sph_tip3": 4946,
+          "fixed_jaw_sph_tip1": 8080,
+          "moving_jaw_box2": 8341,
+          "moving_jaw_sph_tip3": 7240,
+          "fixed_jaw_box3": 6921,
+          "moving_jaw_sph_tip2": 4818,
+          "moving_jaw_sph_tip1": 3758,
+          "geom_50": 1533,
+          "geom_37": 791,
+          "bowl_wall_08": 66,
+          "bowl_wall_09": 48,
+          "bowl_wall_07": 5,
+          "bowl_base": 7142,
+          "bowl_wall_18": 82,
+          "bowl_wall_19": 75,
+          "bowl_wall_00": 3
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33124426737900337,
+        0.116637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.01591778004639928,
+      "pose_error_mean_m": 0.005129890755561382,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5282197454010669,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 95,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.00026192922154859993,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 13.378000000001137,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip2"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_sph_tip2": 92,
+          "moving_jaw_box2": 3
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3406274834723623,
+        0.11552558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012862152638869376,
+      "pose_error_mean_m": 0.005573973588133182,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7744903655313453,
+      "ball_displacement_before_closure_m": 0.0028744719080579834,
+      "contact": {
+        "contact_substeps": 10882,
+        "bilateral_substeps": 4482,
+        "longest_bilateral_s": 8.964,
+        "longest_bilateral_lift_s": 4.532,
+        "bilateral_lift_substeps": 2266,
+        "max_bilateral_height_m": 0.0598247287679777,
+        "max_ball_height_m": 0.0598247287679777,
+        "max_contact_penetration_m": 0.002204836098641999,
+        "max_min_jaw_normal_force_n": 53.30932454903045,
+        "first_contact_s": 12.556000000000862,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip3"
+        ],
+        "first_bilateral_s": 13.290000000001108,
+        "bilateral_slip_mean_mps": 0.0019021745013073263,
+        "by_geom": {
+          "fixed_jaw_sph_tip3": 4697,
+          "fixed_jaw_sph_tip2": 4769,
+          "moving_jaw_box3": 3273,
+          "fixed_jaw_sph_tip1": 4472,
+          "fixed_jaw_box4": 4465,
+          "moving_jaw_box2": 4471,
+          "moving_jaw_sph_tip3": 4464,
+          "geom_49": 633,
+          "moving_jaw_sph_tip2": 4461,
+          "fixed_jaw_box3": 4452,
+          "moving_jaw_sph_tip1": 1844,
+          "bowl_base": 6026,
+          "bowl_wall_08": 11,
+          "bowl_wall_09": 10,
+          "bowl_wall_07": 24,
+          "bowl_wall_10": 3,
+          "bowl_wall_17": 13,
+          "bowl_wall_18": 16
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32433738951990315,
+        0.12379848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.02811002300304404,
+      "pose_error_mean_m": 0.004552144926482624,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.474689320692416,
+      "ball_displacement_before_closure_m": 0.07244143868973187,
+      "contact": {
+        "contact_substeps": 211,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.000939590619817184,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.183999999999736,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box3": 211,
+          "geom_37": 186
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33124426737900337,
+        0.12163733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013029075665464917,
+      "pose_error_mean_m": 0.005162972957074015,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5317953237616362,
+      "ball_displacement_before_closure_m": 0.010230266164988075,
+      "contact": {
+        "contact_substeps": 7988,
+        "bilateral_substeps": 7637,
+        "longest_bilateral_s": 15.274000000000001,
+        "longest_bilateral_lift_s": 6.986,
+        "bilateral_lift_substeps": 4721,
+        "max_bilateral_height_m": 0.16329905073719506,
+        "max_ball_height_m": 0.16329905073719506,
+        "max_contact_penetration_m": 0.002033107114503767,
+        "max_min_jaw_normal_force_n": 48.64850756976014,
+        "first_contact_s": 11.718000000000583,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip1"
+        ],
+        "first_bilateral_s": 14.950000000001662,
+        "bilateral_slip_mean_mps": 0.0026930620794977044,
+        "by_geom": {
+          "fixed_jaw_sph_tip1": 7648,
+          "fixed_jaw_box3": 7629,
+          "fixed_jaw_box4": 7757,
+          "fixed_jaw_sph_tip2": 5270,
+          "fixed_jaw_sph_tip3": 4413,
+          "moving_jaw_box3": 3343,
+          "moving_jaw_box2": 7616,
+          "moving_jaw_sph_tip3": 6721,
+          "geom_49": 579,
+          "moving_jaw_sph_tip2": 6482,
+          "moving_jaw_sph_tip1": 5116,
+          "geom_37": 2584,
+          "geom_50": 2426
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.3406274834723623,
+        0.12052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.012920216104802483,
+      "pose_error_mean_m": 0.005744764848892518,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7999188681000882,
+      "ball_displacement_before_closure_m": 0.0024633098736722005,
+      "contact": {
+        "contact_substeps": 11458,
+        "bilateral_substeps": 4516,
+        "longest_bilateral_s": 9.032,
+        "longest_bilateral_lift_s": 4.538,
+        "bilateral_lift_substeps": 2269,
+        "max_bilateral_height_m": 0.0568893768313595,
+        "max_ball_height_m": 0.0568893768313595,
+        "max_contact_penetration_m": 0.002645928577268905,
+        "max_min_jaw_normal_force_n": 51.60727987256526,
+        "first_contact_s": 11.128000000000386,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip3"
+        ],
+        "first_bilateral_s": 13.256000000001096,
+        "bilateral_slip_mean_mps": 0.001827305660982025,
+        "by_geom": {
+          "fixed_jaw_sph_tip3": 5374,
+          "fixed_jaw_box4": 5069,
+          "fixed_jaw_box3": 3297,
+          "fixed_jaw_sph_tip1": 4541,
+          "fixed_jaw_sph_tip2": 4496,
+          "moving_jaw_box3": 4562,
+          "geom_49": 2186,
+          "moving_jaw_box2": 4484,
+          "moving_jaw_sph_tip2": 4134,
+          "moving_jaw_sph_tip3": 3448,
+          "moving_jaw_sph_tip1": 351,
+          "bowl_wall_08": 42,
+          "bowl_wall_09": 12,
+          "bowl_wall_07": 8,
+          "bowl_base": 5919,
+          "bowl_wall_18": 53,
+          "bowl_wall_19": 27,
+          "bowl_wall_17": 22,
+          "bowl_wall_05": 18
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          5.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32433738951990315,
+        0.12879848113390702
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.031275611135398625,
+      "pose_error_mean_m": 0.004572176321291272,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4784404200295036,
+      "ball_displacement_before_closure_m": 0.08750110282058891,
+      "contact": {
+        "contact_substeps": 253,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0008113414271796215,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 9.16399999999973,
+        "first_contact_geom": [
+          "geom_37",
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "geom_37": 247,
+          "fixed_jaw_box3": 253
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33624426737900337,
+        0.101637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.015806179419585977,
+      "pose_error_mean_m": 0.005139361745958703,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.529193710998019,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 3040,
+        "bilateral_substeps": 2860,
+        "longest_bilateral_s": 5.72,
+        "longest_bilateral_lift_s": 1.024,
+        "bilateral_lift_substeps": 570,
+        "max_bilateral_height_m": 0.06675206886995352,
+        "max_ball_height_m": 0.06675206886995352,
+        "max_contact_penetration_m": 0.0017727381019359278,
+        "max_min_jaw_normal_force_n": 46.23752121833281,
+        "first_contact_s": 14.656000000001564,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 15.024000000001687,
+        "bilateral_slip_mean_mps": 0.0048283416360764084,
+        "by_geom": {
+          "moving_jaw_box3": 2295,
+          "moving_jaw_box2": 3000,
+          "fixed_jaw_sph_tip2": 2495,
+          "fixed_jaw_box4": 2857,
+          "moving_jaw_sph_tip3": 2848,
+          "fixed_jaw_sph_tip1": 2112,
+          "fixed_jaw_box3": 2849,
+          "geom_50": 1176,
+          "geom_37": 175
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.34562748347236233,
+        0.10052558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.0145149907473881,
+      "pose_error_mean_m": 0.005569873518490593,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.773825735272432,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10618,
+        "bilateral_substeps": 3855,
+        "longest_bilateral_s": 7.71,
+        "longest_bilateral_lift_s": 3.378,
+        "bilateral_lift_substeps": 1689,
+        "max_bilateral_height_m": 0.06673488269024616,
+        "max_ball_height_m": 0.06673488269024616,
+        "max_contact_penetration_m": 0.0024966966520620013,
+        "max_min_jaw_normal_force_n": 47.562334574470725,
+        "first_contact_s": 13.062000000001031,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.338000000001124,
+        "bilateral_slip_mean_mps": 0.004119340584988878,
+        "by_geom": {
+          "moving_jaw_box3": 1115,
+          "moving_jaw_box2": 3979,
+          "fixed_jaw_sph_tip2": 2401,
+          "fixed_jaw_sph_tip1": 3622,
+          "moving_jaw_sph_tip3": 3450,
+          "fixed_jaw_box4": 3848,
+          "fixed_jaw_box3": 3849,
+          "moving_jaw_sph_tip2": 1161,
+          "fixed_jaw_sph_tip3": 2,
+          "moving_jaw_sph_tip1": 3359,
+          "geom_50": 2023,
+          "geom_37": 1438,
+          "bowl_wall_00": 42,
+          "bowl_wall_19": 40,
+          "bowl_wall_01": 12,
+          "bowl_wall_18": 4,
+          "bowl_base": 6539,
+          "bowl_wall_09": 43,
+          "bowl_wall_10": 68,
+          "bowl_wall_11": 15,
+          "bowl_wall_02": 17
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          -10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32933738951990316,
+        0.10879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.014271177958125648,
+      "pose_error_mean_m": 0.004583849670634879,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.478228082576534,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 15738,
+        "bilateral_substeps": 4102,
+        "longest_bilateral_s": 8.192,
+        "longest_bilateral_lift_s": 5.752,
+        "bilateral_lift_substeps": 2882,
+        "max_bilateral_height_m": 0.09781271879378414,
+        "max_ball_height_m": 0.09781271879378414,
+        "max_contact_penetration_m": 0.0029561362156044595,
+        "max_min_jaw_normal_force_n": 52.7554283996808,
+        "first_contact_s": 14.010000000001348,
+        "first_contact_geom": [
+          "geom_49",
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.260000000001432,
+        "bilateral_slip_mean_mps": 0.0031729464500510293,
+        "by_geom": {
+          "geom_49": 1068,
+          "moving_jaw_box3": 3753,
+          "fixed_jaw_sph_tip2": 3766,
+          "fixed_jaw_box4": 4101,
+          "moving_jaw_box2": 4097,
+          "fixed_jaw_sph_tip1": 3573,
+          "moving_jaw_sph_tip3": 4082,
+          "fixed_jaw_sph_tip3": 648,
+          "fixed_jaw_box3": 3925,
+          "geom_50": 207,
+          "bowl_wall_05": 22,
+          "bowl_wall_06": 58,
+          "bowl_wall_07": 32,
+          "bowl_base": 11358,
+          "bowl_wall_16": 98,
+          "bowl_wall_17": 19,
+          "bowl_wall_18": 5,
+          "bowl_wall_15": 14,
+          "bowl_wall_01": 12
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33624426737900337,
+        0.10663733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.014548634751134127,
+      "pose_error_mean_m": 0.005143511944697051,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5296498530377343,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 3859,
+        "bilateral_substeps": 3757,
+        "longest_bilateral_s": 7.514,
+        "longest_bilateral_lift_s": 1.37,
+        "bilateral_lift_substeps": 1193,
+        "max_bilateral_height_m": 0.06374216363408866,
+        "max_ball_height_m": 0.06374216363408866,
+        "max_contact_penetration_m": 0.0017746009853334688,
+        "max_min_jaw_normal_force_n": 47.99706179092164,
+        "first_contact_s": 14.808000000001615,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 15.010000000001682,
+        "bilateral_slip_mean_mps": 0.004283917176785963,
+        "by_geom": {
+          "moving_jaw_box3": 2605,
+          "moving_jaw_box2": 3825,
+          "fixed_jaw_sph_tip2": 3099,
+          "fixed_jaw_box4": 3752,
+          "fixed_jaw_sph_tip1": 3192,
+          "moving_jaw_sph_tip3": 3685,
+          "fixed_jaw_box3": 3747,
+          "fixed_jaw_sph_tip3": 39,
+          "moving_jaw_sph_tip1": 842,
+          "geom_50": 1429,
+          "geom_37": 644
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.34562748347236233,
+        0.10552558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013942897501954087,
+      "pose_error_mean_m": 0.00557364526294995,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7742794523655387,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10578,
+        "bilateral_substeps": 4368,
+        "longest_bilateral_s": 8.736,
+        "longest_bilateral_lift_s": 4.378,
+        "bilateral_lift_substeps": 2189,
+        "max_bilateral_height_m": 0.06495364942205381,
+        "max_ball_height_m": 0.06495364942205381,
+        "max_contact_penetration_m": 0.0031385379698101457,
+        "max_min_jaw_normal_force_n": 48.20715440429488,
+        "first_contact_s": 13.158000000001064,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 13.32600000000112,
+        "bilateral_slip_mean_mps": 0.003376798210514951,
+        "by_geom": {
+          "moving_jaw_box3": 1391,
+          "moving_jaw_box2": 4444,
+          "fixed_jaw_sph_tip2": 2877,
+          "fixed_jaw_sph_tip1": 4360,
+          "moving_jaw_sph_tip3": 4132,
+          "fixed_jaw_box4": 4360,
+          "fixed_jaw_box3": 4360,
+          "fixed_jaw_sph_tip3": 445,
+          "moving_jaw_sph_tip2": 2479,
+          "moving_jaw_sph_tip1": 3609,
+          "geom_50": 1845,
+          "geom_37": 1356,
+          "bowl_base": 6128,
+          "bowl_wall_19": 12,
+          "bowl_wall_16": 8,
+          "bowl_wall_14": 5,
+          "bowl_wall_13": 1,
+          "bowl_wall_12": 5,
+          "bowl_wall_10": 6
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          -5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32933738951990316,
+        0.113798481133907
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.0140126287191031,
+      "pose_error_mean_m": 0.004596776204466088,
+      "pose_error_p95_m": 0.016685619697106607,
+      "arm_joint_error_mean_deg_l2": 1.4799813334341592,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 5183,
+        "bilateral_substeps": 5049,
+        "longest_bilateral_s": 10.038,
+        "longest_bilateral_lift_s": 7.578,
+        "bilateral_lift_substeps": 3819,
+        "max_bilateral_height_m": 0.2507232689535024,
+        "max_ball_height_m": 0.2507438022023445,
+        "max_contact_penetration_m": 0.003010482331462911,
+        "max_min_jaw_normal_force_n": 53.9957313724057,
+        "first_contact_s": 14.058000000001364,
+        "first_contact_geom": [
+          "geom_49",
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.252000000001429,
+        "bilateral_slip_mean_mps": 0.0031326303443639974,
+        "by_geom": {
+          "geom_49": 1408,
+          "moving_jaw_box3": 4423,
+          "fixed_jaw_sph_tip2": 4464,
+          "fixed_jaw_box4": 5038,
+          "fixed_jaw_sph_tip1": 4330,
+          "moving_jaw_box2": 5055,
+          "fixed_jaw_sph_tip3": 1283,
+          "moving_jaw_sph_tip3": 4961,
+          "fixed_jaw_box3": 4761,
+          "geom_50": 370,
+          "moving_jaw_sph_tip1": 2,
+          "bowl_wall_06": 8,
+          "bowl_wall_07": 8,
+          "bowl_wall_08": 5
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33624426737900337,
+        0.111637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.015814536774982818,
+      "pose_error_mean_m": 0.005137521923081139,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.528989216042423,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 2299,
+        "bilateral_substeps": 2211,
+        "longest_bilateral_s": 4.422,
+        "longest_bilateral_lift_s": 1.064,
+        "bilateral_lift_substeps": 532,
+        "max_bilateral_height_m": 0.069484507688332,
+        "max_ball_height_m": 0.069484507688332,
+        "max_contact_penetration_m": 0.0018101246106215496,
+        "max_min_jaw_normal_force_n": 44.849500078660554,
+        "first_contact_s": 13.700000000001245,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip2"
+        ],
+        "first_bilateral_s": 15.046000000001694,
+        "bilateral_slip_mean_mps": 0.005408006849931408,
+        "by_geom": {
+          "fixed_jaw_sph_tip2": 1996,
+          "moving_jaw_box3": 1767,
+          "moving_jaw_box2": 2281,
+          "fixed_jaw_box4": 2208,
+          "moving_jaw_sph_tip3": 2204,
+          "fixed_jaw_box3": 2202,
+          "fixed_jaw_sph_tip1": 1246,
+          "geom_50": 1012,
+          "geom_37": 29
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.34562748347236233,
+        0.11052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013685258240687184,
+      "pose_error_mean_m": 0.005574625343014117,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7744098539722608,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 10522,
+        "bilateral_substeps": 4388,
+        "longest_bilateral_s": 8.776,
+        "longest_bilateral_lift_s": 4.408,
+        "bilateral_lift_substeps": 2204,
+        "max_bilateral_height_m": 0.0638022738043966,
+        "max_ball_height_m": 0.0638022738043966,
+        "max_contact_penetration_m": 0.002648850743775105,
+        "max_min_jaw_normal_force_n": 48.03561879082737,
+        "first_contact_s": 13.278000000001104,
+        "first_contact_geom": [
+          "moving_jaw_box2"
+        ],
+        "first_bilateral_s": 13.324000000001119,
+        "bilateral_slip_mean_mps": 0.002889256091448023,
+        "by_geom": {
+          "moving_jaw_box2": 4411,
+          "moving_jaw_box3": 1522,
+          "fixed_jaw_sph_tip2": 3200,
+          "fixed_jaw_sph_tip1": 4385,
+          "fixed_jaw_box4": 4384,
+          "moving_jaw_sph_tip3": 4379,
+          "fixed_jaw_box3": 4382,
+          "fixed_jaw_sph_tip3": 1000,
+          "moving_jaw_sph_tip2": 3314,
+          "moving_jaw_sph_tip1": 3473,
+          "geom_50": 1382,
+          "geom_37": 977,
+          "bowl_base": 6108,
+          "bowl_wall_17": 17,
+          "bowl_wall_13": 6,
+          "bowl_wall_12": 9
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          0.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32933738951990316,
+        0.11879848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.0138937723973788,
+      "pose_error_mean_m": 0.004602148288749089,
+      "pose_error_p95_m": 0.016685619697106607,
+      "arm_joint_error_mean_deg_l2": 1.4807064491231792,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 5535,
+        "bilateral_substeps": 5437,
+        "longest_bilateral_s": 10.85,
+        "longest_bilateral_lift_s": 8.362,
+        "bilateral_lift_substeps": 4193,
+        "max_bilateral_height_m": 0.26556474156282817,
+        "max_ball_height_m": 0.26556474156282817,
+        "max_contact_penetration_m": 0.0036604095244292395,
+        "max_min_jaw_normal_force_n": 55.03468759286797,
+        "first_contact_s": 14.110000000001381,
+        "first_contact_geom": [
+          "geom_49",
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.250000000001428,
+        "bilateral_slip_mean_mps": 0.0028786515144176464,
+        "by_geom": {
+          "geom_49": 1626,
+          "moving_jaw_box3": 4795,
+          "fixed_jaw_sph_tip2": 4959,
+          "fixed_jaw_box4": 5436,
+          "fixed_jaw_sph_tip1": 4888,
+          "fixed_jaw_sph_tip3": 1845,
+          "moving_jaw_box2": 5434,
+          "moving_jaw_sph_tip3": 5364,
+          "fixed_jaw_box3": 5312,
+          "geom_50": 500,
+          "moving_jaw_sph_tip1": 34,
+          "bowl_wall_05": 14,
+          "bowl_wall_06": 13,
+          "bowl_wall_04": 8
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33624426737900337,
+        0.116637332044774
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.017722093575895423,
+      "pose_error_mean_m": 0.005132316912930253,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5284612797286101,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 1274,
+        "bilateral_substeps": 1058,
+        "longest_bilateral_s": 2.116,
+        "longest_bilateral_lift_s": 0.17400000000000002,
+        "bilateral_lift_substeps": 136,
+        "max_bilateral_height_m": 0.042942633098359634,
+        "max_ball_height_m": 0.043659390558514394,
+        "max_contact_penetration_m": 0.001713700856952556,
+        "max_min_jaw_normal_force_n": 43.59719391881791,
+        "first_contact_s": 13.400000000001144,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip2"
+        ],
+        "first_bilateral_s": 15.110000000001715,
+        "bilateral_slip_mean_mps": 0.0076456411643374775,
+        "by_geom": {
+          "fixed_jaw_sph_tip2": 1204,
+          "moving_jaw_box2": 1085,
+          "moving_jaw_sph_tip3": 1061,
+          "fixed_jaw_box4": 1066,
+          "fixed_jaw_box3": 1050,
+          "moving_jaw_box3": 877,
+          "fixed_jaw_sph_tip1": 64,
+          "geom_50": 818
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.34562748347236233,
+        0.11552558778264688
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013513953087277666,
+      "pose_error_mean_m": 0.005573417845291227,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7742780612823559,
+      "ball_displacement_before_closure_m": 0.0015030293508777445,
+      "contact": {
+        "contact_substeps": 10851,
+        "bilateral_substeps": 4400,
+        "longest_bilateral_s": 8.8,
+        "longest_bilateral_lift_s": 4.424,
+        "bilateral_lift_substeps": 2212,
+        "max_bilateral_height_m": 0.06306889183268868,
+        "max_ball_height_m": 0.06306889183268868,
+        "max_contact_penetration_m": 0.002565649830863742,
+        "max_min_jaw_normal_force_n": 47.92448940453069,
+        "first_contact_s": 12.618000000000883,
+        "first_contact_geom": [
+          "fixed_jaw_sph_tip3"
+        ],
+        "first_bilateral_s": 13.322000000001118,
+        "bilateral_slip_mean_mps": 0.0027448492982587833,
+        "by_geom": {
+          "fixed_jaw_sph_tip3": 1408,
+          "fixed_jaw_sph_tip1": 4438,
+          "fixed_jaw_sph_tip2": 3731,
+          "moving_jaw_box2": 4400,
+          "moving_jaw_box3": 1606,
+          "moving_jaw_sph_tip3": 4394,
+          "fixed_jaw_box4": 4391,
+          "fixed_jaw_box3": 4391,
+          "moving_jaw_sph_tip2": 3876,
+          "moving_jaw_sph_tip1": 3420,
+          "geom_50": 1132,
+          "geom_37": 816,
+          "bowl_base": 6098,
+          "bowl_wall_17": 18
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          5.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32933738951990316,
+        0.12379848113390701
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.01386259217006823,
+      "pose_error_mean_m": 0.004605316211052786,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.4810922009775769,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 15642,
+        "bilateral_substeps": 5854,
+        "longest_bilateral_s": 11.708,
+        "longest_bilateral_lift_s": 9.208,
+        "bilateral_lift_substeps": 4604,
+        "max_bilateral_height_m": 0.2627193992177592,
+        "max_ball_height_m": 0.2627193992177592,
+        "max_contact_penetration_m": 0.0033595522443108546,
+        "max_min_jaw_normal_force_n": 55.397277120236694,
+        "first_contact_s": 14.162000000001399,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.246000000001427,
+        "bilateral_slip_mean_mps": 0.0026821481512325353,
+        "by_geom": {
+          "moving_jaw_box3": 4921,
+          "geom_49": 1810,
+          "fixed_jaw_sph_tip2": 5345,
+          "fixed_jaw_box4": 5853,
+          "fixed_jaw_sph_tip3": 2344,
+          "fixed_jaw_sph_tip1": 5327,
+          "moving_jaw_box2": 5844,
+          "moving_jaw_sph_tip3": 5809,
+          "fixed_jaw_box3": 5480,
+          "moving_jaw_sph_tip1": 747,
+          "geom_50": 572,
+          "bowl_wall_05": 41,
+          "bowl_wall_04": 36,
+          "bowl_wall_06": 49,
+          "bowl_wall_03": 5,
+          "bowl_base": 9586,
+          "bowl_wall_16": 18,
+          "bowl_wall_17": 7,
+          "bowl_wall_15": 57,
+          "bowl_wall_14": 17,
+          "bowl_wall_07": 19,
+          "bowl_wall_08": 7,
+          "bowl_wall_00": 12,
+          "bowl_wall_19": 14,
+          "bowl_wall_13": 3,
+          "bowl_wall_12": 3,
+          "bowl_wall_11": 3,
+          "bowl_wall_10": 3,
+          "bowl_wall_09": 2
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 1,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.33624426737900337,
+        0.12163733204477399
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 59.70000076293945,
+      "success": false,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.019349156570796475,
+      "pose_error_mean_m": 0.005132932704999953,
+      "pose_error_p95_m": 0.016909559305579105,
+      "arm_joint_error_mean_deg_l2": 1.5286017432860242,
+      "ball_displacement_before_closure_m": 0.021076412569472975,
+      "contact": {
+        "contact_substeps": 1702,
+        "bilateral_substeps": 1242,
+        "longest_bilateral_s": 2.484,
+        "longest_bilateral_lift_s": 0.524,
+        "bilateral_lift_substeps": 303,
+        "max_bilateral_height_m": 0.0702453232547274,
+        "max_ball_height_m": 0.07141777090925869,
+        "max_contact_penetration_m": 0.0017334212947464414,
+        "max_min_jaw_normal_force_n": 42.62778564441581,
+        "first_contact_s": 11.74000000000059,
+        "first_contact_geom": [
+          "fixed_jaw_box3"
+        ],
+        "first_bilateral_s": 15.09600000000171,
+        "bilateral_slip_mean_mps": 0.007180857450735805,
+        "by_geom": {
+          "fixed_jaw_box3": 1256,
+          "fixed_jaw_box4": 1271,
+          "fixed_jaw_sph_tip1": 286,
+          "fixed_jaw_sph_tip2": 1184,
+          "moving_jaw_box3": 1391,
+          "moving_jaw_box2": 1525,
+          "moving_jaw_sph_tip3": 1238,
+          "geom_50": 767
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 2,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.34562748347236233,
+        0.12052558778264687
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 34.400001525878906,
+      "success": false,
+      "held": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.015723623270252174,
+      "pose_error_mean_m": 0.005582457477651079,
+      "pose_error_p95_m": 0.016715158728651425,
+      "arm_joint_error_mean_deg_l2": 1.7760190459096994,
+      "ball_displacement_before_closure_m": 0.017135357271647677,
+      "contact": {
+        "contact_substeps": 256,
+        "bilateral_substeps": 0,
+        "longest_bilateral_s": 0.0,
+        "longest_bilateral_lift_s": 0.0,
+        "bilateral_lift_substeps": 0,
+        "max_bilateral_height_m": 0.0,
+        "max_ball_height_m": 0.0009999999999999731,
+        "max_contact_penetration_m": 0.0006573901588573169,
+        "max_min_jaw_normal_force_n": 0.0,
+        "first_contact_s": 11.14200000000039,
+        "first_contact_geom": [
+          "fixed_jaw_box4"
+        ],
+        "first_bilateral_s": null,
+        "bilateral_slip_mean_mps": null,
+        "by_geom": {
+          "fixed_jaw_box4": 215,
+          "fixed_jaw_sph_tip3": 240,
+          "fixed_jaw_box3": 185,
+          "fixed_jaw_sph_tip1": 180,
+          "moving_jaw_box2": 13
+        },
+        "trace": []
+      },
+      "trace": []
+    },
+    {
+      "episode": 3,
+      "mode": "leader",
+      "candidate": {
+        "xy_offset_mm": [
+          10.0,
+          10.0
+        ],
+        "gripper_scale": 1.0,
+        "friction": 0.6,
+        "damping": 1.0,
+        "base_offset_mm": 12.0
+      },
+      "initial_ball_xy": [
+        0.32933738951990316,
+        0.12879848113390702
+      ],
+      "invalid_initial_ball_contacts": [],
+      "initial_robot_table_penetration_m": 0.0,
+      "initial_penetration_tolerance_m": 0.002,
+      "initial_physical_valid": true,
+      "valid": true,
+      "execution_completed": true,
+      "duration_s": 45.599998474121094,
+      "success": true,
+      "held": true,
+      "lifted": true,
+      "min_ee_ball_distance_m": 0.013825235484997285,
+      "pose_error_mean_m": 0.00460979438667715,
+      "pose_error_p95_m": 0.016685619697107242,
+      "arm_joint_error_mean_deg_l2": 1.481789492763693,
+      "ball_displacement_before_closure_m": 0.0,
+      "contact": {
+        "contact_substeps": 15622,
+        "bilateral_substeps": 6017,
+        "longest_bilateral_s": 12.034,
+        "longest_bilateral_lift_s": 9.528,
+        "bilateral_lift_substeps": 4764,
+        "max_bilateral_height_m": 0.2611102449024909,
+        "max_ball_height_m": 0.2611102449024909,
+        "max_contact_penetration_m": 0.002607621123074763,
+        "max_min_jaw_normal_force_n": 55.492949716683384,
+        "first_contact_s": 14.214000000001416,
+        "first_contact_geom": [
+          "moving_jaw_box3"
+        ],
+        "first_bilateral_s": 14.246000000001427,
+        "bilateral_slip_mean_mps": 0.0026024700510556605,
+        "by_geom": {
+          "moving_jaw_box3": 4924,
+          "fixed_jaw_sph_tip2": 5550,
+          "fixed_jaw_box4": 6015,
+          "geom_49": 1861,
+          "fixed_jaw_sph_tip3": 2602,
+          "fixed_jaw_sph_tip1": 5573,
+          "moving_jaw_box2": 6005,
+          "moving_jaw_sph_tip3": 5959,
+          "fixed_jaw_box3": 5550,
+          "moving_jaw_sph_tip1": 1043,
+          "geom_50": 664,
+          "bowl_wall_06": 52,
+          "bowl_wall_05": 38,
+          "bowl_wall_07": 11,
+          "bowl_base": 9450,
+          "bowl_wall_16": 91,
+          "bowl_wall_17": 23,
+          "bowl_wall_18": 5,
+          "bowl_wall_15": 40
+        },
+        "trace": []
+      },
+      "trace": []
+    }
+  ]
+}
