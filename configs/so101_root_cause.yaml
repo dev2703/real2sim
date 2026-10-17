@@ -1,0 +1,32 @@
+name: so101_root_cause_20261017
+out: outputs/so101_root_cause_20261017
+previous_queue: outputs/experiments_20261016_stage1
+replay:
+  config: results/audit/geometry_control_20261016/g2_fitted_xy_local/sim_f0.6_d1.0_b12.0.yaml
+  reference_report: results/audit/geometry_control_20261016/g0_complete/report.json
+  episodes: [1, 2, 3]
+  modes: [joint_reference, cartesian_delta, cartesian_reference_feedback]
+  common_ball_offset_mm: [5.0, 0.0]
+  gripper_source: recorded_command_unverified_provenance
+  geometry_status: exploratory_candidate_not_independent_calibration
+  rebuild_cartesian_reference_from_scene_mapping: true
+  safety_thresholds: unchanged
+  policy_training: false
+  panda_allowed: false
+collection:
+  status: awaiting_operator_collection
+  repo_id: local/so101_root_cause_20fps
+  fps: 20
+  num_episodes: 5
+  push_to_hub: false
+  trace_dir: results/collection_traces
+  hold_seconds: 2
+  sequence:
+    - {episode: 0, condition: empty_rehearsal, matched_pair: A}
+    - {episode: 1, condition: ball_loaded, matched_pair: A}
+    - {episode: 2, condition: ball_loaded, matched_pair: B}
+    - {episode: 3, condition: empty_rehearsal, matched_pair: B}
+    - {episode: 4, condition: ordinary_complete_grasp, matched_pair: null}
+  invariants: [calibration, cameras, hardware_encoder, limiter, existing_motor_settings, intended_hold_poses]
+  purpose: Separate actual cadence, requested-to-sent limiting, and loaded versus unloaded sent-to-measured residuals.
+  automatic_hardware_start: false

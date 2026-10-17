@@ -1,0 +1,13 @@
+episode_index,condition,matched_pair,pose_id,phase,start_frame_inclusive,end_frame_exclusive,notes
+0,empty_rehearsal,A,transport_pose_1,stationary_hold,,,Same intended arm target as episode 1; annotate from video and trace
+0,empty_rehearsal,A,transport_pose_2,stationary_hold,,,Same intended arm target as episode 1; annotate from video and trace
+1,ball_loaded,A,transport_pose_1,stationary_hold,,,Ball visibly supported; do not infer load from commanded gripper alone
+1,ball_loaded,A,transport_pose_2,stationary_hold,,,Ball visibly supported; do not infer load from commanded gripper alone
+2,ball_loaded,B,transport_pose_1,stationary_hold,,,Repeat loaded condition before empty condition
+2,ball_loaded,B,transport_pose_2,stationary_hold,,,Repeat loaded condition before empty condition
+3,empty_rehearsal,B,transport_pose_1,stationary_hold,,,Match episode 2 intended arm target
+3,empty_rehearsal,B,transport_pose_2,stationary_hold,,,Match episode 2 intended arm target
+4,ordinary_complete_grasp,,none,approach,,,Normal complete demonstration without diagnostic pauses
+4,ordinary_complete_grasp,,none,closure,,,Annotate actual visible phase
+4,ordinary_complete_grasp,,none,lift_transport,,,Annotate actual visible phase
+4,ordinary_complete_grasp,,none,release,,,Annotate actual visible phase
