@@ -2,6 +2,7 @@
 
 Run `python scripts/run_v2_protocol.py --help`. No command uploads data or rents compute.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,6 +23,7 @@ from real2sim.experiments.v2 import (
     freeze_bundle,
     gate_failures,
     read_json,
+    scenario_suite,
     verify_bundle,
 )
 
@@ -39,7 +41,11 @@ def main():
     sub = p.add_subparsers(dest="command", required=True)
     split = sub.add_parser("split")
     split.add_argument("--annotations", type=Path, required=True)
-    split.add_argument("--root", type=Path, default=Path.home()/".cache/huggingface/lerobot/local/so101_act_pickplace_v2")
+    split.add_argument(
+        "--root",
+        type=Path,
+        default=Path.home() / ".cache/huggingface/lerobot/local/so101_act_pickplace_v2",
+    )
     split.add_argument("--out", type=Path, default=Path("results/v2/split.json"))
     matrix = sub.add_parser("matrix")
     matrix.add_argument("--base", type=Path, default=Path("configs/v2/act_base.yaml"))
@@ -49,7 +55,12 @@ def main():
     matrix.add_argument("--head-lr", type=float, default=1e-4)
     matrix.add_argument("--out", type=Path, required=True)
     freeze = sub.add_parser("freeze")
-    freeze.add_argument("--file", action="append", required=True, help="name=path; include data, task, sim, eval, scenarios and evidence")
+    freeze.add_argument(
+        "--file",
+        action="append",
+        required=True,
+        help="name=path; include data, task, sim, eval, scenarios and evidence",
+    )
     freeze.add_argument("--out", type=Path, required=True)
     gate = sub.add_parser("check")
     gate.add_argument("--evidence", type=Path, required=True)
@@ -64,21 +75,48 @@ def main():
     score = sub.add_parser("score-final")
     score.add_argument("--rows", type=Path, required=True)
     score.add_argument("--out", type=Path, required=True)
+    cases = sub.add_parser("scenarios")
+    cases.add_argument("--registration", type=Path, required=True)
+    cases.add_argument("--reserved", action="store_true")
+    cases.add_argument("--seed", type=int, default=0)
+    cases.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
-    if args.command == "split":
+    if args.command == "scenarios":
+        write(
+            args.out,
+            scenario_suite(read_json(args.registration), reserved=args.reserved, seed=args.seed),
+        )
+    elif args.command == "split":
         ds = RawDataset(args.root.expanduser())
         write(args.out, stratified_split(read_json(args.annotations), ds.episode_indices))
     elif args.command == "matrix":
-        arms = experiment_matrix(load_yaml(args.base), backbone=args.backbone, head_lr=args.head_lr,
-                                 effective_batch=args.effective_batch, physical_batch=args.physical_batch)
-        write(args.out, {"version": "v2_screen_v1", "selection": "development pick-place success; then closure error; then latency",
-                         "adaptive_baseline": {"backbone": args.backbone, "batch": args.effective_batch, "head_lr": args.head_lr},
-                         "arms": arms})
+        arms = experiment_matrix(
+            load_yaml(args.base),
+            backbone=args.backbone,
+            head_lr=args.head_lr,
+            effective_batch=args.effective_batch,
+            physical_batch=args.physical_batch,
+        )
+        write(
+            args.out,
+            {
+                "version": "v2_screen_v1",
+                "selection": "development pick-place success; then closure error; then latency",
+                "adaptive_baseline": {
+                    "backbone": args.backbone,
+                    "batch": args.effective_batch,
+                    "head_lr": args.head_lr,
+                },
+                "arms": arms,
+            },
+        )
     elif args.command == "freeze":
         paths = dict(item.split("=", 1) for item in args.file)
         write(args.out, freeze_bundle(paths))
     elif args.command == "check":
-        failures = gate_failures(read_json(args.evidence), include_tiny_fit=not args.before_tiny_fit)
+        failures = gate_failures(
+            read_json(args.evidence), include_tiny_fit=not args.before_tiny_fit
+        )
         print(json.dumps({"ready": not failures, "missing_or_failed": failures}, indent=2))
         return int(bool(failures))
     elif args.command == "train":
@@ -98,31 +136,57 @@ def main():
         if arm.get("reuse"):
             raise ValueError(f"reuse existing control {arm['reuse']}; do not charge another screen")
         if arm["family"] != "act":
-            raise ValueError("use train_flow_head.py for the matched frozen-feature flow/regression arms")
+            raise ValueError(
+                "use train_flow_head.py for the matched frozen-feature flow/regression arms"
+            )
         data = Path(arm["config"]["data"]).resolve()
-        if (data/"manifest.json") != Path(bundle["files"]["data_manifest"]["path"]):
+        if (data / "manifest.json") != Path(bundle["files"]["data_manifest"]["path"]):
             raise ValueError("arm data differs from frozen data manifest")
         # Hold the same lock for every v2 training subprocess. Timeouts never retry.
         with queue_lock(Path("outputs/v2/training_lock")):
             verify_bundle(bundle)
             args.out.mkdir(parents=True, exist_ok=True)
-            if (args.out/"training_result.json").exists():
+            if (args.out / "training_result.json").exists():
                 raise FileExistsError("completed run exists; reuse it")
-            cfgpath = args.out/"input.yaml"
+            cfgpath = args.out / "input.yaml"
             if cfgpath.exists() and load_yaml(cfgpath) != arm["config"]:
                 raise ValueError("existing run config differs")
             cfgpath.write_text(yaml.safe_dump(arm["config"], sort_keys=False))
-            cmd = [sys.executable, "-m", "real2sim.policy.train", "--config", str(cfgpath), "--data", str(data), "--out", str(args.out)]
+            cmd = [
+                sys.executable,
+                "-m",
+                "real2sim.policy.train",
+                "--config",
+                str(cfgpath),
+                "--data",
+                str(data),
+                "--out",
+                str(args.out),
+            ]
             if args.resume:
                 cmd += ["--resume", str(args.resume)]
-            with (args.out/"process.log").open("a") as log:
+            with (args.out / "process.log").open("a") as log:
                 try:
-                    result = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, timeout=args.runtime_seconds, check=False)
-                    status = {"returncode": result.returncode, "completed": result.returncode == 0, "automatic_retry": False}
+                    result = subprocess.run(
+                        cmd,
+                        stdout=log,
+                        stderr=subprocess.STDOUT,
+                        timeout=args.runtime_seconds,
+                        check=False,
+                    )
+                    status = {
+                        "returncode": result.returncode,
+                        "completed": result.returncode == 0,
+                        "automatic_retry": False,
+                    }
                 except subprocess.TimeoutExpired:
-                    status = {"completed": False, "timeout": True, "automatic_retry": False,
-                              "resume": "latest fixed-exposure checkpoint; uncheckpointed work is lost"}
-                (args.out/"process_status.json").write_text(json.dumps(status, indent=2)+"\n")
+                    status = {
+                        "completed": False,
+                        "timeout": True,
+                        "automatic_retry": False,
+                        "resume": "latest fixed-exposure checkpoint; uncheckpointed work is lost",
+                    }
+                (args.out / "process_status.json").write_text(json.dumps(status, indent=2) + "\n")
             verify_bundle(bundle)
             return int(not status["completed"])
     elif args.command == "score-final":

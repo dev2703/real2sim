@@ -350,6 +350,7 @@ class PandaPickPlaceEnv:
             "ball_speed_mps": float(np.linalg.norm(ball_v)),
             "ball_in_bowl": bool(np.linalg.norm(ball[:2] - bowl[:2]) < self.bowl["rim_radius"]
                                  and floor_z <= ball[2] <= rim_z + radius),
+            "ball_over_bowl": bool(np.linalg.norm(ball[:2] - bowl[:2]) < self.bowl["rim_radius"] and ball[2] >= floor_z),
             "ball_resting": bool(np.linalg.norm(ball_v) < 0.01),
             "ball_held": ball_held,
             "ball_touching_table": self.table_geom in touching,

@@ -14,7 +14,7 @@ import numpy as np
 TRIAL_COLUMNS = [
     "experiment_id", "controller_source", "robot", "seed", "checkpoint_sha256", "checkpoint_step",
     "success", "pick_place_success", "lifted", "delivered", "released", "rolled_out", "ball_escaped_table",
-    "phase_failed", "min_ee_ball_distance_m", "ticks", "ik_rejections", "mean_latency_ms",
+    "phase_failed", "pick_place_phase_failed", "min_ee_ball_distance_m", "ticks", "ik_rejections", "mean_latency_ms",
     "max_action_saturation", "video_path", "abort",
 ]
 # ``aborted``: the trial stopped on an exception (IK/physics/action error); kept as a row and never
@@ -55,6 +55,7 @@ class TrialTracker:
     _settled: int = 0
     _in_bowl_prev: bool = False
     _held_prev: bool = False
+    _released_over_bowl_after_lift: bool = False
     history: list[dict] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -75,6 +76,8 @@ class TrialTracker:
         self.held_ever |= held
         if self._held_prev and not held:
             self.released = True
+            self._released_over_bowl_after_lift = self.lifted and bool(
+                privileged.get("ball_over_bowl", privileged["ball_in_bowl"]))
         in_bowl = bool(privileged["ball_in_bowl"])
         self.delivered |= in_bowl
         # Only a *released* ball leaving the bowl counts as rolling out: the ball must be unheld
@@ -94,7 +97,7 @@ class TrialTracker:
         self._settled = self._settled + 1 if settled else 0
         if self._settled >= self.success_hold_ticks:
             self.success = True
-            self.pick_place_success |= self.lifted and self.released
+            self.pick_place_success |= self._released_over_bowl_after_lift
         self.history.append({
             "tick": self.ticks, "in_bowl": in_bowl, "held": held, "resting": bool(privileged["ball_resting"]),
             "ee_ball_distance_m": float(privileged["ee_ball_distance_m"]),
@@ -129,6 +132,9 @@ class TrialTracker:
             "released": self.released, "rolled_out": self.rolled_out and not self.success,
             "ball_escaped_table": self.ball_escaped_table,
             "phase_failed": "aborted" if abort else self.phase_failed(),
+            "pick_place_phase_failed": ("aborted" if abort else "none" if self.pick_place_success
+                else "release" if self.lifted and self.delivered else "transport" if self.lifted
+                else "grasp" if self.held_ever or self.min_ee_ball_distance_m <= self.approach_distance_m else "approach"),
             "abort": abort or None,
             "min_ee_ball_distance_m": (None if not np.isfinite(self.min_ee_ball_distance_m)
                                        else round(self.min_ee_ball_distance_m, 5)),
@@ -155,6 +161,7 @@ def summarize(rows: list[dict]) -> dict:
         "lifted": count("lifted"), "delivered": count("delivered"), "released": count("released"),
         "rolled_out": count("rolled_out"), "ball_escaped_table": count("ball_escaped_table"),
         "phase_failed_counts": {p: sum(r["phase_failed"] == p for r in rows) for p in PHASES},
+        "pick_place_phase_failed_counts": {p: sum(r.get("pick_place_phase_failed") == p for r in rows) for p in PHASES},
         "ik_rejections_total": int(sum(r["ik_rejections"] for r in rows)),
         "mean_latency_ms": (float(np.mean(lat)) if lat else None),
         "max_action_saturation": (max(r["max_action_saturation"] for r in rows) if rows else None),

@@ -52,4 +52,12 @@ def validate_fixed_split(split: dict, episode_ids: list[int]) -> dict:
     flat = [int(e) for group in lists for e in group]
     if not lists[0] or not lists[1] or len(flat) != len(set(flat)) or set(flat) != set(episode_ids):
         raise ValueError("fixed split must partition all episodes without overlap")
+    if split.get("version") == "v2_conditions_v1":
+        if lists[3]:
+            raise ValueError("the v2 split retains all 41 episodes, including episode 9")
+        for condition, counts in COUNTS.items():
+            observed = tuple(sum(split["conditions"].get(str(e)) == condition for e in group)
+                             for group in lists[:3])
+            if observed != counts:
+                raise ValueError(f"v2 stratification differs for {condition}: {observed}")
     return split

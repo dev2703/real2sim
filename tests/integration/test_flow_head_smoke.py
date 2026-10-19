@@ -127,3 +127,18 @@ def test_cache_failure_writes_flag_without_success(tmp_path):
     failure = json.loads((out / "FAILED.json").read_text())
     assert "FileNotFoundError" in failure["error"]
     assert not (out / "COMPLETE.json").exists() and not (out / "RUNNING.json").exists()
+
+
+@pytest.mark.integration
+def test_two_camera_flow_cache_reload_and_profile(tiny_data, tmp_path, monkeypatch):
+    data, _, manifest, _ = tiny_data
+    np.save(data / "images_top.npy", np.load(data / "images_iphone.npy")[:, ::-1].copy())
+    manifest["camera_keys"].append("observation.images.top")
+    manifest["image_files"]["observation.images.top"] = "images_top.npy"
+    manifest["files_sha256"]["images_top.npy"] = file_sha256(data / "images_top.npy")
+    (data / "manifest.json").write_text(json.dumps(manifest))
+    test_cache_train_portable_reload_and_profile(tiny_data, tmp_path, "flow", monkeypatch)
+    policy, _, contract = load_checkpoint(tmp_path / "flow/checkpoint")
+    assert policy.config.camera_keys == contract["camera_keys"] == manifest["camera_keys"]
+    assert policy.config.feature_tokens == 12
+    assert policy.head.camera_position.shape[0] == 2

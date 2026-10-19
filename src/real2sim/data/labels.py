@@ -46,6 +46,7 @@ def absolute_pose_actions(poses: np.ndarray, gripper_cmd_pct: np.ndarray, lead: 
         raise ValueError("expected poses [N,4,4] and positive integer lead")
     if not len(poses) or grip.shape != (len(poses),) or not np.isfinite(poses).all() or not np.isfinite(grip).all():
         raise ValueError("poses and commands must be finite, nonempty and aligned")
+    lead = int(lead)
     from real2sim.geometry.so3 import is_rotation
 
     if not np.allclose(poses[:, 3], [0, 0, 0, 1]) or not all(is_rotation(p[:3, :3]) for p in poses):

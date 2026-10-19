@@ -308,6 +308,7 @@ class So101PickPlaceEnv:
             "bowl_xyz_task": (bowl - self.offset).tolist(),
             "tool_xyz_task": (tool - self.offset).tolist(),
             "ball_speed_mps": float(np.linalg.norm(ball_v)),
+            "ball_over_bowl": bool(np.linalg.norm(ball[:2] - bowl[:2]) < self.bowl["rim_radius"] and ball[2] >= floor_z),
             "ball_in_bowl": bool(np.linalg.norm(ball[:2] - bowl[:2]) < self.bowl["rim_radius"]
                                  and floor_z <= ball[2] <= rim_z + radius),
             "ball_resting": bool(np.linalg.norm(ball_v) < 0.01),

@@ -167,10 +167,25 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     seed_everything(int(tcfg["seed"]))
 
     manifest = json.loads((data_dir / "manifest.json").read_text())
+    if manifest.get("contract_version"):
+        for name, digest in manifest["files_sha256"].items():
+            if Path(name).name != name or file_sha256(data_dir / name) != digest:
+                raise ValueError(f"v2 data checksum mismatch: {name}")
     chunk = int(cfg["model"]["chunk_size"])
-    train_ds = DerivedTickDataset(data_dir, manifest["split"]["train"], chunk,
+    train_episodes = tcfg.get("diagnostic_episodes", manifest["split"]["train"])
+    tiny_fit = "diagnostic_episodes" in tcfg
+    if tiny_fit:
+        conditions = manifest["split"].get("conditions", {})
+        if (len(train_episodes) != 3 or not set(train_episodes) <= set(manifest["split"]["train"])
+                or {conditions.get(str(e)) for e in train_episodes} != {"baseline", "ball_shift", "bowl_shift"}):
+            raise ValueError("tiny-fit diagnostics require three training episodes, one per condition")
+        if (cfg.get("augmentation") or cfg.get("paired_images") or cfg["model"].get("use_vae", True)
+                or cfg["model"].get("dropout", .1) != 0 or cfg["model"].get("optimizer_weight_decay", .05) != 0
+                or int(tcfg["steps"]) * int(tcfg["batch_size"]) * int(tcfg.get("grad_accum", 1)) > 32000):
+            raise ValueError("tiny fit must be deterministic and unregularized, capped at 32000 anchors")
+    train_ds = DerivedTickDataset(data_dir, train_episodes, chunk,
                                  augmentation=cfg.get("augmentation"))
-    val_ds = DerivedTickDataset(data_dir, manifest["split"]["val"], chunk, normalizer=train_ds.normalizer)
+    val_ds = DerivedTickDataset(data_dir, train_episodes if tiny_fit else manifest["split"]["val"], chunk, normalizer=train_ds.normalizer)
     assert not set(manifest["split"]["train"]) & set(manifest["split"]["val"])
     paired_provenance = None
     if cfg.get("paired_images"):
@@ -258,6 +273,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         "act_config": {k: (v if isinstance(v, (int, float, str, bool, type(None))) else str(v)) for k, v in vars(act_cfg).items()},
         "data_manifest": {k: manifest[k] for k in ("source", "split", "camera_keys", "label_semantics", "policy_hz", "files_sha256", "prepare_version")},
         "n_train_ticks": len(train_ds),
+        "validation_scope": "tiny-fit training episodes (not generalization)" if tiny_fit else "validation episodes",
         "n_val_ticks": len(val_ds),
         "n_params": sum(p.numel() for p in policy.parameters()),
         "n_trainable_params": sum(p.numel() for p in policy.parameters() if p.requires_grad),
@@ -284,6 +300,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             raise ValueError("exact resume requires saved sampler/RNG and identical accumulation")
         if continuation["augmentation"] != cfg.get("augmentation") or continuation["paired_images"] != paired_provenance:
             raise ValueError("resume augmentation or paired image provenance differs")
+        if continuation.get("train_episodes", manifest["split"]["train"]) != train_episodes:
+            raise ValueError("resume sampled training episodes differ")
         it.load_state_dict(continuation["sampler"])
         restore_rng(continuation["rng"])
     t_start = time.time()
@@ -374,13 +392,15 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 "best_val_l1": best_l1, "best_step": best_step,
                 "patience_reference": patience_reference, "bad_validations": bad_validations,
                 "augmentation": cfg.get("augmentation"),
+                "diagnostic_episodes": train_episodes if tiny_fit else None,
                 "paired_images": paired_provenance, "initial_checkpoint": initial_provenance,
                 "reconstruction_loss": asdict(loss_config),
                 "scheduler": schedule, "scheduler_total_steps": schedule_steps,
                 "examples_seen": step * bs * accum,
                 "wall_s": round(time.time() - t_start, 1)}, optimizer,
                 training_state={"sampler": it.state_dict(), "rng": rng_state(), "grad_accum": accum,
-                                "augmentation": cfg.get("augmentation"), "paired_images": paired_provenance}
+                                "augmentation": cfg.get("augmentation"), "paired_images": paired_provenance,
+                                "train_episodes": train_episodes}
                 if exact_resume else None)
             update_last_link(out_dir / "checkpoints", ck.name)
             if improved:

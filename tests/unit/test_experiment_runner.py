@@ -149,7 +149,7 @@ def test_dry_run_writes_configs_without_launching_or_claiming_completion(tmp_pat
     root = tmp_path / "data"
     variants = ["canonical", "no_velocity", "ema_velocity_05", "ema_velocity_075", "joints", "canonical_joints", "history3"]
     for name in variants:
-        atomic_json(root / name / "manifest.json", {"kind": name})
+        atomic_json(root / name / "manifest.json", {"kind": name, "files_sha256": {}})
     runner = make_runner(tmp_path, "--dry-run", "--data-root", str(root))
     monkeypatch.setattr(runner, "command", lambda *a, **k: pytest.fail("dry run launched a subprocess"))
     runner.execute()

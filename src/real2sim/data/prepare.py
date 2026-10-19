@@ -96,6 +96,8 @@ def prepare(
         task_cfg = _load(cfg.get("task_config", "configs/task.yaml"))
         fk = So101FK(mapping=JointMapping.from_task_config(task_cfg))
     ds = RawDataset(root, repo_id=repo_id, revision=revision)
+    if cfg.get("contract_version") and (ds.fps != 25 or float(cfg["policy_hz"]) != 12.5):
+        raise ValueError("v2 contract requires nominal 25 Hz source and exact 12.5 Hz policy ticks")
     keys = validate_camera_keys(cfg, ds.image_keys)
     excluded = sorted(int(e) for e in cfg.get("excluded_episodes", []))
     split_cfg = cfg["split"]
@@ -286,8 +288,14 @@ def prepare(
         manifest.update(contract_version=cfg["contract_version"], prepare_version="v3",
                         action_representation=mode, controller_semantics=cfg.get("controller_semantics"),
                         calibration_sha256=_sha256(project_path(cfg["task_config"])),
-                        camera_transforms=cfg.get("camera_transforms", {}),
+                        camera_transforms={k: task_cfg[k] for k in ("camera_iphone", "additional_cameras") if k in task_cfg}
+                        if mode != "joint" else cfg.get("camera_transforms", {}),
                         timing_basis="nominal source row clock; physical acquisition intervals unavailable")
+        manifest["source_files_sha256"] = {
+            str(path.relative_to(root)): _sha256(path)
+            for directory in ("meta", "data", "videos")
+            for path in sorted((root / directory).rglob("*")) if path.is_file()
+        }
         manifest["label_semantics"] = {
             "joint": "Recorded command at the sampled row; provenance in source annotations",
             "canonical_joint": "Canonical observed TCP state; recorded joint command at the sampled row",
