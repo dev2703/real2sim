@@ -1,0 +1,15 @@
+name: so101_persistent_target_20261019
+out: outputs/so101_persistent_target_20261019/replay
+previous_queue: outputs/experiments_20261016_stage1
+replay:
+  config: results/audit/geometry_control_20261016/g2_fitted_xy_local/sim_f0.6_d1.0_b12.0.yaml
+  reference_report: results/audit/geometry_control_20261016/g0_complete/report.json
+  episodes: [1, 2, 3]
+  modes: [joint_reference, cartesian_delta, cartesian_persistent_target]
+  common_ball_offset_mm: [5.0, 0.0]
+  gripper_source: recorded_command_unverified_provenance
+  geometry_status: exploratory_candidate_not_independent_calibration
+  rebuild_cartesian_reference_from_scene_mapping: true
+  safety_thresholds: unchanged
+  policy_training: false
+  panda_allowed: false

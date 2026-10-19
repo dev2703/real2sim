@@ -56,7 +56,7 @@ def test_matched_routes_preserve_gripper_command_inputs_and_source_arrays(diagno
         assert [r["recorded_gripper_command_pct"] for r in rows] == [30., 30.]
         assert [r["recorded_gripper_observed_pct"] for r in rows] == [40., 40.]
         masks.append([r["active_reference"] for r in rows])
-    assert masks[0] == masks[1] == masks[2]
+    assert all(mask == masks[0] for mask in masks)
     for before, after in ((before_joint, joint), (before_cart, cart)):
         for key in before:
             np.testing.assert_array_equal(before[key], after[key])
@@ -68,9 +68,11 @@ def test_stationary_control_does_not_misclassify_ball_table_contact(diagnostic):
     fixed = probe(Path("configs/sim_so101.yaml"), state, "fixed_joint_target", ticks=20)
     delta = probe(Path("configs/sim_so101.yaml"), state, "zero_delta_current_pose", ticks=20)
     feedback = probe(Path("configs/sim_so101.yaml"), state, "fixed_initial_pose_feedback", ticks=20)
+    persistent = probe(Path("configs/sim_so101.yaml"), state, "zero_delta_accepted_target", ticks=20)
     assert delta["end_drift_mm"] > fixed["end_drift_mm"] * 5
     assert feedback["end_drift_mm"] < fixed["end_drift_mm"] * 1.1
-    for result in (fixed, delta, feedback):
+    assert persistent["end_drift_mm"] < fixed["end_drift_mm"] * 1.1
+    for result in (fixed, delta, feedback, persistent):
         assert result["ball_non_table_contact_ticks"] == 0
         assert result["ik_rejections"] == 0
         json.dumps(result, allow_nan=False)

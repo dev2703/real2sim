@@ -68,15 +68,76 @@ def test_dataset_validation_rejects_old_requested_action_labels(tmp_path):
     (tmp_path / "meta").mkdir()
     (tmp_path / "data").mkdir()
     (tmp_path / "meta/info.json").write_text(json.dumps({"fps": 20, "features": {
-        "action": {"names": ["joint.pos"]}}}))
+        "action": {"names": ["joint.pos"]},
+        "observation.state": {"names": ["joint.pos"]}}}))
     data = attempt()
     path = tmp_path / "data/episode.parquet"
     frame = pd.DataFrame({"episode_index": [0] * 31, "frame_index": np.arange(31),
-                          "action": [[10.]] * 31})
+                          "action": [[10.]] * 31, "observation.state": [[0.]] + [[8.]] * 30,
+                          "timestamp": np.arange(31) / 20})
     frame.to_parquet(path)
     session = {"metadata": {"dataset_fps": 20}}
-    assert audit.check_dataset(tmp_path, session, [data])["0"]["sent_action_labels"] == "PASS"
+    assert audit.check_dataset(tmp_path, session, [data])["episodes"]["0"]["sent_action_labels"] == "PASS"
     frame["action"] = [[20.]] * 31
     frame.to_parquet(path)
     with pytest.raises(AssertionError):
         audit.check_dataset(tmp_path, session, [data])
+
+
+def test_drift_and_velocity_scale_expose_nominal_timestamp_error():
+    data = attempt()
+    # Actual 18.18 Hz for nominal 20 Hz: every stored one-second span is 1.1 physical seconds.
+    for i, row in enumerate(data["frames"]):
+        for key in row:
+            if key.endswith("_ns"):
+                row[key] += i * 5_000_000
+    result = audit.audit_attempt(data, 20)
+    drift = result["clock_drift"]
+    assert drift["observation_minus_nominal_end_ms"] == pytest.approx(150)
+    assert drift["nominal_velocity_scale_over_physical"]["mean"] == pytest.approx(1.1)
+    assert drift["policy_row_stride"]["actual_interval_ms"]["mean"] == pytest.approx(110)
+    assert drift["policy_row_stride"]["nominal_velocity_scale_over_physical"]["mean"] == pytest.approx(1.1)
+    joint = result["joints"]["joint.pos"]
+    assert joint["leader_minus_processed_request_absolute"]["mean"] == 5
+    assert joint["processed_requests_changed_by_send"]["changed_fraction"] == 1
+
+
+def test_stall_residuals_are_separated_and_noninteger_stride_is_not_rounded():
+    data = attempt()
+    for row in data["frames"][15:]:
+        for key in row:
+            if key.endswith("_ns"):
+                row[key] += 200_000_000
+    data["frames"][15]["measured_positions"]["joint.pos"] = 100.
+    result = audit.audit_attempt(data, 25)
+    assert result["clock_drift"]["policy_row_stride"]["status"] == "noninteger_rate_ratio"
+    joint = result["joints"]["joint.pos"]
+    assert joint["latest_prior_sent_minus_measured_absolute"]["max"] == 90
+    assert joint["prior_sent_minus_measured_excluding_long_gaps_absolute"]["max"] == 2
+
+
+def test_trace_does_not_certify_untraced_episodes_or_different_observations(tmp_path):
+    (tmp_path / "meta").mkdir()
+    (tmp_path / "data").mkdir()
+    (tmp_path / "meta/info.json").write_text(json.dumps({"fps": 20, "features": {
+        "action": {"names": ["joint.pos"]}, "observation.state": {"names": ["joint.pos"]}}}))
+    data = attempt(4)
+    frame = pd.DataFrame({"episode_index": [0] * 4 + [1] * 4, "frame_index": list(range(4)) * 2,
+                          "action": [[10.]] * 8, "observation.state": ([[0.]] + [[8.]] * 3) * 2,
+                          "timestamp": list(np.arange(4) / 20) * 2})
+    path = tmp_path / "data/episode.parquet"
+    frame.to_parquet(path)
+    session = {"metadata": {"dataset_fps": 20}}
+    result = audit.check_dataset(tmp_path, session, [data])
+    assert result["coverage"]["untraced_dataset_episodes"] == [1]
+    assert result["coverage"]["all_dataset_episodes_traced"] is False
+    frame.at[1, "observation.state"] = [99.]
+    frame.to_parquet(path)
+    with pytest.raises(AssertionError, match="observations differ"):
+        audit.check_dataset(tmp_path, session, [data])
+
+
+@pytest.mark.parametrize("fps,policy_hz", [(0, 10), (20, 0), (float("nan"), 10), (20, float("inf"))])
+def test_nonfinite_or_invalid_cadences_are_rejected(fps, policy_hz):
+    with pytest.raises(ValueError, match="Rates"):
+        audit.audit_attempt(attempt(), fps, policy_hz=policy_hz)

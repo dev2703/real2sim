@@ -7,6 +7,7 @@ import traceback
 from pathlib import Path
 
 import numpy as np
+import yaml
 from run_so101_experiments import atomic_json, hash_file, now, queue_lock
 
 from real2sim.geometry.so3 import delta_action
@@ -86,7 +87,7 @@ def main():
             joint = dict(np.load(".cache/derived_joint/arrays.npz"))
             source_files = [Path(__file__), config, Path(".cache/derived_joint/arrays.npz"),
                 Path("src/real2sim/sim/env.py"),
-                Path(yaml_task := __import__("yaml").safe_load(config.read_text())["task_config"]),
+                Path(yaml.safe_load(config.read_text())["task_config"]),
                 Path("src/real2sim/policy/adapters.py"), Path("src/real2sim/sim/kinematics.py")]
             hashes = {str(p): hash_file(p) for p in source_files}
             report = {"kind": "NO_POLICY_STATIONARY_HOLD_CONTROL_DIAGNOSTIC",
