@@ -54,6 +54,8 @@ def make_episode_split(
     before exclusion.
     """
     ids = sorted(int(e) for e in episode_ids)
+    if len(ids) != len(set(ids)):
+        raise ValueError("episode_ids must not contain duplicates")
     if n_val < 0 or n_val >= len(ids):
         raise ValueError(f"n_val={n_val} must be in [0, {len(ids) - 1}]")
     excluded = sorted({int(e) for e in (exclude or [])})
