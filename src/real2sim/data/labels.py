@@ -31,6 +31,28 @@ PROPRIO_NAMES = (
     + ["ee_vx", "ee_vy", "ee_vz", "gripper_obs"]
 )
 ACTION_NAMES = ["dx", "dy", "dz", "d_rx", "d_ry", "d_rz", "gripper_target"]
+ABSOLUTE_ACTION_NAMES = ["target_x", "target_y", "target_z"] + [f"target_rot6d_{i}" for i in range(6)] + ["gripper_target"]
+
+
+def absolute_pose_actions(poses: np.ndarray, gripper_cmd_pct: np.ndarray, lead: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    """Next achieved task-frame pose, with current commanded gripper intent.
+
+    Terminal placeholders retain the last pose and are masked, never counted as labels.
+    Rotation columns use the same convention as canonical proprioception.
+    """
+    poses = np.asarray(poses, dtype=float)
+    grip = np.asarray(gripper_cmd_pct, dtype=float)
+    if lead < 1 or int(lead) != lead or poses.ndim != 3 or poses.shape[1:] != (4, 4):
+        raise ValueError("expected poses [N,4,4] and positive integer lead")
+    if not len(poses) or grip.shape != (len(poses),) or not np.isfinite(poses).all() or not np.isfinite(grip).all():
+        raise ValueError("poses and commands must be finite, nonempty and aligned")
+    from real2sim.geometry.so3 import is_rotation
+
+    if not np.allclose(poses[:, 3], [0, 0, 0, 1]) or not all(is_rotation(p[:3, :3]) for p in poses):
+        raise ValueError("absolute targets require proper homogeneous poses")
+    target = poses[np.minimum(np.arange(len(poses)) + lead, len(poses) - 1)]
+    actions = np.c_[target[:, :3, 3], np.stack([rot6d_from_matrix(p[:3, :3]) for p in target]), np.clip(grip / 100, 0, 1)]
+    return actions, np.arange(len(poses)) + lead >= len(poses)
 
 
 @dataclass

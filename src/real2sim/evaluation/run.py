@@ -43,6 +43,7 @@ from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import (
     IPHONE_KEY,
+    AbsolutePoseActionAdapter,
     ApplyResult,
     CartesianActionAdapter,
     ChunkExecutor,
@@ -60,6 +61,7 @@ ROBOTS = ("so101", "panda")
 CONTROLLER_SOURCES = {"learned": "LEARNED_ACT", "hold": "HOLD_POSE"}
 EXPERIMENT_IDS = {"joint": "E1_joint_ACT", "cartesian": "E2_cart_ACT_so101",
                   "cartesian_persistent_target": "DIAGNOSTIC_E2_cart_ACT_so101_persistent_target",
+                  "cartesian_absolute": "E2_absolute_ACT_so101", "canonical_joint": "DIAGNOSTIC_canonical_joint_ACT",
                   "panda": "E3_cart_ACT_panda", "hold": "E0_hold_pose_null",
                   "hold_panda": "E0_hold_pose_null_panda"}
 DEFAULT_CONFIGS = {"so101": ("configs/sim_so101.yaml", "configs/eval_so101.yaml"),
@@ -118,6 +120,12 @@ def check_contract_timing_and_image(contract: dict, env) -> None:
     A 30 Hz checkpoint at 10 Hz control would mis-scale the velocity feature and action timing; a
     different letterbox would change the image geometry. Both pass the shape checks silently.
     """
+    if "camera_keys" in contract and hasattr(env, "camera_keys") and contract["camera_keys"] != env.camera_keys:
+        raise ContractError("checkpoint camera order differs from simulator cameras")
+    if contract.get("contract_version"):
+        task_path = project_path(env.config["task_config"])
+        if contract.get("calibration_sha256") != sha256_file(task_path):
+            raise ContractError("checkpoint calibration differs from simulator task registration")
     hz = contract.get("policy_hz")
     if hz is None or abs(float(hz) - float(env.control_hz)) > 1e-9:
         raise ContractError(f"checkpoint policy_hz {hz} != simulator control_hz {env.control_hz}")
@@ -135,9 +143,8 @@ def _cartesian_target_reference(eval_cfg: dict, *, robot: str, controller: str) 
     reference = eval_cfg.get("cartesian", {}).get("target_reference", "current_pose")
     if reference not in ("current_pose", "accepted_target"):
         raise ValueError("cartesian.target_reference must be 'current_pose' or 'accepted_target'")
-    if reference == "accepted_target" and (robot != "so101" or controller != "learned"):
-        raise ContractError("accepted_target requires a learned SO-101 Cartesian controller; "
-                            "it cannot be applied to Panda or the hold baseline")
+    if reference == "accepted_target" and controller != "learned":
+        raise ContractError("accepted_target requires a learned Cartesian controller; it cannot be applied to the hold baseline")
     return reference
 
 
@@ -154,7 +161,7 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
 
         # Refuses a joint contract (ContractError) before any Panda machinery is built.
         obs_adapter = PandaObservationAdapter(contract, normalizer, device=device)
-        panda = PandaCartesianActionAdapter(env)
+        panda = PandaCartesianActionAdapter(env, target_reference=target_reference)
         # The Panda adapter clamps with sim_panda.yaml action_limits; the eval config mirrors the
         # SO-101 thresholds and must agree so both robots see the same per-tick clamp.
         if not (math.isclose(panda.max_translation, float(cart["max_step_m"]))
@@ -165,7 +172,7 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
         action_adapter = PandaActionAdapter(panda)
     else:
         obs_adapter = ObservationAdapter(contract, normalizer, device=device)
-        if obs_adapter.kind == "joint":
+        if obs_adapter.kind in ("joint", "canonical_joint"):
             if target_reference == "accepted_target":
                 raise ContractError("accepted_target requires a Cartesian checkpoint; "
                                     "joint targets do not use a Cartesian target reference")
@@ -175,6 +182,13 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
                 env, NativeKinematics(env.model, env.config),
                 max_step_m=cart["max_step_m"], max_step_rad=cart["max_step_rad"],
                 target_reference=target_reference)
+    if obs_adapter.kind == "cartesian_absolute":
+        if target_reference != "current_pose":
+            raise ContractError("absolute pose actions require current_pose bounded feedback")
+        action_adapter = AbsolutePoseActionAdapter(action_adapter)
+    expected_controller = contract.get("controller_semantics")
+    if contract.get("contract_version") and expected_controller not in (None, target_reference):
+        raise ContractError("checkpoint execution semantics differ from evaluation configuration")
     executor = ChunkExecutor(policy, normalizer, obs_adapter, action_adapter)
     run_info = json.loads((checkpoint / "run_info.json").read_text()) if (checkpoint / "run_info.json").is_file() else {}
     meta = {
@@ -185,7 +199,7 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
         "chunk_size": int(policy.config.chunk_size),
         "n_action_steps": executor.n_action_steps,
         "device": device,
-        "target_reference": target_reference if obs_adapter.kind == "cartesian" else None,
+        "target_reference": target_reference if obs_adapter.kind in ("cartesian", "cartesian_absolute") else None,
         "execution_interface_ablation": target_reference == "accepted_target",
         "checkpoint_contract_modified": False,
     }
@@ -199,14 +213,14 @@ def run_trial(env, controller, *, seed: int, max_ticks: int, tracker: TrialTrack
               else env.reset(seed=seed, scenario=reset_scenario))
     controller.reset()
     if video is not None:
-        video.write(policy_view_to_bgr(obs[IPHONE_KEY], upscale), f"{caption_prefix} seed={seed} tick=0")
+        video.write(policy_view_to_bgr(obs[IPHONE_KEY if IPHONE_KEY in obs else env.camera_keys[0]], upscale), f"{caption_prefix} seed={seed} tick=0")
     for tick in range(1, max_ticks + 1):
         result = controller.step(obs, env)
         obs = result.obs
         done = tracker.update(result.info["privileged_metrics"], saturation=result.saturation,
                               ik_rejected=result.ik_rejected)
         if video is not None:
-            video.write(policy_view_to_bgr(obs[IPHONE_KEY], upscale),
+            video.write(policy_view_to_bgr(obs[IPHONE_KEY if IPHONE_KEY in obs else env.camera_keys[0]], upscale),
                         f"{caption_prefix} seed={seed} tick={tick}")
         if done or result.truncated:
             break
@@ -259,6 +273,9 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
     if meta["execution_interface_ablation"]:
         caption += " persistent target (execution ablation)"
     source = CONTROLLER_SOURCES[controller]
+    if controller == "learned" and getattr(ctrl.policy.config, "type", "") == "small_chunk_head":
+        source = "LEARNED_FLOW" if ctrl.policy.config.objective == "flow" else "LEARNED_REGRESSION"
+        caption = f"{source} ({robot} sim)"
     vcfg = eval_cfg["video"]
     rows, trials = [], []
     t_start = time.perf_counter()

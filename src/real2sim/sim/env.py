@@ -55,7 +55,10 @@ class So101PickPlaceEnv:
         self.render_images = render_images
         self.renderer = None
         self.data_config = load_yaml(project_path(self.config["data_config"]))
-        self.camera_keys = validate_camera_keys(self.data_config, [self.task["camera_iphone"]["key"]])
+        from real2sim.sim.cameras import camera_bindings
+
+        self.camera_bindings = camera_bindings(self.task, "so101")
+        self.camera_keys = validate_camera_keys(self.data_config, list(self.camera_bindings))
         self.mapping = JointMapping.from_task_config(self.task)
         self.offset = task_frame_offset(self.task)  # p_world = p_task + offset
         self.bowl = bowl_dimensions(self.task, bowl_inner_depth)
@@ -227,11 +230,11 @@ class So101PickPlaceEnv:
         return np.concatenate([p, rot6d_from_matrix(T[:3, :3]), vel, [gripper]]).astype(np.float32)
 
     # ------------------------------------------------------------------ observation / info
-    def render(self) -> np.ndarray:
+    def render(self, camera: str = "iphone") -> np.ndarray:
         if self.renderer is None:
             render = self.config["render"]
             self.renderer = mujoco.Renderer(self.model, height=render["height"], width=render["width"])
-        self.renderer.update_scene(self.data, camera="iphone")
+        self.renderer.update_scene(self.data, camera=camera)
         return self.renderer.render().copy()
 
     def observation(self) -> dict:
@@ -242,8 +245,9 @@ class So101PickPlaceEnv:
         }
         if self.render_images:
             cfg = self.data_config["image"]
-            rgb, _ = letterbox_rgb(self.render(), cfg["height"], cfg["width"], cfg["pad_value"])
-            result[self.camera_keys[0]] = to_chw_float(rgb)
+            for key in self.camera_keys:
+                rgb, _ = letterbox_rgb(self.render(self.camera_bindings[key]), cfg["height"], cfg["width"], cfg["pad_value"])
+                result[key] = to_chw_float(rgb)
         return result
 
     def _contact_pairs(self) -> list[dict]:

@@ -29,7 +29,7 @@ from pathlib import Path
 import numpy as np
 
 from real2sim.config import load_yaml, validate_camera_keys
-from real2sim.data.labels import ACTION_NAMES, PROPRIO_NAMES
+from real2sim.data.labels import ABSOLUTE_ACTION_NAMES, ACTION_NAMES, PROPRIO_NAMES, absolute_pose_actions
 from real2sim.data.raw import RawDataset, resolve_dataset_root
 from real2sim.data.resample import episode_tick_rows, policy_stride
 from real2sim.data.split import make_episode_split
@@ -82,11 +82,11 @@ def prepare(
     episodes: list[int] | None = None,
     mode: str = "joint",
 ) -> dict:
-    if mode not in ("joint", "cartesian"):
+    if mode not in ("joint", "cartesian", "cartesian_absolute", "canonical_joint"):
         raise ValueError(mode)
     gripper_source = None
     fk = None
-    if mode == "cartesian":
+    if mode != "joint":
         from real2sim.config import load_yaml as _load
         from real2sim.geometry.so101_fk import JointMapping, So101FK
 
@@ -103,7 +103,20 @@ def prepare(
     split = make_episode_split(
         ds.episode_indices, n_val=n_val, seed=int(split_cfg["seed"]), repo_id=repo_id, revision=revision, exclude=excluded
     )
-    keep = sorted(split.train + split.val)
+    fixed_split = None
+    if split_cfg.get("fixed_manifest"):
+        from types import SimpleNamespace
+        from real2sim.config import project_path
+        from real2sim.data.conditions import validate_fixed_split
+
+        fixed_split = validate_fixed_split(json.loads(project_path(split_cfg["fixed_manifest"]).read_text()), ds.episode_indices)
+        if excluded != sorted(fixed_split.get("excluded", [])):
+            raise ValueError("fixed manifest exclusions differ from configuration")
+        split = SimpleNamespace(**fixed_split)
+    reserved = fixed_split.get("reserved", []) if fixed_split else []
+    keep = sorted(split.train + split.val + reserved)
+    if fixed_split and episodes is not None:
+        raise ValueError("fixed split cannot be silently restricted; create a separate debug manifest")
     if episodes is not None:
         keep = [e for e in keep if e in set(episodes)]
     stride = policy_stride(ds.fps, float(cfg["policy_hz"]))
@@ -119,15 +132,17 @@ def prepare(
         ticks.append((ep, g, rows))
     N = sum(len(r) for _, _, r in ticks)
 
+    if (out_dir / "manifest.json").exists():
+        raise FileExistsError(f"refusing to overwrite a completed derived dataset: {out_dir}")
     out_dir.mkdir(parents=True, exist_ok=True)
     keys_ = ["episode_index", "frame_index", "row_index", "timestamp", "ep_start", "ep_len", "state", "action"]
-    if mode == "cartesian":
+    if mode != "joint":
         keys_ += ["joint_state", "joint_action", "label_is_extrapolated", "leader_follower_pos_err", "jump_flag"]
     arrays = {k: [] for k in keys_}
     start = 0
     for ep, g, rows in ticks:
         n = len(rows)
-        if mode == "cartesian":
+        if mode != "joint":
             from real2sim.data.labels import episode_labels
 
             S = ds.stack(g, "observation.state")[rows]
@@ -147,9 +162,16 @@ def prepare(
         arrays["timestamp"].append(g["timestamp"].to_numpy()[rows].astype(np.float64))
         arrays["ep_start"].append(np.full(n, start, np.int64))
         arrays["ep_len"].append(np.full(n, n, np.int64))
-        if mode == "cartesian":
+        if mode != "joint":
             arrays["state"].append(lab.proprio.astype(np.float32))
-            arrays["action"].append(lab.action.astype(np.float32))
+            targets = lab.action
+            if mode == "cartesian_absolute":
+                targets, extrapolated = absolute_pose_actions(fk.fk_real(S), A[:, 5], lead=int(cfg["labels"].get("cartesian_lead_ticks", 1)))
+                if not np.array_equal(extrapolated, lab.label_is_extrapolated):
+                    raise RuntimeError("absolute action masks differ from canonical labels")
+            elif mode == "canonical_joint":
+                targets = A
+            arrays["action"].append(targets.astype(np.float32))
         else:
             arrays["state"].append(ds.stack(g, "observation.state")[rows].astype(np.float32))
             arrays["action"].append(ds.stack(g, "action")[rows].astype(np.float32))
@@ -235,7 +257,7 @@ def prepare(
         "image_shape_hwc": [H, W, 3],
         "letterbox": geometry.to_dict() if geometry else None,
         "state_names": ds.state_names if mode == "joint" else PROPRIO_NAMES,
-        "action_names": ds.action_names if mode == "joint" else ACTION_NAMES,
+        "action_names": ds.action_names if mode in ("joint", "canonical_joint") else ABSOLUTE_ACTION_NAMES if mode == "cartesian_absolute" else ACTION_NAMES,
         "label_semantics": (
             "joint: recorded leader target action[t] at each 10 Hz tick (D-003 option C)"
             if mode == "joint"
@@ -252,9 +274,26 @@ def prepare(
         "split": {"seed": split.seed, "train": split.train, "val": split.val, "excluded": split.excluded, "sha256": split.sha256},
         "n_ticks": int(N),
         "n_ticks_train": int(train_mask.sum()),
-        "n_ticks_val": int((~train_mask).sum()),
+        "n_ticks_val": int(np.isin(arrays["episode_index"], split.val).sum()),
         "files_sha256": {f: _sha256(out_dir / f) for f in files},
     }
+    if fixed_split:
+        manifest["split"] = fixed_split
+        manifest["n_ticks_reserved"] = int(np.isin(arrays["episode_index"], reserved).sum())
+    if cfg.get("contract_version"):
+        from real2sim.config import project_path
+
+        manifest.update(contract_version=cfg["contract_version"], prepare_version="v3",
+                        action_representation=mode, controller_semantics=cfg.get("controller_semantics"),
+                        calibration_sha256=_sha256(project_path(cfg["task_config"])),
+                        camera_transforms=cfg.get("camera_transforms", {}),
+                        timing_basis="nominal source row clock; physical acquisition intervals unavailable")
+        manifest["label_semantics"] = {
+            "joint": "Recorded command at the sampled row; provenance in source annotations",
+            "canonical_joint": "Canonical observed TCP state; recorded joint command at the sampled row",
+            "cartesian": "Next achieved FK pose minus current observed FK pose in task frame; recorded current gripper command",
+            "cartesian_absolute": "Next achieved FK position/rot6d in task frame; recorded current gripper command",
+        }[mode]
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"wrote {out_dir}: {N} ticks ({manifest['n_ticks_train']} train / {manifest['n_ticks_val']} val)", file=sys.stderr)
     return manifest
@@ -262,7 +301,7 @@ def prepare(
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="python -m real2sim.data.prepare", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--mode", choices=["joint", "cartesian"], default="joint")
+    p.add_argument("--mode", choices=["joint", "cartesian", "cartesian_absolute", "canonical_joint"], default="joint")
     p.add_argument("--config", default="configs/data.yaml")
     p.add_argument("--repo-id", default=None)
     p.add_argument("--revision", default=None)

@@ -13,7 +13,7 @@ import numpy as np
 
 TRIAL_COLUMNS = [
     "experiment_id", "controller_source", "robot", "seed", "checkpoint_sha256", "checkpoint_step",
-    "success", "lifted", "delivered", "released", "rolled_out", "ball_escaped_table",
+    "success", "pick_place_success", "lifted", "delivered", "released", "rolled_out", "ball_escaped_table",
     "phase_failed", "min_ee_ball_distance_m", "ticks", "ik_rejections", "mean_latency_ms",
     "max_action_saturation", "video_path", "abort",
 ]
@@ -42,6 +42,7 @@ class TrialTracker:
     ball_radius_m: float
     ticks: int = 0
     success: bool = False
+    pick_place_success: bool = False
     lifted: bool = False
     delivered: bool = False
     held_ever: bool = False
@@ -93,6 +94,7 @@ class TrialTracker:
         self._settled = self._settled + 1 if settled else 0
         if self._settled >= self.success_hold_ticks:
             self.success = True
+            self.pick_place_success |= self.lifted and self.released
         self.history.append({
             "tick": self.ticks, "in_bowl": in_bowl, "held": held, "resting": bool(privileged["ball_resting"]),
             "ee_ball_distance_m": float(privileged["ee_ball_distance_m"]),
@@ -122,7 +124,8 @@ class TrialTracker:
     def row(self, *, abort: str | None = None, **static) -> dict:
         row = dict(static)
         row.update({
-            "success": self.success, "lifted": self.lifted, "delivered": self.delivered,
+            "success": self.success, "pick_place_success": self.pick_place_success and not bool(abort),
+            "lifted": self.lifted, "delivered": self.delivered,
             "released": self.released, "rolled_out": self.rolled_out and not self.success,
             "ball_escaped_table": self.ball_escaped_table,
             "phase_failed": "aborted" if abort else self.phase_failed(),
@@ -147,6 +150,8 @@ def summarize(rows: list[dict]) -> dict:
         "aborted": int(sum(bool(r.get("abort")) for r in rows)),
         "successes": count("success"),
         "success_rate": (count("success") / n) if n else None,
+        "pick_place_successes": sum(bool(r.get("pick_place_success", False)) for r in rows),
+        "pick_place_success_rate": (sum(bool(r.get("pick_place_success", False)) for r in rows) / n) if n else None,
         "lifted": count("lifted"), "delivered": count("delivered"), "released": count("released"),
         "rolled_out": count("rolled_out"), "ball_escaped_table": count("ball_escaped_table"),
         "phase_failed_counts": {p: sum(r["phase_failed"] == p for r in rows) for p in PHASES},

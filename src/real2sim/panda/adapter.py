@@ -27,7 +27,7 @@ import mujoco
 import numpy as np
 
 from real2sim.data.labels import ACTION_NAMES
-from real2sim.geometry.so3 import apply_delta, is_rotation, log_so3, make_T, matrix_from_rot6d
+from real2sim.geometry.so3 import apply_delta, delta_action, is_rotation, log_so3, make_T, matrix_from_rot6d
 from real2sim.panda.env import N_ARM, PandaPickPlaceEnv
 from real2sim.panda.model import BASE_BODY, FINGER_BODIES
 
@@ -206,7 +206,10 @@ class ControlResult:
 class PandaCartesianActionAdapter:
     """7-D contract -> Panda native joints; see module docstring. Keeps per-episode tallies."""
 
-    def __init__(self, env: PandaPickPlaceEnv):
+    def __init__(self, env: PandaPickPlaceEnv, *, target_reference: str = "current_pose"):
+        if target_reference not in ("current_pose", "accepted_target"):
+            raise ValueError("unknown Cartesian target reference")
+        self.target_reference = target_reference
         self.env = env
         self.ik = PandaIK(env.model, env.config, task_origin=env.offset)
         limits = env.config["action_limits"]
@@ -216,6 +219,7 @@ class PandaCartesianActionAdapter:
         self.reset_stats()
 
     def reset_stats(self) -> None:
+        self._accepted_target = None
         self.stats = {"ticks": 0, "rejected": 0, "reasons": {}, "translation_clamped": 0,
                       "rotation_clamped": 0, "residual_position_m": [],
                       "residual_orientation_rad": []}
@@ -253,7 +257,13 @@ class PandaCartesianActionAdapter:
         T_obs = self.pose_from_state(obs[self.state_key])
         delta, t_clamped, r_clamped = self.clamp(action[:6], self.max_translation,
                                                  self.max_rotation)
-        target = apply_delta(T_obs, delta)
+        reference = T_obs if self._accepted_target is None or self.target_reference == "current_pose" else self._accepted_target
+        target = apply_delta(reference, delta)
+        if self.target_reference == "accepted_target":
+            feedback, feedback_t, feedback_r = self.clamp(delta_action(T_obs, target), self.max_translation, self.max_rotation)
+            target = apply_delta(T_obs, feedback)
+            t_clamped |= feedback_t
+            r_clamped |= feedback_r
         seed = self.env.arm_qpos()
         opening = self.gripper_opening_m(action[6])
         # Penetration check with the fingers at the wider of observed and commanded openings
@@ -264,6 +274,8 @@ class PandaCartesianActionAdapter:
         # limit-clipped seed), never the previous tick's possibly still-converging ctrl target.
         joint_cmd = np.append(result.qpos, opening)
         observation, _, _, truncated, info = self.env.step(joint_cmd)
+        if self.target_reference == "accepted_target" and result.accepted:
+            self._accepted_target = target.copy()
         info["adapter"] = {"rejected": not result.accepted, "reason": result.reason,
                            "residual_position_m": result.position_error_m,
                            "residual_orientation_rad": result.orientation_error_rad,

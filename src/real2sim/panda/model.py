@@ -214,6 +214,9 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     ET.SubElement(body, "freejoint", name="ball_free")
     ET.SubElement(body, "geom", name="ball_geom", type="sphere", size=str(ball["radius"]),
                   mass=str(ball["mass"]), rgba="0.72 0.9 0.06 1", **contact_attrs)
+    from real2sim.sim.cameras import add_link_cameras
+
+    add_link_cameras(root, task, "panda")
     return ET.tostring(root, encoding="unicode")
 
 

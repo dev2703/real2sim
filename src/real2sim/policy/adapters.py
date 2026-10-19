@@ -29,8 +29,8 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
-from real2sim.data.labels import ACTION_NAMES, PROPRIO_NAMES
-from real2sim.geometry.so3 import apply_delta, delta_action, is_rotation
+from real2sim.data.labels import ABSOLUTE_ACTION_NAMES, ACTION_NAMES, PROPRIO_NAMES
+from real2sim.geometry.so3 import apply_delta, delta_action, is_rotation, make_T, matrix_from_rot6d
 from real2sim.geometry.so101_fk import JointMapping
 
 IPHONE_KEY = "observation.images.iphone"
@@ -66,8 +66,8 @@ def normalize_image_chw(normalizer, chw_float01: np.ndarray) -> np.ndarray:
 def contract_kind(contract: dict) -> str:
     """``'joint'`` or ``'cartesian'``; raises :class:`ContractError` for anything else."""
     cams = list(contract.get("camera_keys", []))
-    if cams != [IPHONE_KEY]:
-        raise ContractError(f"contract camera_keys {cams} != [{IPHONE_KEY!r}]; refusing to adapt")
+    if not cams or len(cams) != len(set(cams)) or any(not k.startswith("observation.images.") for k in cams):
+        raise ContractError("contract camera_keys must be unique ordered image keys")
     shape = tuple(int(x) for x in contract.get("image_shape_chw", []))
     if shape != IMAGE_SHAPE_CHW:
         raise ContractError(f"contract image_shape_chw {shape} != {IMAGE_SHAPE_CHW}; refusing to adapt")
@@ -90,7 +90,11 @@ def contract_kind(contract: dict) -> str:
             f"contract state_names {names} match neither the joint contract {JOINT_STATE_NAMES} "
             f"nor the canonical proprio {list(PROPRIO_NAMES)}; no new feature slots are served")
     actions = list(contract.get("action_names", []))
-    expected = list(ACTION_NAMES) if kind == "cartesian" else JOINT_STATE_NAMES
+    if kind == "cartesian" and actions == list(ABSOLUTE_ACTION_NAMES):
+        kind = "cartesian_absolute"
+    elif kind == "cartesian" and actions == JOINT_STATE_NAMES:
+        kind = "canonical_joint"
+    expected = list(ACTION_NAMES) if kind == "cartesian" else list(ABSOLUTE_ACTION_NAMES) if kind == "cartesian_absolute" else JOINT_STATE_NAMES
     if actions != expected and not (kind == "joint" and actions == list(JOINT_NAMES)):
         raise ContractError(f"contract action_names {actions} != {expected}")
     return kind
@@ -105,6 +109,7 @@ class ObservationAdapter:
         self.normalizer = normalizer
         self.device = device
         self.state_dim = len(contract["state_names"])
+        self.camera_keys = list(contract["camera_keys"])
         if len(normalizer.state_mean) != self.state_dim:
             raise ContractError("normalizer state statistics do not match contract state_names")
         # EE position observed at the previous control tick (None before the first tick, so the
@@ -133,7 +138,7 @@ class ObservationAdapter:
         Must be called once per control tick *before* the action is applied (i.e. on the
         observation the policy would see at this tick), whether or not inference ran.
         """
-        if self.kind == "cartesian":
+        if self.kind != "joint":
             # Filters/history observe every tick, including queued actions without inference.
             if self._transform is not None:
                 self.state(env)
@@ -168,25 +173,28 @@ class ObservationAdapter:
         # metrics in ``info`` never reach the policy.
         if any(k.startswith("privileged") for k in obs):
             raise ContractError("observation carries privileged keys")
-        if IPHONE_KEY not in obs:
-            raise ContractError(f"observation lacks {IPHONE_KEY}")
-        img = normalize_image_chw(self.normalizer, obs[IPHONE_KEY])
+        missing = [key for key in self.camera_keys if key not in obs]
+        if missing:
+            raise ContractError(f"observation lacks {missing}")
         state = self.normalizer.state(self.state(env)).astype(np.float32)
         if not np.all(np.isfinite(state)):
             raise ContractError("normalised state is not finite")
         batch = {
-            IPHONE_KEY: torch.from_numpy(np.ascontiguousarray(img))[None].to(self.device),
             STATE_KEY: torch.from_numpy(state)[None].to(self.device),
         }
-        assert_policy_batch(batch)
+        for key in self.camera_keys:
+            img = normalize_image_chw(self.normalizer, obs[key])
+            batch[key] = torch.from_numpy(np.ascontiguousarray(img))[None].to(self.device)
+        assert_policy_batch(batch, self.camera_keys)
         return batch
 
 
-def assert_policy_batch(batch: dict) -> None:
+def assert_policy_batch(batch: dict, camera_keys: list[str] | None = None) -> None:
     """Runtime guard (plan rule 5): a policy batch holds exactly the contract inputs, never GT."""
+    expected = POLICY_KEYS if camera_keys is None else {STATE_KEY, *camera_keys}
     bad = [k for k in batch if k.startswith(FORBIDDEN_PREFIXES)]
-    if bad or set(batch) != POLICY_KEYS:
-        raise ContractError(f"policy batch keys {sorted(batch)} != {sorted(POLICY_KEYS)}; forbidden: {bad}")
+    if bad or set(batch) != expected:
+        raise ContractError(f"policy batch keys {sorted(batch)} != {sorted(expected)}; forbidden: {bad}")
 
 
 @dataclass
@@ -362,6 +370,49 @@ class CartesianActionAdapter:
                                    "orientation_error_rad": result.orientation_error_rad})
 
 
+class AbsolutePoseActionAdapter:
+    """Ten-dimensional absolute tool pose -> the existing bounded delta controller.
+
+    Each prediction specifies a task-frame pose, not a delta to integrate. The wrapped
+    adapter must reference current_pose so previously accepted targets are not added twice.
+    All IK, workspace, contact, gripper and rate constraints remain on the wrapped path.
+    """
+
+    dim = 10
+    needs_obs = True
+
+    def __init__(self, delta_adapter):
+        controller = getattr(delta_adapter, "panda", delta_adapter)
+        if getattr(controller, "target_reference", "current_pose") != "current_pose":
+            raise ValueError("absolute poses require a current-pose bounded controller")
+        self.delta_adapter = delta_adapter
+        self.env = delta_adapter.env
+
+    def reset(self):
+        self.delta_adapter.reset()
+
+    @property
+    def stats(self):
+        return getattr(self.delta_adapter, "stats", None)
+
+    @property
+    def ik_rejections(self):
+        return self.delta_adapter.ik_rejections
+
+    def apply(self, action, obs=None):
+        a = np.asarray(action, dtype=float)
+        if a.shape != (10,) or not np.isfinite(a).all():
+            raise ValueError("absolute pose action must contain ten finite values")
+        target = make_T(matrix_from_rot6d(a[3:9]), a[:3])
+        delta = np.r_[delta_action(self.env.ee_pose(), target), a[9]]
+        if getattr(self.delta_adapter, "needs_obs", False):
+            result = self.delta_adapter.apply(delta, obs)
+        else:
+            result = self.delta_adapter.apply(delta)
+        result.detail.update(action_representation="cartesian_absolute", absolute_target_pose=target.tolist())
+        return result
+
+
 class ChunkExecutor:
     """Open-loop execution of ``n_action_steps`` actions per policy call; re-observes afterwards."""
 
@@ -390,8 +441,8 @@ class ChunkExecutor:
         self.n_policy_calls = 0
 
     def _infer(self, obs: dict, env) -> list[np.ndarray]:
-        batch = self.obs_adapter.batch(obs, env)
         t0 = time.perf_counter()
+        batch = self.obs_adapter.batch(obs, env)
         with torch.no_grad():
             chunk = self.policy.predict_action_chunk(batch)
         raw = self.normalizer.unaction(chunk).detach().cpu().numpy()
@@ -433,7 +484,7 @@ class PandaObservationAdapter(ObservationAdapter):
 
     def __init__(self, contract: dict, normalizer, *, device: str = "cpu"):
         super().__init__(contract, normalizer, device=device)
-        if self.kind != "cartesian":
+        if self.kind not in ("cartesian", "cartesian_absolute"):
             raise ContractError(
                 "a 6-D SO-101 joint-space checkpoint has no meaning on the 7-joint Panda; only the "
                 "canonical 13-float / 7-D cartesian contract transfers (plan E3)")
