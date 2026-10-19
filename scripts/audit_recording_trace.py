@@ -22,7 +22,36 @@ def joint_values(rows, key, joint):
     return np.array([float(value) if value is not None else np.nan for value in values])
 
 
-def audit_attempt(attempt, fps, hold_tolerance=.5, settle_s=.25, min_hold_s=.5):
+def clock_drift(times, fps, policy_hz):
+    """Compare actual host observation intervals with nominal row-time assumptions."""
+    nominal = np.arange(len(times), dtype=float) / fps
+    observed = times[:, 1] - times[0, 1]
+    drift = observed - nominal
+    result = {"physical_observation_span_s": float(observed[-1]),
+              "nominal_row_span_s": float(nominal[-1]),
+              "observation_minus_nominal_end_ms": float(drift[-1] * 1000),
+              "observation_minus_nominal_absolute_ms": summary(abs(drift) * 1000),
+              "nominal_velocity_scale_over_physical": summary(np.diff(observed) * fps)}
+    ratio = fps / policy_hz
+    stride = int(round(ratio))
+    if stride < 1 or not np.isclose(ratio, stride, rtol=0, atol=1e-6):
+        result["policy_row_stride"] = {"status": "noninteger_rate_ratio",
+                                      "source_fps": fps, "policy_hz": policy_hz}
+    else:
+        intervals = np.diff(observed[::stride])
+        result["policy_row_stride"] = {
+            "status": "diagnostic_only", "stride": stride, "policy_hz": policy_hz,
+            "actual_interval_ms": summary(intervals * 1000),
+            "nominal_velocity_scale_over_physical": summary(intervals * policy_hz),
+            "intervals_above_1_5_policy_period": int((intervals > 1.5 / policy_hz).sum())}
+    return result
+
+
+def audit_attempt(attempt, fps, hold_tolerance=.5, settle_s=.25, min_hold_s=.5,
+                  policy_hz=10.):
+    if (not np.isfinite([fps, policy_hz, hold_tolerance, settle_s, min_hold_s]).all()
+            or fps <= 0 or policy_hz <= 0 or hold_tolerance < 0 or settle_s < 0 or min_hold_s <= 0):
+        raise ValueError("Rates/hold duration must be positive and hold tolerance/settle time nonnegative")
     rows = attempt["frames"]
     if len(rows) < 2:
         raise ValueError("Need at least two recorded rows for a cadence audit")
@@ -40,6 +69,10 @@ def audit_attempt(attempt, fps, hold_tolerance=.5, settle_s=.25, min_hold_s=.5):
     intervals = np.diff(times[:, 0])
     period = 1 / fps
     gap_limit = 2.5 * period
+    # This tick's observation precedes its command. Use the latest completed send.
+    previous = np.searchsorted(stamps[:, 4], stamps[:, 1], side="right") - 1
+    eligible = previous >= 0
+    command_age = times[eligible, 1] - times[previous[eligible], 4]
     joints = sorted(set().union(*(r["sent_target"] for r in rows)))
     by_joint = {}
     for joint in joints:
@@ -47,10 +80,9 @@ def audit_attempt(attempt, fps, hold_tolerance=.5, settle_s=.25, min_hold_s=.5):
         measured = joint_values(rows, "measured_positions", joint)
         requested = joint_values(rows, "processed_request", joint)
         leader = joint_values(rows, "leader_request", joint)
-        # This tick's observation precedes its command. Use the latest completed send.
-        previous = np.searchsorted(stamps[:, 4], stamps[:, 1], side="right") - 1
-        eligible = previous >= 0
         prior_errors = sent[previous[eligible]] - measured[eligible]
+        comparable_requests = np.isfinite(requested) & np.isfinite(sent)
+        changed_requests = abs(requested[comparable_requests] - sent[comparable_requests]) > 1e-6
         holds = []
         start = 0
         while start < len(rows):
@@ -83,8 +115,16 @@ def audit_attempt(attempt, fps, hold_tolerance=.5, settle_s=.25, min_hold_s=.5):
                                      (("leader", leader), ("requested", requested),
                                       ("sent", sent), ("measured", measured))},
             "leader_minus_sent_absolute": summary(abs(leader - sent)),
+            "leader_minus_processed_request_absolute": summary(abs(leader - requested)),
             "processed_request_minus_sent_absolute": summary(abs(requested - sent)),
+            "processed_requests_changed_by_send": {
+                "comparable_rows": int(comparable_requests.sum()),
+                "changed_rows": int(changed_requests.sum()),
+                "changed_fraction": float(changed_requests.mean()) if len(changed_requests) else None,
+                "comparison_tolerance_command_units": 1e-6},
             "latest_prior_sent_minus_measured_absolute": summary(abs(prior_errors)),
+            "prior_sent_minus_measured_excluding_long_gaps_absolute": summary(
+                abs(prior_errors[command_age <= gap_limit])),
             "stable_target_windows": holds,
         }
     return {"episode_index": attempt["episode_index"], "attempt_id": attempt["attempt_id"],
@@ -95,6 +135,8 @@ def audit_attempt(attempt, fps, hold_tolerance=.5, settle_s=.25, min_hold_s=.5):
             "observe_duration_ms": summary((times[:, 2] - times[:, 1]) * 1000),
             "send_duration_ms": summary((times[:, 4] - times[:, 3]) * 1000),
             "tick_to_record_ms": summary((times[:, 5] - times[:, 0]) * 1000),
+            "prior_command_age_at_observation_ms": summary(command_age * 1000),
+            "clock_drift": clock_drift(times, fps, policy_hz),
             "intervals_above_1_5_nominal": int((intervals > 1.5 * period).sum()),
             "intervals_above_2_5_nominal": int((intervals > gap_limit).sum()),
             "joints": by_joint}
@@ -107,10 +149,12 @@ def check_dataset(root, session, attempts):
     if info["fps"] != session["metadata"]["dataset_fps"]:
         raise ValueError("Dataset FPS differs from trace session")
     names = info["features"]["action"]["names"]
+    state_names = info["features"]["observation.state"]["names"]
     paths = sorted((root / "data").rglob("*.parquet"))
     if not paths:
         raise ValueError("No data parquet files found")
-    frame = pd.concat([pd.read_parquet(p, columns=["episode_index", "frame_index", "action"])
+    frame = pd.concat([pd.read_parquet(p, columns=["episode_index", "frame_index", "action",
+                                                  "observation.state", "timestamp"])
                        for p in paths], ignore_index=True)
     checks = {}
     for attempt in attempts:
@@ -121,9 +165,25 @@ def check_dataset(root, session, attempts):
         sent = np.array([[row["sent_target"][joint] for joint in names] for row in rows])
         labels = np.stack(saved.action.to_numpy())
         np.testing.assert_allclose(labels, sent, atol=1e-5, rtol=1e-6, equal_nan=False)
+        measured = np.array([[row["measured_positions"][joint] for joint in state_names] for row in rows])
+        observations = np.stack(saved["observation.state"].to_numpy())
+        # This audit supports the collector's default identity position processor.
+        # A custom transform needs explicit provenance; it cannot silently validate raw parity.
+        np.testing.assert_allclose(observations, measured, atol=1e-5, rtol=1e-6,
+                                   equal_nan=False, err_msg="Dataset observations differ from raw trace positions")
+        np.testing.assert_allclose(saved.timestamp, np.arange(len(rows)) / info["fps"],
+                                   atol=1e-5, rtol=1e-6, equal_nan=False)
         checks[str(ep)] = {"rows": len(rows), "sent_action_labels": "PASS",
-                           "max_absolute_label_difference": float(abs(labels - sent).max())}
-    return checks
+                           "raw_observation_positions": "PASS", "nominal_row_timestamps": "PASS",
+                           "max_absolute_label_difference": float(abs(labels - sent).max()),
+                           "max_absolute_observation_difference": float(abs(observations - measured).max())}
+    traced = {a["episode_index"] for a in attempts}
+    dataset_episodes = {int(ep) for ep in frame.episode_index.unique()}
+    return {"episodes": checks, "coverage": {
+        "dataset_episodes": sorted(dataset_episodes), "verified_trace_episodes": sorted(traced),
+        "untraced_dataset_episodes": sorted(dataset_episodes - traced),
+        "all_dataset_episodes_traced": dataset_episodes == traced,
+        "scope": "Only listed traced episodes have timing and command provenance checks."}}
 
 
 def main():
@@ -134,9 +194,12 @@ def main():
     parser.add_argument("--hold-tolerance", type=float, default=.5, help="Command units; diagnostic only")
     parser.add_argument("--settle-seconds", type=float, default=.25)
     parser.add_argument("--minimum-hold-seconds", type=float, default=.5)
+    parser.add_argument("--policy-hz", type=float, default=10., help="Nominal downstream row-stride diagnostic")
     args = parser.parse_args()
-    if args.hold_tolerance < 0 or args.settle_seconds < 0 or args.minimum_hold_seconds <= 0:
-        parser.error("Hold tolerance/settle time must be nonnegative and hold duration positive")
+    if (not np.isfinite([args.hold_tolerance, args.settle_seconds, args.minimum_hold_seconds,
+                        args.policy_hz]).all() or args.hold_tolerance < 0 or args.settle_seconds < 0
+            or args.minimum_hold_seconds <= 0 or args.policy_hz <= 0):
+        parser.error("Hold tolerance/settle time must be nonnegative; duration/policy rate positive and finite")
     session = json.loads((args.session / "SESSION.json").read_text())
     if session["schema_version"] != 1:
         raise ValueError("Unsupported trace schema")
@@ -150,16 +213,21 @@ def main():
     if len({a["episode_index"] for a in saved}) != len(saved):
         raise ValueError("Multiple saved attempts claim the same dataset episode")
     result = {"session": str(args.session.resolve()), "provenance": session,
+        "trace_session_markers": {name: (args.session / name).exists()
+                                  for name in ("RUNNING.json", "COMPLETE.json", "FAILED.json")},
         "nominal_fps": fps, "ignored_attempts": [{k: a[k] for k in ("attempt_id", "episode_index", "status")}
                                                for a in attempts if a["status"] != "saved"],
         "diagnostic_settings": {"hold_tolerance_command_units": args.hold_tolerance,
             "settle_seconds": args.settle_seconds, "minimum_hold_seconds": args.minimum_hold_seconds,
-            "hold_break_gap_nominal_intervals": 2.5},
+            "hold_break_gap_nominal_intervals": 2.5, "policy_hz": args.policy_hz},
         "episodes": [audit_attempt(a, fps, args.hold_tolerance, args.settle_seconds,
-                                   args.minimum_hold_seconds) for a in saved],
+                                   args.minimum_hold_seconds, args.policy_hz) for a in saved],
         "dataset_label_checks": check_dataset(args.dataset, session, saved) if args.dataset else "not_run",
         "limitations": ["Command units follow session calibration; gripper and arm units can differ.",
             "Host read/send intervals do not establish camera exposure timestamps or frame freshness.",
+            "Velocity scale is actual host observation interval divided by nominal interval; no label correction is applied.",
+            "Changed requests identify send-side command changes, not a motor fault or limiter parameter by themselves.",
+            "Dataset observation parity assumes the default identity position observation processor.",
             "Prior-sent residuals include response dynamics; even stable command windows do not prove physical settling.",
             "No measured/sent residual alone diagnoses a motor defect; loaded and unloaded holds need interpretation.",
             "No data acceptance, physical grasp success or Panda gate is granted by this report."],

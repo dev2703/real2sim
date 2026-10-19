@@ -25,7 +25,8 @@ from real2sim.policy.adapters import CartesianActionAdapter
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
 
-MODES = ("joint_reference", "cartesian_delta", "cartesian_reference_feedback")
+MODES = ("joint_reference", "cartesian_delta", "cartesian_reference_feedback",
+         "cartesian_persistent_target")
 
 
 def reference_for_scene(env, states):
@@ -75,7 +76,9 @@ def run_trial(config, joint, cart, indices, metadata, review, mode, offset):
             if key not in ("position_convergence_m", "orientation_convergence_rad"):
                 assert cfg["ik"][key] == value
         kin = NativeKinematics(env.model, cfg)
-        adapter = CartesianActionAdapter(env, kin)
+        adapter = CartesianActionAdapter(env, kin, target_reference=(
+            "accepted_target" if mode == "cartesian_persistent_target" else "current_pose"))
+        initial_reference_error = delta_action(env.ee_pose(), poses[0])
         tracker = TrialTracker(int(env.task["episode"]["success_hold_s"] * env.control_hz),
                                .03, env.table_top, env.task["ball"]["radius"])
         rows, losses = [], []
@@ -123,6 +126,7 @@ def run_trial(config, joint, cart, indices, metadata, review, mode, offset):
                     "recorded_gripper_command_pct": grip * 100,
                     "sim_gripper_observed_pct": float(env.real_state()[5]),
                     "ik_rejected": rejected, "ik_reason": reason, "ik_iterations": iterations,
+                    "cartesian_control": applied.detail if mode != "joint_reference" else None,
                     "joint_limit_clipped": control["limit_clipped"], "joint_rate_limited": control["rate_limited"],
                     "held": metrics["ball_held"], "lifted": metrics["lifted"], "in_bowl": metrics["ball_in_bowl"],
                     "ball_xyz_task": metrics["ball_xyz_task"], "tool_xyz_task": metrics["tool_xyz_task"],
@@ -133,6 +137,10 @@ def run_trial(config, joint, cart, indices, metadata, review, mode, offset):
                 rows.append(row)
         limit_difference = abs(qrefs - np.clip(qrefs, *env.limits.T))
         summary = {"mode": mode, "ticks": len(rows), "initial_physical_valid": initial_valid,
+            "initial_reference_pose_error_m": float(np.linalg.norm(initial_reference_error[:3])),
+            "initial_reference_rotation_error_rad": float(np.linalg.norm(initial_reference_error[3:])),
+            "target_reference": adapter.target_reference if mode != "joint_reference" else "recorded_joints",
+            "initial_reference_outside_joint_limits": bool(np.any(limit_difference[0] > 1e-8)),
             "initial_robot_table_penetration_m": initial["robot_table_penetration_m"],
             "initial_non_table_ball_contacts": initial_contacts,
             "reference_outside_joint_limits_ticks": int(np.any(limit_difference > 1e-8, axis=1).sum()),
@@ -191,7 +199,7 @@ def run(plan, out):
     for path, expected in hashes.items():
         assert hash_file(Path(path)) == expected, f"Input changed during replay: {path}"
     report["complete"] = True
-    report["note"] = "Review direct versus delta versus privileged feedback by phase. Common geometry is unvalidated; no gate opens automatically."
+    report["note"] = "Compare each control route by phase, including initial reference mismatch and rejected targets. Persistent targets use only current pose at initialization and accepted action history, never future recorded FK. Common geometry is unvalidated; no gate opens automatically."
     atomic_json(out / "report.json", report)
 
 

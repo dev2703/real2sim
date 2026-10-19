@@ -8,6 +8,8 @@
 * :class:`CartesianActionAdapter` applies the canonical 7-D task-frame delta relative to the
   *current observed* EE pose: clamp -> IK (seeded from the current native qpos) -> native step;
   rejected IK targets hold the current pose and are counted, never silently applied.
+  The explicit ``target_reference='accepted_target'`` experiment instead integrates deltas
+  into a persistent accepted pose, with feedback bounded by the same per-tick limits.
 * :class:`ChunkExecutor` runs one ``predict_action_chunk`` per ``n_action_steps`` ticks and drops
   the queue on reset. It advances the observation adapter's EE-position memory on *every* tick so
   the canonical proprio velocity is the one-tick finite difference ``(p_k - p_{k-1}) * hz`` of
@@ -28,7 +30,7 @@ import numpy as np
 import torch
 
 from real2sim.data.labels import ACTION_NAMES, PROPRIO_NAMES
-from real2sim.geometry.so3 import apply_delta, is_rotation
+from real2sim.geometry.so3 import apply_delta, delta_action, is_rotation
 from real2sim.geometry.so101_fk import JointMapping
 
 IPHONE_KEY = "observation.images.iphone"
@@ -217,18 +219,71 @@ class JointActionAdapter:
 
 
 class CartesianActionAdapter:
-    """7-D ``[dx,dy,dz,drx,dry,drz,g]`` relative to the current observed EE pose -> IK -> step."""
+    """7-D task-frame delta -> bounded pose target -> IK -> native step.
+
+    ``current_pose`` preserves the checkpoint's existing runtime contract. The opt-in
+    ``accepted_target`` mode integrates each clamped delta into the last accepted Cartesian
+    target instead of repeatedly following the displaced measured pose. Its total feedback
+    from the measured pose is clamped by the SAME translation/rotation limits; any excess is
+    discarded, preventing unbounded accumulation when the native servo cannot keep up. Only
+    accepted IK followed by a successful native step advances the reference. IK acceptance
+    does not imply exact tracking: native joint/rate limits and residual checks still apply.
+
+    Call ``reset()`` with every environment reset (``ChunkExecutor`` does this), or explicitly
+    ``rebase_target()`` when changing control ownership. Both discard the old reference; no
+    automatic rebase conceals drift or repeated rejection. On rejection the current native
+    pose is held, the gripper command is honoured, and the previous reference is retained.
+    This changes action execution semantics and must be evaluated before policy deployment.
+    """
 
     dim = 7
 
-    def __init__(self, env, kinematics, *, max_step_m: float = 0.03, max_step_rad: float = 0.3):
+    def __init__(self, env, kinematics, *, max_step_m: float = 0.03, max_step_rad: float = 0.3,
+                 target_reference: str = "current_pose"):
         self.env = env
         self.ik = kinematics
         self.max_step_m = float(max_step_m)
         self.max_step_rad = float(max_step_rad)
+        if any(not np.isfinite(v) or v <= 0 for v in (self.max_step_m, self.max_step_rad)):
+            raise ValueError("Cartesian step limits must be finite and positive")
+        if target_reference not in ("current_pose", "accepted_target"):
+            raise ValueError("target_reference must be 'current_pose' or 'accepted_target'")
+        self.target_reference = target_reference
         self.mapping: JointMapping = env.mapping
+        self._accepted_target: np.ndarray | None = None
         self.ik_rejections = 0
         self.residuals: list[dict] = []
+
+    def reset(self) -> None:
+        """Clear episode state; the first action anchors to the next measured pose."""
+        self._accepted_target = None
+        self.ik_rejections = 0
+        self.residuals.clear()
+
+    @property
+    def accepted_target(self) -> np.ndarray | None:
+        """A copy of the persistent target, never a mutable view of controller state."""
+        return None if self._accepted_target is None else self._accepted_target.copy()
+
+    def _current_pose(self) -> np.ndarray:
+        pose = np.asarray(self.env.ee_pose(), dtype=np.float64)
+        if (pose.shape != (4, 4) or not np.all(np.isfinite(pose))
+                or not np.allclose(pose[3], [0, 0, 0, 1])
+                or not is_rotation(pose[:3, :3])):
+            raise RuntimeError("current EE pose must be a finite proper homogeneous transform")
+        return pose.copy()
+
+    def rebase_target(self) -> np.ndarray:
+        """Explicitly discard accumulated error and anchor to the current measured pose.
+
+        The measured pose is an initial reference, not an IK-certified command. Subsequent
+        actions still require bounded feedback and accepted IK before any target is applied.
+        This does not clear rejection statistics or invoke the simulator.
+        """
+        if self.target_reference != "accepted_target":
+            raise ValueError("rebasing requires target_reference='accepted_target'")
+        self._accepted_target = self._current_pose()
+        return self._accepted_target.copy()
 
     def apply(self, action: np.ndarray) -> ApplyResult:
         a = np.asarray(action, np.float64).reshape(-1)
@@ -245,10 +300,25 @@ class CartesianActionAdapter:
         if not 0.0 <= g <= 1.0:
             g = float(np.clip(g, 0.0, 1.0))
             clamped[6] = True
-        T_cur = self.env.ee_pose()
-        if not is_rotation(T_cur[:3, :3]):
-            raise RuntimeError("current EE pose is not a proper rotation")
-        target = apply_delta(T_cur, np.concatenate([dp, dr]))
+        T_cur = self._current_pose()
+        reference = T_cur
+        if self.target_reference == "accepted_target":
+            if self._accepted_target is None:
+                self._accepted_target = T_cur.copy()
+            reference = self._accepted_target
+        requested_target = apply_delta(reference, np.concatenate([dp, dr]))
+        target = requested_target
+        feedback_clamped = np.zeros(6, bool)
+        requested_feedback = delta_action(T_cur, requested_target)
+        bounded_feedback = requested_feedback.copy()
+        if self.target_reference == "accepted_target":
+            for part, limit in ((slice(0, 3), self.max_step_m), (slice(3, 6), self.max_step_rad)):
+                if (n := np.linalg.norm(bounded_feedback[part])) > limit:
+                    bounded_feedback[part] *= limit / n
+                    feedback_clamped[part] = True
+            # Do not retain the unbounded request for later catch-up. Zero actions retain a
+            # stable target until this explicit feedback cap is reached by a large disturbance.
+            target = apply_delta(T_cur, bounded_feedback)
         # MuJoCo joint limits are soft: measured qpos can overshoot jnt_range by ~1e-3 rad under
         # contact, and NativeKinematics.solve refuses out-of-range seeds. Clip like replay.py does;
         # the clip is diagnostic-only (the seed), never a change to the upstream model.
@@ -268,10 +338,26 @@ class CartesianActionAdapter:
             q = seed.copy()  # hold the current arm pose; gripper command still honoured
             q[5] = grip
         obs, _, _, truncated, info = self.env.step(q)
-        saturation = float(np.mean(clamped))
+        if self.target_reference == "accepted_target" and result.accepted:
+            self._accepted_target = target.copy()
+        all_clamped = clamped.copy()
+        all_clamped[:6] |= feedback_clamped
+        saturation = float(np.mean(all_clamped))
         return ApplyResult(obs, info, truncated, saturation, ik_rejected=not result.accepted,
-                           detail={"clamped": clamped.tolist(), "ik_reason": result.reason,
+                           detail={"clamped": all_clamped.tolist(), "ik_reason": result.reason,
                                    "target_task": target[:3, 3].tolist(),
+                                   "target_reference": self.target_reference,
+                                   "action_clamped": clamped.tolist(),
+                                   "feedback_clamped": feedback_clamped.tolist(),
+                                   "reference_pose": reference.tolist(),
+                                   "requested_target_pose": requested_target.tolist(),
+                                   "bounded_target_pose": target.tolist(),
+                                   "requested_feedback": requested_feedback.tolist(),
+                                   "bounded_feedback": bounded_feedback.tolist(),
+                                   "accepted_target_pose": (None if self._accepted_target is None
+                                                            else self._accepted_target.tolist()),
+                                   "target_advanced": bool(self.target_reference == "accepted_target"
+                                                           and result.accepted),
                                    "position_error_m": result.position_error_m,
                                    "orientation_error_rad": result.orientation_error_rad})
 
