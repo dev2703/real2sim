@@ -75,6 +75,11 @@ def test_split_is_deterministic_and_leak_free(tmp_path):
         make_episode_split(ids, n_val=40)
 
 
+def test_split_rejects_duplicate_episode_ids():
+    with pytest.raises(ValueError, match="duplicates"):
+        make_episode_split([1, 1, 2], n_val=1)
+
+
 def test_unsupported_codebase_version_rejected(tmp_path, synthetic_root):
     bad = tmp_path / "bad"
     (bad / "meta").mkdir(parents=True)
