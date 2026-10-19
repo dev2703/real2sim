@@ -1,0 +1,59 @@
+name: v2_act_screen
+data: .cache/v2/cartesian_iphone_top
+model:
+  chunk_size: 25
+  n_action_steps: 2
+  vision_backbone: dinov2
+  pretrained_backbone_weights: null
+  dinov2_model_id: facebook/dinov2-small
+  dinov2_revision: ed25f3a31f01632728cabb09d1542f84ab7b0056
+  dinov2_pretrained_path: .cache/huggingface/models--facebook--dinov2-small/snapshots/ed25f3a31f01632728cabb09d1542f84ab7b0056
+  dinov2_trainable_blocks: 0
+  dinov2_config:
+    hidden_size: 384
+    image_size: 518
+    num_attention_heads: 6
+    num_hidden_layers: 12
+    patch_size: 14
+    num_channels: 3
+    mlp_ratio: 4
+    hidden_act: gelu
+    layer_norm_eps: 1.0e-06
+    layerscale_value: 1.0
+    qkv_bias: true
+    use_swiglu_ffn: false
+    hidden_dropout_prob: 0.0
+    attention_probs_dropout_prob: 0.0
+    drop_path_rate: 0.0
+  dim_model: 512
+  n_heads: 8
+  dim_feedforward: 3200
+  n_encoder_layers: 4
+  n_decoder_layers: 1
+  use_vae: true
+  latent_dim: 32
+  n_vae_encoder_layers: 4
+  dropout: 0.1
+  kl_weight: 10.0
+  optimizer_lr: 0.0001
+  optimizer_lr_backbone: 1.0e-05
+  optimizer_weight_decay: 0.05
+scheduler:
+  warmup_steps: 200
+  start_factor: 0.001
+  min_lr: 1.0e-07
+train:
+  seed: 0
+  batch_size: 8
+  grad_accum: 2
+  steps: 4000
+  grad_clip_norm: 1.0
+  log_every: 50
+  val_every: 500
+  save_every: 500
+  val_max_batches: null
+  num_workers: 0
+  device: auto
+  keep_only_best_and_last: false
+  schedule_steps: 4000
+  exact_resume: true

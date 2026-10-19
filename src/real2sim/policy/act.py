@@ -100,6 +100,7 @@ def save_checkpoint(
     manifest: dict,
     run_info: dict,
     optimizer: torch.optim.Optimizer | None = None,
+    training_state: dict | None = None,
 ) -> None:
     out.mkdir(parents=True, exist_ok=True)
     policy.save_pretrained(out)
@@ -117,7 +118,9 @@ def save_checkpoint(
         "derived_files_sha256": manifest["files_sha256"],
         "prepare_version": manifest["prepare_version"],
     }
-    for key in ("observation_variant", "experiment_split", "source_manifest_sha256"):
+    for key in ("observation_variant", "experiment_split", "source_manifest_sha256",
+                "contract_version", "action_representation", "controller_semantics",
+                "calibration_sha256", "camera_transforms", "timing_basis"):
         if key in manifest:
             contract[key] = manifest[key]
     if policy.config.vision_backbone == "dinov2":
@@ -135,7 +138,8 @@ def save_checkpoint(
     (out / "real2sim_contract.json").write_text(json.dumps(contract, indent=2) + "\n")
     (out / "run_info.json").write_text(json.dumps(run_info, indent=2) + "\n")
     if optimizer is not None:
-        torch.save({"optimizer": optimizer.state_dict(), "step": run_info["step"]}, out / "training_state.pt")
+        torch.save({"optimizer": optimizer.state_dict(), "step": run_info["step"],
+                    "continuation": training_state}, out / "training_state.pt")
 
 
 def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[ACTPolicy, Normalizer, dict]:

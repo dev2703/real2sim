@@ -79,29 +79,19 @@ def test_joint_checkpoint_refuses_persistent_target_but_keeps_default(fake_check
     assert metadata["execution_interface_ablation"] is False
 
 
-def test_panda_builder_refuses_persistent_mode_before_checkpoint_loading(fake_checkpoint):
-    checkpoint, env, _, loads = fake_checkpoint
-    with pytest.raises(ContractError, match="cannot be applied to Panda"):
-        run.build_learned_controller(env, checkpoint, eval_config("accepted_target"), "cpu",
-                                     robot="panda")
-    assert loads == []
-
-
-@pytest.mark.parametrize("robot,controller", [("so101", "hold"), ("panda", "learned"),
-                                             ("panda", "hold")])
-def test_run_trials_rejects_inapplicable_mode_before_env_creation(tmp_path, monkeypatch,
-                                                                 robot, controller):
+@pytest.mark.parametrize("robot", ["so101", "panda"])
+def test_run_trials_rejects_persistent_hold_before_env_creation(tmp_path, monkeypatch, robot):
     config = tmp_path / "eval.yaml"
     config.write_text(yaml.safe_dump(eval_config("accepted_target")))
 
     def forbid_env(*args, **kwargs):
-        raise AssertionError("inapplicable ablation must fail before simulator construction")
+        raise AssertionError("inapplicable mode must fail before simulator construction")
 
     monkeypatch.setattr(run, "make_env", forbid_env)
-    with pytest.raises(ContractError, match="requires a learned SO-101 Cartesian controller"):
+    with pytest.raises(ContractError, match="requires a learned Cartesian controller"):
         run.run_trials(robot=robot, checkpoint=None, config=Path("absent.yaml"), eval_config=config,
                        n_trials=1, seed_start=0, out=tmp_path / "out", video=False,
-                       controller=controller, device="cpu")
+                       controller="hold", device="cpu")
     assert not (tmp_path / "out").exists()
 
 

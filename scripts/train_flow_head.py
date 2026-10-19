@@ -35,6 +35,8 @@ from real2sim.policy.flow_matching import (
     save_flow_checkpoint,
 )
 from real2sim.policy.paired import file_sha256
+from real2sim.policy.sampling import ResumableBatches, restore_rng, rng_state
+from real2sim.policy.schedule import learning_rate
 
 
 def write_json(path: Path, value):
@@ -66,21 +68,23 @@ def build_cache(args):
     manifest = json.loads((args.data / "manifest.json").read_text())
     arrays = dict(np.load(args.data / "arrays.npz", allow_pickle=False))
     norm = Normalizer.from_json(args.data / "stats.json")
-    if len(manifest["camera_keys"]) != 1:
-        raise ValueError("F0 currently requires exactly one camera")
     model = yaml.safe_load(args.vision_config.read_text())["model"]
     config = FlowHeadConfig(
         state_dim=len(manifest["state_names"]), camera_key=manifest["camera_keys"][0],
+        camera_keys=manifest["camera_keys"], feature_tokens=266 * len(manifest["camera_keys"]),
+        chunk_size=getattr(args, "chunk_size", 20),
         dinov2_config=model["dinov2_config"], dinov2_model_id=model["dinov2_model_id"],
         dinov2_revision=model["dinov2_revision"], feature_dim=model["dinov2_config"]["hidden_size"],
     )
     device = resolve_device(args.device)
     backbone = build_frozen_backbone(config, pretrained_path=model["dinov2_pretrained_path"]).to(device)
-    image_name = manifest["image_files"][config.camera_key]
-    if file_sha256(args.data / image_name) != manifest["files_sha256"][image_name]:
-        raise ValueError("derived images do not match their recorded hash")
-    images = np.load(args.data / image_name, mmap_mode="r", allow_pickle=False)
-    ticks = np.arange(len(images), dtype=np.int64)
+    images = {}
+    for key in config.camera_keys:
+        image_name = manifest["image_files"][key]
+        if file_sha256(args.data / image_name) != manifest["files_sha256"][image_name]:
+            raise ValueError("derived images do not match their recorded hash")
+        images[key] = np.load(args.data / image_name, mmap_mode="r", allow_pickle=False)
+    ticks = np.arange(len(images[config.camera_keys[0]]), dtype=np.int64)
     if args.episodes:
         ticks = ticks[np.isin(arrays["episode_index"], args.episodes)]
     if not len(ticks):
@@ -90,9 +94,12 @@ def build_cache(args):
     started = time.perf_counter()
     with torch.inference_mode():
         for start in range(0, len(ticks), args.batch_size):
-            image = np.stack([norm.image(images[t]) for t in ticks[start:start + args.batch_size]])
-            value = backbone(torch.from_numpy(image).to(device))["feature_map"]
-            value = value.flatten(2).transpose(1, 2).cpu().numpy().astype(np.float16)
+            views = []
+            for key in config.camera_keys:
+                image = np.stack([norm.image(images[key][t]) for t in ticks[start:start + args.batch_size]])
+                value = backbone(torch.from_numpy(image).to(device))["feature_map"]
+                views.append(value.flatten(2).transpose(1, 2).cpu().numpy().astype(np.float16))
+            value = np.concatenate(views, axis=1)
             if not np.isfinite(value).all():
                 raise FloatingPointError("nonfinite frozen DINO features")
             if features is None:
@@ -177,6 +184,8 @@ def fit_normalizer(data: Path, train_episodes: list[int]):
 
 
 def resolve_split(manifest, path: Path | None):
+    if manifest.get("contract_version") and path is None:
+        return dict(manifest["split"])
     source_split = manifest.get("source_split", manifest["split"])
     training = sorted(source_split["train"])
     if path:
@@ -290,30 +299,67 @@ def train_head(args):
             raise ValueError(f"feature cache checksum mismatch: {name}")
     config = FlowHeadConfig(**{**cache["config"], "objective": args.objective,
                                "state_dim": len(manifest["state_names"]), "sampling_seed": args.seed})
-    train = CachedFeatureDataset(args.data, args.cache, split["train"], normalizer)
-    val = CachedFeatureDataset(args.data, args.cache, split["val"], normalizer, executed_prefix=True)
+    train = CachedFeatureDataset(args.data, args.cache, split["train"], normalizer, config.chunk_size)
+    val = CachedFeatureDataset(args.data, args.cache, split["val"], normalizer, config.chunk_size, executed_prefix=True)
     policy = FlowHeadPolicy(config).to(device)
     optimizer = torch.optim.AdamW(policy.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    generator = torch.Generator().manual_seed(args.seed)
-    loader = DataLoader(train, batch_size=args.batch_size, shuffle=True, generator=generator, num_workers=0)
     noise_generator = torch.Generator().manual_seed(args.seed + 73_021)
-    iterator = iter(loader)
+    iterator = ResumableBatches(train, args.batch_size, args.seed)
     started = time.perf_counter()
     if device.startswith("cuda"):
         torch.cuda.reset_peak_memory_stats()
+    contract = {key: manifest[key] for key in ("camera_keys", "letterbox", "state_names", "action_names",
+                "label_semantics", "policy_hz", "source", "prepare_version")}
+    for key in ("observation_variant", "experiment_split", "source_manifest_sha256", "source_split",
+                "canonical_state_names", "source_derived", "observation_semantics", "contract_version",
+                "action_representation", "controller_semantics", "calibration_sha256", "camera_transforms"):
+        if key in manifest:
+            contract[key] = manifest[key]
+    contract.update(image_shape_chw=[3, *manifest["image_shape_hwc"][:2]], split=split,
+                    derived_files_sha256=manifest["files_sha256"],
+                    policy_kind=f"frozen_dino_small_{args.objective}_head", vision_encoder={
+                        "kind": "dinov2_spatial_patches", "model_id": config.dinov2_model_id,
+                        "revision": config.dinov2_revision, "trainable_final_blocks": 0})
     seen, update = 0, 0
     history = []
+    effective = args.batch_size * args.grad_accum
+    schedule_examples = getattr(args, "schedule_examples", None) or args.examples
+    validation_every = getattr(args, "validate_every", 8000)
+    if effective <= 0 or args.examples % effective or schedule_examples % effective or validation_every % effective:
+        raise ValueError("exposure budgets and validation interval must divide the effective batch exactly")
+    schedule_updates = schedule_examples // effective
+    warmup = max(1, int(.05 * schedule_updates))
+    if schedule_updates < 2 or args.examples > schedule_examples:
+        raise ValueError("scheduler horizon must cover at least two updates and the requested exposure")
+    identity = {"cache": cache["sha256"], "data": manifest["files_sha256"], "split": split,
+                "config": asdict(config), "batch_size": args.batch_size, "grad_accum": args.grad_accum,
+                "lr": args.lr, "weight_decay": args.weight_decay, "schedule_examples": schedule_examples,
+                "validation_every": validation_every}
+    resume = getattr(args, "resume", None)
+    if resume:
+        saved = torch.load(resume / "training_state.pt", map_location="cpu", weights_only=False)
+        if saved["identity"] != identity:
+            raise ValueError("flow resume data/config/scheduler identity differs")
+        weights = load_file(resume / "model.safetensors")
+        policy.load_state_dict({k: v for k, v in weights.items() if not k.startswith("backbone.")}, strict=True)
+        optimizer.load_state_dict(saved["optimizer"])
+        iterator.load_state_dict(saved["sampler"])
+        noise_generator.set_state(saved["noise_generator"])
+        restore_rng(saved["rng"])
+        seen, update = saved["examples_seen"], saved["update"]
+        history = saved["history"]
+        if seen >= args.examples:
+            raise ValueError("resume checkpoint has already reached the requested exposure")
     while seen < args.examples:
+        for group in optimizer.param_groups:
+            group["lr"] = learning_rate(update + 1, schedule_updates, args.lr,
+                                        warmup_steps=warmup, start_factor=.001, min_lr=1e-7)
         policy.train()
         optimizer.zero_grad(set_to_none=True)
         target = min(args.batch_size * args.grad_accum, args.examples - seen)
         consumed, loss_sum = 0, 0.
         while consumed < target:
-            try:
-                batch = next(iterator)
-            except StopIteration:
-                iterator = iter(loader)
-                batch = next(iterator)
+            batch = next(iterator)
             count = min(len(batch["action"]), target - consumed)
             batch = {k: v[:count].to(device) for k, v in batch.items()}
             loss, _ = policy(batch, generator=noise_generator)
@@ -332,19 +378,19 @@ def train_head(args):
             history.append(entry)
             write_json(args.out / "progress.json", entry)
             print(json.dumps(entry), flush=True)
+        if seen % validation_every == 0 or seen == args.examples:
+            validation, _ = evaluate(policy, val, device, args.batch_size, args.seed, 4)
+            ck = args.out / "checkpoints" / f"{seen:09d}"
+            info = {"step": update, "examples_seen": seen, "validation": validation,
+                    "objective": args.objective, "identity": identity}
+            save_flow_checkpoint(ck, policy, normalizer.stats, contract, info,
+                                 backbone_state=load_file(args.cache / "backbone.safetensors"))
+            torch.save({"optimizer": optimizer.state_dict(), "sampler": iterator.state_dict(),
+                        "rng": rng_state(), "noise_generator": noise_generator.get_state(),
+                        "examples_seen": seen, "update": update, "identity": identity, "history": history},
+                       ck / "training_state.pt")
     synchronize(device)
     training_s = time.perf_counter() - started
-    contract = {key: manifest[key] for key in ("camera_keys", "letterbox", "state_names", "action_names",
-                "label_semantics", "policy_hz", "source", "prepare_version")}
-    for key in ("observation_variant", "experiment_split", "source_manifest_sha256", "source_split",
-                "canonical_state_names", "source_derived", "observation_semantics"):
-        if key in manifest:
-            contract[key] = manifest[key]
-    contract.update(image_shape_chw=[3, *manifest["image_shape_hwc"][:2]], split=split,
-                    derived_files_sha256=manifest["files_sha256"],
-                    policy_kind=f"frozen_dino_small_{args.objective}_head", vision_encoder={
-                        "kind": "dinov2_spatial_patches", "model_id": config.dinov2_model_id,
-                        "revision": config.dinov2_revision, "trainable_final_blocks": 0})
     report = {"objective": args.objective, "seed": args.seed, "device": device,
               "examples": seen, "updates": update, "microbatch": args.batch_size,
               "grad_accum": args.grad_accum, "effective_batch": args.batch_size * args.grad_accum,
@@ -376,13 +422,12 @@ def profile_head(args):
     manifest = json.loads((args.data / "manifest.json").read_text())
     if manifest["files_sha256"] != contract["derived_files_sha256"]:
         raise ValueError("profile data differs from checkpoint data")
-    image = np.load(args.data / manifest["image_files"][policy.config.camera_key], mmap_mode="r")[0]
     arrays = np.load(args.data / "arrays.npz", allow_pickle=False)
-    batch = {policy.config.camera_key: torch.tensor(normalizer.image(image))[None].to(device),
-             "observation.state": torch.tensor(normalizer.state(arrays["state"][0]))[None].to(device)}
+    images = {key: np.load(args.data / manifest["image_files"][key], mmap_mode="r")[0]
+              for key in policy.config.camera_keys}
     report = {"device": device, "repeats": args.repeats, "batch_size": 1,
-              "latency_includes": "frozen vision, action integration, synchronous output transfer",
-              "cadence_ms": 200., "checkpoint": str(args.checkpoint)}
+              "latency_includes": "all-camera normalization and input transfer, frozen vision, head/integration, action denormalization and synchronous output transfer",
+              "cadence_ms": 1000 * policy.config.n_action_steps / contract["policy_hz"], "checkpoint": str(args.checkpoint)}
     if device.startswith("cuda"):
         torch.cuda.reset_peak_memory_stats()
     for steps in ((4, 8) if policy.config.objective == "flow" else (4,)):
@@ -390,7 +435,10 @@ def profile_head(args):
         for i in range(args.repeats + 3):
             synchronize(device)
             start = time.perf_counter()
-            prediction = policy.predict_action_chunk(batch, sampling_seed=0, sampling_steps=steps).cpu()
+            batch = {"observation.state": torch.tensor(normalizer.state(arrays["state"][0]))[None].to(device)}
+            for key, img in images.items():
+                batch[key] = torch.tensor(normalizer.image(img))[None].to(device)
+            prediction = normalizer.unaction(policy.predict_action_chunk(batch, sampling_seed=0, sampling_steps=steps)).cpu()
             synchronize(device)
             if not torch.isfinite(prediction).all():
                 raise FloatingPointError("nonfinite profiled prediction")
@@ -398,7 +446,8 @@ def profile_head(args):
                 timings.append((time.perf_counter() - start) * 1000)
         key = f"{steps}_steps" if policy.config.objective == "flow" else "regression"
         report[key] = {"median_ms": float(np.median(timings)), "p95_ms": float(np.quantile(timings, .95)),
-                       "max_ms": float(max(timings)), "under_200ms_p95": bool(np.quantile(timings, .95) < 200)}
+                       "max_ms": float(max(timings)), "under_120ms_p95": bool(np.quantile(timings, .95) < 120),
+                       "under_200ms_p95": bool(np.quantile(timings, .95) < 200)}
     if device == "mps":
         report["mps_current_allocated_bytes"] = torch.mps.current_allocated_memory()
         report["mps_driver_allocated_bytes"] = torch.mps.driver_allocated_memory()
@@ -416,6 +465,7 @@ def main():
     cache.add_argument("--vision-config", type=Path, default=Path("configs/act_cartesian_dinov2_pilot.yaml"))
     cache.add_argument("--batch-size", type=int, default=8)
     cache.add_argument("--episodes", type=int, nargs="+")
+    cache.add_argument("--chunk-size", type=int, default=20)
     train = commands.add_parser("train")
     train.add_argument("--cache", type=Path, required=True)
     train.add_argument("--objective", choices=("flow", "regression"), required=True)
@@ -428,6 +478,9 @@ def main():
     train.add_argument("--grad-clip", type=float, default=1.)
     train.add_argument("--seed", type=int, default=0)
     train.add_argument("--log-every", type=int, default=20)
+    train.add_argument("--resume", type=Path)
+    train.add_argument("--schedule-examples", type=int)
+    train.add_argument("--validate-every", type=int, default=8000)
     profile = commands.add_parser("profile")
     profile.add_argument("--checkpoint", type=Path, required=True)
     profile.add_argument("--repeats", type=int, default=20)

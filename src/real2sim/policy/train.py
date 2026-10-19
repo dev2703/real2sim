@@ -43,6 +43,7 @@ from real2sim.policy.act import (
 from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.losses import ReconstructionLoss, act_training_loss
 from real2sim.policy.paired import PairedViewDataset, file_sha256
+from real2sim.policy.sampling import ResumableBatches, restore_rng, rng_state
 from real2sim.policy.schedule import learning_rate
 
 HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "lr_backbone", "sec_per_step", "wall_s", "samples"]
@@ -154,7 +155,9 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     loss_config = ReconstructionLoss(**cfg.get("reconstruction_loss", {}))
     tcfg = cfg["train"]
     tcfg.update({k: v for k, v in (overrides or {}).items() if v is not None})
-    schedule_steps = int(tcfg["steps"])
+    schedule_steps = int(tcfg.get("schedule_steps", tcfg["steps"]))
+    if schedule_steps < int(tcfg["steps"]):
+        raise ValueError("schedule_steps must cover all requested training steps")
     if smoke_steps is not None:
         tcfg.update(steps=smoke_steps, log_every=1, val_every=smoke_steps, save_every=smoke_steps, val_max_batches=2)
     device = resolve_device(tcfg.get("device", "auto"))
@@ -208,14 +211,22 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         previous_loss = json.loads((resume / "run_info.json").read_text()).get("reconstruction_loss", {})
         if ReconstructionLoss(**previous_loss) != loss_config:
             raise ValueError("cannot resume with a different reconstruction loss")
-        resumed, _, _ = load_checkpoint(resume, device="cpu")
+        resumed, resumed_norm, resumed_contract = load_checkpoint(resume, device="cpu")
+        for key in ("source", "split", "camera_keys", "state_names", "action_names", "policy_hz", "label_semantics",
+                    "contract_version", "controller_semantics", "calibration_sha256", "camera_transforms"):
+            if resumed_contract.get(key) != manifest.get(key):
+                raise ValueError(f"resume checkpoint {key} differs from data")
+        if resumed_contract["derived_files_sha256"] != manifest["files_sha256"] or resumed_norm.stats != train_ds.normalizer.stats:
+            raise ValueError("resume checkpoint data hashes or normalization differ")
         policy.load_state_dict(resumed.state_dict(), strict=True)
         del resumed
-        state = torch.load(resume / "training_state.pt", map_location=device, weights_only=False)
+        state = torch.load(resume / "training_state.pt", map_location="cpu", weights_only=False)
         optimizer.load_state_dict(state["optimizer"])
         start_step = int(state["step"])
         if cfg.get("scheduler") != json.loads((resume / "run_info.json").read_text()).get("scheduler"):
             raise ValueError("cannot resume with a different scheduler")
+        if schedule_steps != json.loads((resume / "run_info.json").read_text()).get("scheduler_total_steps", schedule_steps):
+            raise ValueError("cannot resume with a different scheduler horizon; declare schedule_steps before screening")
 
     schedule = cfg.get("scheduler")
     peaks = [act_cfg.optimizer_lr, act_cfg.optimizer_lr_backbone]
@@ -226,7 +237,10 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     bs = int(tcfg["batch_size"])
     accum = int(tcfg.get("grad_accum", 1))
     workers = int(tcfg.get("num_workers", 0))
-    train_loader = make_loader(train_ds, bs, True, workers, int(tcfg["seed"]), drop_last=True)
+    exact_resume = bool(tcfg.get("exact_resume", False))
+    if exact_resume and workers:
+        raise ValueError("exact_resume requires num_workers=0 (no prefetched stochastic samples)")
+    train_loader = None if exact_resume else make_loader(train_ds, bs, True, workers, int(tcfg["seed"]), drop_last=True)
     val_loader = make_loader(val_ds, bs, False, workers, 0, drop_last=False)
     steps = int(tcfg["steps"])
     if len(train_ds) < bs or bs < 1 or accum < 1 or steps <= start_step:
@@ -263,7 +277,15 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     writer.writerows(kept)
 
     action_std = np.asarray(train_ds.normalizer.action_std, np.float64)
-    it = infinite(train_loader)
+    it = ResumableBatches(train_ds, bs, int(tcfg["seed"])) if exact_resume else infinite(train_loader)
+    if resume is not None and exact_resume:
+        continuation = state.get("continuation")
+        if not continuation or continuation["grad_accum"] != accum:
+            raise ValueError("exact resume requires saved sampler/RNG and identical accumulation")
+        if continuation["augmentation"] != cfg.get("augmentation") or continuation["paired_images"] != paired_provenance:
+            raise ValueError("resume augmentation or paired image provenance differs")
+        it.load_state_dict(continuation["sampler"])
+        restore_rng(continuation["rng"])
     t_start = time.time()
     t_window = time.time()
     run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "grad_norm": 0.0, "n": 0}
@@ -355,7 +377,11 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 "paired_images": paired_provenance, "initial_checkpoint": initial_provenance,
                 "reconstruction_loss": asdict(loss_config),
                 "scheduler": schedule, "scheduler_total_steps": schedule_steps,
-                "wall_s": round(time.time() - t_start, 1)}, optimizer)
+                "examples_seen": step * bs * accum,
+                "wall_s": round(time.time() - t_start, 1)}, optimizer,
+                training_state={"sampler": it.state_dict(), "rng": rng_state(), "grad_accum": accum,
+                                "augmentation": cfg.get("augmentation"), "paired_images": paired_provenance}
+                if exact_resume else None)
             update_last_link(out_dir / "checkpoints", ck.name)
             if improved:
                 update_checkpoint_link(out_dir / "checkpoints", ck.name, "best")

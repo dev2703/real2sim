@@ -39,12 +39,19 @@ class FlowHeadConfig:
     sampling_steps: int = 4
     sampling_seed: int = 0
     camera_key: str = "observation.images.iphone"
+    camera_keys: list[str] = field(default_factory=list)
     dinov2_config: dict = field(default_factory=dict)
     dinov2_model_id: str = "facebook/dinov2-small"
     dinov2_revision: str = "ed25f3a31f01632728cabb09d1542f84ab7b0056"
     type: str = "small_chunk_head"
 
     def __post_init__(self):
+        if not self.camera_keys:
+            self.camera_keys = [self.camera_key]  # old single-camera checkpoints
+        if len(set(self.camera_keys)) != len(self.camera_keys) or any(not k.startswith("observation.images.") for k in self.camera_keys):
+            raise ValueError("camera_keys must contain distinct image inputs in token order")
+        if self.feature_tokens % len(self.camera_keys):
+            raise ValueError("feature token count must divide into equal camera grids")
         if self.objective not in {"flow", "regression"}:
             raise ValueError("objective must be flow or regression")
         for name in ("state_dim", "action_dim", "chunk_size", "n_action_steps", "feature_dim",
@@ -92,6 +99,9 @@ class ChunkHead(nn.Module):
         self.time_projection = nn.Sequential(nn.Linear(d, d), nn.SiLU(), nn.Linear(d, d))
         self.action_position = nn.Parameter(torch.randn(config.chunk_size, d) * .02)
         self.feature_position = nn.Parameter(torch.randn(config.feature_tokens, d) * .02)
+        # Only new multi-view models add parameters; old checkpoints still load strictly.
+        self.camera_position = (nn.Parameter(torch.randn(len(config.camera_keys), d) * .02)
+                                if len(config.camera_keys) > 1 else None)
         layer = nn.TransformerDecoderLayer(
             d, config.n_heads, config.dim_feedforward, dropout=0., activation="gelu",
             batch_first=True, norm_first=True,
@@ -109,6 +119,8 @@ class ChunkHead(nn.Module):
         if features.shape != (len(state), c.feature_tokens, c.feature_dim):
             raise ValueError("DINO feature shape does not match head configuration")
         image = self.feature_projection(features) + self.feature_position
+        if self.camera_position is not None:
+            image = image + self.camera_position.repeat_interleave(c.feature_tokens // len(c.camera_keys), dim=0)
         return torch.cat([self.state_projection(state).unsqueeze(1), image], dim=1)
 
     def field(self, x: torch.Tensor, t: torch.Tensor, memory: torch.Tensor,
@@ -203,9 +215,14 @@ class FlowHeadPolicy(nn.Module):
             return batch[FEATURE_KEY]
         if self.backbone is None:
             raise ValueError("raw-image inference requires an attached frozen DINO backbone")
+        views = []
         with torch.no_grad():
-            features = self.backbone(batch[self.config.camera_key])["feature_map"]
-        return features.flatten(2).transpose(1, 2)
+            for key in self.config.camera_keys:
+                if key not in batch:
+                    raise ValueError(f"missing required camera {key}")
+                features = self.backbone(batch[key])["feature_map"]
+                views.append(features.flatten(2).transpose(1, 2))
+        return torch.cat(views, dim=1)
 
     def forward(self, batch: dict, **kwargs):
         return self.head.training_loss({**batch, FEATURE_KEY: self.features(batch)}, **kwargs)

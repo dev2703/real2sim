@@ -88,6 +88,10 @@ class So101PickPlaceEnv:
         if np.any(self.max_velocity <= 0):
             raise ValueError("max_velocity must be positive")
         self.initial_qpos = self._vector(self.config["initial_qpos"], "initial_qpos")
+        requested_initial = sim_from_real(self.mapping, self.config["initial_qpos_real_deg"])
+        if self.config.get("strict_initial_state") and (
+                np.any(requested_initial < self.limits[:, 0]) or np.any(requested_initial > self.limits[:, 1])):
+            raise ValueError("v2 initial real pose exceeds model limits; define a measured task start, do not clamp")
         expected = np.clip(sim_from_real(self.mapping, self.config["initial_qpos_real_deg"]),
                            self.limits[:, 0], self.limits[:, 1])
         if not np.allclose(self.initial_qpos, expected, atol=1e-6):
@@ -158,6 +162,9 @@ class So101PickPlaceEnv:
         # table with the D-014 lift, so the first control tick is a contact-driven jump. Recorded
         # here so every trial carries the confound explicitly.
         self.start_pose = self._robot_table_penetration()
+        if self.config.get("strict_initial_state") and self.start_pose["robot_table_penetration_m"] > 1e-6:
+            self._ready = False
+            raise ValueError("v2 initial pose penetrates the table")
         return self.observation(), self.info()
 
     def step(self, action) -> tuple[dict, float, bool, bool, dict]:

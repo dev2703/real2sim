@@ -1,0 +1,41 @@
+source:
+  repo_id: local/so101_act_pickplace_v2
+  revision: local-content-addressed-v2
+  codebase_version: v3.0
+  local_root_hint: ~/.cache/huggingface/lerobot/local/so101_act_pickplace_v2
+  fps: 25
+camera_keys:
+- observation.images.iphone
+- observation.images.top
+excluded_cameras: []
+excluded_episodes: []
+image:
+  mode: letterbox
+  height: 192
+  width: 256
+  pad_value: 114
+  source_width: 1280
+  source_height: 720
+policy_hz: 12.5
+labels:
+  joint: recorded_action
+  cartesian: achieved_motion
+  cartesian_lead_ticks: 1
+  cartesian_gripper_source: leader_action
+split:
+  seed: 0
+  n_val: 6
+  fixed_manifest: results/v2/split.json
+task_config: configs/v2/task.calibrated.yaml
+state:
+  joint_names:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_flex
+  - wrist_flex
+  - wrist_roll
+  - gripper
+  units: degrees
+  gripper_units: percent
+contract_version: so101_v2_12p5_v1
+controller_semantics: accepted_target

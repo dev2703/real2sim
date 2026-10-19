@@ -63,11 +63,11 @@ def test_rejects_extra_ground_truth_slot():
 
 def test_rejects_wrong_camera_key_and_shape():
     c = joint_contract()
-    c["camera_keys"] = ["observation.images.top"]
+    c["camera_keys"] = ["privileged.ball_position"]
     with pytest.raises(ContractError, match="camera_keys"):
         ObservationAdapter(c, FakeNormalizer(6))
     c = joint_contract()
-    c["camera_keys"] = ["observation.images.iphone", "observation.images.wrist"]
+    c["camera_keys"] = ["observation.images.iphone", "observation.images.iphone"]
     with pytest.raises(ContractError, match="camera_keys"):
         ObservationAdapter(c, FakeNormalizer(6))
     c = joint_contract()

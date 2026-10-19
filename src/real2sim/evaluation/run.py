@@ -260,8 +260,9 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         except Exception:
             env.close()
             raise
-        experiment_kind = ("cartesian_persistent_target" if meta["execution_interface_ablation"]
-                           else "panda" if robot == "panda" else meta["kind"])
+        experiment_kind = ("panda" if robot == "panda" else
+                           "cartesian_persistent_target" if meta["execution_interface_ablation"]
+                           else meta["kind"])
         exp_id = experiment_id or EXPERIMENT_IDS[experiment_kind]
     else:
         ctrl = HoldPoseController(env, hold_action(robot, env))
