@@ -192,6 +192,7 @@ class Runner:
         self.args = args
         self.out = args.out.resolve()
         self.data = args.data_root.resolve()
+        self.out.mkdir(parents=True, exist_ok=True)
         if args.flow_cache.resolve().is_relative_to(self.out):
             raise ValueError("feature cache must live outside the publishable output directory")
         self.token = hashlib.sha256(str(self.out).encode()).hexdigest()
