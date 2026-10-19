@@ -126,6 +126,17 @@ def test_process_flags_and_optional_failure_preserve_queue(tmp_path):
     assert not (runner.out / "stages/required/COMPLETE.json").exists()
 
 
+def test_dry_run_accepts_manifest_without_checksums(tmp_path, monkeypatch):
+    root = tmp_path / "data"
+    variants = ["canonical", "no_velocity", "ema_velocity_05", "ema_velocity_075", "joints", "canonical_joints", "history3"]
+    for name in variants:
+        atomic_json(root / name / "manifest.json", {"kind": name})
+    runner = make_runner(tmp_path, "--dry-run", "--data-root", str(root))
+    monkeypatch.setattr(runner, "command", lambda *a, **k: pytest.fail("dry run launched a subprocess"))
+    runner.execute()
+    assert read_json(runner.out / "PLAN_READY.json")["status"] == "NOT_STARTED"
+
+
 def test_queue_lock_prevents_duplicate_live_runner(tmp_path):
     with queue_lock(tmp_path):
         with pytest.raises(RuntimeError, match="already owns"):
