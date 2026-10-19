@@ -457,6 +457,8 @@ class Runner:
         for manifest_path in manifest_paths.values():
             manifest = read_json(manifest_path)
             self.frozen_files[str(manifest_path)] = hash_file(manifest_path)
+            if self.args.dry_run:
+                continue
             for name, expected in manifest["files_sha256"].items():
                 path = (manifest_path.parent / name).resolve(strict=True)
                 if path not in checked:
