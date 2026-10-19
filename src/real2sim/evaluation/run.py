@@ -19,6 +19,10 @@ One row per trial goes to ``<out>/trials.csv`` (failures and aborts included); `
 holds ``successes/N``, the per-trial list, the resolved configs and the checkpoint contract.
 ``--controller hold`` runs the HOLD_POSE null baseline (initial pose held, no policy); it is
 labelled as such and is never an ACT result.
+
+``cartesian.target_reference: accepted_target`` opts into a SO-101 Cartesian execution-interface
+ablation. The checkpoint, training labels and policy inputs remain unchanged; only the runtime
+target integration changes. It is refused for Panda, joint policies and the hold baseline.
 """
 
 from __future__ import annotations
@@ -55,6 +59,7 @@ from real2sim.sim.model import project_path
 ROBOTS = ("so101", "panda")
 CONTROLLER_SOURCES = {"learned": "LEARNED_ACT", "hold": "HOLD_POSE"}
 EXPERIMENT_IDS = {"joint": "E1_joint_ACT", "cartesian": "E2_cart_ACT_so101",
+                  "cartesian_persistent_target": "DIAGNOSTIC_E2_cart_ACT_so101_persistent_target",
                   "panda": "E3_cart_ACT_panda", "hold": "E0_hold_pose_null",
                   "hold_panda": "E0_hold_pose_null_panda"}
 DEFAULT_CONFIGS = {"so101": ("configs/sim_so101.yaml", "configs/eval_so101.yaml"),
@@ -126,8 +131,19 @@ def check_contract_timing_and_image(contract: dict, env) -> None:
         raise ContractError(f"checkpoint was trained on a {src_aspect:.3f} aspect source; the simulator renders 16:9")
 
 
+def _cartesian_target_reference(eval_cfg: dict, *, robot: str, controller: str) -> str:
+    reference = eval_cfg.get("cartesian", {}).get("target_reference", "current_pose")
+    if reference not in ("current_pose", "accepted_target"):
+        raise ValueError("cartesian.target_reference must be 'current_pose' or 'accepted_target'")
+    if reference == "accepted_target" and (robot != "so101" or controller != "learned"):
+        raise ContractError("accepted_target requires a learned SO-101 Cartesian controller; "
+                            "it cannot be applied to Panda or the hold baseline")
+    return reference
+
+
 def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
                              robot: str = "so101") -> tuple[ChunkExecutor, dict, dict]:
+    target_reference = _cartesian_target_reference(eval_cfg, robot=robot, controller="learned")
     from real2sim.policy.act import load_checkpoint
 
     policy, normalizer, contract = load_checkpoint(checkpoint, device)
@@ -150,11 +166,15 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
     else:
         obs_adapter = ObservationAdapter(contract, normalizer, device=device)
         if obs_adapter.kind == "joint":
+            if target_reference == "accepted_target":
+                raise ContractError("accepted_target requires a Cartesian checkpoint; "
+                                    "joint targets do not use a Cartesian target reference")
             action_adapter = JointActionAdapter(env)
         else:
             action_adapter = CartesianActionAdapter(
                 env, NativeKinematics(env.model, env.config),
-                max_step_m=cart["max_step_m"], max_step_rad=cart["max_step_rad"])
+                max_step_m=cart["max_step_m"], max_step_rad=cart["max_step_rad"],
+                target_reference=target_reference)
     executor = ChunkExecutor(policy, normalizer, obs_adapter, action_adapter)
     run_info = json.loads((checkpoint / "run_info.json").read_text()) if (checkpoint / "run_info.json").is_file() else {}
     meta = {
@@ -165,6 +185,9 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
         "chunk_size": int(policy.config.chunk_size),
         "n_action_steps": executor.n_action_steps,
         "device": device,
+        "target_reference": target_reference if obs_adapter.kind == "cartesian" else None,
+        "execution_interface_ablation": target_reference == "accepted_target",
+        "checkpoint_contract_modified": False,
     }
     return executor, contract, meta
 
@@ -201,6 +224,7 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
     if reset_scenarios is not None and len(reset_scenarios) != n_trials:
         raise ValueError("one reset scenario is required for every diagnostic trial")
     eval_cfg = load_yaml(eval_config)
+    _cartesian_target_reference(eval_cfg, robot=robot, controller=controller)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     # Check the scene yaml's robot field BEFORE building the env: the robot-specific env class
@@ -222,12 +246,18 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         except Exception:
             env.close()
             raise
-        exp_id = experiment_id or EXPERIMENT_IDS["panda" if robot == "panda" else meta["kind"]]
+        experiment_kind = ("cartesian_persistent_target" if meta["execution_interface_ablation"]
+                           else "panda" if robot == "panda" else meta["kind"])
+        exp_id = experiment_id or EXPERIMENT_IDS[experiment_kind]
     else:
         ctrl = HoldPoseController(env, hold_action(robot, env))
-        meta = {"checkpoint": None, "checkpoint_sha256": None, "checkpoint_step": None, "kind": "hold"}
+        meta = {"checkpoint": None, "checkpoint_sha256": None, "checkpoint_step": None,
+                "kind": "hold", "target_reference": None, "execution_interface_ablation": False,
+                "checkpoint_contract_modified": False}
         exp_id = experiment_id or EXPERIMENT_IDS["hold_panda" if robot == "panda" else "hold"]
     caption = CAPTIONS[(robot, controller)]
+    if meta["execution_interface_ablation"]:
+        caption += " persistent target (execution ablation)"
     source = CONTROLLER_SOURCES[controller]
     vcfg = eval_cfg["video"]
     rows, trials = [], []
@@ -289,6 +319,14 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         "summary": summarize(rows), "trials": trials,
         "checkpoint": meta,
         "contract": contract,
+        "execution_interface": {
+            "target_reference": meta["target_reference"],
+            "ablation": meta["execution_interface_ablation"],
+            "checkpoint_contract_modified": False,
+            "note": ("Persistent accepted target execution ablation; frozen checkpoint, labels "
+                     "and policy observations unchanged. This is not a trained contract change."
+                     if meta["execution_interface_ablation"] else "Default execution interface."),
+        },
         "reset_scenarios": reset_scenarios,
         "resolved": {"sim_config": env.config, "task_config": task, "eval_config": eval_cfg,
                      "data_config": env.data_config, "max_ticks": ticks_cap,

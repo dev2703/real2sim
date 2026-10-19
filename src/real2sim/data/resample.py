@@ -1,9 +1,10 @@
 """Episode-preserving resampling to the policy clock and action-chunk indexing (D-007).
 
-The recording clock is uniform (audited), so 10 Hz from 30 Hz is exact row selection: every
-``stride``-th row of each episode, starting at row 0. Chunks never cross episode boundaries;
-positions past the episode end are padded with the last valid action and flagged in
-``action_is_pad`` so the ACT loss ignores them.
+Only the stored nominal timestamp spacing has been audited as uniform; physical acquisition
+cadence is unknown without recording traces. Selecting every ``stride``-th row, starting at
+row 0, converts 30 Hz to 10 Hz in nominal row time and does not correct real stalls or drift.
+Chunks never cross episode boundaries; positions past the episode end are padded with the
+last valid action and flagged in ``action_is_pad`` so the ACT loss ignores them.
 """
 
 from __future__ import annotations

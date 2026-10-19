@@ -94,9 +94,9 @@ def test_drift_and_velocity_scale_expose_nominal_timestamp_error():
     result = audit.audit_attempt(data, 20)
     drift = result["clock_drift"]
     assert drift["observation_minus_nominal_end_ms"] == pytest.approx(150)
-    assert drift["nominal_velocity_scale_over_physical"]["mean"] == pytest.approx(1.1)
+    assert drift["nominal_velocity_scale_over_host_interval"]["mean"] == pytest.approx(1.1)
     assert drift["policy_row_stride"]["actual_interval_ms"]["mean"] == pytest.approx(110)
-    assert drift["policy_row_stride"]["nominal_velocity_scale_over_physical"]["mean"] == pytest.approx(1.1)
+    assert drift["policy_row_stride"]["nominal_velocity_scale_over_host_interval"]["mean"] == pytest.approx(1.1)
     joint = result["joints"]["joint.pos"]
     assert joint["leader_minus_processed_request_absolute"]["mean"] == 5
     assert joint["processed_requests_changed_by_send"]["changed_fraction"] == 1

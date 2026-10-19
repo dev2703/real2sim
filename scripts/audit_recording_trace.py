@@ -27,11 +27,11 @@ def clock_drift(times, fps, policy_hz):
     nominal = np.arange(len(times), dtype=float) / fps
     observed = times[:, 1] - times[0, 1]
     drift = observed - nominal
-    result = {"physical_observation_span_s": float(observed[-1]),
+    result = {"host_observation_start_span_s": float(observed[-1]),
               "nominal_row_span_s": float(nominal[-1]),
               "observation_minus_nominal_end_ms": float(drift[-1] * 1000),
               "observation_minus_nominal_absolute_ms": summary(abs(drift) * 1000),
-              "nominal_velocity_scale_over_physical": summary(np.diff(observed) * fps)}
+              "nominal_velocity_scale_over_host_interval": summary(np.diff(observed) * fps)}
     ratio = fps / policy_hz
     stride = int(round(ratio))
     if stride < 1 or not np.isclose(ratio, stride, rtol=0, atol=1e-6):
@@ -42,7 +42,7 @@ def clock_drift(times, fps, policy_hz):
         result["policy_row_stride"] = {
             "status": "diagnostic_only", "stride": stride, "policy_hz": policy_hz,
             "actual_interval_ms": summary(intervals * 1000),
-            "nominal_velocity_scale_over_physical": summary(intervals * policy_hz),
+            "nominal_velocity_scale_over_host_interval": summary(intervals * policy_hz),
             "intervals_above_1_5_policy_period": int((intervals > 1.5 / policy_hz).sum())}
     return result
 

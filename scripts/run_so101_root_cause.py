@@ -105,6 +105,9 @@ def run_trial(config, joint, cart, indices, metadata, review, mode, offset):
                 bounded = requested.copy()
                 for section, limit in ((slice(0, 3), adapter.max_step_m), (slice(3, 6), adapter.max_step_rad)):
                     bounded[section] *= min(1., limit / max(np.linalg.norm(bounded[section]), 1e-12))
+                bounded_action = bounded.copy()
+                if mode != "joint_reference":
+                    bounded = np.asarray(applied.detail["bounded_feedback"])
                 metrics, control = info["privileged_metrics"], info["control"]
                 tracker.update(metrics, ik_rejected=rejected)
                 applied_pose = kin.forward(np.array(control["applied_radians"]))
@@ -114,6 +117,7 @@ def run_trial(config, joint, cart, indices, metadata, review, mode, offset):
                     "active_reference": bool(np.linalg.norm(deltas[k, :3]) > .001 or np.linalg.norm(deltas[k, 3:]) > .01),
                     "recorded_delta": deltas[k].tolist(), "requested_delta": requested.tolist(),
                     "bounded_delta_applied_by_cartesian_adapter": mode != "joint_reference",
+                    "bounded_action_delta": bounded_action.tolist(),
                     "bounded_delta": bounded.tolist(), "achieved_delta": achieved.tolist(),
                     "reference_pose_error_m": float(np.linalg.norm(residual[:3])),
                     "reference_rotation_error_rad": float(np.linalg.norm(residual[3:])),
