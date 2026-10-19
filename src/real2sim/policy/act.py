@@ -120,7 +120,7 @@ def save_checkpoint(
     }
     for key in ("observation_variant", "experiment_split", "source_manifest_sha256",
                 "contract_version", "action_representation", "controller_semantics",
-                "calibration_sha256", "camera_transforms", "timing_basis"):
+                "calibration_sha256", "camera_transforms", "timing_basis", "transfer_shared_task_sha256"):
         if key in manifest:
             contract[key] = manifest[key]
     if policy.config.vision_backbone == "dinov2":

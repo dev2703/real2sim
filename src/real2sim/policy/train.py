@@ -388,7 +388,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         if improved or stopped_early or step % int(tcfg["save_every"]) == 0 or step == steps:
             ck = out_dir / "checkpoints" / f"{step:06d}"
             save_checkpoint(ck, policy, data_dir / "stats.json", manifest, {
-                "step": step, "name": cfg.get("name"), "device": device, "last_val": last_val,
+                "step": step, "seed": int(tcfg["seed"]), "name": cfg.get("name"), "device": device, "last_val": last_val,
                 "best_val_l1": best_l1, "best_step": best_step,
                 "patience_reference": patience_reference, "bad_validations": bad_validations,
                 "augmentation": cfg.get("augmentation"),

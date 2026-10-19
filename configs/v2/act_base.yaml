@@ -39,7 +39,7 @@ model:
   optimizer_lr_backbone: 1.0e-05
   optimizer_weight_decay: 0.05
 scheduler:
-  warmup_steps: 200
+  warmup_steps: 1000
   start_factor: 0.001
   min_lr: 1.0e-07
 train:
@@ -55,5 +55,5 @@ train:
   num_workers: 0
   device: auto
   keep_only_best_and_last: false
-  schedule_steps: 4000
+  schedule_steps: 20000
   exact_resume: true

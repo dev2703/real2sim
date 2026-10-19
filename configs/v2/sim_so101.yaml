@@ -1,4 +1,4 @@
-# Requires measured task.calibrated.yaml and a verified start before use.
+# Measured registration and verified task start required. IK acceptance bounds unchanged.
 robot: so101
 model: assets/menagerie/robotstudio_so101/so101.xml
 manifest: assets/menagerie/manifest.json
@@ -87,6 +87,8 @@ ik:
   - 0.45
   - 0.6
   penetration_tolerance_m: 0.002
+  position_convergence_m: 1.0e-05
+  orientation_convergence_rad: 0.0001
 appearance:
   robot_plastic_rgba:
   - 0.75

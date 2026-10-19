@@ -4,9 +4,24 @@ Local camera axes follow MuJoCo (x right, y up, camera looks along -z).
 No placeholder mount is supplied: a wrist view needs a measured body transform.
 """
 
+import copy
+import hashlib
+import json
 import xml.etree.ElementTree as ET
 
 import numpy as np
+
+
+def shared_task_hash(task: dict) -> str:
+    """Freeze shared task/optics and SO-101 calibration, permitting a later Panda mount.
+
+    Only the added Panda camera-to-link mounts are excluded. Geometry, coordinates,
+    iPhone calibration, camera roles/order, intrinsics and SO-101 mounts remain pinned.
+    """
+    common = copy.deepcopy(task)
+    for camera in common.get("additional_cameras", []):
+        camera.get("mounts", {}).pop("panda", None)
+    return hashlib.sha256(json.dumps(common, sort_keys=True, allow_nan=False).encode()).hexdigest()
 
 
 def camera_bindings(task: dict, robot: str) -> dict[str, str]:

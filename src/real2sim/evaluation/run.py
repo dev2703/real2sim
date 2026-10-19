@@ -22,7 +22,7 @@ labelled as such and is never an ACT result.
 
 ``cartesian.target_reference: accepted_target`` opts into a SO-101 Cartesian execution-interface
 ablation. The checkpoint, training labels and policy inputs remain unchanged; only the runtime
-target integration changes. It is refused for Panda, joint policies and the hold baseline.
+target integration changes. Both robots support this interface; joint policies and hold baselines refuse it.
 """
 
 from __future__ import annotations
@@ -124,7 +124,11 @@ def check_contract_timing_and_image(contract: dict, env) -> None:
         raise ContractError("checkpoint camera order differs from simulator cameras")
     if contract.get("contract_version"):
         task_path = project_path(env.config["task_config"])
-        if contract.get("calibration_sha256") != sha256_file(task_path):
+        from real2sim.sim.cameras import shared_task_hash
+
+        panda_mount_extension = (env.config.get("robot") == "panda"
+            and contract.get("transfer_shared_task_sha256") == shared_task_hash(env.task))
+        if contract.get("calibration_sha256") != sha256_file(task_path) and not panda_mount_extension:
             raise ContractError("checkpoint calibration differs from simulator task registration")
     hz = contract.get("policy_hz")
     if hz is None or abs(float(hz) - float(env.control_hz)) > 1e-9:

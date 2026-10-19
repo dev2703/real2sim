@@ -29,7 +29,12 @@ from pathlib import Path
 import numpy as np
 
 from real2sim.config import load_yaml, validate_camera_keys
-from real2sim.data.labels import ABSOLUTE_ACTION_NAMES, ACTION_NAMES, PROPRIO_NAMES, absolute_pose_actions
+from real2sim.data.labels import (
+    ABSOLUTE_ACTION_NAMES,
+    ACTION_NAMES,
+    PROPRIO_NAMES,
+    absolute_pose_actions,
+)
 from real2sim.data.raw import RawDataset, resolve_dataset_root
 from real2sim.data.resample import episode_tick_rows, policy_stride
 from real2sim.data.split import make_episode_split
@@ -108,6 +113,7 @@ def prepare(
     fixed_split = None
     if split_cfg.get("fixed_manifest"):
         from types import SimpleNamespace
+
         from real2sim.config import project_path
         from real2sim.data.conditions import validate_fixed_split
 
@@ -284,12 +290,15 @@ def prepare(
         manifest["n_ticks_reserved"] = int(np.isin(arrays["episode_index"], reserved).sum())
     if cfg.get("contract_version"):
         from real2sim.config import project_path
+        from real2sim.sim.cameras import shared_task_hash
+
+        calibrated_task = load_yaml(project_path(cfg["task_config"]))
 
         manifest.update(contract_version=cfg["contract_version"], prepare_version="v3",
                         action_representation=mode, controller_semantics=cfg.get("controller_semantics"),
                         calibration_sha256=_sha256(project_path(cfg["task_config"])),
-                        camera_transforms={k: task_cfg[k] for k in ("camera_iphone", "additional_cameras") if k in task_cfg}
-                        if mode != "joint" else cfg.get("camera_transforms", {}),
+                        transfer_shared_task_sha256=shared_task_hash(calibrated_task),
+                        camera_transforms={k: calibrated_task[k] for k in ("camera_iphone", "additional_cameras") if k in calibrated_task},
                         timing_basis="nominal source row clock; physical acquisition intervals unavailable")
         manifest["source_files_sha256"] = {
             str(path.relative_to(root)): _sha256(path)

@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from real2sim.config import load_yaml
+from real2sim.config import load_yaml, project_path
 from real2sim.data.conditions import manifest_hash
 from real2sim.evaluation.run import run_trials
 from real2sim.experiments.v2 import gate_failures, read_json, verify_bundle
@@ -43,6 +43,10 @@ def main():
         raise ValueError(f"freeze required artifacts: {sorted(required)}")
     if files["checkpoint"]["sha256"] != file_sha256(a.checkpoint / "model.safetensors"):
         raise ValueError("freeze the checkpoint before evaluation")
+    for name, filename in (("checkpoint_config", "config.json"), ("checkpoint_stats", "stats.json"),
+                           ("checkpoint_contract", "real2sim_contract.json")):
+        if files[name]["sha256"] != file_sha256(a.checkpoint / filename):
+            raise ValueError(f"frozen checkpoint metadata differs: {name}")
     failures = gate_failures(read_json(files["evidence"]["path"]))
     if failures:
         raise ValueError("prerequisite evidence failed: " + "; ".join(failures))
@@ -64,6 +68,8 @@ def main():
         raise ValueError("scenario checksum mismatch")
     sim = load_yaml(files["sim"]["path"])
     task = load_yaml(files["task"]["path"])
+    if file_sha256(project_path(sim["task_config"])) != files["task"]["sha256"]:
+        raise ValueError("simulator task differs from the frozen task")
     if sim["control_hz"] != 12.5 or sim["physics_hz"] != 500 or not sim.get("strict_initial_state"):
         raise ValueError("v2 evaluation requires strict starts and 12.5/500 Hz control/physics")
     if task["episode"]["timeout_s"] != 45 or task["episode"]["success_hold_s"] != 1:

@@ -199,6 +199,12 @@ class PandaPickPlaceEnv:
         self.steps = 0
         self._ready = True
         self._ee_velocity = np.zeros(3)  # first tick: zero velocity, as in the labels
+        if self.config.get("strict_initial_state"):
+            for contact in self.data.contact[:self.data.ncon]:
+                pair = {int(contact.geom1), int(contact.geom2)}
+                if self.table_geom in pair and self.ball_geom not in pair and contact.dist < -1e-6:
+                    self._ready = False
+                    raise ValueError("v2 initial pose penetrates the table")
         return self.observation(), self.info()
 
     def _gripper_ctrl(self, opening_m: float) -> float:

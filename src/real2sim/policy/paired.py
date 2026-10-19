@@ -21,6 +21,8 @@ class PairedViewDataset(Dataset):
         if not 0 <= self.probability <= 1:
             raise ValueError("replacement probability must be in [0,1]")
         self.manifest = json.loads((self.root / "manifest.json").read_text())
+        if not evaluation and (self.manifest.get("usage") == "diagnostic_only" or self.manifest.get("counterfactual")):
+            raise ValueError("counterfactual renders cannot train against unchanged real actions")
         for key in ("source", "split", "files_sha256"):
             if self.manifest["derived_manifest"][key] != base.manifest[key]:
                 raise ValueError(f"paired dataset {key} differs from real data")

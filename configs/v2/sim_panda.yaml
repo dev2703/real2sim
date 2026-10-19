@@ -1,4 +1,4 @@
-# Requires measured task.calibrated.yaml and a verified start before use.
+# Measured registration and verified task start required. IK acceptance bounds unchanged.
 robot: panda
 model: assets/menagerie/franka_emika_panda/panda.xml
 model_sha256: 96ad67da03710f17f798c9478fd9e9efdf24a3bf8359f05e456dd9fb158ea273
@@ -89,4 +89,6 @@ ik:
   - 0.45
   - 0.6
   penetration_tolerance_m: 0.002
+  position_convergence_m: 1.0e-05
+  orientation_convergence_rad: 0.0001
 strict_initial_state: true

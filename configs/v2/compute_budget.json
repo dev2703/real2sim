@@ -1,0 +1,39 @@
+{
+  "version": "v2_budget_v1",
+  "execution_order": [
+    "local",
+    "eligible_existing_hf_or_lightning_credit",
+    "vast_finalist_only"
+  ],
+  "one_training_job_at_a_time": true,
+  "reserve_fraction": 0.2,
+  "automatic_paid_retries": false,
+  "providers": {
+    "huggingface": {
+      "user_reported_credit_usd": 10,
+      "usable_training_usd": 8,
+      "eligibility_verified": false,
+      "rate_verified": false
+    },
+    "lightning": {
+      "user_reported_credits": 22,
+      "usable_training_credits": 17.6,
+      "eligibility_verified": false,
+      "rate_verified": false
+    },
+    "vast": {
+      "new_spending_cap_usd": 10,
+      "training_allocation_usd": 8,
+      "rate_verified": false
+    }
+  },
+  "upload_requirements": [
+    "exact private bundle and hashes",
+    "destination and privacy",
+    "measured two-camera throughput",
+    "current verified rates/credit eligibility",
+    "runtime limit and automatic shutdown",
+    "checkpointed resumption",
+    "user upload authorization"
+  ]
+}

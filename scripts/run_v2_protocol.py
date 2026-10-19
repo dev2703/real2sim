@@ -22,10 +22,12 @@ from real2sim.experiments.v2 import (
     final_summary,
     freeze_bundle,
     gate_failures,
+    promote_finalists,
     read_json,
     scenario_suite,
     verify_bundle,
 )
+from real2sim.policy.paired import file_sha256
 
 
 def write(path, value):
@@ -71,6 +73,9 @@ def main():
     run.add_argument("--bundle", type=Path, required=True)
     run.add_argument("--out", type=Path, required=True)
     run.add_argument("--resume", type=Path)
+    run.add_argument(
+        "--cache", type=Path, help="frozen DINO feature cache for flow/regression arms"
+    )
     run.add_argument("--runtime-seconds", type=int, required=True)
     score = sub.add_parser("score-final")
     score.add_argument("--rows", type=Path, required=True)
@@ -80,8 +85,16 @@ def main():
     cases.add_argument("--reserved", action="store_true")
     cases.add_argument("--seed", type=int, default=0)
     cases.add_argument("--out", type=Path, required=True)
+    finalists = sub.add_parser("finalists")
+    finalists.add_argument("--matrix", type=Path, required=True)
+    finalists.add_argument("--development-reports", type=Path, required=True)
+    finalists.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
-    if args.command == "scenarios":
+    if args.command == "finalists":
+        write(
+            args.out, promote_finalists(read_json(args.matrix), read_json(args.development_reports))
+        )
+    elif args.command == "scenarios":
         write(
             args.out,
             scenario_suite(read_json(args.registration), reserved=args.reserved, seed=args.seed),
@@ -100,7 +113,7 @@ def main():
         write(
             args.out,
             {
-                "version": "v2_screen_v1",
+                "version": "v2_screen_v2",
                 "selection": "development pick-place success; then closure error; then latency",
                 "adaptive_baseline": {
                     "backbone": args.backbone,
@@ -133,12 +146,21 @@ def main():
         if failures:
             raise ValueError("learning comparison blocked: " + "; ".join(failures))
         arm = next(a for a in read_json(args.matrix)["arms"] if a["id"] == args.arm)
+        if arm.get("resume_checkpoint"):
+            expected_resume = Path(arm["resume_checkpoint"]).resolve()
+            if args.resume is not None and args.resume.resolve() != expected_resume:
+                raise ValueError("finalist must continue its selected seed-zero screen")
+            args.resume = expected_resume
         if arm.get("reuse"):
             raise ValueError(f"reuse existing control {arm['reuse']}; do not charge another screen")
         if arm["family"] != "act":
-            raise ValueError(
-                "use train_flow_head.py for the matched frozen-feature flow/regression arms"
-            )
+            if args.cache is None or "feature_cache_manifest" not in bundle["files"]:
+                raise ValueError("freeze and provide the dual-camera DINO feature cache")
+            if (
+                file_sha256(args.cache / "manifest.json")
+                != bundle["files"]["feature_cache_manifest"]["sha256"]
+            ):
+                raise ValueError("frozen feature cache differs")
         data = Path(arm["config"]["data"]).resolve()
         if (data / "manifest.json") != Path(bundle["files"]["data_manifest"]["path"]):
             raise ValueError("arm data differs from frozen data manifest")
@@ -163,6 +185,37 @@ def main():
                 "--out",
                 str(args.out),
             ]
+            if arm["family"] != "act":
+                t = arm["config"]["train"]
+                cmd = [
+                    sys.executable,
+                    "scripts/train_flow_head.py",
+                    "train",
+                    "--data",
+                    str(data),
+                    "--cache",
+                    str(args.cache),
+                    "--out",
+                    str(args.out / "head"),
+                    "--objective",
+                    arm["family"],
+                    "--examples",
+                    str(arm["examples"]),
+                    "--schedule-examples",
+                    str(t["schedule_steps"] * t["batch_size"] * t["grad_accum"]),
+                    "--batch-size",
+                    str(t["batch_size"]),
+                    "--grad-accum",
+                    str(t["grad_accum"]),
+                    "--lr",
+                    str(arm["config"]["model"]["optimizer_lr"]),
+                    "--weight-decay",
+                    "0.05",
+                    "--seed",
+                    str(t["seed"]),
+                    "--device",
+                    t["device"],
+                ]
             if args.resume:
                 cmd += ["--resume", str(args.resume)]
             with (args.out / "process.log").open("a") as log:

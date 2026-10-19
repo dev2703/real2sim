@@ -312,7 +312,7 @@ def train_head(args):
                 "label_semantics", "policy_hz", "source", "prepare_version")}
     for key in ("observation_variant", "experiment_split", "source_manifest_sha256", "source_split",
                 "canonical_state_names", "source_derived", "observation_semantics", "contract_version",
-                "action_representation", "controller_semantics", "calibration_sha256", "camera_transforms"):
+                "action_representation", "controller_semantics", "calibration_sha256", "camera_transforms", "transfer_shared_task_sha256"):
         if key in manifest:
             contract[key] = manifest[key]
     contract.update(image_shape_chw=[3, *manifest["image_shape_hwc"][:2]], split=split,

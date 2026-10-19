@@ -730,3 +730,31 @@ isolated corrected-geometry snapshots. These are diagnostic results, not edits t
 primary benchmark tables. Differences include both visual encoder and training
 recipe, so parent comparison alone cannot isolate a causal backbone advantage.
 No automatic longer training. Notify this thread once on completion/failure.
+
+## D-029 Approved v2 real-to-sim protocol (2026-10-20)
+
+The user explicitly requested implementation of the SO-101 60% complete pick-and-place
+milestone, then frozen-policy Panda transfer, with 70% as a stretch target. V2 is a
+separate 25-to-12.5 Hz, exact stride-two, two-camera contract; `observation.images.top`
+is the wrist stream. Chunk25/execution2, 500Hz physics/40 steps, Cartesian caps
+0.024m/0.24rad maintain the old per-second caps. V1 configs and historical splits remain
+separate. No interpolated state/image pairs or inferred physical recording cadence.
+
+Condition-stratified 29/6/6 whole-episode splits require confirmed condition IDs/directions.
+Calibration, phase annotations and valid reset measurements remain pending. Geometry and
+camera values must not be guessed to make acceptance pass. V2 strict starts reject concealed
+clipping and table penetration. Joint references, persistent deltas and absolute xyz/rot6d/grip
+are independently named contracts; canonical joint policies are SO-101 diagnostics.
+
+Historical ball-in-bowl success remains available. New pick-and-place success requires a
+held lift, subsequent release over the bowl, then one second resting inside it. A lift/drop
+elsewhere followed by a push cannot pass. Both success and failure-phase fields are retained.
+
+Screens use fresh nonvisual ACT initialization, frozen pretrained vision, 64000 anchors,
+validation/checkpoints every8000, matched exposure across batch sizes, optimizer/sampler/RNG
+state retained. Resume cannot silently change data, preprocessing, or scheduler horizon.
+A different finalist scheduler horizon is a separately declared continuation stage, not an
+exact resume. Cloud eligibility/rates and finalist throughput remain unmeasured; no cloud
+upload, paid job or hardware execution was performed by this implementation.
+
+Implementation and measured provisional findings: [v2 implementation status](v2_implementation_20261020.md).

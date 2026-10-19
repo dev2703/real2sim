@@ -68,11 +68,11 @@ def experiment_matrix(
             batch_size=physical_batch,
             grad_accum=batch // physical_batch,
             steps=SCREEN_ANCHORS // batch,
-            schedule_steps=SCREEN_ANCHORS // batch,
+            schedule_steps=FINAL_ANCHORS // batch,
             val_every=VALIDATE_ANCHORS // batch,
             save_every=VALIDATE_ANCHORS // batch,
         )
-        cfg["scheduler"]["warmup_steps"] = int(0.05 * SCREEN_ANCHORS) // batch
+        cfg["scheduler"]["warmup_steps"] = int(0.05 * FINAL_ANCHORS) // batch
         arms.append(
             {
                 "id": name,
@@ -336,3 +336,71 @@ def scenario_suite(registration: dict, *, reserved=False, seed=0) -> dict:
     }
     result["sha256"] = manifest_hash(result)
     return result
+
+
+def promote_finalists(matrix: dict, reports: list[dict]) -> dict:
+    """Select one ACT and the strongest distinct challenger from common development cases."""
+    by_id = {a["id"]: a for a in matrix["arms"]}
+    ranked = []
+    common = None
+    for report in reports:
+        arm = by_id[report["arm_id"]]
+        if arm.get("reuse"):
+            raise ValueError("use the original control report, not an alias as a second candidate")
+        rows = report["rows"]
+        identities = {(r["condition"], r["scenario_id"]) for r in rows}
+        if (
+            len(rows) != 30
+            or len(identities) != 30
+            or any(sum(r["condition"] == c for r in rows) != 10 for c in CONDITIONS)
+        ):
+            raise ValueError("selection requires 30 unique development cases, ten per condition")
+        if any(
+            not r["scenario_id"].startswith("dev_") or not isinstance(r["pick_place_success"], bool)
+            for r in rows
+        ):
+            raise ValueError(
+                "selection requires development cases with boolean complete-task outcomes"
+            )
+        signature = (report["scenario_suite_sha256"], identities)
+        if common is not None and signature != common:
+            raise ValueError("all selection reports must use the identical development suite")
+        common = signature
+        closure, latency = float(report["closure_error_mm"]), float(report["p95_latency_ms"])
+        if not np.isfinite([closure, latency]).all() or closure < 0 or latency <= 0:
+            raise ValueError(
+                "finite nonnegative closure error and positive measured latency required"
+            )
+        if latency >= 120:
+            continue
+        score = sum(r["pick_place_success"] and not r.get("abort") for r in rows) / 30
+        ranked.append(((-score, closure, latency), arm, report))
+    ranked.sort(key=lambda entry: entry[0])
+    best_act = next((r for r in ranked if r[1]["family"] == "act"), None)
+    if best_act is None:
+        raise ValueError("no ACT candidate meets the measured inference budget")
+    challenger = next((r for r in ranked if r[1]["id"] != best_act[1]["id"]), None)
+    if challenger is None:
+        raise ValueError("no distinct challenger meets the measured inference budget")
+    finalists = []
+    for _, source, report in (best_act, challenger):
+        for seed in (0, 1, 2):
+            arm = copy.deepcopy(source)
+            arm["id"] = f"finalist_{source['id']}_seed{seed}"
+            arm.update(
+                seed=seed, stage="finalist", examples=FINAL_ANCHORS, status="requires_evidence"
+            )
+            train = arm["config"]["train"]
+            if train["schedule_steps"] * train["batch_size"] * train["grad_accum"] != FINAL_ANCHORS:
+                raise ValueError("screen did not declare the 320000-anchor continuation horizon")
+            train.update(seed=seed, steps=FINAL_ANCHORS // arm["effective_batch"])
+            arm["config"]["name"] = arm["id"]
+            if seed == 0:
+                arm["resume_checkpoint"] = report["screen_checkpoint"]
+            finalists.append(arm)
+    return {
+        "version": "v2_finalists_v1",
+        "selection_reports_sha256": manifest_hash({"reports": reports}),
+        "selection": "complete development task success, then closure error, then inference latency",
+        "arms": finalists,
+    }
