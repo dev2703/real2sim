@@ -31,7 +31,22 @@ PROPRIO_NAMES = (
     + ["ee_vx", "ee_vy", "ee_vz", "gripper_obs"]
 )
 ACTION_NAMES = ["dx", "dy", "dz", "d_rx", "d_ry", "d_rz", "gripper_target"]
+TOOL_ACTION_NAMES = ["tool_dx", "tool_dy", "tool_dz", "tool_d_rx", "tool_d_ry", "tool_d_rz", "gripper_target"]
 ABSOLUTE_ACTION_NAMES = ["target_x", "target_y", "target_z"] + [f"target_rot6d_{i}" for i in range(6)] + ["gripper_target"]
+
+
+def tool_frame_actions(poses: np.ndarray, task_actions: np.ndarray) -> np.ndarray:
+    """Rotate both task-frame increments into the current observed tool frame.
+
+    Translation is a pose difference, not the translational component of an se(3) logarithm.
+    Gripper intent and terminal masks are unchanged.
+    """
+    if poses.shape != (len(task_actions), 4, 4) or task_actions.shape[1:] != (7,):
+        raise ValueError("aligned poses and seven-dimensional actions required")
+    result = task_actions.copy()
+    for part in (slice(0, 3), slice(3, 6)):
+        result[:, part] = np.einsum("nji,nj->ni", poses[:, :3, :3], task_actions[:, part])
+    return result
 
 
 def absolute_pose_actions(poses: np.ndarray, gripper_cmd_pct: np.ndarray, lead: int = 1) -> tuple[np.ndarray, np.ndarray]:

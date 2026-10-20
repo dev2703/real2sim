@@ -43,9 +43,15 @@ class FlowHeadConfig:
     dinov2_config: dict = field(default_factory=dict)
     dinov2_model_id: str = "facebook/dinov2-small"
     dinov2_revision: str = "ed25f3a31f01632728cabb09d1542f84ab7b0056"
+    vision_backbone: str = "dinov2"
+    clip_config: dict = field(default_factory=dict)
+    clip_model_id: str = "openai/clip-vit-base-patch16"
+    clip_revision: str = "57e6b9622bd450f20321a1e587a7778158ea0610"
     type: str = "small_chunk_head"
 
     def __post_init__(self):
+        if self.vision_backbone not in ("dinov2", "clip"):
+            raise ValueError("flow features require frozen DINO or CLIP")
         if not self.camera_keys:
             self.camera_keys = [self.camera_key]  # old single-camera checkpoints
         if len(set(self.camera_keys)) != len(self.camera_keys) or any(not k.startswith("observation.images.") for k in self.camera_keys):
@@ -245,6 +251,14 @@ class FlowHeadPolicy(nn.Module):
 
 
 def build_frozen_backbone(config: FlowHeadConfig, *, pretrained_path: str | None = None):
+    if config.vision_backbone == "clip":
+        from real2sim.policy.clip_act import ClipSpatialBackbone
+
+        if not config.clip_config:
+            raise ValueError("CLIP architecture must be embedded in the checkpoint")
+        cfg = SimpleNamespace(clip_config=config.clip_config, clip_trainable_blocks=0,
+                              clip_pretrained_path=pretrained_path or "")
+        return ClipSpatialBackbone(cfg, initialize_pretrained=pretrained_path is not None).eval()
     from real2sim.policy.dinov2_act import DinoSpatialBackbone
 
     if not config.dinov2_config:

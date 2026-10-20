@@ -46,9 +46,11 @@ def build_act_config(model_cfg: dict, manifest: dict, device: str) -> ACTConfig:
     kwargs = {k: model_cfg[k] for k in ACT_FIELDS if k in model_cfg}
     dino_fields = {"dinov2_model_id", "dinov2_revision", "dinov2_pretrained_path",
                    "dinov2_trainable_blocks", "dinov2_config"}
+    clip_fields = {k.replace("dinov2", "clip") for k in dino_fields}
     experiment_fields = {"attention_backend", "freeze_backbone"}
     is_dino = model_cfg.get("vision_backbone") == "dinov2"
-    unknown = set(model_cfg) - set(ACT_FIELDS) - experiment_fields - (dino_fields if is_dino else set())
+    is_clip = model_cfg.get("vision_backbone") == "clip"
+    unknown = set(model_cfg) - set(ACT_FIELDS) - experiment_fields - (dino_fields if is_dino else clip_fields if is_clip else set())
     if unknown:
         raise ValueError(f"unknown ACT fields in config: {sorted(unknown)}")
     config_class = ACTConfig
@@ -62,6 +64,11 @@ def build_act_config(model_cfg: dict, manifest: dict, device: str) -> ACTConfig:
 
         config_class = DinoACTConfig
         kwargs.update({k: model_cfg[k] for k in dino_fields if k in model_cfg})
+    if is_clip:
+        from real2sim.policy.clip_act import ClipACTConfig
+
+        config_class = ClipACTConfig
+        kwargs.update({k: model_cfg[k] for k in clip_fields if k in model_cfg})
     return config_class(
         input_features=input_features,
         output_features=output_features,
@@ -72,6 +79,10 @@ def build_act_config(model_cfg: dict, manifest: dict, device: str) -> ACTConfig:
 
 
 def build_policy(config, *, initialize_backbone=True):
+    if config.vision_backbone == "clip":
+        from real2sim.policy.clip_act import ClipACTPolicy
+
+        return ClipACTPolicy(config, initialize_backbone=initialize_backbone)
     if config.vision_backbone == "dinov2":
         from real2sim.policy.dinov2_act import DinoACTPolicy
 
@@ -130,6 +141,13 @@ def save_checkpoint(
             "trainable_final_blocks": policy.config.dinov2_trainable_blocks,
             "preprocessing": "existing ImageNet normalization; right/bottom replicate-pad to patch multiple; no crop",
         }
+    elif policy.config.vision_backbone == "clip":
+        contract["vision_encoder"] = {
+            "kind": "clip_spatial_patches", "model_id": policy.config.clip_model_id,
+            "revision": policy.config.clip_revision,
+            "trainable_final_blocks": policy.config.clip_trainable_blocks,
+            "preprocessing": "ImageNet-to-CLIP normalization; replicate-pad to patch multiple; interpolated positions; no crop",
+        }
     if run_info.get("paired_images"):
         contract["training_provenance"] = {
             "paired_images": run_info["paired_images"],
@@ -154,6 +172,10 @@ def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[ACTPolicy, N
         from real2sim.policy.dinov2_act import DinoACTPolicy
 
         policy_class = DinoACTPolicy
+    elif config_json.get("type") == "act_clip":
+        from real2sim.policy.clip_act import ClipACTPolicy
+
+        policy_class = ClipACTPolicy
     elif config_json.get("type") == "act_experiment":
         from real2sim.policy.attention import ExperimentACTPolicy
 

@@ -1,0 +1,20 @@
+model:
+  vision_backbone: clip
+  pretrained_backbone_weights: null
+  clip_model_id: openai/clip-vit-base-patch16
+  clip_revision: 57e6b9622bd450f20321a1e587a7778158ea0610
+  clip_pretrained_path: .cache/pretrained/clip-vit-base-patch16-57e6b962
+  clip_trainable_blocks: 0
+  clip_config:
+    hidden_size: 768
+    intermediate_size: 3072
+    num_hidden_layers: 12
+    num_attention_heads: 12
+    image_size: 224
+    patch_size: 16
+    hidden_act: quick_gelu
+    layer_norm_eps: 1.0e-05
+    attention_dropout: 0.0
+    initializer_range: 0.02
+    initializer_factor: 1.0
+    projection_dim: 512

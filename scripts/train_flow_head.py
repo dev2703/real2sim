@@ -69,15 +69,19 @@ def build_cache(args):
     arrays = dict(np.load(args.data / "arrays.npz", allow_pickle=False))
     norm = Normalizer.from_json(args.data / "stats.json")
     model = yaml.safe_load(args.vision_config.read_text())["model"]
+    vision = model.get("vision_backbone", "dinov2")
+    if vision not in ("dinov2", "clip") or model.get(f"{vision}_trainable_blocks", 0):
+        raise ValueError("feature caches require an explicitly frozen DINO or CLIP encoder")
+    architecture = model[f"{vision}_config"]
     config = FlowHeadConfig(
         state_dim=len(manifest["state_names"]), camera_key=manifest["camera_keys"][0],
         camera_keys=manifest["camera_keys"], feature_tokens=266 * len(manifest["camera_keys"]),
         chunk_size=getattr(args, "chunk_size", 20),
-        dinov2_config=model["dinov2_config"], dinov2_model_id=model["dinov2_model_id"],
-        dinov2_revision=model["dinov2_revision"], feature_dim=model["dinov2_config"]["hidden_size"],
+        vision_backbone=vision, feature_dim=architecture["hidden_size"],
+        **{f"{vision}_{key}": model[f"{vision}_{key}"] for key in ("config", "model_id", "revision")},
     )
     device = resolve_device(args.device)
-    backbone = build_frozen_backbone(config, pretrained_path=model["dinov2_pretrained_path"]).to(device)
+    backbone = build_frozen_backbone(config, pretrained_path=model[f"{vision}_pretrained_path"]).to(device)
     images = {}
     for key in config.camera_keys:
         image_name = manifest["image_files"][key]
@@ -113,7 +117,7 @@ def build_cache(args):
     features.flush()
     save_file({k: v.detach().cpu().contiguous() for k, v in backbone.state_dict().items()},
               args.out / "backbone.safetensors")
-    report = {"kind": "frozen_dino_features", "config": asdict(config), "dtype": "float16",
+    report = {"kind": f"frozen_{vision}_features", "config": asdict(config), "dtype": "float16",
               "augmentation": None, "image_identity": image_identity(manifest, arrays, norm.stats),
               "ticks": len(ticks), "shape": list(features.shape), "device": device,
               "wall_s": time.perf_counter() - started,
@@ -317,9 +321,11 @@ def train_head(args):
             contract[key] = manifest[key]
     contract.update(image_shape_chw=[3, *manifest["image_shape_hwc"][:2]], split=split,
                     derived_files_sha256=manifest["files_sha256"],
-                    policy_kind=f"frozen_dino_small_{args.objective}_head", vision_encoder={
-                        "kind": "dinov2_spatial_patches", "model_id": config.dinov2_model_id,
-                        "revision": config.dinov2_revision, "trainable_final_blocks": 0})
+                    policy_kind=f"frozen_{config.vision_backbone}_small_{args.objective}_head", vision_encoder={
+                        "kind": f"{config.vision_backbone}_spatial_patches",
+                        "model_id": getattr(config, f"{config.vision_backbone}_model_id"),
+                        "revision": getattr(config, f"{config.vision_backbone}_revision"),
+                        "trainable_final_blocks": 0})
     seen, update = 0, 0
     history = []
     effective = args.batch_size * args.grad_accum

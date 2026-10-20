@@ -60,6 +60,7 @@ from real2sim.sim.model import project_path
 ROBOTS = ("so101", "panda")
 CONTROLLER_SOURCES = {"learned": "LEARNED_ACT", "hold": "HOLD_POSE"}
 EXPERIMENT_IDS = {"joint": "E1_joint_ACT", "cartesian": "E2_cart_ACT_so101",
+                  "cartesian_tool": "K1_tool_delta_ACT_so101",
                   "cartesian_persistent_target": "DIAGNOSTIC_E2_cart_ACT_so101_persistent_target",
                   "cartesian_absolute": "E2_absolute_ACT_so101", "canonical_joint": "DIAGNOSTIC_canonical_joint_ACT",
                   "panda": "E3_cart_ACT_panda", "hold": "E0_hold_pose_null",
@@ -190,6 +191,15 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
         if target_reference != "current_pose":
             raise ContractError("absolute pose actions require current_pose bounded feedback")
         action_adapter = AbsolutePoseActionAdapter(action_adapter)
+    projection = cart.get("kinematic_projection")
+    if obs_adapter.kind == "cartesian_tool" or projection is not None:
+        from real2sim.policy.kinematic_actions import KinematicDeltaAdapter
+
+        if obs_adapter.kind not in ("cartesian", "cartesian_tool"):
+            raise ContractError("kinematic delta projection requires a delta-action checkpoint")
+        action_adapter = KinematicDeltaAdapter(
+            action_adapter, tool_frame=obs_adapter.kind == "cartesian_tool", projection=projection,
+        )
     expected_controller = contract.get("controller_semantics")
     if contract.get("contract_version") and expected_controller not in (None, target_reference):
         raise ContractError("checkpoint execution semantics differ from evaluation configuration")
@@ -203,8 +213,10 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
         "chunk_size": int(policy.config.chunk_size),
         "n_action_steps": executor.n_action_steps,
         "device": device,
-        "target_reference": target_reference if obs_adapter.kind in ("cartesian", "cartesian_absolute") else None,
-        "execution_interface_ablation": target_reference == "accepted_target",
+        "target_reference": target_reference if obs_adapter.kind in ("cartesian", "cartesian_absolute", "cartesian_tool") else None,
+        "execution_interface_ablation": projection is not None or (
+            target_reference == "accepted_target" and not contract.get("contract_version")),
+        "kinematic_projection": projection,
         "checkpoint_contract_modified": False,
     }
     return executor, contract, meta

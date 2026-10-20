@@ -27,6 +27,7 @@ def experiment_matrix(
     head_lr: float = 1e-4,
     effective_batch: int = 16,
     physical_batch: int = 8,
+    clip_model: dict | None = None,
 ) -> list[dict]:
     """Resolve adaptive arms explicitly; never select a winner from training loss."""
     if backbone not in ("resnet18", "dinov2") or effective_batch not in (16, 64):
@@ -57,10 +58,17 @@ def experiment_matrix(
             vision_backbone=vision, optimizer_lr=lr, optimizer_lr_backbone=backbone_lr
         )
         if vision == "resnet18":
-            cfg["model"] = {k: v for k, v in cfg["model"].items() if not k.startswith("dinov2_")}
+            cfg["model"] = {k: v for k, v in cfg["model"].items() if not k.startswith(("dinov2_", "clip_"))}
             cfg["model"].update(
                 pretrained_backbone_weights="ResNet18_Weights.IMAGENET1K_V1", freeze_backbone=True
             )
+        elif vision == "clip":
+            if clip_model is None:
+                raise ValueError("CLIP experiments require a pinned architecture/configuration")
+            cfg["model"] = {k: v for k, v in cfg["model"].items() if not k.startswith("dinov2_")}
+            cfg["model"].pop("freeze_backbone", None)
+            cfg["model"].update(copy.deepcopy(clip_model))
+            cfg["model"].update(pretrained_backbone_weights=None, clip_trainable_blocks=blocks)
         else:
             cfg["model"].pop("freeze_backbone", None)
             cfg["model"].update(pretrained_backbone_weights=None, dinov2_trainable_blocks=blocks)
@@ -81,7 +89,7 @@ def experiment_matrix(
                 "camera_keys": list(cameras),
                 "action_representation": action,
                 "controller_semantics": "accepted_target"
-                if action == "cartesian"
+                if action in ("cartesian", "cartesian_tool")
                 else "current_pose",
                 "examples": SCREEN_ANCHORS,
                 "seed": 0,
@@ -114,6 +122,14 @@ def experiment_matrix(
         add(f"L5_{action}", "L5", action=action)
     for objective in ("regression", "flow"):
         add(f"L6_dino_{objective}", "L6", vision="dinov2", family=objective)
+    if clip_model is not None:
+        add("L7_clip_frozen", "L7", vision="clip")
+        for lr in (3e-6, 1e-5):
+            add(f"L7_clip_last2_lr{lr:g}", "L7", vision="clip", blocks=2, backbone_lr=lr)
+        for objective in ("regression", "flow"):
+            add(f"L8_clip_{objective}", "L8", vision="clip", family=objective)
+        # Compare coordinates with the selected baseline; retain the existing task-frame control.
+        add("K1_tool_delta", "K1", action="cartesian_tool")
     # Record aliases where an adaptive control exactly matches an existing ACT arm.
     identities = {}
     for arm in arms:

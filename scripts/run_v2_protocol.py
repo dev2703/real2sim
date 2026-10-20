@@ -56,6 +56,7 @@ def main():
     matrix.add_argument("--physical-batch", type=int, default=8)
     matrix.add_argument("--head-lr", type=float, default=1e-4)
     matrix.add_argument("--out", type=Path, required=True)
+    matrix.add_argument("--clip-config", type=Path, help="enable CLIP and tool-delta extension arms")
     freeze = sub.add_parser("freeze")
     freeze.add_argument(
         "--file",
@@ -105,6 +106,7 @@ def main():
     elif args.command == "matrix":
         arms = experiment_matrix(
             load_yaml(args.base),
+            clip_model=load_yaml(args.clip_config)["model"] if args.clip_config else None,
             backbone=args.backbone,
             head_lr=args.head_lr,
             effective_batch=args.effective_batch,
@@ -113,7 +115,7 @@ def main():
         write(
             args.out,
             {
-                "version": "v2_screen_v2",
+                "version": "v2_screen_v3" if args.clip_config else "v2_screen_v2",
                 "selection": "development pick-place success; then closure error; then latency",
                 "adaptive_baseline": {
                     "backbone": args.backbone,
@@ -155,12 +157,20 @@ def main():
             raise ValueError(f"reuse existing control {arm['reuse']}; do not charge another screen")
         if arm["family"] != "act":
             if args.cache is None or "feature_cache_manifest" not in bundle["files"]:
-                raise ValueError("freeze and provide the dual-camera DINO feature cache")
+                raise ValueError("freeze and provide the matching dual-camera vision feature cache")
             if (
                 file_sha256(args.cache / "manifest.json")
                 != bundle["files"]["feature_cache_manifest"]["sha256"]
             ):
                 raise ValueError("frozen feature cache differs")
+            cached = json.loads((args.cache / "manifest.json").read_text())["config"]
+            model = arm["config"]["model"]
+            vision = model["vision_backbone"]
+            if cached.get("vision_backbone", "dinov2") != vision or any(
+                cached.get(f"{vision}_{key}") != model.get(f"{vision}_{key}")
+                for key in ("model_id", "revision", "config")
+            ) or cached["camera_keys"] != arm["camera_keys"]:
+                raise ValueError("feature cache encoder or camera order differs from experiment arm")
         data = Path(arm["config"]["data"]).resolve()
         if (data / "manifest.json") != Path(bundle["files"]["data_manifest"]["path"]):
             raise ValueError("arm data differs from frozen data manifest")

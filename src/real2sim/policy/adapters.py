@@ -29,7 +29,12 @@ from dataclasses import dataclass, field
 import numpy as np
 import torch
 
-from real2sim.data.labels import ABSOLUTE_ACTION_NAMES, ACTION_NAMES, PROPRIO_NAMES
+from real2sim.data.labels import (
+    ABSOLUTE_ACTION_NAMES,
+    ACTION_NAMES,
+    PROPRIO_NAMES,
+    TOOL_ACTION_NAMES,
+)
 from real2sim.geometry.so3 import apply_delta, delta_action, is_rotation, make_T, matrix_from_rot6d
 from real2sim.geometry.so101_fk import JointMapping
 
@@ -94,7 +99,9 @@ def contract_kind(contract: dict) -> str:
         kind = "cartesian_absolute"
     elif kind == "cartesian" and actions == JOINT_STATE_NAMES:
         kind = "canonical_joint"
-    expected = list(ACTION_NAMES) if kind == "cartesian" else list(ABSOLUTE_ACTION_NAMES) if kind == "cartesian_absolute" else JOINT_STATE_NAMES
+    if kind == "cartesian" and actions == list(TOOL_ACTION_NAMES):
+        kind = "cartesian_tool"
+    expected = list(TOOL_ACTION_NAMES) if kind == "cartesian_tool" else list(ACTION_NAMES) if kind == "cartesian" else list(ABSOLUTE_ACTION_NAMES) if kind == "cartesian_absolute" else JOINT_STATE_NAMES
     if actions != expected and not (kind == "joint" and actions == list(JOINT_NAMES)):
         raise ContractError(f"contract action_names {actions} != {expected}")
     return kind
@@ -484,7 +491,7 @@ class PandaObservationAdapter(ObservationAdapter):
 
     def __init__(self, contract: dict, normalizer, *, device: str = "cpu"):
         super().__init__(contract, normalizer, device=device)
-        if self.kind not in ("cartesian", "cartesian_absolute"):
+        if self.kind not in ("cartesian", "cartesian_absolute", "cartesian_tool"):
             raise ContractError(
                 "a 6-D SO-101 joint-space checkpoint has no meaning on the 7-joint Panda; only the "
                 "canonical 13-float / 7-D cartesian contract transfers (plan E3)")

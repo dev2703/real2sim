@@ -33,7 +33,9 @@ from real2sim.data.labels import (
     ABSOLUTE_ACTION_NAMES,
     ACTION_NAMES,
     PROPRIO_NAMES,
+    TOOL_ACTION_NAMES,
     absolute_pose_actions,
+    tool_frame_actions,
 )
 from real2sim.data.raw import RawDataset, resolve_dataset_root
 from real2sim.data.resample import episode_tick_rows, policy_stride
@@ -87,7 +89,7 @@ def prepare(
     episodes: list[int] | None = None,
     mode: str = "joint",
 ) -> dict:
-    if mode not in ("joint", "cartesian", "cartesian_absolute", "canonical_joint"):
+    if mode not in ("joint", "cartesian", "cartesian_absolute", "canonical_joint", "cartesian_tool"):
         raise ValueError(mode)
     gripper_source = None
     fk = None
@@ -177,6 +179,8 @@ def prepare(
                 targets, extrapolated = absolute_pose_actions(fk.fk_real(S), A[:, 5], lead=int(cfg["labels"].get("cartesian_lead_ticks", 1)))
                 if not np.array_equal(extrapolated, lab.label_is_extrapolated):
                     raise RuntimeError("absolute action masks differ from canonical labels")
+            elif mode == "cartesian_tool":
+                targets = tool_frame_actions(lab.poses, lab.action)
             elif mode == "canonical_joint":
                 targets = A
             arrays["action"].append(targets.astype(np.float32))
@@ -265,7 +269,7 @@ def prepare(
         "image_shape_hwc": [H, W, 3],
         "letterbox": geometry.to_dict() if geometry else None,
         "state_names": ds.state_names if mode == "joint" else PROPRIO_NAMES,
-        "action_names": ds.action_names if mode in ("joint", "canonical_joint") else ABSOLUTE_ACTION_NAMES if mode == "cartesian_absolute" else ACTION_NAMES,
+        "action_names": ds.action_names if mode in ("joint", "canonical_joint") else ABSOLUTE_ACTION_NAMES if mode == "cartesian_absolute" else TOOL_ACTION_NAMES if mode == "cartesian_tool" else ACTION_NAMES,
         "label_semantics": (
             "joint: recorded leader target action[t] at each 10 Hz tick (D-003 option C)"
             if mode == "joint"
@@ -309,6 +313,7 @@ def prepare(
             "joint": "Recorded command at the sampled row; provenance in source annotations",
             "canonical_joint": "Canonical observed TCP state; recorded joint command at the sampled row",
             "cartesian": "Next achieved FK pose minus current observed FK pose in task frame; recorded current gripper command",
+            "cartesian_tool": "Next achieved pose increment in current observed tool axes; current gripper command",
             "cartesian_absolute": "Next achieved FK position/rot6d in task frame; recorded current gripper command",
         }[mode]
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -318,7 +323,7 @@ def prepare(
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="python -m real2sim.data.prepare", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--mode", choices=["joint", "cartesian", "cartesian_absolute", "canonical_joint"], default="joint")
+    p.add_argument("--mode", choices=["joint", "cartesian", "cartesian_absolute", "canonical_joint", "cartesian_tool"], default="joint")
     p.add_argument("--config", default="configs/data.yaml")
     p.add_argument("--repo-id", default=None)
     p.add_argument("--revision", default=None)
