@@ -60,7 +60,11 @@ def hold(env, ticks=30):
 def test_pinned_assets():
     manifest = verify_assets("assets/menagerie/manifest.json")
     assert manifest["revision"] == "0059d4335f8156206f63a35662313385f7ad6d74"
-    assert len(manifest["files"]) == 104
+    assert manifest["scope"] == "so101_panda_runtime_v1"
+    assert len(manifest["files"]) == 95
+    paths = {row["path"] for row in manifest["files"]}
+    assert {"robotstudio_so101/so101.xml", "franka_emika_panda/panda.xml"} <= paths
+    assert not paths.intersection(manifest["omitted_variants"])
 
 
 def test_scene_uses_task_yaml_single_source(env):

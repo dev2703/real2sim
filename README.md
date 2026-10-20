@@ -13,6 +13,17 @@ The main aim is to train an ACT policy with a recovery MLP head in Mujoco and us
 Teleoperation with an SO-101 leader/follower pair through LeRobot (dataset format v3.0,
 25 Hz, follower PID P=16 I=0 D=4). Two cameras were recorded; observation.images.top (wrist camera), observation.images.iphone (global top view camera) - both recorded at 1280 * 720, couldn't get iphone to work with 640 * 480 but could be resized easily with pytorch tensor ops 
 
+## Current v2 workflow
+
+The local dataset has **41 episodes**. Reviewed conditions are 32 baseline, four ball shifts
+(6, 8, 9, 10), and five bowl shifts (21–25), with a seeded 29/6/6 episode split.
+See the [v2 runbook](docs/v2_implementation_20261020.md) for the 12.5 Hz two-camera pipeline,
+CLIP/DINO/flow/kinematics experiments and remaining calibration gates. These experiments are
+implemented; v2 learned task success and frozen Panda transfer have not yet been demonstrated.
+The commands below document the retained legacy 10 Hz workflow.
+
+See [cleanup and recovery](docs/cleanup_20261021.md) for removed historical scripts and artifacts.
+
 ## Install
 
 ```

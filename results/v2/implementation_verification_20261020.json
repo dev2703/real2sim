@@ -22,7 +22,7 @@
   },
   "v2_learning_started": false,
   "pending": [
-    "confirmed condition IDs and shift directions",
+    "measured task-coordinate shift vectors (semantic direction and episode IDs now reviewed)",
     "measured camera/jaw/base/table calibration",
     "phase annotations and demonstrated loaded retention",
     "reference placements and tiny-set acceptance"
@@ -43,5 +43,15 @@
     "provisional": true,
     "phase_annotations_pending": true,
     "kinematic_projection_promoted": false
+  },
+  "condition_review_update_20261021": {
+    "report": "results/v2/condition_review_v1.json",
+    "split": "results/v2/split.json",
+    "counts": [
+      32,
+      4,
+      5
+    ],
+    "unit_protocol_tests_passed": 14
   }
 }

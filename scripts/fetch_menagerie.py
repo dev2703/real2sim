@@ -14,6 +14,9 @@ from urllib.request import urlopen
 
 REVISION = "0059d4335f8156206f63a35662313385f7ad6d74"
 MODELS = ("robotstudio_so101", "franka_emika_panda")
+# Unused upstream variants are outside the runtime asset contract.
+OMITTED_VARIANTS = frozenset({'robotstudio_so101/scene_box.xml', 'franka_emika_panda/panda_nohand.xml', 'franka_emika_panda/mjx_panda.xml', 'franka_emika_panda/mjx_panda_nohand.xml', 'franka_emika_panda/mjx_scene.xml', 'franka_emika_panda/mjx_single_cube.xml', 'franka_emika_panda/hand.xml', 'robotstudio_so101/assets/wrist_roll_follower_so101_gripper_v1.stl', 'franka_emika_panda/mjx_hand.xml'})
+
 
 
 def fetch(url: str) -> bytes:
@@ -33,6 +36,7 @@ def main() -> None:
     entries = [
         item for item in tree["tree"]
         if item["type"] == "blob" and item["path"].split("/")[0] in MODELS
+        and item["path"] not in OMITTED_VARIANTS
         and Path(item["path"]).suffix.lower() not in {".png", ".jpg", ".gif", ".mp4"}
     ]
 
@@ -52,7 +56,8 @@ def main() -> None:
     with ThreadPoolExecutor(max_workers=4) as pool:
         files = sorted(pool.map(download, entries), key=lambda row: row["path"])
     manifest = {"repository": "https://github.com/google-deepmind/mujoco_menagerie",
-                "revision": REVISION, "files": files}
+                "revision": REVISION, "scope": "so101_panda_runtime_v1",
+                "omitted_variants": sorted(OMITTED_VARIANTS), "files": files}
     (args.out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Verified {len(files)} files, {sum(row['bytes'] for row in files)} bytes at {REVISION}")
 

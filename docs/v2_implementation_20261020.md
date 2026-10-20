@@ -1,8 +1,8 @@
 # V2 implementation and experiment runbook — 20 October 2026
 
 The two-camera pipeline and bounded experiment infrastructure are implemented. **No v2
-learned task-success result or SO-101 60% milestone is claimed.** Confirmed episode conditions,
-measured camera/jaw registration, phase annotations, and reference-task acceptance remain
+learned task-success result or SO-101 60% milestone is claimed.** Episode conditions and the 29/6/6 split are now reviewed and saved.
+Measured camera/jaw registration, phase annotations, and reference-task acceptance remain
 prerequisites for ranking learned rollouts. No cloud jobs, private uploads or robot movements
 were performed.
 
@@ -170,17 +170,35 @@ zero-shot Panda success from our 41 SO-101 recordings.
 
 ## Run order and budgets
 
-1. Complete the [operator measurement session](v2_operator_session.md) and annotation template.
-   Confirm all 31 baseline, five ball-shift and five bowl-shift IDs and shift directions.
-   Preserve episode 9's bowl-tipping annotation. The extra recording being baseline does not
-   establish its index or the remaining condition IDs.
-2. Create the measured `configs/v2/task.calibrated.yaml`, confirm a complete-task start, then
-   generate the whole-episode split:
+1. Use [reviewed annotations](../configs/v2/annotations.reviewed_v2.json) and the frozen
+   [seed-0 split](../results/v2/split.json). Visual inspection found ball shifts in **6, 8, 9, 10**
+   and bowl shifts in **21–25**; all other episodes are baseline. The operator acknowledged
+   that only four ball-shift recordings may have been saved. Both shifts are reported as
+   toward the robot, with no lateral shift; the task-coordinate vectors remain unmeasured.
+   This explicitly revises the originally intended 31/5/5 condition counts to **32/4/5**.
+
+   | Condition | Training | Validation | Reserved |
+   |---|---:|---:|---:|
+   | Baseline | 24 | 4 | 4 |
+   | Ball shifted | 2 | 1 | 1 |
+   | Bowl shifted | 3 | 1 | 1 |
+   | Total | 29 | 6 | 6 |
+
+   Episode 9 remains in validation with its bowl-tipping annotation. No episodes were
+   excluded. All episodes have been visually inspected; reserved does not mean untouched.
+   Protocol `v2_conditions_v2` preserves the old allocation under `v2_conditions_v1`.
+   The initial-layout review is not a task-outcome or phase-boundary annotation.
+
+   Reproduce the split to a new output path:
 
    ```sh
    .venv/bin/python scripts/run_v2_protocol.py split \
-     --annotations configs/v2/annotations.confirmed.json --out results/v2/split.json
+     --annotations configs/v2/annotations.reviewed_v2.json --out /tmp/v2_split_reproduced.json
    ```
+
+2. Complete the [operator measurement session](v2_operator_session.md), including phase
+   annotations and measured `configs/v2/task.calibrated.yaml`. Confirm a complete-task start.
+   The split is ready; calibrated training labels and reference-task acceptance are pending.
 
 3. Prepare each camera/action arm from its own versioned data config. Use `accepted_target`
    for task/tool deltas and `current_pose` for absolute/joint controls. Keep training episodes
