@@ -3,7 +3,7 @@
 ## What this is
 
 Forty teleoperated pick-and-place demonstrations were recorded on a real SO-101 arm (tennis
-ball into a bowl) and published at [Hugging Face](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v1). 
+ball into a bowl) and published at [Hugging Face](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v2). 
 
 The main aim is to train an ACT policy with a recovery MLP head in Mujoco and use the frozen ACT weights for cross embodiment and use trained policy to work on 7DOF panda arm in MujOco
 
@@ -11,8 +11,7 @@ The main aim is to train an ACT policy with a recovery MLP head in Mujoco and us
 ## Data collection
 
 Teleoperation with an SO-101 leader/follower pair through LeRobot (dataset format v3.0,
-30 Hz, follower PID P=12 I=0 D=2). Two cameras were recorded; only the iPhone side view is
-usable. 
+25 Hz, follower PID P=16 I=0 D=4). Two cameras were recorded; observation.images.top (wrist camera), observation.images.iphone (global top view camera) - both recorded at 1280 * 720, couldn't get iphone to work with 640 * 480 but could be resized easily with pytorch tensor ops 
 
 ## Install
 
@@ -49,10 +48,14 @@ uv run python scripts/aggregate_trials.py
 
 ## Models and physics assumptions
 
-- ACT (LeRobot 0.6.1): ResNet-18, `dim_model` 512, chunk 20 at 10 Hz, 2 actions executed per
-  inference, batch 16. Joint baseline learns the recorded leader targets; the Cartesian policy
+- ACT (LeRobot 0.6.1): ResNet-18, `dim_model` 512, chunk 20 at 10 Hz, 2 actions executed per inference, batch 16. Joint baseline learns the recorded leader targets; the Cartesian policy
   learns achieved end-effector motion from forward kinematics.
 - Simulation: MuJoCo Menagerie `robotstudio_so101` and `franka_emika_panda`. Ball and bowl are compound primitives. Physical values are
   provisional standards not precise measurement 
 
-
+## Experiments
+- Replaced ACT VAE with flow matching head
+- Replaced ACT resnet18 backbone with DinoV2 or Clip (fine tuned ViT on our dataset)
+- Used end effector delta as action state
+- Added a recovery MLP head (256->128->512) 
+- On going experiments continued... 
