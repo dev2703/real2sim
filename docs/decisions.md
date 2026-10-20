@@ -789,3 +789,34 @@ mapping/geometry and phase scope before promoting architectures or execution cha
 Keep existing collision checks and limits; no geometry was changed to manufacture a pass.
 
 Evidence and reproduction commands are in the [v2 runbook](v2_implementation_20261020.md).
+
+## D-032 Reviewed v2 conditions and whole-episode split (2026-10-21)
+
+Fixed-iPhone initial-layout review identifies ball shifts in episodes 6, 8, 9 and 10,
+and bowl shifts in 21–25. Sampled opening frames resolve the disputed boundaries:
+5 and 7 retain ordinary ball placement, and 30–35 retain ordinary bowl placement.
+The operator acknowledged that only four ball-shift recordings may have been saved.
+Use the observed 32/4/5 condition counts rather than forcing the recalled 31/5/5 counts.
+Both shifts are reported toward the robot with no lateral translation; metric task-frame
+vectors and the nominal 5 cm magnitude still need independent registration.
+
+Protocol `v2_conditions_v2` allocates baseline 24/4/4, ball 2/1/1, bowl 3/1/1 to
+training/validation/reserved, keeping 29/6/6 totals. The seed-0 manifest is frozen in
+`results/v2/split.json`, with annotation hash and every episode retained. Episode 9's
+bowl-tip note remains in validation. Initial-layout review does not establish task
+success or phase boundaries. The original v1 allocation remains reproducible.
+
+## D-033 Remove stale files while retaining active dependencies (2026-10-21)
+
+The user explicitly requested a second cleanup covering scripts, outputs, annotations,
+assets and other stale directories. Removed 1,861 of 2,496 original entries across the
+six audited roots (74.56%), including 36 historical drivers. Required dependencies,
+all package source/tests, selected training checkpoints and runtime geometry remain.
+Unused upstream MJX/no-hand variants are excluded from the pinned runtime asset manifest;
+SO-101 and Panda runtime asset hashes and geometry are unchanged.
+
+Tracked deletions have Git-blob recovery; untracked metadata/media have a verified local
+archive. Obsolete intermediate/smoke checkpoints and an unused upload bundle were discarded,
+with explicit recovery limitations. Validation restored five required dependencies, then
+passed 576 tests. [Cleanup details and recovery](cleanup_20261021.md) record the exact scope,
+net logical-byte reduction, validation and remaining limitations.

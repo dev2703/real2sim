@@ -16462,5 +16462,18 @@
     }
   ],
   "applied": true,
-  "net_logical_bytes_removed_after_archive": 13597400388
+  "net_logical_bytes_removed_after_archive": 13594201782,
+  "restored_runtime_dependencies": [
+    "outputs/so101_root_cause_20261017/episode1_joint_reference_trace.json",
+    "outputs/so101_root_cause_20261017/episode2_joint_reference_trace.json",
+    "outputs/so101_root_cause_20261017/episode3_joint_reference_trace.json",
+    "scripts/diag_proprioception_noise.py",
+    "scripts/prepare_observation_variants.py"
+  ],
+  "net_removed_files": 1861,
+  "net_removed_percent": 74.55929487179488,
+  "recovery_verification": {
+    "git_blob": true,
+    "local_archive": true
+  }
 }
