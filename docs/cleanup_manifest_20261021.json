@@ -16461,5 +16461,6 @@
       "recovery": "git_blob"
     }
   ],
-  "applied": false
+  "applied": true,
+  "net_logical_bytes_removed_after_archive": 13597400388
 }

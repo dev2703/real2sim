@@ -1,7 +1,0 @@
-{
-  "scripts/eval_act_response.py": "c2c2ed5dc8eb327edcb29d95518ab47751aacaa7dfbe973faafb058e4709a4f3",
-  "src/real2sim/evaluation/response_adapter.py": "d36da387b0d61bca911f90ce41cd573c07f72095f14597d3392a8bcdede55947",
-  "src/real2sim/sim/follower_response.py": "69b80f2e9a3959e45d97757d9f9bda533206349ad02479cca644160f8e4a3410",
-  "results/metrics/geometry_3988577/configs/sim_so101.yaml": "5caeaf290fc280320840c491223425114839a86218205e63f9d2a8cb4edb4ab3",
-  "results/metrics/geometry_3988577/configs/task.yaml": "420c379424f7c142fedb6dec86c07ea3420b534519fa127e9a5b416ae8386b9e"
-}

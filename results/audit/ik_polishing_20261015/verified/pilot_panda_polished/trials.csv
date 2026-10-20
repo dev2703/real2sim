@@ -1,4 +1,0 @@
-experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
-FROZEN_IK_PILOT_PANDA_POLISHED,LEARNED_ACT,panda,0,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.15215,300,0,44.67,0.0,,
-FROZEN_IK_PILOT_PANDA_POLISHED,LEARNED_ACT,panda,1,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.12934,300,0,44.75,0.0,,
-FROZEN_IK_PILOT_PANDA_POLISHED,LEARNED_ACT,panda,2,bf8bbb874bffd01db37043d4b7081a3b3844a3149a98db54dde6e88129e4a14d,1250,False,False,False,False,False,False,approach,0.14444,300,0,44.58,0.0,,
