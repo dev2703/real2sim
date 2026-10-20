@@ -46,7 +46,7 @@ from real2sim.policy.paired import PairedViewDataset, file_sha256
 from real2sim.policy.sampling import ResumableBatches, restore_rng, rng_state
 from real2sim.policy.schedule import learning_rate
 
-HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "lr_backbone", "sec_per_step", "wall_s", "samples"]
+HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "trajectory", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "lr_backbone", "sec_per_step", "wall_s", "samples"]
 
 
 def update_last_link(checkpoints: Path, target_name: str) -> None:
@@ -179,7 +179,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         if (len(train_episodes) != 3 or not set(train_episodes) <= set(manifest["split"]["train"])
                 or {conditions.get(str(e)) for e in train_episodes} != {"baseline", "ball_shift", "bowl_shift"}):
             raise ValueError("tiny-fit diagnostics require three training episodes, one per condition")
-        if (cfg.get("augmentation") or cfg.get("paired_images") or cfg["model"].get("use_vae", True)
+        if (loss_config.trajectory_weight or cfg.get("augmentation") or cfg.get("paired_images") or cfg["model"].get("use_vae", True)
                 or cfg["model"].get("dropout", .1) != 0 or cfg["model"].get("optimizer_weight_decay", .05) != 0
                 or int(tcfg["steps"]) * int(tcfg["batch_size"]) * int(tcfg.get("grad_accum", 1)) > 32000):
             raise ValueError("tiny fit must be deterministic and unregularized, capped at 32000 anchors")
@@ -306,7 +306,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         restore_rng(continuation["rng"])
     t_start = time.time()
     t_window = time.time()
-    run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "grad_norm": 0.0, "n": 0}
+    run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "trajectory": 0.0, "grad_norm": 0.0, "n": 0}
     created_checkpoints: set[str] = set()
     last_val = None
     best_l1, patience_reference, bad_validations, best_step = math.inf, math.inf, 0, None
@@ -328,7 +328,12 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             batch = to_device(next(it), device)
             autocast = torch.autocast("cuda", dtype=torch.bfloat16) if precision == "bfloat16" else nullcontext()
             with autocast:
-                loss, ld = act_training_loss(policy, batch, loss_config)
+                loss, ld = act_training_loss(
+                    policy, batch, loss_config,
+                    action_mean=train_ds.normalizer.action_mean,
+                    action_std=train_ds.normalizer.action_std,
+                    action_representation=manifest.get("action_representation"),
+                )
             if not torch.isfinite(loss):
                 raise FloatingPointError(f"non-finite loss at step {step}: {ld}")
             (loss / accum).backward()
@@ -336,6 +341,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             run["l1"] += ld["l1_loss"] / accum
             run["kld"] += ld.get("kld_loss", 0.0) / accum
             run["reconstruction"] += ld["reconstruction_loss"] / accum
+            run["trajectory"] += ld.get("trajectory_loss", 0.0) / accum
         grad_norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), float(tcfg["grad_clip_norm"]))
         if not math.isfinite(float(grad_norm)):
             raise FloatingPointError(f"non-finite gradient norm at step {step}")
@@ -354,6 +360,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 "l1": round(run["l1"] / run["n"], 6),
                 "kld": round(run["kld"] / run["n"], 6),
                 "reconstruction": round(run["reconstruction"] / run["n"], 6),
+                "trajectory": round(run["trajectory"] / run["n"], 6),
                 "weighted_kl": round(act_cfg.kl_weight * run["kld"] / run["n"], 6),
                 "grad_norm": round(run["grad_norm"] / run["n"], 6),
                 "lr": optimizer.param_groups[0]["lr"],
@@ -365,7 +372,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             writer.writerow(row)
             hist_f.flush()
             print(f"step {step} loss {row['loss']:.4f} l1 {row['l1']:.4f} kld {row['kld']:.4f} {dt:.3f}s/step grad_norm {float(grad_norm):.2f} reconstruction[{loss_config.kind}] {row['reconstruction']:.4f} weighted_kl {row['weighted_kl']:.4f}", file=sys.stderr)
-            run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "grad_norm": 0.0, "n": 0}
+            run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "trajectory": 0.0, "grad_norm": 0.0, "n": 0}
             t_window = time.time()
 
         if step % int(tcfg["val_every"]) == 0 or step == steps:

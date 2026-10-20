@@ -123,7 +123,7 @@ class ChunkHead(nn.Module):
         if state.ndim != 2 or state.shape[1] != c.state_dim:
             raise ValueError("state shape does not match head configuration")
         if features.shape != (len(state), c.feature_tokens, c.feature_dim):
-            raise ValueError("DINO feature shape does not match head configuration")
+            raise ValueError("vision feature shape does not match head configuration")
         image = self.feature_projection(features) + self.feature_position
         if self.camera_position is not None:
             image = image + self.camera_position.repeat_interleave(c.feature_tokens // len(c.camera_keys), dim=0)
@@ -194,7 +194,7 @@ class ChunkHead(nn.Module):
 
 
 class FlowHeadPolicy(nn.Module):
-    """Frozen DINO + trainable head, or head alone while reading cached features."""
+    """Frozen DINO/CLIP + trainable head, or head alone while reading cached features."""
 
     def __init__(self, config: FlowHeadConfig, *, backbone: nn.Module | None = None):
         super().__init__()
@@ -220,7 +220,7 @@ class FlowHeadPolicy(nn.Module):
         if FEATURE_KEY in batch:
             return batch[FEATURE_KEY]
         if self.backbone is None:
-            raise ValueError("raw-image inference requires an attached frozen DINO backbone")
+            raise ValueError("raw-image inference requires an attached frozen vision backbone")
         views = []
         with torch.no_grad():
             for key in self.config.camera_keys:

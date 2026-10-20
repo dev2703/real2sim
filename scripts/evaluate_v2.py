@@ -38,15 +38,21 @@ def main():
         "checkpoint_config",
         "checkpoint_stats",
         "checkpoint_contract",
+        "checkpoint_run_info",
     }
     if not required <= files.keys():
         raise ValueError(f"freeze required artifacts: {sorted(required)}")
     if files["checkpoint"]["sha256"] != file_sha256(a.checkpoint / "model.safetensors"):
         raise ValueError("freeze the checkpoint before evaluation")
     for name, filename in (("checkpoint_config", "config.json"), ("checkpoint_stats", "stats.json"),
-                           ("checkpoint_contract", "real2sim_contract.json")):
+                           ("checkpoint_contract", "real2sim_contract.json"),
+                           ("checkpoint_run_info", "run_info.json")):
         if files[name]["sha256"] != file_sha256(a.checkpoint / filename):
             raise ValueError(f"frozen checkpoint metadata differs: {name}")
+    if read_json(a.checkpoint / "run_info.json").get("seed") != a.training_seed:
+        raise ValueError("declared training seed differs from checkpoint provenance")
+    policy_artifacts = {k: files[k]["sha256"] for k in required if k.startswith("checkpoint")}
+    execution_settings = load_yaml(files["eval"]["path"])["cartesian"]
     failures = gate_failures(read_json(files["evidence"]["path"]))
     if failures:
         raise ValueError("prerequisite evidence failed: " + "; ".join(failures))
@@ -56,6 +62,10 @@ def main():
         result = read_json(a.so101_final)
         if result.get("n_rollouts") != 270 or result.get("mean_success", 0) < 0.6:
             raise ValueError("SO-101 60% milestone has not been demonstrated")
+        if (result.get("policy_artifacts_by_seed", {}).get(str(a.training_seed)) != policy_artifacts
+                or result.get("scenario_suite_sha256") != files["scenarios"]["sha256"]
+                or result.get("execution_settings") != execution_settings):
+            raise ValueError("Panda must retain the successful SO-101 policy, scenarios and execution settings")
         # Target-robot scripted verification must be recorded separately from learned rollouts.
         transfer = read_json(files["panda_verification"]["path"])
         if not all(
@@ -99,6 +109,9 @@ def main():
             "condition": case["condition"],
             "timeout_s": 45,
             "checkpoint_sha256": files["checkpoint"]["sha256"],
+            "policy_artifacts": policy_artifacts,
+            "scenario_suite_sha256": files["scenarios"]["sha256"],
+            "execution_settings": execution_settings,
             "pick_place_success": summary["summary"]["pick_place_successes"] == 1,
             "historical_ball_in_bowl_success": summary["summary"]["successes"] == 1,
             "abort": summary["summary"]["aborted"] > 0,

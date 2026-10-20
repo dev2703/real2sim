@@ -14,16 +14,19 @@ from tests.integration.test_flow_head_smoke import tiny_data  # noqa: F401
 
 
 @pytest.mark.integration
-def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path):  # noqa: F811
+@pytest.mark.parametrize("trajectory_weight", [0., .1])
+def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path, trajectory_weight):  # noqa: F811
     data, _, manifest, _ = tiny_data
     images = np.load(data / "images_iphone.npy")
     np.save(data / "images_top.npy", images[:, ::-1].copy())
     manifest["camera_keys"].append("observation.images.top")
     manifest["image_files"]["observation.images.top"] = "images_top.npy"
     manifest["files_sha256"]["images_top.npy"] = file_sha256(data / "images_top.npy")
+    manifest["action_representation"] = "cartesian_tool"
     (data / "manifest.json").write_text(json.dumps(manifest))
     cfg = {
         "name": "resume_fixture",
+        "reconstruction_loss": {"trajectory_weight": trajectory_weight},
         "model": dict(
             chunk_size=3,
             n_action_steps=2,

@@ -53,6 +53,8 @@ class KinematicDeltaAdapter:
         self.projection = projection
         if projection is not None and set(projection) - {"rotation_weight", "damping"}:
             raise ValueError("unknown kinematic projection settings")
+        if projection is not None and any(not np.isfinite(v) or v <= 0 for v in projection.values()):
+            raise ValueError("kinematic projection settings must be finite and positive")
 
     def reset(self):
         self.wrapped.reset()

@@ -42,6 +42,12 @@ def replay(raw, config, case, mode):
         if outside[0]:
             raise ValueError("recorded start is out of range; no reference clipping allowed")
         hold = case.get("fixed_target_hold")
+        if hold and (
+            int(hold["source_frame"]) not in indices[1:]
+            or not np.isfinite(float(hold["duration_s"]))
+            or float(hold["duration_s"]) <= 0
+        ):
+            raise ValueError("hold must have a positive finite duration at an executed even source frame")
         hold_ticks = int(np.ceil(float(hold["duration_s"]) * 12.5)) if hold else 0
         env.max_episode_steps = len(q) + hold_ticks
         _, info = env.reset(

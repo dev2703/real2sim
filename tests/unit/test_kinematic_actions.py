@@ -1,10 +1,12 @@
 import numpy as np
 import pytest
+import torch
 
 from real2sim.data.labels import episode_labels, tool_frame_actions
 from real2sim.geometry.so3 import apply_delta, delta_action, exp_so3
 from real2sim.policy.adapters import ApplyResult
 from real2sim.policy.kinematic_actions import KinematicDeltaAdapter, bounded_joint_step
+from real2sim.policy.losses import integrated_tool_loss
 
 
 def test_tool_labels_and_execution_roundtrip_under_rotated_base():
@@ -51,3 +53,52 @@ def test_bounded_projection_respects_joint_margins_and_missing_dof():
     np.testing.assert_allclose(zero, 0, atol=1e-12)
     with pytest.raises(ValueError, match="never silently clip"):
         bounded_joint_step(j, d, np.full(5, 1.01), bounds, np.full(5, .02))
+
+
+def test_trajectory_loss_accumulation_mask_and_rotation_gradients():
+    target = torch.zeros(1, 4, 7)
+    pred = target.clone()
+    pred[:, :, 0] = .001
+    pred[:, :, 5] = .01
+    pred.requires_grad_()
+    pad = torch.tensor([[False, False, False, True]])
+    kwargs = dict(tool_frame=True, translation_scale=.024, rotation_scale=.24)
+    loss = integrated_tool_loss(pred, target, pad, **kwargs)
+    assert loss.item() > 0
+    loss.backward()
+    assert torch.isfinite(pred.grad).all()
+    assert pred.grad[0, :3, 0].abs().sum() > 0
+    assert pred.grad[0, :3, 5].abs().sum() > 0
+    assert not pred.grad[0, 3].any()
+    modified = pred.detach().clone()
+    modified[:, 3] = 1e8
+    torch.testing.assert_close(integrated_tool_loss(modified, target, pad, **kwargs), loss.detach())
+    zero = target.clone().requires_grad_()
+    exact = integrated_tool_loss(zero, target, pad, **kwargs)
+    exact.backward()
+    assert exact.item() == 0 and torch.isfinite(zero.grad).all()
+    assert integrated_tool_loss(pred, target, torch.ones_like(pad), **kwargs).item() == 0
+
+
+def test_new_matrix_controls_are_distinct_and_exposure_matched():
+    from real2sim.config import load_yaml
+    from real2sim.experiments.v2 import experiment_matrix
+
+    matrix = experiment_matrix(load_yaml("configs/v2/act_base.yaml"),
+                               clip_model=load_yaml("configs/v2/clip_backbone.yaml")["model"])
+    arms = {a["id"]: a for a in matrix}
+    assert "reuse" not in arms["K3_tool_trajectory"]
+    for name in ("K1_tool_delta", "K3_tool_trajectory", "L7_clip_frozen", "L8_clip_flow",
+                 "L8_clip_regression", "L7_clip_last2_lr3e-06", "L7_clip_last2_lr1e-05"):
+        arm = arms[name]
+        assert arm["examples"] == 64000
+        cfg = arm["config"]
+        assert cfg["train"]["schedule_steps"] * arm["effective_batch"] == 320000
+    assert arms["K1_tool_delta"]["action_representation"] == "cartesian_tool"
+    # A later measured CLIP winner can use the same batch/LR screen without losing its 1e-4 control.
+    adaptive = experiment_matrix(load_yaml("configs/v2/act_base.yaml"), backbone="clip",
+                                 effective_batch=64, head_lr=3e-5,
+                                 clip_model=load_yaml("configs/v2/clip_backbone.yaml")["model"])
+    control = next(a for a in adaptive if a["id"] == "L3_clip_b16_lr0.0001")
+    assert control["config"]["model"]["vision_backbone"] == "clip"
+    assert control["effective_batch"] == 16

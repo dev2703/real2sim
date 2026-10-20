@@ -28,3 +28,8 @@ annotations/*.bak
 .ruff_cache/
 # Failed pair-preparation previews are retained locally; the failure is documented.
 /results/audit/paired_approach_3988577_failed_metadata/
+# New bulk diagnostic outputs belong in outputs/; existing curated previews stay tracked.
+/results/**/*.mp4
+/results/**/*.jpg
+/results/**/*.png
+/results/**/*.npz

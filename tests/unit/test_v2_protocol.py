@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from real2sim.config import load_yaml
-from real2sim.data.conditions import stratified_split, validate_fixed_split
+from real2sim.data.conditions import manifest_hash, stratified_split, validate_fixed_split
 from real2sim.data.labels import ABSOLUTE_ACTION_NAMES, absolute_pose_actions
 from real2sim.experiments.v2 import CAMERAS, experiment_matrix, final_summary, gate_failures
 from real2sim.geometry.so3 import matrix_from_rot6d
@@ -50,6 +50,36 @@ def test_stratification_requires_confirmed_conditions_and_directions():
     a["episodes"][0]["condition_status"] = "guess"
     with pytest.raises(ValueError, match="confirmed"):
         stratified_split(a, list(range(41)))
+
+
+def test_reviewed_four_ball_split_is_explicit_and_preserves_legacy():
+    a = annotations()
+    a["episodes"][31]["condition"] = "baseline"
+    with pytest.raises(ValueError, match="expected 31"):
+        stratified_split(a, list(range(41)))
+    a["split_protocol"] = "v2_conditions_v2"
+    split = stratified_split(a, list(range(41)))
+    assert split["version"] == "v2_conditions_v2"
+    assert [len(split[k]) for k in ("train", "val", "reserved")] == [29, 6, 6]
+    assert split["condition_counts"]["ball_shift"] == (2, 1, 1)
+    assert 9 in split["train"] + split["val"] + split["reserved"]
+    validate_fixed_split(split, list(range(41)))
+    a["episodes"].reverse()
+    reordered = stratified_split(a, list(range(41)))
+    assert all(reordered[k] == split[k] for k in ("train", "val", "reserved"))
+    assert stratified_split(annotations(), list(range(41)))["version"] == "v2_conditions_v1"
+
+    # A self-consistent checksum cannot authorize changing the declared allocation/version.
+    tampered = copy.deepcopy(split)
+    tampered["condition_counts"]["ball_shift"] = (3, 1, 1)
+    tampered["sha256"] = manifest_hash(tampered)
+    with pytest.raises(ValueError, match="declared condition counts"):
+        validate_fixed_split(tampered, list(range(41)))
+    tampered = copy.deepcopy(split)
+    tampered["version"] = "v2_conditions_unknown"
+    tampered["sha256"] = manifest_hash(tampered)
+    with pytest.raises(ValueError, match="unknown split protocol"):
+        validate_fixed_split(tampered, list(range(41)))
 
 
 def test_absolute_labels_next_pose_current_grip_and_terminal_mask():
@@ -201,10 +231,20 @@ def test_final_aggregation_clusters_scenarios_across_training_seeds():
     bad[-1] = bad[0]
     with pytest.raises(ValueError, match="duplicate"):
         final_summary(bad)
+    for row in rows:
+        row.update(policy_artifacts={"checkpoint": f"weights-{row['training_seed']}"},
+                   scenario_suite_sha256="common-suite", execution_settings={"target_reference": "accepted_target"})
+    pinned = final_summary(rows)
+    assert pinned["policy_artifacts_by_seed"]["1"]["checkpoint"] == "weights-1"
+    rows[-1]["policy_artifacts"] = {"checkpoint": "different"}
+    with pytest.raises(ValueError, match="changed checkpoint"):
+        final_summary(rows)
 
 
-def test_v2_preparation_keeps_reserved_out_of_statistics_and_subsamples_exactly(tmp_path):
+@pytest.mark.parametrize("mode", ["cartesian_absolute", "cartesian_tool"])
+def test_v2_preparation_keeps_reserved_out_of_statistics_and_subsamples_exactly(tmp_path, mode):
     import json
+
     from real2sim.data.prepare import prepare
     from real2sim.data.synthetic import make_synthetic_dataset
     from real2sim.policy.dataset import DerivedTickDataset
@@ -220,7 +260,7 @@ def test_v2_preparation_keeps_reserved_out_of_statistics_and_subsamples_exactly(
     cfg["split"]["fixed_manifest"] = str(sp)
     cfg["image"].update(height=48, width=64)
     out = tmp_path / "derived"
-    m = prepare(raw, cfg, out, "synthetic/v2", "fixture", mode="cartesian_absolute")
+    m = prepare(raw, cfg, out, "synthetic/v2", "fixture", mode=mode)
     a = np.load(out / "arrays.npz")
     assert m["n_ticks"] == 41 * 3 and m["n_ticks_reserved"] == 6 * 3
     np.testing.assert_array_equal(a["frame_index"], np.tile([0, 2, 4], 41))

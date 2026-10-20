@@ -30,8 +30,10 @@ def experiment_matrix(
     clip_model: dict | None = None,
 ) -> list[dict]:
     """Resolve adaptive arms explicitly; never select a winner from training loss."""
-    if backbone not in ("resnet18", "dinov2") or effective_batch not in (16, 64):
-        raise ValueError("choose a measured ResNet/DINO baseline and batch 16 or 64")
+    if backbone not in ("resnet18", "dinov2", "clip") or effective_batch not in (16, 64):
+        raise ValueError("choose a measured ResNet/DINO/CLIP baseline and batch 16 or 64")
+    if backbone == "clip" and clip_model is None:
+        raise ValueError("a selected CLIP baseline requires its pinned configuration")
     if not math.isfinite(head_lr) or head_lr <= 0 or physical_batch < 1:
         raise ValueError("positive finite head LR and physical batch required")
     arms = []
@@ -112,7 +114,7 @@ def experiment_matrix(
     for batch in (16, 64):
         for lr in (3e-5, 1e-4, 3e-4):
             # The identical L1 dual ResNet / L2 DINO control is reused.
-            if batch == 16 and lr == 1e-4:
+            if batch == 16 and lr == 1e-4 and backbone != "clip":
                 continue
             add(f"L3_{backbone}_b{batch}_lr{lr:g}", "L3", batch=batch, lr=lr)
     add("L4_dino_frozen_control", "L4", vision="dinov2")
@@ -130,6 +132,9 @@ def experiment_matrix(
             add(f"L8_clip_{objective}", "L8", vision="clip", family=objective)
         # Compare coordinates with the selected baseline; retain the existing task-frame control.
         add("K1_tool_delta", "K1", action="cartesian_tool")
+        add("K3_tool_trajectory", "K3", action="cartesian_tool")
+        arms[-1]["config"]["reconstruction_loss"] = {"kind": "l1", "trajectory_weight": 0.1,
+            "translation_scale_m": .024, "rotation_scale_rad": .24}
     # Record aliases where an adaptive control exactly matches an existing ACT arm.
     identities = {}
     for arm in arms:
@@ -139,6 +144,7 @@ def experiment_matrix(
                 "model": arm["config"]["model"],
                 "train": arm["config"]["train"],
                 "scheduler": arm["config"]["scheduler"],
+                "reconstruction_loss": arm["config"].get("reconstruction_loss", {}),
                 "data": arm["config"]["data"],
             }
         )
@@ -252,6 +258,9 @@ def verify_bundle(bundle: dict) -> None:
 def final_summary(rows: list[dict], *, bootstrap_seed=0) -> dict:
     """90 scenario clusters shared across seeds; no 270-independent-trial interval."""
     by_case = {}
+    policies = {}
+    suite_hashes = set()
+    execution_settings = []
     for row in rows:
         seed = row["training_seed"]
         if seed not in (0, 1, 2) or row["condition"] not in CONDITIONS:
@@ -265,8 +274,17 @@ def final_summary(rows: list[dict], *, bootstrap_seed=0) -> dict:
         if row.get("timeout_s") != 45:
             raise ValueError("v2 confirmation uses the declared 45-second timeout")
         group[seed] = row["pick_place_success"] and not row.get("abort")
+        if "policy_artifacts" in row:
+            if seed in policies and policies[seed] != row["policy_artifacts"]:
+                raise ValueError("a training seed changed checkpoint artifacts during final evaluation")
+            policies[seed] = row["policy_artifacts"]
+            suite_hashes.add(row["scenario_suite_sha256"])
+            execution_settings.append(row["execution_settings"])
     if len(rows) != 270 or any(set(v) != {0, 1, 2} for v in by_case.values()):
         raise ValueError("expected exactly 90 common scenarios x 3 training seeds")
+    if policies and (len(execution_settings) != 270 or len(suite_hashes) != 1
+                     or any(s != execution_settings[0] for s in execution_settings)):
+        raise ValueError("final evaluation must freeze all policy artifacts, execution settings and scenarios")
     matrices = {}
     for condition in CONDITIONS:
         values = [list(v.values()) for (c, _), v in sorted(by_case.items()) if c == condition]
@@ -287,6 +305,9 @@ def final_summary(rows: list[dict], *, bootstrap_seed=0) -> dict:
         "n_rollouts": 270,
         "mean_success": float(all_values.mean()),
         "milestone_60_percent": bool(all_values.mean() >= 0.6),
+        "policy_artifacts_by_seed": {str(s): v for s, v in policies.items()},
+        "scenario_suite_sha256": next(iter(suite_hashes)) if suite_hashes else None,
+        "execution_settings": execution_settings[0] if execution_settings else None,
         "per_seed": {str(s): float(all_values[:, s].mean()) for s in range(3)},
         "per_condition_seed": {
             c: {str(s): float(v[:, s].mean()) for s in range(3)} for c, v in matrices.items()

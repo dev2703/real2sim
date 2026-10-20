@@ -130,8 +130,21 @@ def test_cache_failure_writes_flag_without_success(tmp_path):
 
 
 @pytest.mark.integration
-def test_two_camera_flow_cache_reload_and_profile(tiny_data, tmp_path, monkeypatch):
-    data, _, manifest, _ = tiny_data
+@pytest.mark.parametrize("vision", ["dinov2", "clip"])
+def test_two_camera_flow_cache_reload_and_profile(tiny_data, tmp_path, monkeypatch, vision):
+    data, config_path, manifest, _ = tiny_data
+    if vision == "clip":
+        from transformers import CLIPVisionConfig, CLIPVisionModel
+
+        config = CLIPVisionConfig(hidden_size=12, intermediate_size=24, num_hidden_layers=1,
+                                 num_attention_heads=3, image_size=32, patch_size=16)
+        local = tmp_path / "clip"
+        CLIPVisionModel(config).save_pretrained(local)
+        config_path.write_text(yaml.safe_dump({"model": {
+            "vision_backbone": "clip", "clip_config": config.to_dict(),
+            "clip_pretrained_path": str(local), "clip_model_id": "tiny-clip",
+            "clip_revision": "offline-fixture", "clip_trainable_blocks": 0,
+        }}))
     np.save(data / "images_top.npy", np.load(data / "images_iphone.npy")[:, ::-1].copy())
     manifest["camera_keys"].append("observation.images.top")
     manifest["image_files"]["observation.images.top"] = "images_top.npy"
@@ -141,4 +154,5 @@ def test_two_camera_flow_cache_reload_and_profile(tiny_data, tmp_path, monkeypat
     policy, _, contract = load_checkpoint(tmp_path / "flow/checkpoint")
     assert policy.config.camera_keys == contract["camera_keys"] == manifest["camera_keys"]
     assert policy.config.feature_tokens == 12
+    assert policy.config.vision_backbone == vision
     assert policy.head.camera_position.shape[0] == 2

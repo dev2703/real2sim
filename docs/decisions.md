@@ -758,3 +758,34 @@ exact resume. Cloud eligibility/rates and finalist throughput remain unmeasured;
 upload, paid job or hardware execution was performed by this implementation.
 
 Implementation and measured provisional findings: [v2 implementation status](v2_implementation_20261020.md).
+
+## D-030 CLIP, tool-motion experiments and artifact cleanup (2026-10-20)
+
+The user added CLIP ViT fine-tuning, flow matching, kinematics-aware policies and substantial
+repository cleanup. Matrix v4 adds frozen/last-two-block CLIP, matched CLIP regression/flow,
+observed-tool-frame delta training, and a composed-motion consistency loss. Joint-bounded
+Jacobian/FK retargeting is a separately versioned execution ablation on the same frozen policy.
+These are literature-inspired comparisons, not reproductions or claims of transfer success.
+
+All current screens declare the 320000-anchor scheduler horizon before training, stopping
+at64000 for selection. Finalist seed0 resumes without changing that schedule; seeds1/2 start
+fresh. This resolves D-029's continuation concern before any v2 screen was run.
+
+Cleanup removes committed generated artifacts with a hash/blob recovery manifest while
+preserving code, tests and referenced calibration assets. The approximately80% reduction
+applies to tracked working-tree bytes, not source lines or local dataset/model caches.
+
+## D-031 Full-motion geometry and rejected-delta attribution (2026-10-20)
+
+Thirty-six provisional unloaded controller comparisons show that stable 20-second holds
+do not establish reference-motion compatibility. K2 bounded retargeting preserves the
+holds but worsens motion p95 in all three recorded windows; it remains experimental.
+
+Persistent task-delta tracking is initially about0.30–0.33mm p95. Collision-rejected
+increments then produce a persistent reference offset exactly matching their cumulative
+discarded translations in these windows. A scan of all41 recordings finds joint-range,
+table and self-collision mismatches, including unannotated return motions. Resolve measured
+mapping/geometry and phase scope before promoting architectures or execution changes.
+Keep existing collision checks and limits; no geometry was changed to manufacture a pass.
+
+Evidence and reproduction commands are in the [v2 runbook](v2_implementation_20261020.md).

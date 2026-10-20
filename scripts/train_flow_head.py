@@ -388,7 +388,7 @@ def train_head(args):
             validation, _ = evaluate(policy, val, device, args.batch_size, args.seed, 4)
             ck = args.out / "checkpoints" / f"{seen:09d}"
             info = {"step": update, "examples_seen": seen, "validation": validation,
-                    "objective": args.objective, "identity": identity}
+                    "objective": args.objective, "identity": identity, "seed": args.seed}
             save_flow_checkpoint(ck, policy, normalizer.stats, contract, info,
                                  backbone_state=load_file(args.cache / "backbone.safetensors"))
             torch.save({"optimizer": optimizer.state_dict(), "sampler": iterator.state_dict(),

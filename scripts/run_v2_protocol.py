@@ -51,7 +51,7 @@ def main():
     split.add_argument("--out", type=Path, default=Path("results/v2/split.json"))
     matrix = sub.add_parser("matrix")
     matrix.add_argument("--base", type=Path, default=Path("configs/v2/act_base.yaml"))
-    matrix.add_argument("--backbone", choices=("resnet18", "dinov2"), default="resnet18")
+    matrix.add_argument("--backbone", choices=("resnet18", "dinov2", "clip"), default="resnet18")
     matrix.add_argument("--effective-batch", type=int, default=16)
     matrix.add_argument("--physical-batch", type=int, default=8)
     matrix.add_argument("--head-lr", type=float, default=1e-4)
@@ -75,7 +75,7 @@ def main():
     run.add_argument("--out", type=Path, required=True)
     run.add_argument("--resume", type=Path)
     run.add_argument(
-        "--cache", type=Path, help="frozen DINO feature cache for flow/regression arms"
+        "--cache", type=Path, help="matching frozen DINO/CLIP feature cache for flow/regression arms"
     )
     run.add_argument("--runtime-seconds", type=int, required=True)
     score = sub.add_parser("score-final")
@@ -115,7 +115,7 @@ def main():
         write(
             args.out,
             {
-                "version": "v2_screen_v3" if args.clip_config else "v2_screen_v2",
+                "version": "v2_screen_v4" if args.clip_config else "v2_screen_v2",
                 "selection": "development pick-place success; then closure error; then latency",
                 "adaptive_baseline": {
                     "backbone": args.backbone,
@@ -174,6 +174,11 @@ def main():
         data = Path(arm["config"]["data"]).resolve()
         if (data / "manifest.json") != Path(bundle["files"]["data_manifest"]["path"]):
             raise ValueError("arm data differs from frozen data manifest")
+        prepared = read_json(data / "manifest.json")
+        if any(prepared.get(key) != arm[key] for key in (
+            "camera_keys", "action_representation", "controller_semantics",
+        )) or prepared.get("policy_hz") != 12.5:
+            raise ValueError("prepared data camera/action/controller/timing contract differs from arm")
         # Hold the same lock for every v2 training subprocess. Timeouts never retry.
         with queue_lock(Path("outputs/v2/training_lock")):
             verify_bundle(bundle)

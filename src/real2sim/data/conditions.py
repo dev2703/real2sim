@@ -7,6 +7,16 @@ import numpy as np
 
 CONDITIONS = ("baseline", "ball_shift", "bowl_shift")
 COUNTS = {"baseline": (23, 4, 4), "ball_shift": (3, 1, 1), "bowl_shift": (3, 1, 1)}
+# Recording review found four ball shifts, not the five originally recalled.
+# Keep the original protocol reproducible; never infer an allocation from row order.
+PROTOCOL_COUNTS = {
+    "v2_conditions_v1": COUNTS,
+    "v2_conditions_v2": {
+        "baseline": (24, 4, 4),
+        "ball_shift": (2, 1, 1),
+        "bowl_shift": (3, 1, 1),
+    },
+}
 
 
 def manifest_hash(value: dict) -> str:
@@ -14,6 +24,10 @@ def manifest_hash(value: dict) -> str:
 
 
 def stratified_split(annotations: dict, episode_ids: list[int], seed: int = 0) -> dict:
+    version = annotations.get("split_protocol", "v2_conditions_v1")
+    if version not in PROTOCOL_COUNTS:
+        raise ValueError(f"unknown split protocol: {version}")
+    allocation = PROTOCOL_COUNTS[version]
     rows = annotations["episodes"]
     ids = [r["episode_index"] for r in rows]
     if len(ids) != len(set(ids)) or set(ids) != set(episode_ids):
@@ -26,11 +40,11 @@ def stratified_split(annotations: dict, episode_ids: list[int], seed: int = 0) -
         if condition != "baseline" and not row.get("shift_direction"):
             raise ValueError(f"episode {row['episode_index']}: shifted condition needs direction")
         groups[condition].append(int(row["episode_index"]))
-    result = {"version": "v2_conditions_v1", "seed": seed, "train": [], "val": [], "reserved": [],
-              "excluded": [], "condition_counts": COUNTS,
+    result = {"version": version, "seed": seed, "train": [], "val": [], "reserved": [],
+              "excluded": [], "condition_counts": allocation,
               "annotations_sha256": manifest_hash(annotations), "conditions": {str(r["episode_index"]): r["condition"] for r in rows}}
     rng = np.random.default_rng(seed)
-    for condition, counts in COUNTS.items():
+    for condition, counts in allocation.items():
         group = sorted(groups[condition])
         if len(group) != sum(counts):
             raise ValueError(f"{condition}: expected {sum(counts)} episodes, got {len(group)}")
@@ -52,10 +66,19 @@ def validate_fixed_split(split: dict, episode_ids: list[int]) -> dict:
     flat = [int(e) for group in lists for e in group]
     if not lists[0] or not lists[1] or len(flat) != len(set(flat)) or set(flat) != set(episode_ids):
         raise ValueError("fixed split must partition all episodes without overlap")
-    if split.get("version") == "v2_conditions_v1":
+    version = split.get("version", "")
+    if version.startswith("v2_conditions_") and version not in PROTOCOL_COUNTS:
+        raise ValueError(f"unknown split protocol: {version}")
+    if version in PROTOCOL_COUNTS:
         if lists[3]:
             raise ValueError("the v2 split retains all 41 episodes, including episode 9")
-        for condition, counts in COUNTS.items():
+        allocation = PROTOCOL_COUNTS[version]
+        declared = {k: list(v) for k, v in split.get("condition_counts", {}).items()}
+        if declared != {k: list(v) for k, v in allocation.items()}:
+            raise ValueError("declared condition counts differ from the versioned protocol")
+        if set(split.get("conditions", {})) != {str(e) for e in episode_ids}:
+            raise ValueError("conditions must cover exactly the source episodes")
+        for condition, counts in allocation.items():
             observed = tuple(sum(split["conditions"].get(str(e)) == condition for e in group)
                              for group in lists[:3])
             if observed != counts:
