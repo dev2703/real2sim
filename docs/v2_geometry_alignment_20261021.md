@@ -6,6 +6,60 @@ The operator confirmed motor calibration, robot base and cameras unchanged since
 see the [setup record](../configs/v2/setup_provenance_20261021.json). Current measurements can
 therefore check the recordings. Historical timing and command provenance remain unverified.
 
+## Follow-up — 22 October 2026
+
+Joint-zero and camera agreement remain the first execution priority. The current input
+inventory still contains no completed independent camera/joint landmark file: both camera
+intrinsics and distortion are null in the measurement template, and there are no measured
+joint landmark rows. The local static-CAD inventory has 12 nominal anchors, zero verified
+physical identities and only two tentative image associations. Earlier camera fits used
+unverified robot FK or jointly fitted nuisance geometry, so they cannot independently fix
+the camera for joint-zero verification.
+
+The existing [iPhone stability diagnostic](../outputs/v2/iphone_stability_20261021/README.md)
+adds a concrete correspondence issue to resolve. Relative to episode 0, static-feature
+displacement has a median of **0.65 source pixels** in the five sampled training episodes
+before episode 7 and **11.62 pixels** in the 23 later training episodes; later apparent
+similarity scale is 0.97288. The six validation episodes give 11.85 pixels. The effect appears
+in the fixed foot, lower clamp and cabinet handle; it is not confined to moving arm links.
+All 75 saved source-image hashes were checked, and rerunning episode 0 against episodes
+6, 7 and 31 reproduced the saved matches exactly. Reserved episodes were excluded.
+
+These are descriptive image displacements, **not landmark reprojection errors or a failed
+calibration acceptance test**. The cause could include capture cropping/focus/intrinsics or
+camera motion; this does not overturn the operator's unchanged-hardware attestation. Check
+the applicable camera model on both recording periods before treating newly measured
+intrinsics/extrinsics as valid for the whole dataset. No corrective image warp follows from
+this diagnostic alone.
+
+Registration code now rejects reuse of a source frame under different capture-group names
+and duplicate frame/landmark observations. Joint landmarks from the same source frame must
+use the same joint/gripper readings, and each named physical landmark must keep its native
+body and local coordinates. This closes a route for fitting and verification to share data
+under different labels. Source identity remains operator-supplied; renamed files or an
+incorrect provenance statement cannot be independently detected by these checks.
+
+Candidate reports now include complete data-only Jacobian null directions and the weakest
+parameter direction, including fits with fewer observations than unknown offsets. Inspect
+these against `arm_joint_order`; a low residual cannot identify an unobserved joint. Optical
+depth and behind-camera counts are also reported per fit/verification partition. Synthetic
+tests demonstrate that an impossible behind-camera fit can have zero pixel error. These
+diagnostics do not establish physical calibration or adopt a candidate automatically.
+
+The next physical step is calibrated source-resolution iPhone intrinsics/distortion and
+independent metric landmarks with verified source-frame identities. Fit/check the fixed
+camera first, then joint zeros with base/signs/landmark geometry fixed, then the wrist mount
+with verified link poses. Keep whole captures separate for fitting and verification and
+retain reserved policy episodes outside both. Use the existing commands below once those
+inputs are available. No learning screen has been launched.
+
+The previously blank experiment row is already implemented: **K1 tool-frame deltas and K3
+trajectory-consistency loss**. A newly reproduced mixed-precision NaN in the trajectory
+loss is fixed by denormalizing and composing poses in at least float32 with autocast
+disabled for those operations; gradients and coordinate semantics are preserved. Their
+learning comparison remains deferred until geometry and reference replay pass. See the
+[follow-up verification record](../results/v2/geometry_followup_20261022.json).
+
 ## Standard hardware and no-spacer update
 
 The operator subsequently confirmed a standard SO-101 with **no spacer** and requested use

@@ -29,6 +29,7 @@ def test_camera_fit_recovers_independent_geometry_and_does_not_fit_verification(
     np.testing.assert_allclose(report["T_optical_task"], T, atol=1e-8)
     assert report["verification"]["p95_px"] < 1e-6
     assert report["identifiability"]["full_rank"]
+    assert report["all_landmarks_in_front_of_camera"]
     assert not report["automatically_adopted"]
     pixels[groups == 2] += [80, -40]
     changed = fit_camera_registration(points, pixels, groups, **kwargs)
@@ -109,6 +110,67 @@ def test_joint_fit_reports_unobservable_parameters_instead_of_prior_confidence()
     result = fit_joint_zero_offsets(q, pixels, groups, unobservable, **kwargs)
     assert result["identifiability"]["rank"] == 3
     assert result["identifiability"]["conditional_parameter_std"] is None
+    null_directions = np.asarray(result["identifiability"]["scaled_null_directions"])
+    assert null_directions.shape == (2, 5)
+    np.testing.assert_allclose(null_directions[:, :3], 0, atol=1e-8)
+    np.testing.assert_allclose(null_directions @ null_directions.T, np.eye(2), atol=1e-8)
+
+
+def test_fewer_pixel_constraints_than_joints_reports_complete_nullspace():
+    q, _, _, _, _, kwargs = joint_problem()
+    q = q[:2]
+    groups = [0, 1]
+
+    def points(joints, indices):
+        # One fit point provides only two independent image coordinates. The
+        # compensating joint sums and the absent third coordinate leave three
+        # directions unobservable, even if the residual happens to be zero.
+        return np.column_stack([.1 * (joints[:, 0] + joints[:, 3]),
+                                .1 * (joints[:, 1] + joints[:, 4]),
+                                np.zeros(len(joints))])
+
+    def project(joints):
+        return cv2.projectPoints(points(joints, np.arange(len(joints))), np.zeros(3),
+                                 np.array([0., 0., 1.]), K, None)[0].reshape(-1, 2)
+
+    result = fit_joint_zero_offsets(q, project(q), groups, points,
+                                   **(kwargs | {"fit_groups": [0], "verification_groups": [1]}))
+    ident = result["identifiability"]
+    assert ident["rank"] == 2
+    assert not ident["full_rank"]
+    assert ident["conditional_parameter_std"] is None
+    assert len(ident["scaled_singular_values"]) == 5
+    assert np.asarray(ident["scaled_right_singular_vectors"]).shape == (5, 5)
+    null_directions = np.asarray(ident["scaled_null_directions"])
+    assert null_directions.shape == (3, 5)
+    for direction in null_directions * np.asarray(ident["parameter_scales"]):
+        np.testing.assert_allclose(project(q + direction * 1e-3), project(q), atol=1e-7)
+
+
+@pytest.mark.parametrize("behind_groups,expected_fit,expected_verify", [
+    ([2], 0, 8), ([0, 1, 2], 16, 8),
+])
+def test_joint_fit_exposes_behind_camera_landmarks_despite_low_pixel_error(
+    behind_groups, expected_fit, expected_verify,
+):
+    q, _, groups, real_points, offsets, kwargs = joint_problem()
+    behind = np.isin(groups, behind_groups)
+
+    def points(joints, indices):
+        xyz = real_points(joints, indices)
+        xyz[behind[indices], 2] -= 2.
+        return xyz
+
+    xyz = points(q + offsets, np.arange(len(q)))
+    pixels = cv2.projectPoints(xyz, np.zeros(3), np.array([0., 0., 1.]), K, None)[0].reshape(-1, 2)
+    result = fit_joint_zero_offsets(q, pixels, groups, points, **kwargs)
+    assert result["verification"]["p95_px"] < 1e-5
+    assert result["fit_points_behind_camera"] == expected_fit
+    assert result["verification_points_behind_camera"] == expected_verify
+    assert result["points_behind_camera"] == expected_fit + expected_verify
+    assert not result["all_landmarks_in_front_of_camera"]
+    np.testing.assert_array_equal(np.asarray(result["per_row_depth_m"]) <= 0, behind)
+    assert not result["automatically_adopted"]
 
 
 def test_impossible_joint_states_are_never_clipped_into_feasibility():

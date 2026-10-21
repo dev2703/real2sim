@@ -59,6 +59,22 @@ def rigid(value, name):
     return T
 
 
+def validate_capture_sources(rows):
+    """A renamed group must not move one source frame across the calibration split."""
+    frame_groups, landmarks = {}, set()
+    for row in rows:
+        source = provenance(row, "source_frame_reference").strip()
+        landmark = provenance(row, "landmark_id").strip()
+        group = row["capture_group"]
+        if source in frame_groups and frame_groups[source] != group:
+            raise ValueError("one source_frame_reference cannot belong to different capture_group values")
+        frame_groups[source] = group
+        key = (source, landmark)
+        if key in landmarks:
+            raise ValueError("duplicate landmark_id in one source_frame_reference is not an independent observation")
+        landmarks.add(key)
+
+
 def native_landmarks(section, rows):
     """Exact native FK; joint limits constrain fitting, never alter reference states."""
     provenance(section, "base_registration_provenance")
@@ -71,6 +87,7 @@ def native_landmarks(section, rows):
     addresses = model.jnt_qposadr[ids]
     grip_address = model.joint("gripper").qposadr[0]
     body_ids, offsets, grips = [], [], []
+    frame_states, fixed_landmarks = {}, {}
     for row in rows:
         name = required(row, "body_name")
         try:
@@ -79,9 +96,23 @@ def native_landmarks(section, rows):
             raise ValueError(f"unknown native MJCF body landmark: {name}") from exc
         if body == 0:
             raise ValueError("joint-zero landmarks must be on a named robot body")
+        point = finite(required(row, "point_body_m"), (3,), "point_body_m")
+        grip = float(required(row, "gripper_joint_rad"))
+        q = finite(required(row, "q_nominal_rad"), (len(ARM_JOINTS),), "q_nominal_rad")
+        source = provenance(row, "source_frame_reference").strip()
+        state = np.r_[q, grip]
+        if source in frame_states and not np.allclose(state, frame_states[source], rtol=0, atol=1e-10):
+            raise ValueError("joint and gripper readings must stay identical within one source_frame_reference")
+        frame_states[source] = state
+        landmark = provenance(row, "landmark_id").strip()
+        if landmark in fixed_landmarks:
+            old_body, old_point = fixed_landmarks[landmark]
+            if body != old_body or not np.allclose(point, old_point, rtol=0, atol=1e-10):
+                raise ValueError("each joint-zero landmark_id must retain its body_name and point_body_m")
+        fixed_landmarks[landmark] = (body, point)
         body_ids.append(body)
-        offsets.append(finite(required(row, "point_body_m"), (3,), "point_body_m"))
-        grips.append(float(required(row, "gripper_joint_rad")))
+        offsets.append(point)
+        grips.append(grip)
     if not np.isfinite(grips).all():
         raise ValueError("gripper_joint_rad must be finite; do not infer its calibration")
 
@@ -163,6 +194,7 @@ def fit_document(document, mode):
     groups = [required(row, "capture_group") for row in rows]
     if not all(isinstance(group, str) and group.strip() for group in groups):
         raise ValueError("capture_group must be a nonempty string identifying a whole capture")
+    validate_capture_sources(rows)
     common = dict(
         K=K, distortion=distortion, pixels=pixels, groups=groups,
         sigma_px=[required(row, "sigma_px") for row in rows],

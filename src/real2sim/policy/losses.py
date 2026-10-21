@@ -53,34 +53,39 @@ def integrated_tool_loss(pred, target, pad, *, tool_frame, translation_scale, ro
     if torch.any(pad[:, :-1] & ~pad[:, 1:]):
         raise ValueError("trajectory padding must be terminal")
     valid = ~pad
-    pred, target = (x.masked_fill(pad[..., None], 0) for x in (pred, target))
+    # Matrix exponential and repeated rotation products are unstable in half precision.
+    # Disable autocast as well as promoting inputs: autocast would otherwise cast the
+    # composition matmuls back down. Casts remain differentiable to the model outputs.
+    dtype = torch.promote_types(torch.promote_types(pred.dtype, target.dtype), torch.float32)
+    with torch.autocast(device_type=pred.device.type, enabled=False):
+        pred, target = (x.to(dtype).masked_fill(pad[..., None], 0) for x in (pred, target))
 
-    def compose(actions):
-        rotation = torch.eye(3, device=actions.device, dtype=actions.dtype).expand(len(actions), 3, 3)
-        position = actions.new_zeros(len(actions), 3)
-        positions, rotations = [], []
-        for action in actions.unbind(1):
-            x, y, z = action[:, 3:6].unbind(-1)
-            zero = torch.zeros_like(x)
-            skew = torch.stack([zero, -z, y, z, zero, -x, -y, x, zero], -1).reshape(-1, 3, 3)
-            step = torch.matrix_exp(skew)
-            dp = action[:, :3]
-            if tool_frame:
-                position = position + (rotation @ dp[..., None]).squeeze(-1)
-                rotation = rotation @ step
-            else:
-                position = position + dp
-                rotation = step @ rotation
-            positions.append(position)
-            rotations.append(rotation)
-        return torch.stack(positions, 1), torch.stack(rotations, 1)
+        def compose(actions):
+            rotation = torch.eye(3, device=actions.device, dtype=actions.dtype).expand(len(actions), 3, 3)
+            position = actions.new_zeros(len(actions), 3)
+            positions, rotations = [], []
+            for action in actions.unbind(1):
+                x, y, z = action[:, 3:6].unbind(-1)
+                zero = torch.zeros_like(x)
+                skew = torch.stack([zero, -z, y, z, zero, -x, -y, x, zero], -1).reshape(-1, 3, 3)
+                step = torch.matrix_exp(skew)
+                dp = action[:, :3]
+                if tool_frame:
+                    position = position + (rotation @ dp[..., None]).squeeze(-1)
+                    rotation = rotation @ step
+                else:
+                    position = position + dp
+                    rotation = step @ rotation
+                positions.append(position)
+                rotations.append(rotation)
+            return torch.stack(positions, 1), torch.stack(rotations, 1)
 
-    p, r = compose(pred)
-    tp, tr = compose(target)
-    position_error = (p - tp).square().sum(-1) / translation_scale**2
-    # Stable chordal SO(3) error: ||R1-R2||_F^2/2, approximately angle^2 near zero.
-    rotation_error = (r - tr).square().sum((-1, -2)) / (2 * rotation_scale**2)
-    return ((position_error + rotation_error) * valid).sum() / valid.sum().clamp_min(1)
+        p, r = compose(pred)
+        tp, tr = compose(target)
+        position_error = (p - tp).square().sum(-1) / translation_scale**2
+        # Stable chordal SO(3) error: ||R1-R2||_F^2/2, approximately angle^2 near zero.
+        rotation_error = (r - tr).square().sum((-1, -2)) / (2 * rotation_scale**2)
+        return ((position_error + rotation_error) * valid).sum() / valid.sum().clamp_min(1)
 
 
 def act_training_loss(policy, batch: dict, config: ReconstructionLoss, *,
@@ -101,13 +106,15 @@ def act_training_loss(policy, batch: dict, config: ReconstructionLoss, *,
     if config.trajectory_weight:
         if action_representation not in ("cartesian", "cartesian_tool") or action_mean is None or action_std is None:
             raise ValueError("trajectory loss requires delta actions and training-only normalization")
-        mean = torch.as_tensor(action_mean, device=predicted.device, dtype=predicted.dtype)
-        std = torch.as_tensor(action_std, device=predicted.device, dtype=predicted.dtype)
-        trajectory = integrated_tool_loss(
-            predicted * std + mean, batch[ACTION] * std + mean, batch["action_is_pad"],
-            tool_frame=action_representation == "cartesian_tool",
-            translation_scale=config.translation_scale_m, rotation_scale=config.rotation_scale_rad,
-        )
+        dtype = torch.promote_types(predicted.dtype, torch.float32)
+        with torch.autocast(device_type=predicted.device.type, enabled=False):
+            mean = torch.as_tensor(action_mean, device=predicted.device, dtype=dtype)
+            std = torch.as_tensor(action_std, device=predicted.device, dtype=dtype)
+            trajectory = integrated_tool_loss(
+                predicted.to(dtype) * std + mean, batch[ACTION].to(dtype) * std + mean, batch["action_is_pad"],
+                tool_frame=action_representation == "cartesian_tool",
+                translation_scale=config.translation_scale_m, rotation_scale=config.rotation_scale_rad,
+            )
         loss = loss + config.trajectory_weight * trajectory
         metrics["trajectory_loss"] = trajectory.item()
     if policy.config.use_vae and log_variance is not None:

@@ -68,6 +68,35 @@ def test_verification_pixels_do_not_refit_camera():
     assert changed["verification"]["p95_px"] > 49.9
 
 
+@pytest.mark.parametrize("mode,factory,section", [
+    ("camera", lambda: synthetic_document(), "camera_registration"),
+    ("joint-zero", lambda: joint_document(), "joint_zero_registration"),
+    ("wrist", lambda: wrist_document(), "wrist_registration"),
+])
+def test_frame_cannot_be_relabeled_into_verification(mode, factory, section):
+    document, _ = factory()
+    rows = document[section]["observations"]
+    rows[-1]["source_frame_reference"] = " " + rows[0]["source_frame_reference"] + " "
+    with pytest.raises(ValueError, match="different capture_group"):
+        fit_document(document, mode)
+
+
+def test_duplicate_landmark_observations_cannot_inflate_camera_evidence():
+    document, _ = synthetic_document()
+    rows = document["camera_registration"]["observations"]
+    rows.append(copy.deepcopy(rows[0]))
+    with pytest.raises(ValueError, match="duplicate landmark_id"):
+        fit_document(document, "camera")
+
+
+def test_distinct_landmarks_in_shared_source_frames_are_allowed():
+    document, T = synthetic_document()
+    for row in document["camera_registration"]["observations"]:
+        row["source_frame_reference"] = f"synthetic-frame:{row['capture_group']}"
+    report = fit_document(document, "camera")
+    np.testing.assert_allclose(report["T_optical_task"], T, atol=1e-8)
+
+
 @pytest.mark.parametrize("mutate,match", [
     (lambda d: d["camera"].update(K_source_pixels=None), "missing measured input: K_source_pixels"),
     (lambda d: d["camera"].update(distortion_coefficients=None), "distortion_coefficients"),
@@ -145,6 +174,41 @@ def test_joint_fit_requires_fixed_independent_geometry(mutate, match):
     mutate(document)
     with pytest.raises(ValueError, match=match):
         fit_document(document, "joint-zero")
+
+
+@pytest.mark.parametrize("field", ["q_nominal_rad", "gripper_joint_rad"])
+def test_one_joint_source_frame_cannot_claim_different_recorded_states(field):
+    document, _ = joint_document()
+    rows = document["joint_zero_registration"]["observations"]
+    extra = copy.deepcopy(rows[0])
+    extra["landmark_id"] = "another-landmark-in-the-same-frame"
+    if field == "q_nominal_rad":
+        extra[field][0] += .01
+    else:
+        extra[field] += .01
+    rows.append(extra)
+    with pytest.raises(ValueError, match="readings must stay identical"):
+        fit_document(document, "joint-zero")
+
+
+@pytest.mark.parametrize("field,value", [
+    ("body_name", "wrist"), ("point_body_m", [.03, .01, -.09]),
+])
+def test_joint_landmark_geometry_cannot_change_between_source_frames(field, value):
+    document, _ = joint_document()
+    rows = document["joint_zero_registration"]["observations"]
+    rows[1]["landmark_id"] = rows[0]["landmark_id"]
+    rows[1][field] = value
+    with pytest.raises(ValueError, match="must retain its body_name and point_body_m"):
+        fit_document(document, "joint-zero")
+
+
+def test_joint_landmark_can_repeat_across_varied_poses_in_one_capture_group():
+    document, offsets = joint_document()
+    for row in document["joint_zero_registration"]["observations"]:
+        row["landmark_id"] = "one-physical-marker-on-gripper"
+    report = fit_document(document, "joint-zero")
+    np.testing.assert_allclose(report["joint_zero_offsets_rad"], offsets, atol=1e-6)
 
 
 def wrist_document():

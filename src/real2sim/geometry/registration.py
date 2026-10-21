@@ -84,6 +84,21 @@ def _errors(predicted, observed, mask):
     }
 
 
+def _depth_report(points, T, fit, verify):
+    """Reprojection alone cannot distinguish a visible point from one behind the lens."""
+    depth = (points @ T[:3, :3].T + T[:3, 3])[:, 2]
+    behind = depth <= 0
+    return {
+        "points_behind_camera": int(behind.sum()),
+        "fit_points_behind_camera": int(behind[fit].sum()),
+        "verification_points_behind_camera": int(behind[verify].sum()),
+        "fit_min_depth_m": float(depth[fit].min()),
+        "verification_min_depth_m": float(depth[verify].min()),
+        "per_row_depth_m": depth.tolist(),
+        "all_landmarks_in_front_of_camera": bool(not behind.any()),
+    }
+
+
 def _identifiability(residual: Callable, x: np.ndarray, scales: np.ndarray):
     """Data-only finite-difference Jacobian; no regularizer can manufacture rank.
 
@@ -97,7 +112,11 @@ def _identifiability(residual: Callable, x: np.ndarray, scales: np.ndarray):
         step[i] = scale * 1e-5
         columns.append((residual(x + step) - residual(x - step)) / (2 * step[i]))
     J = np.column_stack(columns)
-    _, singular, vt = np.linalg.svd(J * scales, full_matrices=False)
+    # For fewer residuals than parameters, the reduced SVD omits the remaining
+    # exact null directions. Request the complete basis only for that small case;
+    # a full U for an overdetermined landmark set would waste quadratic memory.
+    _, singular, vt = np.linalg.svd(J * scales, full_matrices=J.shape[0] < J.shape[1])
+    singular = np.pad(singular, (0, len(x) - len(singular)))
     tolerance = max(float(singular[0]), 1.0) * 1e-7
     rank = int((singular > tolerance).sum())
     identifiable = rank == len(x)
@@ -105,7 +124,12 @@ def _identifiability(residual: Callable, x: np.ndarray, scales: np.ndarray):
     std = scales * np.sqrt(np.sum((vt.T / singular) ** 2, axis=1)) if identifiable else None
     return {
         "rank": rank, "parameter_count": len(x), "full_rank": identifiable,
+        "rank_tolerance": tolerance,
         "parameter_scales": scales.tolist(), "scaled_singular_values": singular.tolist(),
+        "scaled_right_singular_vectors": vt.tolist(),
+        "scaled_null_directions": vt[rank:].tolist(),
+        "weakest_parameter_direction": (scales * vt[-1]).tolist(),
+        "direction_note": "Rows of scaled_right_singular_vectors run strongest to weakest. Multiply each row elementwise by parameter_scales to obtain a parameter perturbation. Null directions use the reported rank tolerance; signs of directions are arbitrary.",
         "scaled_condition_number": float(singular[0] / singular[-1]) if identifiable else None,
         "conditional_parameter_std": None if std is None else std.tolist(),
         "uncertainty_note": "Local data-only linear approximation; ignores systematic geometry, intrinsics and timing error, and solution ambiguity.",
@@ -181,9 +205,9 @@ def fit_camera_registration(
         "T_optical_task": T.tolist(), "geometry_provenance": geometry_provenance,
         "fitting_anchor_spatial_rank": int(geometry_rank),
         "planar_ambiguity_requires_independent_check": bool(geometry_rank == 2),
-        "points_behind_camera": int(np.sum((points @ R.T + T[:3, 3])[:, 2] <= 0)),
         "intrinsics_fitted": False,
     })
+    report.update(_depth_report(points, T, fit, verify))
     return report
 
 
@@ -207,7 +231,7 @@ def fit_joint_zero_offsets(
     pixels, fit, verify, sigma = _observations(
         pixels, groups, fit_groups, verification_groups, reserved_groups, sigma_px)
     q = np.asarray(q_nominal_rad, np.float64)
-    if q.ndim != 2 or len(q) != len(fit) or not np.isfinite(q).all():
+    if q.ndim != 2 or q.shape[1] == 0 or len(q) != len(fit) or not np.isfinite(q).all():
         raise ValueError("joint coordinates must be a finite rows-by-joints array")
     n = q.shape[1]
     limits = _finite(joint_limits_rad, (n, 2), "joint limits")
@@ -225,18 +249,19 @@ def fit_joint_zero_offsets(
     K, T = _intrinsics(K), _transform(T_optical_task)
     rvec, tvec = cv2.Rodrigues(T[:3, :3])[0], T[:3, 3]
 
-    def project(x, indices):
-        points = _finite(points_for_q(q[indices] + x, indices), (len(indices), 3), "FK landmarks")
-        return _project(points, rvec, tvec, K, distortion)
+    def landmarks(x, indices):
+        return _finite(points_for_q(q[indices] + x, indices), (len(indices), 3), "FK landmarks")
 
     fit_indices = np.flatnonzero(fit)
 
     def residual(x):
-        return ((project(x, fit_indices) - pixels[fit]) / sigma[fit, None]).ravel()
+        predicted = _project(landmarks(x, fit_indices), rvec, tvec, K, distortion)
+        return ((predicted - pixels[fit]) / sigma[fit, None]).ravel()
 
     result = least_squares(residual, x0, bounds=(lower, upper), loss="soft_l1",
                            f_scale=2, max_nfev=1000, x_scale=np.full(n, .1))
-    predicted = project(result.x, np.arange(len(q)))
+    points = landmarks(result.x, np.arange(len(q)))
+    predicted = _project(points, rvec, tvec, K, distortion)
     ident = _identifiability(residual, result.x, np.full(n, .1))
     report = _report(predicted, pixels, groups, fit, verify, result, ident,
                      [q, pixels, K, T, sigma, limits, bounds])
@@ -254,4 +279,5 @@ def fit_joint_zero_offsets(
     })
     report["fitted_offsets_at_bound"] = (
         np.isclose(result.x, lower, atol=1e-6) | np.isclose(result.x, upper, atol=1e-6)).tolist()
+    report.update(_depth_report(points, T, fit, verify))
     return report

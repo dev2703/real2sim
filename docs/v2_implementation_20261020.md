@@ -11,6 +11,12 @@ confirmed unchanged motor calibration/base/cameras. Arm units are strongly suppo
 degrees; physical zeros remain unverified. The gripper scale and visual CAD/table audit now
 identify concrete calibration checks before resuming the learning matrix.
 
+The [22 October follow-up](v2_geometry_alignment_20261021.md#follow-up--22-october-2026)
+documents the apparent iPhone view change across recordings, stricter source-frame
+separation and joint observability/depth diagnostics. Independent measured inputs remain
+missing. K3 pose composition now uses at least float32 to prevent mixed-precision NaNs;
+this implementation fix does not advance the physical or learned-success gates.
+
 ## Experiment status — 21 October 2026
 
 All eight requested experiment groups remain in [screen matrix v4](../results/v2/screen_matrix_v4.json).
