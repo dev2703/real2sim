@@ -1,0 +1,20 @@
+{
+  "version": "v2_setup_provenance_20261021_v1",
+  "dataset": "local/so101_act_pickplace_v2",
+  "operator_confirmation_date": "2026-10-21",
+  "operator_statement_verbatim": "Motor calibration and setup unchanged",
+  "question_scope": "Whether SO-101 motor calibration, robot base, or cameras changed since recording v2",
+  "motor_calibration_unchanged": true,
+  "base_and_cameras_unchanged": true,
+  "provenance": "Operator attestation in this conversation; not an independent metrology result",
+  "current_follower_calibration": {
+    "path": "~/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json",
+    "sha256": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3"
+  },
+  "physical_joint_zeros_verified": false,
+  "base_table_registration_verified": false,
+  "camera_registration_verified": false,
+  "jaw_geometry_verified": false,
+  "historical_command_and_camera_timing_verified": false,
+  "interpretation": "Current physical measurements can be used to check v2 correspondence, subject to measurement uncertainty. The confirmation does not establish joint zeros, camera transforms, jaw clearance or historical timing."
+}

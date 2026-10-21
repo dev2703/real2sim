@@ -1,5 +1,5 @@
 {
-  "version": "v2_measurements_v1",
+  "version": "v2_measurements_v2",
   "status": "pending_operator_session",
   "units": "metres and radians; source-image pixels",
   "collector_version": null,
@@ -18,31 +18,51 @@
       "command_percent": null,
       "measured_joint": null,
       "gap_m": null,
-      "verification_only": false
+      "verification_only": false,
+      "suggested_command_percent": 0,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
     },
     {
       "command_percent": null,
       "measured_joint": null,
       "gap_m": null,
-      "verification_only": false
+      "verification_only": true,
+      "suggested_command_percent": 15,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
     },
     {
       "command_percent": null,
       "measured_joint": null,
       "gap_m": null,
-      "verification_only": false
+      "verification_only": false,
+      "suggested_command_percent": 30,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
     },
     {
       "command_percent": null,
       "measured_joint": null,
       "gap_m": null,
-      "verification_only": false
+      "verification_only": true,
+      "suggested_command_percent": 45,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
     },
     {
       "command_percent": null,
       "measured_joint": null,
       "gap_m": null,
-      "verification_only": false
+      "verification_only": false,
+      "suggested_command_percent": 60,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
     }
   ],
   "cameras": {
@@ -106,5 +126,8 @@
       "camera_frame_timestamp_provenance": null
     }
   ],
-  "note": "Keep verification poses/openings separate from fitting. These new traces do not establish timing/provenance for the original 41 episodes."
+  "note": "Keep verification poses/openings separate from fitting. These new traces do not establish timing/provenance for the original 41 episodes.",
+  "setup_provenance_file": "configs/v2/setup_provenance_20261021.json",
+  "jaw_gap_definition": null,
+  "jaw_measurement_uncertainty_m": null
 }

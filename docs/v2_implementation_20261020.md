@@ -6,6 +6,11 @@ Measured camera/jaw registration, phase annotations, and reference-task acceptan
 prerequisites for ranking learned rollouts. No cloud jobs, private uploads or robot movements
 were performed.
 
+The current work is [geometry alignment](v2_geometry_alignment_20261021.md). The operator
+confirmed unchanged motor calibration/base/cameras. Arm units are strongly supported as
+degrees; physical zeros remain unverified. The gripper scale and visual CAD/table audit now
+identify concrete calibration checks before resuming the learning matrix.
+
 ## Measured diagnosis
 
 The local v2 dataset has 41 episodes and 27,736 source rows at nominal 25 FPS. The wrist is

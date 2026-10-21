@@ -42,7 +42,7 @@ import math
 import re
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import av
@@ -1073,8 +1073,7 @@ def _fit_summary(fit: dict) -> dict:
 
 def _pan_flip_diagnostic(cs: list[Correspondence], task: dict, K: np.ndarray, image_size) -> dict:
     mapping = JointMapping.from_task_config(task)
-    flipped = JointMapping(sign=(-mapping.sign[0], *mapping.sign[1:]), offset_deg=mapping.offset_deg,
-                           gripper_sim_range_rad=mapping.gripper_sim_range_rad)
+    flipped = replace(mapping, sign=(-mapping.sign[0], *mapping.sign[1:]))
     fk = So101FK(mapping=flipped)
     P = np.array([fk.fk_real(np.array(c.state_deg))[:3, 3] if c.kind == "held" else c.point_base for c in cs])
     U = np.array([c.pixel for c in cs])

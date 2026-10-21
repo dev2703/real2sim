@@ -5,14 +5,76 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
+import mujoco
 import numpy as np
 
 from real2sim.data.raw import RawDataset, sha256_file
 from real2sim.geometry.so3 import delta_action
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
+
+
+def gripper_scale_audit(env, calibration_path, observed_percent):
+    """Encoder-derived relative-angle hypothesis; closure/ratio/sign remain unverified.
+
+    This compares geometry at identical arm coordinates, without physics, target clipping,
+    or changing the scene. Tip-sphere separation is a reproducible CAD diagnostic, not a
+    measurement of the real jaw gap or the minimum distance between entire jaw surfaces.
+    """
+    calibration_path = Path(calibration_path)
+    calibration = json.loads(calibration_path.read_text())
+    gripper = calibration["gripper"]
+    low, high = float(gripper["range_min"]), float(gripper["range_max"])
+    if not (0 <= low < high <= 4095) or gripper["drive_mode"] != 0:
+        raise ValueError("this SO-101 diagnostic requires ordered 12-bit endpoints and drive_mode=0")
+    scale = (high - low) * (2 * np.pi / 4095) / 100
+    zero = float(env.mapping.gripper_real_to_sim_rad(0))
+    candidate = replace(env.mapping, gripper_affine_rad=(zero, scale))
+    data = mujoco.MjData(env.model)
+    tips = [env.model.geom(name).id for name in ("fixed_jaw_sph_tip1", "moving_jaw_sph_tip1")]
+    if any(env.model.geom_type[g] != mujoco.mjtGeom.mjGEOM_SPHERE for g in tips):
+        raise ValueError("expected the pinned jaw tip spheres")
+
+    def gap(q):
+        data.qpos[env.qadr] = 0.
+        data.qpos[env.qadr[5]] = q
+        mujoco.mj_kinematics(env.model, data)
+        return float((np.linalg.norm(data.geom_xpos[tips[0]] - data.geom_xpos[tips[1]])
+                      - sum(env.model.geom_size[g, 0] for g in tips)) * 1000)
+
+    observed = np.asarray(observed_percent, float)
+    rows = []
+    for percent in [0., 15., 30., 45., 60., float(observed.max())]:
+        current = float(env.mapping.gripper_real_to_sim_rad(percent))
+        proposed = float(candidate.gripper_real_to_sim_rad(percent))
+        rows.append({"percent": percent, "current_native_rad": current,
+                     "candidate_native_rad": proposed,
+                     "angular_difference_deg": float(np.rad2deg(proposed - current)),
+                     "current_tip_sphere_separation_mm": gap(current),
+                     "candidate_tip_sphere_separation_mm": gap(proposed),
+                     "candidate_within_native_limits": bool(env.limits[5, 0] <= proposed <= env.limits[5, 1])})
+    native_observed = candidate.gripper_real_to_sim_rad(observed)
+    native_percent_limits = candidate.gripper_sim_to_real_percent(env.limits[5])
+    return {
+        "kind": "ENCODER_SCALE_CANDIDATE_NOT_ADOPTED",
+        "calibration_path": str(calibration_path), "calibration_sha256": sha256_file(calibration_path),
+        "reported_tick_endpoints": [low, high], "angle_denominator_ticks": 4095,
+        "candidate_percent_to_joint": {"offset_rad": zero, "scale_rad_per_percent": scale},
+        "relative_motor_rotation_deg_per_100_percent": float(np.rad2deg(scale) * 100),
+        "current_joint_rotation_deg_per_100_percent": float(np.rad2deg(
+            env.mapping.gripper_real_to_sim_rad(100) - env.mapping.gripper_real_to_sim_rad(0))),
+        "candidate_native_limit_percent_interval": sorted(native_percent_limits.tolist()),
+        "observed_percent_interval": [float(observed.min()), float(observed.max())],
+        "observed_rows_outside_native_limits_with_candidate": int(np.sum(
+            (native_observed < env.limits[5, 0]) | (native_observed > env.limits[5, 1]))),
+        "ordinary_openings": rows, "tip_spheres": [env.model.geom(g).name for g in tips],
+        "assumptions_not_verified": ["positive motor-to-jaw sign", "one-to-one motor-to-jaw ratio",
+                                     "existing closure zero", "physical jaw shape matches CAD"],
+        "interpretation": "Tip-sphere separation is not real jaw clearance. No physical fit, limit change, clipping, or configuration promotion was performed.",
+    }
 
 
 def contact_scan(env, kin, q, candidates):
@@ -59,7 +121,7 @@ def contact_scan(env, kin, q, candidates):
     }
 
 
-def audit(root: Path, config: Path, *, full_contact_scan=False):
+def audit(root: Path, config: Path, *, full_contact_scan=False, gripper_calibration=None):
     ds = RawDataset(root)
     rows = []
     global_min, global_max = np.full(6, np.inf), np.full(6, -np.inf)
@@ -133,6 +195,9 @@ def audit(root: Path, config: Path, *, full_contact_scan=False):
             },
             "config_sha256": sha256_file(config),
             "task_sha256": sha256_file(task_path),
+            **({"gripper_scale": gripper_scale_audit(
+                env, gripper_calibration, ds.stack(ds.data, "observation.state")[:, 5])}
+               if gripper_calibration is not None else {}),
             "source_hz": ds.fps,
             "sample_stride": 2,
             "nominal_policy_hz": ds.fps / 2,
@@ -168,10 +233,13 @@ def main():
     p.add_argument("--config", type=Path, default=Path("configs/sim_so101.yaml"))
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--full-contact-scan", action="store_true")
+    p.add_argument("--gripper-calibration", type=Path,
+                   help="optional unchanged follower JSON; audit a relative-angle hypothesis only")
     a = p.parse_args()
     if a.out.exists():
         raise FileExistsError(a.out)
-    result = audit(a.root, a.config, full_contact_scan=a.full_contact_scan)
+    result = audit(a.root, a.config, full_contact_scan=a.full_contact_scan,
+                   gripper_calibration=a.gripper_calibration)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
     print(

@@ -20,6 +20,8 @@ The local dataset has **41 episodes**. Reviewed conditions are 32 baseline, four
 See the [v2 runbook](docs/v2_implementation_20261020.md) for the 12.5 Hz two-camera pipeline,
 CLIP/DINO/flow/kinematics experiments and remaining calibration gates. These experiments are
 implemented; v2 learned task success and frozen Panda transfer have not yet been demonstrated.
+Current priority is [real/simulation geometry alignment](docs/v2_geometry_alignment_20261021.md),
+including the encoder-derived gripper-scale discrepancy and CAD/table collision diagnosis.
 The commands below document the retained legacy 10 Hz workflow.
 
 See [cleanup and recovery](docs/cleanup_20261021.md) for removed historical scripts and artifacts.

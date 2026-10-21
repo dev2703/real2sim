@@ -35,8 +35,7 @@ def real_from_sim(mapping: JointMapping, q_sim6: np.ndarray) -> np.ndarray:
     """Inverse of ``JointMapping``: native radians -> LeRobot degrees and gripper percent."""
     q = np.asarray(q_sim6, np.float64)
     arm = (np.rad2deg(q[:5]) - np.asarray(mapping.offset_deg)) / np.asarray(mapping.sign)
-    lo, hi = mapping.gripper_sim_range_rad
-    return np.concatenate([arm, [(q[5] - lo) / (hi - lo) * 100.0]])
+    return np.concatenate([arm, [mapping.gripper_sim_to_real_percent(q[5])]])
 
 
 def sim_from_real(mapping: JointMapping, q_real6: np.ndarray) -> np.ndarray:

@@ -28,6 +28,9 @@ class JointMapping:
     sign: tuple[float, ...] = (1, 1, 1, 1, 1)
     offset_deg: tuple[float, ...] = (0, 0, 0, 0, 0)
     gripper_sim_range_rad: tuple[float, float] = (-0.1745, 1.7454)
+    # Explicit percent-to-joint calibration is independent of native joint limits.
+    # Legacy checkpoints retain the endpoint-based mapping when this is absent.
+    gripper_affine_rad: tuple[float, float] | None = None  # offset, radians per percent
 
     def __post_init__(self) -> None:
         if len(self.sign) != 5 or len(self.offset_deg) != 5:
@@ -39,14 +42,23 @@ class JointMapping:
         lo, hi = self.gripper_sim_range_rad
         if not (np.isfinite(lo) and np.isfinite(hi) and lo < hi):
             raise ValueError(f"gripper range must be finite with lo < hi, got {self.gripper_sim_range_rad}")
+        if self.gripper_affine_rad is not None:
+            if len(self.gripper_affine_rad) != 2:
+                raise ValueError("gripper affine mapping needs offset and radians per percent")
+            offset, scale = self.gripper_affine_rad
+            if not (np.isfinite(offset) and np.isfinite(scale) and scale != 0):
+                raise ValueError("gripper affine mapping must be finite with nonzero scale")
 
     @classmethod
     def from_task_config(cls, task_cfg: dict) -> JointMapping:
         r = task_cfg["robot_so101"]
+        affine = r["gripper"].get("percent_to_joint")
         return cls(
             sign=tuple(float(s) for s in r["real_to_sim"]["sign"]),
             offset_deg=tuple(float(o) for o in r["real_to_sim"]["offset_deg"]),
-            gripper_sim_range_rad=tuple(float(x) for x in r["gripper"]["sim_range_rad"]),
+            gripper_sim_range_rad=tuple(float(x) for x in r["gripper"].get("sim_range_rad", (-0.1745, 1.7454))),
+            gripper_affine_rad=None if affine is None else (
+                float(affine["offset_rad"]), float(affine["scale_rad_per_percent"])),
         )
 
     def arm_real_to_sim_rad(self, q_real_deg: np.ndarray) -> np.ndarray:
@@ -54,8 +66,20 @@ class JointMapping:
         return np.deg2rad(q * np.asarray(self.sign) + np.asarray(self.offset_deg))
 
     def gripper_real_to_sim_rad(self, gripper_pct: np.ndarray) -> np.ndarray:
+        if self.gripper_affine_rad is not None:
+            offset, scale = self.gripper_affine_rad
+            return offset + np.asarray(gripper_pct, np.float64) * scale
         lo, hi = self.gripper_sim_range_rad
         return lo + np.asarray(gripper_pct, np.float64) / 100.0 * (hi - lo)
+
+    def gripper_sim_to_real_percent(self, gripper_rad: np.ndarray) -> np.ndarray:
+        """Inverse calibration, without concealing out-of-range observed positions."""
+        q = np.asarray(gripper_rad, np.float64)
+        if self.gripper_affine_rad is not None:
+            offset, scale = self.gripper_affine_rad
+            return (q - offset) / scale
+        lo, hi = self.gripper_sim_range_rad
+        return (q - lo) / (hi - lo) * 100.0
 
 
 class So101FK:

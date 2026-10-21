@@ -97,11 +97,12 @@ def _identifiability(residual: Callable, x: np.ndarray, scales: np.ndarray):
         step[i] = scale * 1e-5
         columns.append((residual(x + step) - residual(x - step)) / (2 * step[i]))
     J = np.column_stack(columns)
-    singular = np.linalg.svd(J * scales, compute_uv=False)
+    _, singular, vt = np.linalg.svd(J * scales, full_matrices=False)
     tolerance = max(float(singular[0]), 1.0) * 1e-7
     rank = int((singular > tolerance).sum())
     identifiable = rank == len(x)
-    std = np.sqrt(np.diag(np.linalg.inv(J.T @ J))) if identifiable else None
+    # Avoid squaring the condition number with an inverse of J.T @ J.
+    std = scales * np.sqrt(np.sum((vt.T / singular) ** 2, axis=1)) if identifiable else None
     return {
         "rank": rank, "parameter_count": len(x), "full_rank": identifiable,
         "parameter_scales": scales.tolist(), "scaled_singular_values": singular.tolist(),

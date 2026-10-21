@@ -78,12 +78,23 @@ def replay(raw, config, case, mode):
         if any(phases.get(name) is None for name in ("grasp", "lift", "release")):
             raise ValueError("reviewed grasp/lift/release boundaries required")
         for k in range(len(q) - 1):
-            grip = float(np.clip(commands[k, 5] / 100, 0, 1))
+            grip = float(commands[k, 5] / 100)
+            if not 0 <= grip <= 1:
+                raise ValueError("recorded gripper intent is out of range")
             if mode == "joint_reference":
                 target = q[k + 1].copy()
                 target[5] = env.mapping.gripper_real_to_sim_rad(grip * 100)
                 _, _, _, _, info = env.step(target)
                 rejection = False
+                control = info["control"]
+                saturation = float(np.mean(control["limit_clipped"]))
+                detail = {
+                    "limit_clipped": control["limit_clipped"],
+                    "rate_limited": control["rate_limited"],
+                    "requested_gripper_rad": float(target[5]),
+                    "bounded_gripper_rad": float(np.clip(target[5], *env.limits[5])),
+                    "native_gripper_clipped": bool(control["limit_clipped"][5]),
+                }
             else:
                 action = (
                     np.r_[poses[k + 1, :3, 3], rot6d_from_matrix(poses[k + 1, :3, :3]), grip]
@@ -92,8 +103,9 @@ def replay(raw, config, case, mode):
                 )
                 applied = adapter.apply(action)
                 info, rejection = applied.info, applied.ik_rejected
+                detail, saturation = applied.detail, applied.saturation
             privileged = info["privileged_metrics"]
-            tracker.update(privileged, ik_rejected=rejection)
+            tracker.update(privileged, saturation=saturation, ik_rejected=rejection)
             error = delta_action(env.ee_pose(), poses[k + 1])
             trace.append(
                 {
@@ -101,8 +113,10 @@ def replay(raw, config, case, mode):
                     "reference_outside_limits": bool(outside[k + 1]),
                     "tool_reference_error_mm": float(np.linalg.norm(error[:3]) * 1000),
                     "rotation_error_rad": float(np.linalg.norm(error[3:])),
-                    "closure_transport": phases["grasp"] <= indices[k] < phases["release"],
+                    "closure_transport": bool(phases["grasp"] <= indices[k] < phases["release"]),
                     "ik_rejected": rejection,
+                    "action_saturation": saturation,
+                    "adapter_detail": detail,
                     "control": info["control"],
                     "contacts": privileged["contacts"],
                     "ball_held": privileged["ball_held"],
@@ -144,6 +158,12 @@ def replay(raw, config, case, mode):
             if phase_errors
             else None,
             "ik_rejections": tracker.ik_rejections,
+            "max_action_saturation": tracker.max_action_saturation,
+            "native_gripper_clipped_ticks": sum(
+                bool(r["adapter_detail"].get("native_gripper_clipped")) for r in trace
+            ),
+            "joint_limit_clipped_ticks": sum(any(r["control"]["limit_clipped"]) for r in trace),
+            "joint_rate_limited_ticks": sum(any(r["control"]["rate_limited"]) for r in trace),
             "retention_probe": hold_result,
             "trace": trace,
         }

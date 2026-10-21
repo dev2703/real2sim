@@ -89,6 +89,20 @@ def test_increments_compose_on_accepted_target_in_task_frame():
     assert env.commands[-1][5] == .5
 
 
+def test_native_gripper_clipping_after_calibration_is_reported():
+    env, _, adapter = controller()
+    env.mapping = adapter.mapping = SimpleNamespace(
+        gripper_real_to_sim_rad=lambda percent: .03 * percent)
+    result = adapter.apply(np.r_[np.zeros(6), 1.])
+    assert result.detail["requested_gripper_rad"] == 3.
+    assert result.detail["bounded_gripper_rad"] == 2.
+    assert result.detail["native_gripper_clipped"]
+    assert result.detail["clamped"][6]
+    assert not result.detail["action_clamped"][6]
+    assert result.saturation == pytest.approx(1 / 7)
+    assert env.commands[-1][5] == 2.
+
+
 def test_feedback_antiwindup_discards_excess_under_a_stalled_servo():
     env, ik, adapter = controller(frozen=True)
     action = np.array([.02, 0., 0., .2, 0., 0., .4])

@@ -340,7 +340,9 @@ class CartesianActionAdapter:
         lo_all, hi_all = self.env.limits[:, 0], self.env.limits[:, 1]
         seed = np.clip(self.env.sim_state(), lo_all, hi_all)
         lo, hi = self.env.limits[5]
-        grip = float(np.clip(self.mapping.gripper_real_to_sim_rad(g * 100.0), lo, hi))
+        requested_grip = float(self.mapping.gripper_real_to_sim_rad(g * 100.0))
+        grip = float(np.clip(requested_grip, lo, hi))
+        native_gripper_clipped = grip != requested_grip
         result = self.ik.solve(target, seed, gripper=grip)
         self.residuals.append({"position_error_m": result.position_error_m,
                                "orientation_error_rad": result.orientation_error_rad,
@@ -357,12 +359,16 @@ class CartesianActionAdapter:
             self._accepted_target = target.copy()
         all_clamped = clamped.copy()
         all_clamped[:6] |= feedback_clamped
+        all_clamped[6] |= native_gripper_clipped
         saturation = float(np.mean(all_clamped))
         return ApplyResult(obs, info, truncated, saturation, ik_rejected=not result.accepted,
                            detail={"clamped": all_clamped.tolist(), "ik_reason": result.reason,
                                    "target_task": target[:3, 3].tolist(),
                                    "target_reference": self.target_reference,
                                    "action_clamped": clamped.tolist(),
+                                   "requested_gripper_rad": requested_grip,
+                                   "bounded_gripper_rad": grip,
+                                   "native_gripper_clipped": native_gripper_clipped,
                                    "feedback_clamped": feedback_clamped.tolist(),
                                    "reference_pose": reference.tolist(),
                                    "requested_target_pose": requested_target.tolist(),

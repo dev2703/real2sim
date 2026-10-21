@@ -138,6 +138,8 @@ def test_rot6d_degenerate_inputs_raise(x):
     {"sign": (1, 1, 1, 1)}, {"sign": (1, 1, 1, 1, 0)}, {"sign": (1, 1, 1, 1, 2)},
     {"offset_deg": (0, 0, 0)}, {"offset_deg": (0, 0, 0, 0, np.inf)},
     {"gripper_sim_range_rad": (1.0, -1.0)}, {"gripper_sim_range_rad": (0.0, np.nan)},
+    {"gripper_affine_rad": (0.0, 0.0)}, {"gripper_affine_rad": (np.nan, .02)},
+    {"gripper_affine_rad": (0.0,)},
 ])
 def test_joint_mapping_rejects_invalid_parameters(kwargs):
     with pytest.raises(ValueError):
@@ -152,6 +154,36 @@ def test_joint_mapping_inverse_round_trip_with_signs_and_offsets():
     np.testing.assert_allclose(back, q, atol=1e-12)
     lo, hi = m.gripper_sim_range_rad
     np.testing.assert_allclose(m.gripper_real_to_sim_rad(np.array([0.0, 100.0])), [lo, hi])
+
+
+@pytest.mark.parametrize("scale", [np.deg2rad(129.4065934065934) / 100, -.02])
+def test_explicit_gripper_affine_round_trip_does_not_rescale_to_native_limits(scale):
+    from real2sim.sim.env import real_from_sim, sim_from_real
+
+    m = JointMapping(gripper_affine_rad=(-.1745, scale))
+    values = np.array([-5., 0., 30., 60., 100., 110.])
+    mapped = m.gripper_real_to_sim_rad(values)
+    np.testing.assert_allclose(mapped, -.1745 + values * scale)
+    np.testing.assert_allclose(m.gripper_sim_to_real_percent(mapped), values)
+    for value in values:
+        state = np.r_[10., -20., 30., 40., -5., value]
+        np.testing.assert_allclose(real_from_sim(m, sim_from_real(m, state)), state)
+    if scale > 0:
+        assert mapped[-2] > m.gripper_sim_range_rad[1]
+
+
+def test_explicit_gripper_mapping_loads_without_altering_legacy_contract():
+    from real2sim.config import load_yaml
+
+    task = load_yaml("configs/task.yaml")
+    legacy = JointMapping.from_task_config(task)
+    assert legacy.gripper_affine_rad is None
+    task["robot_so101"]["gripper"]["percent_to_joint"] = {
+        "offset_rad": -.1, "scale_rad_per_percent": .022,
+    }
+    mapped = JointMapping.from_task_config(task)
+    assert mapped.gripper_affine_rad == (-.1, .022)
+    assert mapped.gripper_real_to_sim_rad(50) == pytest.approx(1.)
 
 
 # ------------------------------------------------------------------ labels

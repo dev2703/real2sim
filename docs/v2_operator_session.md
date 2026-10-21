@@ -9,13 +9,19 @@ Copy `configs/v2/measurements.template.json` to a new versioned measurement file
 unknown values null. Do not copy old camera positions into `task.calibrated.yaml` and label
 them measured.
 
-1. Confirm the five ball-shift episode IDs, the bowl-shift IDs (21–25 are a visual candidate),
-   and both shift vectors in a declared task coordinate frame. Intended totals are31/5/5.
-   The extra episode was confirmed as baseline, but its index and the remaining ordering
-   cannot be inferred from that answer. Copy `annotations.template.json`; review approach,
-   grasp, lift and release source-frame boundaries, corrections and bowl contacts. Retain
-   episode9's bowl-tipping note. Separate fitting, validation and reserved recordings only
-   after those labels are confirmed.
+On 21 October the operator confirmed **motor calibration, base and cameras unchanged since
+v2 recording**. The statement and current calibration hash are saved in
+[`setup_provenance_20261021.json`](../configs/v2/setup_provenance_20261021.json).
+This permits checking the old recordings with current measurements; it does not establish
+their original command or exposure timestamps.
+
+1. Use the reviewed conditions in `annotations.reviewed_v2.json`: 32 baseline, ball-shift
+   episodes 6, 8, 9, 10, and bowl-shift episodes 21–25. The operator accepted that only four
+   ball shifts may have been saved. Both shifts were toward the robot, without a sideways
+   shift; the metric vector in the task frame still needs registration. The 29/6/6 split is
+   saved in `results/v2/split.json`. Review approach, grasp, lift and release source-frame
+   boundaries, corrections and bowl contacts, retaining episode 9's bowl-tipping note.
+   Do not refit geometry using the reserved episodes.
 2. Record calibration-board views for each camera covering the working field of view.
    Keep the iPhone fixed. Move the wrist through multiple ordinary arm poses while the
    board stays registered to the table. Estimate intrinsics/distortion and the rigid
@@ -26,8 +32,13 @@ them measured.
    policy images. Do not compensate with guessed extrinsics.
 3. Measure robot-base/table registration, ball diameter, bowl inner/outer dimensions,
    depth and rim height. At five ordinary jaw openings including closure, record requested,
-   sent and measured joint values and unloaded jaw separation. Include repeated/held-out
-   openings to verify the fitted mapping. Do not infer jaw shape from a single failed grasp.
+   sent and measured joint values and unloaded jaw separation at the same identified contact
+   surfaces. Suggested commands are 0, 15, 30, 45 and 60%; reserve 15 and 45% for verification
+   before fitting and repeat each reading. Record actual readback percent, not only requested
+   percent. Use only ordinary reachable openings; do not force a mechanical stop. The encoder
+   span implies 129.407 degrees per 100% under a direct-drive hypothesis, while the old mapping
+   uses 110.002 degrees. Verify sign, transmission ratio and closure before adopting that scale.
+   A full 100% test is unnecessary. Do not infer jaw shape from a single failed grasp.
 4. Record exactly five short traced runs at nominal25Hz: two unloaded rehearsals, two
    matching loaded runs, and one normal task. Briefly hold two ordinary transport poses.
    Use the existing collector trace flag `--recording_trace_dir <new-session-root>` with
@@ -46,6 +57,11 @@ Read-only checks, after those traces exist:
   --dataset PATH_TO_NEW_TRACED_DATASET --policy-hz 12.5 \
   --output results/v2/trace_audit_VERSION.json
 ```
+
+For geometry, fill a versioned copy of `configs/v2/geometry_landmarks.template.json`.
+`scripts/fit_v2_geometry.py` has `camera`, `joint-zero` and `wrist` modes. The wrist mode
+requires separately verified link poses and keeps them fixed. Commands, evidence and
+acceptance gates are in the [geometry alignment report](v2_geometry_alignment_20261021.md).
 
 A valid later task start is a change in task definition. Verify it precedes the approach
 and preserves grasp/lift/placement, then record its source episode/frame and version.

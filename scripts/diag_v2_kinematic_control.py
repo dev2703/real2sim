@@ -92,7 +92,15 @@ def probe(config, states, commands, mode, *, hold_ticks=None):
                 target = q[next_k].copy()
                 target[5] = env.mapping.gripper_real_to_sim_rad(grip * 100)
                 _, _, _, _, info = env.step(target)
-                rejected, detail, saturation = False, {}, 0.
+                control = info["control"]
+                rejected, saturation = False, float(np.mean(control["limit_clipped"]))
+                detail = {
+                    "limit_clipped": control["limit_clipped"],
+                    "rate_limited": control["rate_limited"],
+                    "requested_gripper_rad": float(target[5]),
+                    "bounded_gripper_rad": float(np.clip(target[5], *env.limits[5])),
+                    "native_gripper_clipped": bool(control["limit_clipped"][5]),
+                }
             else:
                 delta = np.zeros(6) if hold_ticks is not None else delta_action(poses[k], poses[next_k])
                 if mode == "absolute_pose":
@@ -114,6 +122,7 @@ def probe(config, states, commands, mode, *, hold_ticks=None):
                 "rotation_error_rad": float(np.linalg.norm(error[3:])),
                 "ik_rejected": rejected, "ik_reason": detail.get("ik_reason"),
                 "action_saturation": saturation,
+                "adapter_detail": detail,
                 "joint_limit_clipped": control["limit_clipped"],
                 "joint_rate_limited": control["rate_limited"],
                 "robot_table_penetration_m": metrics["robot_table_penetration_m"],
@@ -138,6 +147,9 @@ def probe(config, states, commands, mode, *, hold_ticks=None):
             "ik_reasons": dict(Counter(r["ik_reason"] for r in trace)),
             "limit_clipped_ticks": sum(any(r["joint_limit_clipped"]) for r in trace),
             "rate_limited_ticks": sum(any(r["joint_rate_limited"]) for r in trace),
+            "native_gripper_clipped_ticks": sum(
+                bool(r["adapter_detail"].get("native_gripper_clipped")) for r in trace),
+            "max_action_saturation": max(r["action_saturation"] for r in trace),
             "max_table_penetration_mm": max(r["robot_table_penetration_m"] for r in trace) * 1000,
             "ball_contact_ticks": sum(r["ball_non_table_contact"] for r in trace),
             "control_and_physics_p95_ms": float(np.quantile([r["control_and_physics_ms"] for r in trace], .95)),

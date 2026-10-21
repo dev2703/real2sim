@@ -1,0 +1,106 @@
+{
+  "schema": "v2_independent_geometry_v1",
+  "evidence_kind": "measured",
+  "capture_setup_provenance": null,
+  "instructions": [
+    "Copy this template; null fields are missing measurements, never defaults.",
+    "Use independently measured task XYZ and original source-image pixels. Do not derive camera anchors from the robot FK being calibrated.",
+    "Declare whole calibration captures as fit or verification before fitting; retain reserved policy-evaluation episodes outside both.",
+    "Camera fitting needs at least six fit correspondences, preferably distributed in 3D, and separate verification captures.",
+    "For joint-zero fitting independently fix the camera and MJCF-world-to-task base registration, then annotate known body-local landmarks at varied measured poses.",
+    "Joint order is shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll. q_nominal_rad already contains verified units/signs; the fit estimates added zero offsets only.",
+    "gripper_joint_rad is fixed per observation and must be measured/mapped independently, not inferred by the arm fitter.",
+    "Wrist mode uses wrist_camera intrinsics and wrist_registration observations to fit a fixed T_optical_link mount. T_task_link must be independently verified and identical for all points in a capture_group.",
+    "For wrist link_pose_source=verified_fk, verify arm mapping and base registration first and record their provenance. Do not jointly fit arm geometry and wrist-camera extrinsics.",
+    "Report candidates are diagnostic only. Pixel fitting does not substitute for held-out metric object checks or collision-free reference replay."
+  ],
+  "camera": {
+    "role": "iphone_fixed",
+    "source_image_size_wh": null,
+    "K_source_pixels": null,
+    "distortion_coefficients": null,
+    "intrinsics_provenance": null
+  },
+  "camera_registration": {
+    "independent_geometry": null,
+    "geometry_provenance": null,
+    "split": {
+      "fit_groups": null,
+      "verification_groups": null,
+      "reserved_groups": null
+    },
+    "observations": [
+      {
+        "capture_group": null,
+        "source_frame_reference": null,
+        "landmark_id": null,
+        "point_task_m": null,
+        "source_pixel_xy": null,
+        "sigma_px": null
+      }
+    ]
+  },
+  "wrist_camera": {
+    "role": "wrist_link",
+    "source_image_size_wh": null,
+    "K_source_pixels": null,
+    "distortion_coefficients": null,
+    "intrinsics_provenance": null
+  },
+  "wrist_registration": {
+    "independent_geometry": null,
+    "geometry_provenance": null,
+    "link_name": null,
+    "link_pose_source": null,
+    "link_pose_provenance": null,
+    "link_poses_independently_verified": null,
+    "arm_mapping_verified": null,
+    "base_registration_verified": null,
+    "arm_and_base_verification_provenance": null,
+    "split": {
+      "fit_groups": null,
+      "verification_groups": null,
+      "reserved_groups": null
+    },
+    "observations": [
+      {
+        "capture_group": null,
+        "source_frame_reference": null,
+        "landmark_id": null,
+        "point_task_m": null,
+        "T_task_link": null,
+        "source_pixel_xy": null,
+        "sigma_px": null
+      }
+    ]
+  },
+  "joint_zero_registration": {
+    "camera_independent_of_robot_fk": null,
+    "camera_registration_provenance": null,
+    "T_optical_task": null,
+    "T_task_mjcf": null,
+    "base_registration_provenance": null,
+    "landmark_geometry_provenance": null,
+    "joint_units_and_signs_provenance": null,
+    "offset_bounds_rad": null,
+    "initial_offsets_rad": null,
+    "split": {
+      "fit_groups": null,
+      "verification_groups": null,
+      "reserved_groups": null
+    },
+    "observations": [
+      {
+        "capture_group": null,
+        "source_frame_reference": null,
+        "landmark_id": null,
+        "q_nominal_rad": null,
+        "gripper_joint_rad": null,
+        "body_name": null,
+        "point_body_m": null,
+        "source_pixel_xy": null,
+        "sigma_px": null
+      }
+    ]
+  }
+}

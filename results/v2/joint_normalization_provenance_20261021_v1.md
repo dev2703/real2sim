@@ -4,6 +4,12 @@ The five recorded arm coordinates are strongly consistent with **degrees**, not 
 
 Machine-readable evidence, complete numeric checks, calibration comparisons and source/data hashes: [joint_normalization_provenance_20261021_v1.json](joint_normalization_provenance_20261021_v1.json). The audit used all 27,736 rows in 41 v2 episodes, independently for measured state and commanded action.
 
+**Subsequent operator confirmation, 21 October:** "Motor calibration and setup unchanged."
+The question covered motor recalibration, base movement and camera movement since v2 recording.
+The statement and current hash are recorded in [the setup provenance](../../configs/v2/setup_provenance_20261021.json).
+This supports using the current calibration and new measurements for v2. It does not independently
+verify physical zeros or historical command/image timing; the audit's numeric results remain unchanged.
+
 ## What the source actually computes
 
 Both the local recording checkout and the installed LeRobot package default `use_degrees=True`. Their motor normalization source files have the same SHA-256. The follower sets the five arm motors to `DEGREES` and the gripper to `RANGE_0_100`.

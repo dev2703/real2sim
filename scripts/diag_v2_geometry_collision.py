@@ -1,6 +1,6 @@
 """Inspect unchanged v2 reference collisions against visual CAD, without rendering or fitting.
 
-Visual mesh vertices provide an independent tabletop-height check. Self distances use convex
+Visual mesh vertices cross-check the collider representation, not physical calibration. Self distances use convex
 hulls of the visual meshes and therefore cannot prove intersection of concave physical parts.
 This diagnostic never changes calibration, joint limits, collision masks, or recorded targets.
 """
@@ -179,7 +179,6 @@ def audit(root, config):
         original = inspect_pose(env, kin, env.initial_qpos, meshes, bodies, None, None)
         base = env.model.body("base").id
         table = env.table_geom
-        base_visual = [v for g, v in meshes.items() if env.model.geom_bodyid[g] == base]
         kin.forward(env.initial_qpos)
         base_lowest = min(float(np.min(meshes[g] @ kin.data.geom_xmat[g].reshape(3, 3)[2]
                                       + kin.data.geom_xpos[g, 2])) for g in meshes
@@ -193,6 +192,11 @@ def audit(root, config):
             "task_path": env.config["task_config"], "task_sha256": sha256_file(Path(env.config["task_config"])),
             "model_path": env.config["model"], "model_sha256": sha256_file(Path(env.config["model"])),
             "raw_root": str(root), "source_hz_nominal": ds.fps, "stride": 2,
+            "raw_files_sha256": {
+                str(p.relative_to(root)): sha256_file(p)
+                for directory in ("data", "meta")
+                for p in sorted((root / directory).rglob("*")) if p.is_file()
+            },
             "ik_penetration_tolerance_mm": tol_mm,
             "geometry_unchanged": True, "limits_unchanged": True, "collision_checks_unchanged": True,
             "frame_consistency": {
@@ -211,8 +215,10 @@ def audit(root, config):
                 "table_failures_with_same_body_visual_mesh_below_table": sum(r["visual_mm"] > 0 for r in table_gaps),
                 "table_failures_with_same_body_visual_mesh_below_tolerance": sum(r["visual_mm"] > tol_mm for r in table_gaps),
                 "collision_depth_minus_visual_depth_mm": {
-                    "min": float(excess.min()), "median": float(np.median(excess)),
-                    "p95": float(np.percentile(excess, 95)), "max": float(excess.max())},
+                    "min": float(excess.min()) if len(excess) else None,
+                    "median": float(np.median(excess)) if len(excess) else None,
+                    "p95": float(np.percentile(excess, 95)) if len(excess) else None,
+                    "max": float(excess.max()) if len(excess) else None},
                 "deepest_table_geom_by_pose": dict(table_pairs),
                 "self_body_pairs_by_pose": dict(self_pairs),
             },
@@ -230,7 +236,7 @@ def audit(root, config):
                 "Use independently verified joint-unit/zero mapping, base support height, and camera landmarks; keep limits and collision rejection active.",
             ],
             "missing_evidence": [
-                "Recording-time motor calibration and unit mode tied to these recordings.",
+                "Independent physical joint-zero/sign verification. Operator attests unchanged calibration/setup in configs/v2/setup_provenance_20261021.json; recorded units and current calibration are audited separately.",
                 "Measured base support/table registration and physical joint landmark observations across multiple poses.",
                 "Measured physical jaw and camera-mount geometry versus pinned upstream CAD.",
                 "Reviewed approach/grasp/lift/release boundaries to distinguish necessary task motion from return motion.",
