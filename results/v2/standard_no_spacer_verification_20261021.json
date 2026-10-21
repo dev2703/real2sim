@@ -1,0 +1,53 @@
+{
+  "version": "standard_no_spacer_verification_20261021_v1",
+  "operator_setup": "standard SO101, unchanged calibration/setup, no spacer",
+  "checks": {
+    "pytest_command": ".venv/bin/pytest -q tests/unit/test_nominal_geometry.py tests/unit/test_data_edge_cases.py tests/integration/test_v2_reference_clipping.py",
+    "tests_passed": 55,
+    "tests_failed": 0,
+    "ruff_check_all": "passed",
+    "git_diff_check": "passed",
+    "source_and_candidate_hashes": "verified",
+    "local_doc_links": "verified",
+    "nominal_base_support_plane_touches_table": true
+  },
+  "geometry_summary": {
+    "in_limit_rows": 9392,
+    "table_over_tolerance_rows": 1593,
+    "self_over_tolerance_rows": 712,
+    "table_failures_with_same_body_visual_mesh_below_table": 1593,
+    "table_failures_with_same_body_visual_mesh_below_tolerance": 1569,
+    "collision_depth_minus_visual_depth_mm": {
+      "min": 0.05374802720015204,
+      "median": 0.32270170670323495,
+      "p95": 0.3577010817698472,
+      "max": 0.3606390207588923
+    },
+    "deepest_table_geom_by_pose": {
+      "gripper:wrist_roll_follower_so101_gripper_part0_v1": 1587,
+      "moving_jaw_so101_v1:moving_jaw_so101_gripper_part1_v1": 6
+    },
+    "self_body_pairs_by_pose": {
+      "gripper:shoulder": 23,
+      "shoulder:wrist": 51,
+      "camera_mount:shoulder": 6,
+      "lower_arm:shoulder": 695
+    }
+  },
+  "physical_calibration_accepted": false,
+  "training_started": false,
+  "legacy_runtime_config_changed": false,
+  "source_urls": [
+    "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/608122e9ac330a753735f2e18aee73338e9ac407/Simulation/SO101/README.md",
+    "https://huggingface.co/docs/lerobot/main/en/assemble_so101#gripper--handle",
+    "https://github.com/google-deepmind/mujoco_menagerie/tree/main/robotstudio_so101"
+  ],
+  "artifacts_sha256": {
+    "configs/v2/geometry.nominal_so101_v1.json": "75c643eee6f17d93004c0fc61b3feb5d70fad41000756b15a871764379b03821",
+    "configs/v2/setup_provenance_20261021.json": "2b76d92a023937bde67193b58c449914510e9de1f4fa5f2ee957b6856426d530",
+    "scripts/diag_v2_geometry_collision.py": "4b13846f3519f3b3e8f43cbbce176bd0a7d768ad23926dbb2ec417b677e841ce",
+    "tests/unit/test_nominal_geometry.py": "76451b3e843a284bcc4f692bf86a17421ac48571344591d3c140a5ba48176789",
+    "results/v2/no_spacer_base_geometry_20261021_v1.json": "92653aaeaac92c4ae72db8ceb90e4a5bc2cbc1c9009b2d242b71b564eb93283a",
+    "results/v2/geometry_standard_no_spacer_20261021_v1.json": "fc317a74c79496faba3c2d79da1d534b54f5c6686e4bd88d2390b7815b5403e4"
+  }
+}

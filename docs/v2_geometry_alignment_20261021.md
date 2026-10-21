@@ -6,6 +6,58 @@ The operator confirmed motor calibration, robot base and cameras unchanged since
 see the [setup record](../configs/v2/setup_provenance_20261021.json). Current measurements can
 therefore check the recordings. Historical timing and command provenance remain unverified.
 
+## Standard hardware and no-spacer update
+
+The operator subsequently confirmed a standard SO-101 with **no spacer** and requested use
+of public hardware sources. The official [SO-101 simulation documentation](https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/608122e9ac330a753735f2e18aee73338e9ac407/Simulation/SO101/README.md)
+distinguishes midpoint-range zeros in the new model from horizontal-extension zeros in the
+old model, and explicitly notes that LeRobot's 0–100 gripper mapping is absent from its
+URDF/MJCF. Menagerie derives from the new-calibration model, so switching to the old zero
+convention would not be justified by the current evidence.
+
+The [official assembly guide](https://huggingface.co/docs/lerobot/main/en/assemble_so101#gripper--handle)
+attaches the moving claw directly to the servo horns. This supports a 1:1 output-angle-to-jaw
+rotation for the stock hardware. The listed 1/345 follower gearing is inside the servo, not
+an extra factor to apply to calibrated output-encoder angles. This supports using the saved
+encoder span for the nominal slope; it does not establish the installed claw's exact closed
+zero. The assembly page's historical software instructions are not used to change our recorder.
+
+The base mesh has a broad, downward-facing support plane **2.4 mm below its native origin**:
+182 coplanar triangles, approximately 2,051 mm². Thus no spacer implies an origin 2.4 mm
+above the tabletop, not zero. The old 12 mm offset leaves a 9.6 mm air gap. This conclusion
+comes from the standard CAD and the operator's setup description, not a collision-minimizing
+fit. See the [base support audit](../results/v2/no_spacer_base_geometry_20261021_v1.json).
+
+A [versioned nominal candidate](../configs/v2/geometry.nominal_so101_v1.json) now specifies
+the 2.4 mm support offset and encoder-derived gripper slope, with closure still provisional.
+It is executable in the static contact diagnostic; it is not a calibrated task configuration.
+
+| Static geometry | Table samples beyond 2 mm | Self-collision samples beyond 2 mm | Maximum table penetration |
+|---|---:|---:|---:|
+| Old 12 mm base offset, old gripper conversion | 948 | 712 | 31.33 mm |
+| No spacer: 2.4 mm base offset, old conversion | 1,593 | 712 | 40.93 mm |
+| No spacer plus encoder-derived gripper slope | 1,593 | 712 | 40.93 mm |
+
+All arms use the same 9,392 in-limit source poses; 4,486 out-of-limit poses remain excluded.
+These are descriptive full-recording geometry checks, not task-success counts. Correcting
+support height exposes more mismatch. Arm self-collision is invariant to base translation;
+gripper scale does not repair the fixed-jaw/table path. Arm reference correspondence remains
+the next cause to resolve, with camera registration needed to compare it to recorded images.
+
+Reproduce the combined candidate without hardware or manual jaw measurements:
+
+```sh
+.venv/bin/python scripts/diag_v2_geometry_collision.py \
+  --geometry-candidate configs/v2/geometry.nominal_so101_v1.json \
+  --out results/v2/geometry_standard_no_spacer_NEXT.json
+```
+
+The [combined result](../results/v2/geometry_standard_no_spacer_20261021_v1.json) hashes the
+candidate, source code, model and dataset. This isolated test keeps the camera/table/object
+world positions fixed while changing robot height. Register all task-frame coordinates
+coherently before using the candidate for rendering, dynamics or learned rollouts. Native
+limits and collision checks stay active; the legacy configuration remains reproducible.
+
 ## What the new diagnosis establishes
 
 The earlier 0.30–0.33 mm tracking error compares a simulated tool with a reference generated
@@ -83,9 +135,11 @@ the wrist fit cannot validate the same unverified kinematics used to construct i
 
 ## Physical inputs and execution order
 
-1. Fill a versioned copy of [the measurement template](../configs/v2/measurements.template.json).
-   Measure unloaded gaps near 0/15/30/45/60%, actual readbacks, consistent contact locations,
-   repeatability and base support thickness. Reserve 15% and 45% before fitting. Measure
+1. Use the standard-CAD/no-spacer candidate above for nominal diagnosis. A versioned copy of
+   [the measurement template](../configs/v2/measurements.template.json) remains available for
+   independent verification. If jaw checks are needed, use unloaded gaps near 0/15/30/45/60%,
+   actual readbacks, consistent contact locations and repeatability; reserve 15% and 45%
+   before fitting. No spacer is already confirmed; do not request its thickness again. Measure
    ball/bowl dimensions and independently register the base/table frame.
 2. Obtain calibrated source-resolution intrinsics/distortion and independent task-frame
    landmarks, including off-plane observations or independent camera-pose verification.

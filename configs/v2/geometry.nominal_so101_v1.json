@@ -1,0 +1,23 @@
+{
+  "schema": "so101_static_geometry_candidate_v1",
+  "version": "standard_so101_no_spacer_encoder_scale_v1",
+  "physical_calibration_accepted": false,
+  "native_model_sha256": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+  "changes": {
+    "base_origin_above_table_m": 0.0024,
+    "gripper_percent_to_joint": {
+      "offset_rad": -0.1745,
+      "scale_rad_per_percent": 0.0225857112873464
+    }
+  },
+  "provenance": {
+    "base": "Operator: standard SO101 with no spacer. Pinned base_so101_v2 mesh has a broad support face at z=-2.4 mm relative to native base origin.",
+    "gripper_scale": "Unchanged aligned_follower calibration endpoints 2026..3498, 4095 angular denominator, direct output-horn-to-claw attachment in official SO101 assembly.",
+    "gripper_closure": "Existing -0.1745 rad retained as a provisional zero. Not physically verified or inferred from model limits.",
+    "calibration_sha256": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+    "base_report": "results/v2/no_spacer_base_geometry_20261021_v1.json",
+    "official_model_note": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/608122e9ac330a753735f2e18aee73338e9ac407/Simulation/SO101/README.md",
+    "assembly": "https://huggingface.co/docs/lerobot/main/en/assemble_so101#gripper--handle"
+  },
+  "scope": "Static contact diagnosis only. Not a calibrated task configuration; no policy rollout, rendered correspondence or physical success claim. Arm signs/zeros, cameras and physical closure remain unresolved."
+}

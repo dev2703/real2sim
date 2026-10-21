@@ -15,6 +15,13 @@ v2 recording**. The statement and current calibration hash are saved in
 This permits checking the old recordings with current measurements; it does not establish
 their original command or exposure timestamps.
 
+The operator also confirmed **standard SO-101 hardware and no spacer** and requested use of
+the public hardware design. The [geometry report](v2_geometry_alignment_20261021.md#standard-hardware-and-no-spacer-update)
+now documents the official gripper mapping caveat, direct horn attachment, nominal 2.4 mm
+native-origin support offset, and the resulting static diagnostic. Manual jaw measurements
+are not a prerequisite for that nominal diagnostic. Exact physical closure and image
+correspondence remain verification work; do not substitute nominal values for measurements.
+
 1. Use the reviewed conditions in `annotations.reviewed_v2.json`: 32 baseline, ball-shift
    episodes 6, 8, 9, 10, and bowl-shift episodes 21–25. The operator accepted that only four
    ball shifts may have been saved. Both shifts were toward the robot, without a sideways
@@ -30,7 +37,8 @@ their original command or exposure timestamps.
    camera interface is a pinhole FOV plus rigid pose; if measured distortion/off-centre
    intrinsics prevent the10px p95 gate, implement/version rectification before preparing
    policy images. Do not compensate with guessed extrinsics.
-3. Measure robot-base/table registration, ball diameter, bowl inner/outer dimensions,
+3. Use the confirmed no-spacer support geometry; verify the remaining base/table registration,
+   ball diameter, bowl inner/outer dimensions,
    depth and rim height. At five ordinary jaw openings including closure, record requested,
    sent and measured joint values and unloaded jaw separation at the same identified contact
    surfaces. Suggested commands are 0, 15, 30, 45 and 60%; reserve 15 and 45% for verification

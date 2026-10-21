@@ -1,8 +1,9 @@
-"""Inspect unchanged v2 reference collisions against visual CAD, without rendering or fitting.
+"""Inspect v2 reference collisions against visual CAD, without rendering or fitting.
 
 Visual mesh vertices cross-check the collider representation, not physical calibration. Self distances use convex
 hulls of the visual meshes and therefore cannot prove intersection of concave physical parts.
-This diagnostic never changes calibration, joint limits, collision masks, or recorded targets.
+The optional static candidate changes only base placement and gripper conversion in memory.
+Joint limits, collision masks, recorded states and production configuration remain unchanged.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 import mujoco
@@ -18,6 +20,40 @@ import numpy as np
 from real2sim.data.raw import RawDataset, sha256_file
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics, xml_forward_kinematics
+
+
+def apply_static_candidate(env, path):
+    """Isolated contact audit only: hold table/camera/object world locations fixed.
+
+    This does not assemble a calibrated scene for observations, dynamics or policy use.
+    Only the base translation and explicit gripper mapping can change; never joint limits,
+    arm zero offsets, collision masks or recorded reference states.
+    """
+    candidate = json.loads(Path(path).read_text())
+    if candidate.get("schema") != "so101_static_geometry_candidate_v1":
+        raise ValueError("unknown static geometry candidate schema")
+    if candidate.get("physical_calibration_accepted") is not False:
+        raise ValueError("static candidates cannot claim physical calibration acceptance")
+    if candidate["native_model_sha256"] != sha256_file(Path(env.config["model"])):
+        raise ValueError("candidate native model hash mismatch")
+    changes = candidate["changes"]
+    if not changes or changes.keys() - {"base_origin_above_table_m", "gripper_percent_to_joint"}:
+        raise ValueError("only base support and gripper mapping may change in this audit")
+    height = float(changes.get("base_origin_above_table_m", env.model.body_pos[env.base_body, 2] - env.table_top))
+    if not np.isfinite(height) or not 0 <= height <= .05:
+        raise ValueError("base support height must be finite in [0, 0.05] metres")
+    mapping = env.mapping
+    if "gripper_percent_to_joint" in changes:
+        affine = changes["gripper_percent_to_joint"]
+        if affine.keys() != {"offset_rad", "scale_rad_per_percent"}:
+            raise ValueError("gripper mapping requires only offset and scale")
+        mapping = replace(mapping, gripper_affine_rad=(float(affine["offset_rad"]),
+                                                      float(affine["scale_rad_per_percent"])))
+    # Validate everything before changing this isolated environment.
+    env.model.body_pos[env.base_body, 2] = env.table_top + height
+    env.mapping = mapping
+    return {"path": str(path), "sha256": sha256_file(Path(path)), "definition": candidate,
+            "scope": "STATIC_CONTACTS_ONLY: camera/table/object world poses fixed; no observation or policy calibration"}
 
 
 def geom_name(model, geom):
@@ -111,11 +147,12 @@ def inspect_pose(env, kin, q, meshes, bodies, episode, frame):
     }
 
 
-def audit(root, config):
+def audit(root, config, *, geometry_candidate=None):
     ds = RawDataset(root)
     episode_reports, selected, table_gaps = [], {}, []
     table_pairs, self_pairs = Counter(), Counter()
     with So101PickPlaceEnv(config, render_images=False) as env:
+        candidate = None if geometry_candidate is None else apply_static_candidate(env, geometry_candidate)
         kin = NativeKinematics(env.model, env.config)
         bodies = robot_bodies(env.model)
         meshes = visual_meshes(env.model, bodies)
@@ -185,7 +222,7 @@ def audit(root, config):
                           if env.model.geom_bodyid[g] == base)
         excess = np.array([r["excess_mm"] for r in table_gaps])
         return {
-            "diagnostic": "Unchanged v2 provisional geometry: collider vs visual CAD audit",
+            "diagnostic": "V2 collider vs visual CAD audit; static candidate" if candidate else "Unchanged v2 provisional geometry: collider vs visual CAD audit",
             "created_date": "2026-10-21", "physical_calibration": False,
             "script_sha256": sha256_file(Path(__file__)),
             "config_path": str(config), "config_sha256": sha256_file(config),
@@ -198,15 +235,17 @@ def audit(root, config):
                 for p in sorted((root / directory).rglob("*")) if p.is_file()
             },
             "ik_penetration_tolerance_mm": tol_mm,
-            "geometry_unchanged": True, "limits_unchanged": True, "collision_checks_unchanged": True,
+            "geometry_unchanged": candidate is None, "limits_unchanged": True, "collision_checks_unchanged": True,
+            "static_candidate": candidate,
             "frame_consistency": {
-                "task_equals_base": True,
+                "task_equals_base": bool(np.allclose(env.offset, env.model.body_pos[base], atol=1e-12, rtol=0)),
+                "configured_task_frame_world_origin_m": env.offset.tolist(),
                 "world_base_position_m": env.model.body_pos[base].tolist(),
                 "table_box_world_center_m": env.model.geom_pos[table].tolist(),
                 "table_top_world_m": env.table_top,
                 "table_top_in_base_frame_m": env.table_top - float(env.model.body_pos[base, 2]),
                 "visual_base_min_height_above_table_mm": (base_lowest - env.table_top) * 1000,
-                "interpretation": "Scene places table and base consistently with task.yaml. Existing 12 mm base offset leaves the lowest base CAD vertex 9.6 mm above table; physical support/mount thickness is not independently verified.",
+                "interpretation": "Static candidate changes robot base height only; re-register scene coordinates before rendered or policy use." if candidate else "Scene places table and base consistently with task.yaml. Existing 12 mm base offset leaves the lowest base CAD vertex 9.6 mm above table; operator subsequently confirmed no spacer.",
             },
             "summary": {
                 "in_limit_rows": sum(r["in_limit_rows"] for r in episode_reports),
@@ -249,10 +288,12 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.home() / ".cache/huggingface/lerobot/local/so101_act_pickplace_v2")
     parser.add_argument("--config", type=Path, default=Path("configs/sim_so101.yaml"))
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--geometry-candidate", type=Path,
+                        help="explicit versioned base/gripper candidate for static contacts only")
     args = parser.parse_args()
     if args.out.exists():
         raise FileExistsError(args.out)
-    result = audit(args.root, args.config)
+    result = audit(args.root, args.config, geometry_candidate=args.geometry_candidate)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
     print(json.dumps(result["summary"], indent=2))
