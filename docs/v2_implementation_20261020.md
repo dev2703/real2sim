@@ -11,6 +11,32 @@ confirmed unchanged motor calibration/base/cameras. Arm units are strongly suppo
 degrees; physical zeros remain unverified. The gripper scale and visual CAD/table audit now
 identify concrete calibration checks before resuming the learning matrix.
 
+## Experiment status — 21 October 2026
+
+All eight requested experiment groups remain in [screen matrix v4](../results/v2/screen_matrix_v4.json).
+Its 24 entries define 22 distinct training configurations and two reused controls; every
+entry is still `requires_evidence`. No v2 learning screen has produced a task-success result.
+Geometry registration and reference replay acceptance come first, followed by the tiny-set
+fitting check and the bounded learning comparison.
+
+| Experiment | Matrix arms | Current status |
+|---|---|---|
+| iPhone vs wrist vs both cameras | L1 | Configured; awaiting geometry acceptance and training. |
+| ResNet18 vs frozen DINOv2 | L1 dual-camera control, L2 | Configured; awaiting geometry acceptance and training. |
+| Larger batch sizes and learning-rate sweep | L3, reusing the identical L1 control | Effective batch 16/64 and head LR 3e-5/1e-4/3e-4 configured with matched example exposure; awaiting training. |
+| DINOv2 fine-tuning | L4 | Last two blocks plus output normalization implemented at backbone LR 3e-6/1e-5, with a frozen control; awaiting training. |
+| CLIP ViT frozen and fine-tuned | L7 | Implemented; pinned pretrained loading verified by the [initialization smoke](../results/v2/clip_initialization_smoke.json); awaiting training. |
+| DINO/CLIP flow matching vs matched regression heads | L6, L8 | Implemented; training/reload smoke checks cover the pipeline; dataset learning comparisons remain pending. |
+| Joint targets, persistent end-effector deltas, absolute poses | L5 | Implemented; provisional controller diagnostics completed, with geometry-induced rejections unresolved; learned comparisons remain pending. |
+| Tool-frame deltas and trajectory-consistency loss | K1, K3 | Implemented and covered by coordinate-roundtrip, terminal-mask, gradient and resume checks; awaiting training. K3 adds trajectory weight 0.1 to the matched K1 control. |
+
+The [kinematic action checks](../tests/unit/test_kinematic_actions.py) cover K1/K3 semantics;
+the [training-resume checks](../tests/integration/test_v2_resume.py) include trajectory loss.
+These checks establish implementation behavior, not improved task completion. K2 bounded
+retargeting remains a separate execution diagnostic and is not promoted after worsening all
+three provisional motion windows. The 64,000-anchor screen budget and strongest-ACT plus
+strongest-challenger finalist cap remain unchanged.
+
 ## Measured diagnosis
 
 The local v2 dataset has 41 episodes and 27,736 source rows at nominal 25 FPS. The wrist is
