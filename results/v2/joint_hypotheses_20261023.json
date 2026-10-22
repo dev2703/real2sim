@@ -1,0 +1,952 @@
+{
+  "kind": "JOINT_HYPOTHESES_DIAGNOSTIC_NOT_PHYSICAL_CALIBRATION",
+  "physical_calibration_accepted": false,
+  "production_files_changed": false,
+  "script_sha256": "ff46b37c285059b29e65210aa30faa64a82491c88afa77350febf4c60f46c138",
+  "input_sha256": {
+    ".cache/v2_exploratory_20261022/cartesian_iphone_top/arrays.npz": "01c1e8b1026415ee3ffa7b9136755b51a9326fd8b5bd4523a4da1f782c3cd08f",
+    "results/v2/split.json": "458c5d8900a98ba86f4cff27aebce90d73b9d75f285bade18c1b3524f9e76ce5",
+    "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+    "assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "configs/task.yaml": "420c379424f7c142fedb6dec86c07ea3420b534519fa127e9a5b416ae8386b9e",
+    "configs/sim_so101.yaml": "a1d7449b30561d9c777cbf4dc04f08b152c56aae1d2a525625a70c79d29f67ae",
+    "src/real2sim/sim/env.py": "85ec03555f325c1c8a9f742c23e9e64cddd1253d2a9bfdea0856007dc5b866bd"
+  },
+  "official_calibration_conventions": "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/608122e9ac330a753735f2e18aee73338e9ac407/Simulation/SO101/README.md",
+  "excluded_reserved_episodes": [
+    1,
+    10,
+    19,
+    21,
+    33,
+    40
+  ],
+  "joint_names": [
+    "shoulder_pan",
+    "shoulder_lift",
+    "elbow_flex",
+    "wrist_flex",
+    "wrist_roll",
+    "gripper"
+  ],
+  "native_arm_bounds_deg": [
+    [
+      -109.99987525598623,
+      109.99987525598623
+    ],
+    [
+      -100.00000275052231,
+      100.00000275052231
+    ],
+    [
+      -96.82986737710912,
+      96.82986737710912
+    ],
+    [
+      -94.99984017946129,
+      94.99984017946129
+    ],
+    [
+      -157.21086991836626,
+      162.78912971598044
+    ]
+  ],
+  "calibration_arm_span_deg": [
+    216.7912087912088,
+    211.16483516483515,
+    194.37362637362637,
+    198.5934065934066,
+    360.0
+  ],
+  "scope": "Fixed native limits, no-spacer 2.4 mm diagnostic base height, legacy provisional gripper mapping. All selected poses evaluated, including those beyond native bounds; contacts at those poses are descriptive FK only. No dynamics, images, task-success measurement or zero acceptance.",
+  "hypotheses": {
+    "identity_degrees": {
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offset_deg": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rationale": "Current provisional mapping; output encoder degrees.",
+      "train": {
+        "rows": 9617,
+        "episodes": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          34,
+          35,
+          38,
+          39
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 3219,
+        "out_of_limits_by_joint": [
+          0,
+          2909,
+          1074,
+          44,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 29,
+        "table_penetration_over_2mm_rows": 2985,
+        "self_penetration_over_2mm_rows": 3387,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 16.933215680956405,
+          "max": 39.16236585938549
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 9.821989549524758,
+          "max": 14.88579189366812
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 12.831587509825582,
+          "max": 17.446792423717994
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 4.7912036093409816,
+          "max": 5.142857662075361
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 12.260711043849238,
+          "p95": 13.085433581537323,
+          "max": 13.3967757384639
+        },
+        "worst_table_reference": {
+          "penetration_mm": 39.16236585938549,
+          "episode": 3,
+          "source_frame": 590
+        }
+      },
+      "val": {
+        "rows": 2077,
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 642,
+        "out_of_limits_by_joint": [
+          0,
+          604,
+          253,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 6,
+        "table_penetration_over_2mm_rows": 691,
+        "self_penetration_over_2mm_rows": 695,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 18.590565228329382,
+          "max": 40.930173169908656
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 9.433828234202444,
+          "max": 10.610995910991349
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 12.892742571874333,
+          "max": 13.45979940135397
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 4.873817568481318,
+          "max": 4.961731081664953
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 12.508075532979968,
+          "p95": 12.70797036600639,
+          "max": 12.710782166935358
+        },
+        "worst_table_reference": {
+          "penetration_mm": 40.930173169908656,
+          "episode": 13,
+          "source_frame": 682
+        }
+      }
+    },
+    "homing_pose_as_zero": {
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offset_deg": [
+        -2.197802197802198,
+        -6.681318681318682,
+        1.3626373626373627,
+        -3.8241758241758244,
+        0.04395604395604396
+      ],
+      "rationale": "Hypothesis only: operator homing pose equals exact CAD zero. Saved homing offsets must not be added again.",
+      "train": {
+        "rows": 9617,
+        "episodes": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          34,
+          35,
+          38,
+          39
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 3702,
+        "out_of_limits_by_joint": [
+          0,
+          3025,
+          3327,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 29,
+        "table_penetration_over_2mm_rows": 1670,
+        "self_penetration_over_2mm_rows": 3441,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 7.567616643173314,
+          "max": 23.28064414232167
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 9.061765352714287,
+          "max": 11.310667508873026
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 26.457514192669755,
+          "max": 46.68185314172866
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 10.280413926225188,
+          "max": 11.560435803843266
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 25.30678071557971,
+          "p95": 26.144191607493738,
+          "max": 26.790517631263125
+        },
+        "worst_table_reference": {
+          "penetration_mm": 23.28064414232167,
+          "episode": 3,
+          "source_frame": 592
+        }
+      },
+      "val": {
+        "rows": 2077,
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 752,
+        "out_of_limits_by_joint": [
+          0,
+          629,
+          687,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 6,
+        "table_penetration_over_2mm_rows": 393,
+        "self_penetration_over_2mm_rows": 707,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 7.604714191589369,
+          "max": 24.22020420414739
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 9.101280805258416,
+          "max": 11.464857461597235
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 26.212955547485812,
+          "max": 32.15458915414381
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 10.280412400346284,
+          "max": 11.560435803843257
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 25.382418159631264,
+          "p95": 25.956364500849716,
+          "max": 26.081153215702482
+        },
+        "worst_table_reference": {
+          "penetration_mm": 24.22020420414739,
+          "episode": 13,
+          "source_frame": 684
+        }
+      }
+    },
+    "calibration_lower_endpoint_to_native_lower": {
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offset_deg": [
+        -1.6042708603818312,
+        5.582414831895264,
+        0.3569458097040581,
+        4.296863117242012,
+        22.789130081633743
+      ],
+      "rationale": "Hypothesis only: recorded calibration lower stop equals native lower stop.",
+      "train": {
+        "rows": 9617,
+        "episodes": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          34,
+          35,
+          38,
+          39
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 3000,
+        "out_of_limits_by_joint": [
+          0,
+          0,
+          2950,
+          50,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 29,
+        "table_penetration_over_2mm_rows": 4952,
+        "self_penetration_over_2mm_rows": 3393,
+        "table_penetration_mm": {
+          "median": 3.433810827977002,
+          "p95": 41.14834440944457,
+          "max": 55.50067389295666
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 23.447246207033817,
+          "max": 27.379908113115803
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 1.6316561931903988,
+          "max": 20.989192932075866
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 0.3622453637472859,
+          "max": 7.538783191686979
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 1.099098074855018,
+          "p95": 1.4682057612657649,
+          "max": 1.8987976240557167
+        },
+        "worst_table_reference": {
+          "penetration_mm": 55.50067389295666,
+          "episode": 39,
+          "source_frame": 508
+        }
+      },
+      "val": {
+        "rows": 2077,
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 616,
+        "out_of_limits_by_joint": [
+          0,
+          0,
+          616,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 6,
+        "table_penetration_over_2mm_rows": 1129,
+        "self_penetration_over_2mm_rows": 703,
+        "table_penetration_mm": {
+          "median": 8.15169732012333,
+          "p95": 40.78882727932176,
+          "max": 55.99616832546473
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 23.465545620617995,
+          "max": 24.25450085251695
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 1.5824720208614766,
+          "max": 2.248882129552094
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 0.3622453637472888,
+          "max": 0.4501588769308946
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 1.1068019337776938,
+          "p95": 1.450445732916569,
+          "max": 1.450692345768042
+        },
+        "worst_table_reference": {
+          "penetration_mm": 55.99616832546473,
+          "episode": 13,
+          "source_frame": 678
+        }
+      }
+    },
+    "calibration_upper_endpoint_to_native_upper": {
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offset_deg": [
+        1.6042708603818312,
+        -5.582414831895264,
+        -0.3569458097040581,
+        -4.296863117242012,
+        -17.210870284019563
+      ],
+      "rationale": "Hypothesis only: recorded calibration upper stop equals native upper stop.",
+      "train": {
+        "rows": 9617,
+        "episodes": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          34,
+          35,
+          38,
+          39
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 3007,
+        "out_of_limits_by_joint": [
+          0,
+          3007,
+          0,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 28,
+        "table_penetration_over_2mm_rows": 630,
+        "self_penetration_over_2mm_rows": 3378,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 2.2880375550841103,
+          "max": 19.334331848404606
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 5.742783728105153,
+          "max": 9.325197104233505
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 28.232247775340852,
+          "max": 40.61176546860915
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 10.373618441236259,
+          "max": 10.725272493970614
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 27.033829054833067,
+          "p95": 27.858994296367026,
+          "max": 28.158605015070766
+        },
+        "worst_table_reference": {
+          "penetration_mm": 19.334331848404606,
+          "episode": 3,
+          "source_frame": 592
+        }
+      },
+      "val": {
+        "rows": 2077,
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 623,
+        "out_of_limits_by_joint": [
+          0,
+          623,
+          0,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 6,
+        "table_penetration_over_2mm_rows": 192,
+        "self_penetration_over_2mm_rows": 695,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 2.205014111301584,
+          "max": 21.082643867152196
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 5.781939717316311,
+          "max": 8.97802639853505
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 28.041682528203715,
+          "max": 29.444574367920946
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 10.461531954419819,
+          "max": 10.549445467603439
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 27.3165974166919,
+          "p95": 27.490515236528253,
+          "max": 27.506590684773318
+        },
+        "worst_table_reference": {
+          "penetration_mm": 21.082643867152196,
+          "episode": 13,
+          "source_frame": 682
+        }
+      }
+    },
+    "endpoint_affine_control": {
+      "scale": [
+        1.0148001468263126,
+        0.9471274198894183,
+        0.9963272197328054,
+        0.9567270314664649,
+        0.8888888878731852
+      ],
+      "offset_deg": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.78912989880709
+      ],
+      "rationale": "Nonphysical control: rescales angular encoder degrees to fit CAD bounds. Incorrect unless an independent transmission ratio establishes the scale.",
+      "train": {
+        "rows": 9617,
+        "episodes": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          34,
+          35,
+          38,
+          39
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 0,
+        "out_of_limits_by_joint": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 0,
+        "table_penetration_over_2mm_rows": 2882,
+        "self_penetration_over_2mm_rows": 3355,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 19.172606995273014,
+          "max": 41.51469709790346
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 10.436047993510499,
+          "max": 14.233077698584108
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "worst_table_reference": {
+          "penetration_mm": 41.51469709790346,
+          "episode": 3,
+          "source_frame": 590
+        }
+      },
+      "val": {
+        "rows": 2077,
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 0,
+        "out_of_limits_by_joint": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 0,
+        "table_penetration_over_2mm_rows": 700,
+        "self_penetration_over_2mm_rows": 685,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 20.73153394287008,
+          "max": 42.98448108113073
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 10.186138335680957,
+          "max": 11.489851596683224
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "worst_table_reference": {
+          "penetration_mm": 42.98448108113073,
+          "episode": 13,
+          "source_frame": 682
+        }
+      }
+    },
+    "train_range_feasible_offset_control": {
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "offset_deg": [
+        0.0,
+        5.142857662075343,
+        -0.093213067226813,
+        -3.2419200744449626,
+        0.0
+      ],
+      "rationale": "Nonphysical control: closest-to-zero offsets satisfying train bounds. No image, physical-zero or contact evidence enters this construction.",
+      "train": {
+        "rows": 9617,
+        "episodes": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          20,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          34,
+          35,
+          38,
+          39
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 0,
+        "out_of_limits_by_joint": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 0,
+        "table_penetration_over_2mm_rows": 3729,
+        "self_penetration_over_2mm_rows": 3373,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 30.48789917182528,
+          "max": 49.622253279943074
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 10.312907656728083,
+          "max": 15.355917980350283
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 5.551792708129603e-14
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 1.928600469969404e-14
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "worst_table_reference": {
+          "penetration_mm": 49.622253279943074,
+          "episode": 8,
+          "source_frame": 242
+        }
+      },
+      "val": {
+        "rows": 2077,
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "limit_roundoff_tolerance_rad": 1e-10,
+        "out_of_limits_rows": 0,
+        "out_of_limits_by_joint": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "starts_out_of_limits": 0,
+        "table_penetration_over_2mm_rows": 910,
+        "self_penetration_over_2mm_rows": 691,
+        "table_penetration_mm": {
+          "median": 0.0,
+          "p95": 31.541440997737034,
+          "max": 54.55001994406516
+        },
+        "self_penetration_mm": {
+          "median": 0.0,
+          "p95": 9.925011372128278,
+          "max": 11.113027521154963
+        },
+        "native_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "native_clipping_ee_rotation_error_deg": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "start_clipping_ee_position_error_mm": {
+          "median": 0.0,
+          "p95": 0.0,
+          "max": 0.0
+        },
+        "worst_table_reference": {
+          "penetration_mm": 54.55001994406516,
+          "episode": 13,
+          "source_frame": 606
+        }
+      }
+    }
+  }
+}

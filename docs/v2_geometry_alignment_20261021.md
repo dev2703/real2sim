@@ -5,8 +5,11 @@ run before geometry acceptance. The [offline exploratory queue](v2_learning_scre
 is running against explicitly provisional labels and recorded images. The physical
 verification requirements in this report remain unmet; the queue does not claim otherwise.
 
-Geometry is the current priority. Learning screens remain deferred until independently
-verified registration and reference replay pass. **Real/sim convergence is not yet established.**
+Geometry work continues alongside the authorized provisional learning screen. Independently
+verified registration and reference replay remain physical acceptance requirements.
+**Real/sim convergence is not yet established.** The
+[23 October investigation](v2_geometry_control_20261023.md) records new camera/base,
+joint-mapping and controller comparisons.
 The operator confirmed motor calibration, robot base and cameras unchanged since v2 recording;
 see the [setup record](../configs/v2/setup_provenance_20261021.json). Current measurements can
 therefore check the recordings. Historical timing and command provenance remain unverified.
@@ -97,13 +100,14 @@ independent metric landmarks with verified source-frame identities. Fit/check th
 camera first, then joint zeros with base/signs/landmark geometry fixed, then the wrist mount
 with verified link poses. Keep whole captures separate for fitting and verification and
 retain reserved policy episodes outside both. Use the existing commands below once those
-inputs are available. No learning screen has been launched.
+inputs are available. The provisional offline learning screen is running separately.
 
 The previously blank experiment row is already implemented: **K1 tool-frame deltas and K3
 trajectory-consistency loss**. A newly reproduced mixed-precision NaN in the trajectory
 loss is fixed by denormalizing and composing poses in at least float32 with autocast
 disabled for those operations; gradients and coordinate semantics are preserved. Their
-learning comparison remains deferred until geometry and reference replay pass. See the
+learning comparison is included in the provisional screen; physical acceptance still requires
+geometry and reference replay. See the
 [follow-up verification record](../results/v2/geometry_followup_20261022.json).
 
 ## Standard hardware and no-spacer update

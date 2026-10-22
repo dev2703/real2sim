@@ -9,6 +9,7 @@ are not a substitute for the runner status.
 |---|---|
 | V2 preparation, evaluation and geometry gates | [V2 runbook](v2_implementation_20261020.md) |
 | Physical joint zeros and camera alignment | [Geometry findings](v2_geometry_alignment_20261021.md) |
+| New camera, joint and feasible-carry comparisons | [23 October investigation](v2_geometry_control_20261023.md) |
 | Calibration conventions | [Calibration](calibration.md) |
 | Data and label contracts | [Data contract](data_contract.md) |
 | Evaluation rules | [Experiment protocol](experiment_protocol.md) |

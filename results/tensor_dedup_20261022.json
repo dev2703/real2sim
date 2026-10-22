@@ -1,0 +1,38 @@
+{
+  "method": "APFS copy-on-write clones of byte-identical files; paths and contents preserved; subsequent writes independent",
+  "files": [
+    {
+      "path": ".cache/derived_cartesian/images_iphone.npy",
+      "shares_storage_with": ".cache/derived_joint/images_iphone.npy",
+      "bytes": 2175860864,
+      "sha256": "c4829fd228fe01fc01ff546de930437d25fec2ec91a9ad1d5717d0bbdc485050"
+    },
+    {
+      "path": "outputs/v2/learning_screen_20261022/runs/L6_dino_regression/attempt-001/checkpoints/000064000/model.safetensors",
+      "shares_storage_with": "outputs/v2/learning_screen_20261022/runs/L6_dino_regression/attempt-001/checkpoint/model.safetensors",
+      "bytes": 98210108,
+      "sha256": "a818ebfda9a702f8d2e886e6592e0935854347b0606553fd39a8be711c2f215c"
+    },
+    {
+      "path": "outputs/v2/learning_screen_20261022/runs/L6_dino_flow/attempt-001/checkpoints/000064000/model.safetensors",
+      "shares_storage_with": "outputs/v2/learning_screen_20261022/runs/L6_dino_flow/attempt-001/checkpoint/model.safetensors",
+      "bytes": 98210108,
+      "sha256": "1e15c7b40e495878cc4a336a54b619c608e99e5f2f21a13e8527ef6281d2e3b4"
+    },
+    {
+      "path": "outputs/v2/learning_screen_20261022/runs/L8_clip_regression/attempt-001/checkpoints/000064000/model.safetensors",
+      "shares_storage_with": "outputs/v2/learning_screen_20261022/runs/L8_clip_regression/attempt-001/checkpoint/model.safetensors",
+      "bytes": 353421244,
+      "sha256": "35ac563d9b12424a8cbf7ac30ca35fe6ebdb10624cbd553e4c99dcb5f4531c6e"
+    },
+    {
+      "path": "outputs/v2/learning_screen_20261022/runs/L8_clip_flow/attempt-001/checkpoints/000064000/model.safetensors",
+      "shares_storage_with": "outputs/v2/learning_screen_20261022/runs/L8_clip_flow/attempt-001/checkpoint/model.safetensors",
+      "bytes": 353421244,
+      "sha256": "3c4c4d1c3038a4d5cdff96f5bb6ce17d33d2b4e7a2f42d9f786f7d10f577dd25"
+    }
+  ],
+  "duplicate_logical_bytes": 3079123568,
+  "free_bytes_before": 33628160000,
+  "free_bytes_after": 36741120000
+}

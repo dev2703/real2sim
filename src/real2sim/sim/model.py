@@ -253,9 +253,11 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
                   diffuse=_numbers(light["sun_diffuse"]))
     cam_pos = np.asarray(camera["approx_position_task"], float) + offset
     cam_at = np.asarray(camera["look_at_task"], float) + offset
+    from real2sim.sim.cameras import camera_projection_attributes
+
     ET.SubElement(world, "camera", name="iphone", pos=_numbers(cam_pos),
                   xyaxes=_numbers(camera_xyaxes(camera, cam_pos, cam_at)),
-                  fovy=str(camera["fovy_deg"]))
+                  **camera_projection_attributes(camera, render))
     table = task["table"]
     top = float(table["height"])
     physics = dict(config["contacts"])
@@ -299,7 +301,7 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
                   mass=str(ball["mass"]), rgba=_numbers(look["ball_rgba"]), **contact_attrs)
     from real2sim.sim.cameras import add_link_cameras
 
-    add_link_cameras(root, task, "so101")
+    add_link_cameras(root, task, "so101", render)
     return ET.tostring(root, encoding="unicode")
 
 

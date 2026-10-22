@@ -12,6 +12,39 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 
+def camera_projection_attributes(camera: dict, render: dict | None = None) -> dict[str, str]:
+    """Opt-in source-resolution OpenCV pinhole intrinsics; legacy FOV stays unchanged.
+
+    MuJoCo principalpixel shifts the projection plane, opposite to OpenCV's optical-axis
+    pixel offset. Distorted source images require explicit rectification outside this helper.
+    """
+    model = camera.get("projection_model", "fovy")
+    if model == "fovy":
+        return {"fovy": str(camera["fovy_deg"])}
+    if model != "opencv_pinhole":
+        raise ValueError(f"unsupported camera projection_model: {model}")
+    width, height = camera["width"], camera["height"]
+    if (not isinstance(width, int) or not isinstance(height, int)
+            or isinstance(width, bool) or isinstance(height, bool) or min(width, height) <= 0):
+        raise ValueError("pinhole source width/height must be positive integers")
+    intrinsic = camera["intrinsics_px"]
+    fx, fy, cx, cy = (float(intrinsic[k]) for k in ("fx", "fy", "cx", "cy"))
+    if not np.isfinite([fx, fy, cx, cy]).all() or min(fx, fy) <= 0:
+        raise ValueError("pinhole intrinsics must be finite with positive focal lengths")
+    distortion = np.asarray(camera.get("distortion_coefficients"), dtype=float)
+    if distortion.shape not in {(4,), (5,), (8,), (12,), (14,)} or not np.isfinite(distortion).all():
+        raise ValueError("explicit finite OpenCV distortion coefficients required for pinhole rendering")
+    if np.any(distortion != 0):
+        raise ValueError("nonzero source distortion requires rectified images and matching rectified intrinsics")
+    if render and not np.isclose(width / height, render["width"] / render["height"], atol=1e-9, rtol=0):
+        raise ValueError("source/render aspect ratio differs; explicit image geometry is required")
+    return {
+        "resolution": f"{width} {height}", "sensorsize": "1 1",
+        "focalpixel": f"{fx:.12g} {fy:.12g}",
+        "principalpixel": f"{width / 2 - cx:.12g} {height / 2 - cy:.12g}",
+    }
+
+
 def shared_task_hash(task: dict) -> str:
     """Freeze shared task/optics and SO-101 calibration, permitting a later Panda mount.
 
@@ -38,7 +71,7 @@ def camera_bindings(task: dict, robot: str) -> dict[str, str]:
     return result
 
 
-def add_link_cameras(root: ET.Element, task: dict, robot: str) -> None:
+def add_link_cameras(root: ET.Element, task: dict, robot: str, render: dict | None = None) -> None:
     camera_bindings(task, robot)
     for camera in task.get("additional_cameras", []):
         mount = camera["mounts"][robot]
@@ -47,10 +80,12 @@ def add_link_cameras(root: ET.Element, task: dict, robot: str) -> None:
             raise ValueError(f"camera mount body does not exist: {mount['body']}")
         pos = np.asarray(mount["position_body_m"], float)
         axes = np.asarray(mount["xyaxes_body"], float)
-        fovy = float(camera["fovy_deg"])
-        if pos.shape != (3,) or axes.shape != (6,) or not np.isfinite(np.r_[pos, axes, fovy]).all():
-            raise ValueError("camera mount must contain finite position, axes and fovy")
-        if not 0 < fovy < 180 or not np.allclose(np.linalg.norm(axes.reshape(2, 3), axis=1), 1, atol=1e-5) or abs(axes[:3] @ axes[3:]) > 1e-5:
-            raise ValueError("camera axes must be orthonormal and fovy within (0,180)")
+        projection = camera_projection_attributes(camera, render)
+        if pos.shape != (3,) or axes.shape != (6,) or not np.isfinite(np.r_[pos, axes]).all():
+            raise ValueError("camera mount must contain finite position and axes")
+        if "fovy" in projection and not 0 < float(projection["fovy"]) < 180:
+            raise ValueError("camera fovy must be within (0,180)")
+        if not np.allclose(np.linalg.norm(axes.reshape(2, 3), axis=1), 1, atol=1e-5) or abs(axes[:3] @ axes[3:]) > 1e-5:
+            raise ValueError("camera axes must be orthonormal")
         ET.SubElement(body, "camera", name=camera["name"],
-                      pos=" ".join(map(str, pos)), xyaxes=" ".join(map(str, axes)), fovy=str(fovy))
+                      pos=" ".join(map(str, pos)), xyaxes=" ".join(map(str, axes)), **projection)

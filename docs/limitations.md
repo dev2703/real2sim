@@ -57,9 +57,11 @@ claims this project can make.
   sim pose. The ball start of the real episode is unknown, so replay says nothing about grasps.
 - **Primary closed-loop results are 0/10 for every learned policy** (E1 joint, E2 Cartesian,
   E3 Panda zero-shot), all failing in the approach phase; the scripted oracle is 10/10 and the
-  null baselines 0/10. The dominant cause on the evidence is compounding error of a weak
-  open-loop policy trained on 28 episodes, with a moderate rendering gap on top (×1.3–1.4
-  open-loop error on sim renders). See `docs/experiment_protocol.md` §5.
+  null baselines 0/10. Compounding prediction error and rendering differences are supported
+  contributors, but their causal contribution has not been separated from joint-zero/start
+  registration, contacts and controller target feasibility. The oracle uses a privileged
+  controller and a different settled start; it cannot rule those problems out. See
+  [the current geometry/control investigation](v2_geometry_control_20261023.md).
 - **The E2 run 1 contained a harness bug** (IK workspace floor above the start pose); it is kept
   as a labelled row set and the corrected run 2 is the reported result. Both are 0/10. When reported they carry the provisional-scene
   caveat above and are a sim-only evaluation of a real-data policy; nothing is claimed about

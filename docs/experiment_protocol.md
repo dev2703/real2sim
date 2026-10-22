@@ -135,11 +135,13 @@ Every trial is a row in `results/metrics/trials.csv` (70 rows). Seeds 0–9, 300
 end-effector–ball distance 14–19 cm on the SO-101 and 6–12 cm on the Panda, versus the oracle's
 grasp at tick ~30. Evidence for each candidate cause:
 
-- *Gripping / scene physics*: ruled out as the blocker. The scripted oracle grasps, carries and
-  places the ball 10/10 with the same gripper, contacts and friction sweep.
+- *Gripping / scene physics*: unresolved. The scripted oracle establishes feasibility for its
+  privileged controller, settled reset, grasp orientation and carry settings. Its 10/10 does
+  not validate the recorded grasp geometry, loaded retention or the learned controller.
 - *IK / controller*: the first E2 run rejected 227–238 of 300 ticks in 4 trials because the IK
   workspace floor (z ≥ 0.015) sat above the lifted start pose; with the floor at the table top
-  the re-run has 2–3 rejections per trial and the outcome is unchanged (0/10). Not the cause.
+  the re-run has 2–3 rejections per trial and the outcome is unchanged (0/10). Fixing that
+  particular bug did not resolve failure; it does not rule out other controller mismatches.
 - *Vision domain gap*: measured directly by `real2sim.evaluation.domain_gap` on validation
   episode 1 (120 ticks): feeding the frozen policy a simulated render of the recorded state
   instead of the real frame raises the open-loop error from 10.4° to 13.5° (joint policy, ×1.29)
@@ -149,7 +151,12 @@ grasp at tick ~30. Evidence for each candidate cause:
   error on *real* frames is 1.5–2 mm against a 3.7 mm median tick motion (relative error ≈ 0.4);
   the joint policy's is 10–21° on the large joints. With 28 training episodes and no
   perturbation data, closed-loop execution drifts off the demonstrated manifold within the
-  first second and never recovers. This is the dominant cause on the evidence above.
+  first second and never recovers. This supports compounding error as a contributor, but the
+  experiment does not isolate it from incorrect start registration, camera geometry or contacts.
+
+The [23 October geometry/control investigation](v2_geometry_control_20261023.md) separates
+strict full-pose and feasible five-joint carry targets under identical acceptance bounds.
+Its scripted results are diagnostic; the historical learned 0/10 remains unchanged.
 
 Latency: 30–70 ms per chunk on CPU (two runs sharing the machine); no timeouts from latency.
 
