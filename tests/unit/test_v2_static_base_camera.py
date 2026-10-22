@@ -1,13 +1,13 @@
 """Coordinate and independent image-prediction checks for the camera diagnostic."""
 
 import importlib.util
-import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import mujoco
 import numpy as np
 import pytest
+from scipy.spatial.transform import Rotation
 
 from real2sim.sim.cameras import camera_projection_attributes
 
@@ -88,13 +88,13 @@ def test_image_similarity_camera_decomposition_preserves_projection():
 @pytest.mark.parametrize("regime", ["early", "late"])
 def test_candidate_camera_compiled_frustum_matches_nonplanar_points(regime):
     diagnostic = load_diagnostic()
-    path = Path(__file__).resolve().parents[2] / "results/v2/camera_render_candidate_20261023.json"
-    evidence = json.loads(path.read_text())
-    candidate = evidence["candidates"][regime]
-    camera, K, transform = (candidate["camera"], np.asarray(candidate["K"]),
-                            np.asarray(candidate["T_optical_native_base"]))
-    # Re-derive the descriptor so a stale saved conversion cannot hide a code regression.
-    assert camera == diagnostic.camera_descriptor(K, transform)
+    # Synthetic inputs keep normal unit tests independent of generated experiment reports.
+    focal, cx, cy = (1371., 640., 360.) if regime == "early" else (1334., 640.17, 360.94)
+    K = np.array([[focal, 0., cx], [0., focal, cy], [0., 0., 1.]])
+    transform = np.eye(4)
+    transform[:3, :3] = Rotation.from_euler("xyz", [.3, -.4, .2]).as_matrix()
+    transform[:3, 3] = [.1, -.2, .8]
+    camera = diagnostic.camera_descriptor(K, transform)
     root = ET.Element("mujoco")
     world = ET.SubElement(root, "worldbody")
     ET.SubElement(world, "camera", name="candidate",
@@ -117,4 +117,3 @@ def test_candidate_camera_compiled_frustum_matches_nonplanar_points(regime):
     v = 720 * (frustum.frustum_top - plane[:, 1]) / (frustum.frustum_top - frustum.frustum_bottom)
     expected = optical @ K.T
     np.testing.assert_allclose(np.c_[u, v], expected[:, :2] / expected[:, 2:], atol=1e-4)
-    assert not evidence["physical_calibration_accepted"]

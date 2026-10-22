@@ -19,12 +19,34 @@ It uses simulator object positions and the actual grasp offset; it is not a lear
 | Nominal no-spacer 2.4 mm base height, seeds 0–9 | 0/10 | 6/10 |
 
 These counts use the existing pick/lift/release/rest criterion, not just ball-in-bowl.
+They use the original 10 Hz/30-second diagnostic clock and 500 Hz physics, not the current
+12.5 Hz learning screen's later evaluation protocol. Other scene registration and gripper
+parameters remain provisional even when the base height is nominal.
 Native 3 mm position, 0.35 rad orientation acceptance, 2 mm collision tolerance, joint
 limits, actuators and friction are unchanged within each comparison. The no-spacer
 comparison raises the workspace floor to the actual tabletop and versions that change.
 The no-spacer controller places every ball it successfully lifts; four trials fail grasp.
 Trying a vertical approach instead of the 15-degree approach failed all ten fresh-seed
 trials, so that alternative was rejected rather than silently replacing failed attempts.
+
+A subsequent, explicit privileged mode searches a fixed set of grasp tilts and IK seeds
+before the first action. It ranks only paths satisfying the unchanged geometry/IK gates
+by joint travel, then executes the checked joint segment. Jaw commands, grasp depth,
+close FSM, friction, physics and scoring stay unchanged. A discovered implementation bug
+used separate clipping per joint and departed from the validated segment; execution now
+uses one common progress fraction bounded by every joint's velocity cap.
+
+| Nominal no-spacer scene | Carry planner only | Reachable grasp plus carry |
+|---|---:|---:|
+| Development seeds 0–9 | 6/10 | 10/10 |
+| Fresh seeds 20–29, algorithm frozen before evaluation | 5/10 | 10/10 |
+
+All new successes include a held lift, release and resting placement. The fresh comparison
+used no subsequent parameter changes. This establishes a scripted feasibility baseline in
+the nominal simulator; simulator object positions remain privileged inputs, and the learned
+policy's 0/10 has not changed. It is not a calibration acceptance result.
+The [reachable-grasp report](../results/v2/reachable_grasp_diagnostic_20261023.json)
+preserves the initial failed attempt, the path correction, fresh results and provenance.
 
 This diagnostic uses the oracle's physically settled reset, not the original learned
 benchmark's folded start. The original oracle also used weaker carry orientation settings.
@@ -63,6 +85,31 @@ make the native bounds fit. No alternative mapping was adopted.
 See [the joint comparison](../results/v2/joint_hypotheses_20261023.json) and
 `scripts/diag_v2_joint_hypotheses.py`. Static counts include poses outside native limits;
 they describe reference inconsistency and are not physical task-failure counts.
+
+With the arm-independent camera below held fixed, a further conditional image fit is more
+promising. An initial axis-line fit improves residuals but can assign different locations
+along a hinge axis to the same visible horn in different frames. Broadening its pan bound
+changes that solution, exposing the depth ambiguity rather than establishing a motor zero.
+
+A stronger model fits pan/lift/elbow zeros plus one fixed axial horn coordinate per hinge
+across every capture. It uses training images from episodes 0, 6 and 23; validation images
+from episodes 31 and 36 do not enter optimization. Wrist flex/roll zeros and all signs remain
+fixed. It estimates offsets **+1.78°, −2.55°, −4.73°**, with no active parameter bounds.
+Validation point RMS decreases **12.59 → 6.65 px**. After fitting, separate static validation
+checks reduce table penetrations beyond 2 mm from **691 to 66** and self-penetrations from
+**695 to 307**; those contact counts never select the fit.
+
+This remains a hypothesis: **620 validation ticks still exceed native joint limits**.
+The six-parameter Jacobian has full local rank, but uncertainty assumes the camera/base/CAD
+are exact and omits their systematic error. The shared-point and axis-only results should
+not be mixed or used to widen native limits. The validation camera frame was previously
+inspected, so this is exploratory verification rather than an untouched acceptance test.
+
+See `outputs/v2/conditional_joint_zeros_20261023/report.json`. A separate
+[verification record](../results/v2/conditional_joint_verification_20261023.json) checks
+synthetic parameter recovery and confirms that changing validation pixels cannot change
+the training objective. Independent raw-video decoding also confirms one training and one
+validation JPEG/state frame identity. It does not establish original exposure/state timing.
 
 ## Camera and base registration
 
@@ -140,3 +187,8 @@ Resolve the camera/base correspondences against independent visible features, th
 joint zeros using those fixed transforms. Version the actual object support and grasp
 geometry before replaying complete recorded tasks. Test any learned controller change on
 the unchanged benchmark and report it separately from these privileged diagnostics.
+
+Verification: the final CPU unit/control suite passed 609 tests; three graphics-dependent
+camera tests passed separately with macOS graphics access. Three MPS/CUDA hardware cases
+were skipped in the CPU sandbox. Ruff and whitespace checks passed. All 59 frozen training
+metadata hashes still match, and the learning queue continued running throughout this work.

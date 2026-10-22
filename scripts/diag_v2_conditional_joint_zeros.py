@@ -73,13 +73,41 @@ class ConditionalFit:
                 direction = segment[1] - segment[0]
                 normal = np.array([-direction[1], direction[0]]) / np.linalg.norm(direction)
                 residual = float(np.dot(np.asarray(observed) - segment[0], normal))
+                fraction = float(np.dot(np.asarray(observed) - segment[0], direction) /
+                                 np.dot(direction, direction))
                 out.append({"episode": capture["episode"], "frame": capture["frame"],
                             "split": capture["split"], "joint": name, "observed_px": observed,
-                            "residual_px": residual, "projected_axis_px": segment.tolist()})
+                            "residual_px": residual, "projected_axis_px": segment.tolist(),
+                            "closest_projected_axis_fraction_minus40_to_plus40mm": fraction})
         return out
 
     def residuals(self, offsets):
         return np.array([r["residual_px"] / 8 for r in self.rows(offsets) if r["split"] == "train"])
+
+    def point_rows(self, parameters):
+        offsets, axial_mm = parameters[:3], parameters[3:]
+        out = []
+        for capture in self.captures:
+            real = capture["real"]
+            arm = self.mapping.arm_real_to_sim_rad(real) + np.deg2rad(np.r_[offsets, 0., 0.])
+            self.data.qpos[self.qadr] = np.r_[arm, self.mapping.gripper_real_to_sim_rad(real[5])]
+            mujoco.mj_kinematics(self.model, self.data)
+            affine = self.late if capture["episode"] >= 7 else None
+            for name, observed in capture["horns"].items():
+                jid = self.model.joint(name).id
+                which = ("shoulder_lift", "elbow_flex", "wrist_flex").index(name)
+                point = self.data.xanchor[jid] + self.data.xaxis[jid] * axial_mm[which] / 1000
+                predicted = project(point[None], self.k, self.transform, affine)[0]
+                out.append({"episode": capture["episode"], "frame": capture["frame"],
+                            "split": capture["split"], "joint": name, "observed_px": observed,
+                            "predicted_px": predicted.tolist(),
+                            "error_px": float(np.linalg.norm(predicted - observed)),
+                            "residual_px": (predicted - observed).tolist()})
+        return out
+
+    def point_residuals(self, parameters):
+        return np.array([r["residual_px"] for r in self.point_rows(parameters)
+                         if r["split"] == "train"]).ravel() / 8
 
 
 def summarize(rows):
@@ -88,6 +116,29 @@ def summarize(rows):
                    "max_axis_distance_px": float(np.max(np.abs(values)))}
             for part in ("train", "val")
             if len(values := np.array([r["residual_px"] for r in rows if r["split"] == part]))}
+
+
+def point_summary(rows):
+    return {part: {"landmarks": len(values), "rms_point_error_px": float(np.sqrt(np.mean(values**2))),
+                   "median_point_error_px": float(np.median(values)), "max_point_error_px": float(values.max())}
+            for part in ("train", "val")
+            if len(values := np.array([r["error_px"] for r in rows if r["split"] == part]))}
+
+
+def identifiability(function, parameters):
+    n = len(parameters)
+    jacobian = np.column_stack([(function(parameters + np.eye(n)[j] * .001) -
+                                 function(parameters - np.eye(n)[j] * .001)) / .002 for j in range(n)])
+    _, singular, vt = np.linalg.svd(jacobian, full_matrices=True)
+    covariance = np.linalg.pinv(jacobian.T @ jacobian)
+    sigma = np.sqrt(np.diag(covariance))
+    return {"rank": int(np.linalg.matrix_rank(jacobian, tol=singular[0] * 1e-7)),
+            "parameters": n, "scalar_observations": len(function(parameters)),
+            "singular_values_after_8px_weighting": singular.tolist(),
+            "weakest_direction": vt[-1].tolist(), "condition_number": float(singular[0] / singular[-1]),
+            "conditional_one_sigma_known_8px_independent_noise": sigma.tolist(),
+            "parameter_correlation": (covariance / np.outer(sigma, sigma)).tolist(),
+            "camera_base_CAD_uncertainty_included": False}
 
 
 def overlay(fit, offsets, out):
@@ -143,6 +194,27 @@ def main():
     _, singular, vt = np.linalg.svd(jacobian, full_matrices=True)
     rank = int(np.linalg.matrix_rank(jacobian, tol=singular[0] * 1e-7))
     baseline, candidate = fit.rows(np.zeros(3)), fit.rows(offsets)
+    # Predeclared sensitivity: widen the *diagnostic pan-offset* bound only. Native
+    # joint limits remain fixed. No held-out scores or contacts select any fit.
+    broad_solutions = [least_squares(fit.residuals, start,
+                       bounds=([-20., -10., -10.], [20., 10., 10.]), loss="soft_l1",
+                       f_scale=1., diff_step=1e-4, max_nfev=2000) for start in starts]
+    broad_best = min(broad_solutions, key=lambda s: s.cost)
+    broad_rows = fit.rows(broad_best.x)
+    # Actual 3D point model: one unknown horn position along each hinge axis,
+    # shared across ALL captures. Baseline fits these nuisance positions only.
+    nuisance_fits = [least_squares(lambda axial: fit.point_residuals(np.r_[np.zeros(3), axial]),
+                                  np.full(3, start), bounds=(-40., 40.), loss="soft_l1",
+                                  f_scale=1., max_nfev=1000) for start in (0., 20., -20.)]
+    nuisance = min(nuisance_fits, key=lambda s: s.cost)
+    point_starts = [np.r_[start, nuisance.x] for start in (np.zeros(3), offsets, broad_best.x)]
+    point_fits = [least_squares(fit.point_residuals, start,
+                 bounds=([-20., -10., -10., -40., -40., -40.], [20., 10., 10., 40., 40., 40.]),
+                 loss="soft_l1", f_scale=1., x_scale=[5., 5., 5., 10., 10., 10.],
+                 max_nfev=2000) for start in point_starts]
+    point_best = min(point_fits, key=lambda s: s.cost)
+    point_baseline = fit.point_rows(np.r_[np.zeros(3), nuisance.x])
+    point_candidate = fit.point_rows(point_best.x)
     args.out.mkdir(parents=True)
     report = {
         "schema": "v2_fixed_camera_conditional_joint_zeros_v1",
@@ -156,6 +228,27 @@ def main():
         "train_solution_offsets_deg": [s.x.tolist() for s in solutions],
         "baseline": {"summary": summarize(baseline), "rows": baseline},
         "candidate": {"summary": summarize(candidate), "rows": candidate},
+        "pan_bound_sensitivity": {
+            "fixed_before_heldout_scoring": True,
+            "offset_bounds_deg": [[-20., 20.], [-10., 10.], [-10., 10.]],
+            "offsets_deg": broad_best.x.tolist(), "active_parameter_bounds": broad_best.active_mask.tolist(),
+            "train_solution_costs": [float(s.cost) for s in broad_solutions],
+            "summary": summarize(broad_rows), "rows": broad_rows,
+            "identifiability": identifiability(fit.residuals, broad_best.x)},
+        "shared_3D_horn_point_model": {
+            "parameter_names": [*ARM_JOINTS[:3], "shoulder_lift_horn_axial", "elbow_flex_horn_axial", "wrist_flex_horn_axial"],
+            "parameter_units": ["degrees"] * 3 + ["mm"] * 3,
+            "parameter_bounds": [[-20., 20.], [-10., 10.], [-10., 10.]] + [[-40., 40.]] * 3,
+            "zero_offset_baseline_horn_axial_mm": nuisance.x.tolist(),
+            "zero_offset_baseline_summary": point_summary(point_baseline),
+            "candidate_parameters": point_best.x.tolist(),
+            "active_parameter_bounds": point_best.active_mask.tolist(),
+            "train_solution_costs": [float(s.cost) for s in point_fits],
+            "candidate_summary": point_summary(point_candidate),
+            "candidate_rows": point_candidate, "zero_offset_baseline_rows": point_baseline,
+            "identifiability": identifiability(fit.point_residuals, point_best.x),
+            "interpretation": "One rigid 3D horn point per hinge shared across all poses; camera, base, signs and remaining joints fixed."
+                              " +/-40mm axial extent is a diagnostic bound, not measured horn geometry."},
         "local_identifiability": {
             "rank": rank, "parameters": 3, "scalar_observations": len(fit.residuals(offsets)),
             "singular_values_per_degree_after_8px_weighting": singular.tolist(),
@@ -180,6 +273,8 @@ def main():
             "Wrist flex/roll zeros are fixed because these landmark axes do not constrain their own downstream rotations.",
             "Local covariance assumes fixed, exact camera/base/CAD and independent 8px errors. Real systematic uncertainty is larger.",
             "Image/state timing, backlash, physical support height and camera distortion remain unverified.",
+            "Axis-only candidates ignore shared horn depth along each hinge. They are NOT joint-zero calibration; the separate shared-point model tests this constraint.",
+            "Covariance at an active bound is an unconstrained local approximation, not a calibrated confidence interval.",
             "No contacts, native-bound counts, held-out image errors, or task-success feedback enter fitting or start selection.",
         ],
     }
@@ -188,7 +283,9 @@ def main():
         env.model.body_pos[env.model.body("base").id, 2] += .0024 - env.task["robot_so101"]["base_z_offset"]
         report["post_fit_static_diagnostics"] = {}
         for label, candidate_offsets in (("zero_offsets", np.zeros(5)),
-                                          ("fitted_offsets", np.r_[offsets, 0., 0.])):
+                                          ("fitted_offsets", np.r_[offsets, 0., 0.]),
+                                          ("pan_bound_20_offsets", np.r_[broad_best.x, 0., 0.]),
+                                          ("shared_point_offsets", np.r_[point_best.x[:3], 0., 0.])):
             report["post_fit_static_diagnostics"][label] = {}
             for part in ("train", "val"):
                 mask = np.isin(arrays["episode_index"], splits[part])
@@ -197,7 +294,11 @@ def main():
                     arrays["frame_index"][mask], np.ones(5), candidate_offsets)
     (args.out / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     print(json.dumps({"offsets_deg": offsets.tolist(), "baseline": summarize(baseline),
-                      "candidate": summarize(candidate), "rank": rank, "singular": singular.tolist()}, indent=2))
+                      "candidate": summarize(candidate), "rank": rank, "singular": singular.tolist(),
+                      "pan_bound20_offsets_deg": broad_best.x.tolist(),
+                      "shared_point_parameters_deg_mm": point_best.x.tolist(),
+                      "shared_point_baseline": point_summary(point_baseline),
+                      "shared_point_candidate": point_summary(point_candidate)}, indent=2))
 
 
 if __name__ == "__main__":
