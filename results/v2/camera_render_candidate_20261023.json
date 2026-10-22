@@ -1,0 +1,191 @@
+{
+  "schema": "v2_camera_render_candidates_v1",
+  "physical_calibration_accepted": false,
+  "automatically_adopted": false,
+  "task_frame": "native_so101_base",
+  "distortion_status": "All five zero coefficients are assumed, not measured. Source images are not independently proven rectified.",
+  "scope": "Reviewable camera-only descriptors for the selected static-foot hypothesis. A coherent scene registration is required before using these with an existing task configuration; this file does not replace a task config.",
+  "source_report": "outputs/v2/static_base_camera_20261023/report.json",
+  "source_report_sha256": "7e37c0da7e5d0400a7787b92d7f2248901f49264409a96bc0954f4a64faa9692",
+  "shared_geometry_metadata_only": {
+    "assumed_table_plane_z_in_native_base_m": -0.0024,
+    "candidate_mat_center_in_native_base_m": [
+      0.2604125645324664,
+      -0.04451734058477202,
+      -0.0024
+    ],
+    "assumed_mat_thickness_m": 0.0,
+    "physical_hole_identities_verified": false,
+    "competing_alignment_basins_retained_in_source_report": true
+  },
+  "candidates": {
+    "early": {
+      "camera": {
+        "key": "observation.images.iphone",
+        "projection_model": "opencv_pinhole",
+        "width": 1280,
+        "height": 720,
+        "intrinsics_px": {
+          "fx": 1371.1514029093664,
+          "fy": 1371.1514029093664,
+          "cx": 640.0,
+          "cy": 360.0
+        },
+        "distortion_coefficients": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "approx_position_task": [
+          0.25168841846031875,
+          -0.6560718704545916,
+          0.5270734396033463
+        ],
+        "xyaxes_task": [
+          0.9995440699134144,
+          0.027017980233568648,
+          0.013478911121664468,
+          -0.027537573985974645,
+          0.6326572468011825,
+          0.7739421748999823
+        ],
+        "look_at_task": [
+          0.24178215959370855,
+          -0.036903480143046674,
+          0.020583192437343967
+        ]
+      },
+      "K": [
+        [
+          1371.1514029093664,
+          0.0,
+          640.0
+        ],
+        [
+          0.0,
+          1371.1514029093664,
+          360.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "T_optical_native_base": [
+        [
+          0.9995440699134144,
+          0.027017980233568648,
+          0.013478911121664468,
+          -0.2409523053571585
+        ],
+        [
+          0.027537573985974645,
+          -0.6326572468011825,
+          -0.7739421748999823,
+          -0.014075147531639692
+        ],
+        [
+          -0.012382823583262766,
+          0.7739604878894311,
+          -0.6331128089575029,
+          0.8445872641054792
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "recording_regime_hypothesis": "episodes0\u20136",
+      "physical_calibration_accepted": false
+    },
+    "late": {
+      "camera": {
+        "key": "observation.images.iphone",
+        "projection_model": "opencv_pinhole",
+        "width": 1280,
+        "height": 720,
+        "intrinsics_px": {
+          "fx": 1333.9784686221376,
+          "fy": 1333.9784686221376,
+          "cx": 640.1678883047812,
+          "cy": 360.936710676381
+        },
+        "distortion_coefficients": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "approx_position_task": [
+          0.25168841846031875,
+          -0.6560718704545916,
+          0.5270734396033463
+        ],
+        "xyaxes_task": [
+          0.9995532162588592,
+          0.02680656542769693,
+          0.013220284283658746,
+          -0.027203557610649787,
+          0.6326662400001477,
+          0.7739466358977212
+        ],
+        "look_at_task": [
+          0.24178215959370855,
+          -0.036903480143046674,
+          0.020583192437343967
+        ]
+      },
+      "K": [
+        [
+          1333.9784686221376,
+          0.0,
+          640.1678883047812
+        ],
+        [
+          0.0,
+          1333.9784686221376,
+          360.936710676381
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "T_optical_native_base": [
+        [
+          0.9995532162588592,
+          0.02680656542769693,
+          0.013220284283658746,
+          -0.24095699535642684
+        ],
+        [
+          0.027203557610649787,
+          -0.6326662400001477,
+          -0.7739466358977212,
+          -0.013994628389838497
+        ],
+        [
+          -0.012382823583262766,
+          0.7739604878894311,
+          -0.6331128089575029,
+          0.8445872641054792
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "recording_regime_hypothesis": "episodes7 onward",
+      "physical_calibration_accepted": false
+    }
+  }
+}

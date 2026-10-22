@@ -2,13 +2,18 @@
 
 import copy
 import xml.etree.ElementTree as ET
+from types import SimpleNamespace
 
 import mujoco
 import numpy as np
 import pytest
 
 from real2sim.config import load_yaml
-from real2sim.sim.cameras import add_link_cameras, camera_projection_attributes
+from real2sim.sim.cameras import (
+    add_link_cameras,
+    camera_intrinsics_px,
+    camera_projection_attributes,
+)
 
 
 def camera():
@@ -19,13 +24,13 @@ def camera():
     }
 
 
-def model_for(camera_config, point=(.1, -.05, -1.)):
+def model_for(camera_config, point=(.1, -.05, -1.), camera_name="cam"):
     root = ET.Element("mujoco")
     visual = ET.SubElement(root, "visual")
     ET.SubElement(visual, "global", offwidth="640", offheight="360")
     ET.SubElement(visual, "headlight", ambient="1 1 1", diffuse="0 0 0", specular="0 0 0")
     world = ET.SubElement(root, "worldbody")
-    ET.SubElement(world, "camera", name="cam", **camera_projection_attributes(camera_config))
+    ET.SubElement(world, "camera", name=camera_name, **camera_projection_attributes(camera_config))
     ET.SubElement(world, "geom", type="sphere", size="0.015", pos=" ".join(map(str, point)),
                   rgba="1 0 0 1")
     return mujoco.MjModel.from_xml_string(ET.tostring(root).decode())
@@ -71,6 +76,27 @@ def test_rendered_sphere_matches_source_intrinsics_at_both_render_sizes(size):
 
 def test_legacy_fovy_is_an_explicit_unchanged_default():
     assert camera_projection_attributes({"fovy_deg": 22.79, "intrinsics_px": {}}) == {"fovy": "22.79"}
+
+
+@pytest.mark.parametrize("explicit", [False, True])
+def test_paired_backprojection_uses_the_actual_compiled_camera(explicit):
+    from real2sim.data.paired_approach import camera_parameters
+
+    spec = camera() if explicit else {"fovy_deg": 45.}
+    model = model_for(spec, camera_name="iphone")
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    env = SimpleNamespace(model=model, data=data, offset=np.zeros(3),
+                          task={"camera_iphone": {"width": 1280, "height": 720}})
+    _, _, intrinsic, _, _ = camera_parameters(env)
+    if explicit:
+        expected = np.array([[1000., 0, 720.], [0, 800., 320.], [0, 0, 1.]])
+    else:
+        focal = 720 / (2 * np.tan(np.pi / 8))
+        expected = np.array([[focal, 0, 640.], [0, focal, 360.], [0, 0, 1.]])
+    np.testing.assert_allclose(intrinsic, expected, atol=1e-4)
+    np.testing.assert_allclose(camera_intrinsics_px(model, 0, 640, 360),
+                               np.diag([.5, .5, 1.]) @ expected, atol=1e-4)
 
 
 @pytest.mark.parametrize("edit", [

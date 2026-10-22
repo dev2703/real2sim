@@ -1,10 +1,15 @@
 """Coordinate and independent image-prediction checks for the camera diagnostic."""
 
 import importlib.util
+import json
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import mujoco
 import numpy as np
 import pytest
+
+from real2sim.sim.cameras import camera_projection_attributes
 
 
 def load_diagnostic():
@@ -78,3 +83,38 @@ def test_image_similarity_camera_decomposition_preserves_projection():
     assert K_late[0, 1] == K_late[1, 0] == 0.
     with pytest.raises(ValueError, match="similarity"):
         diagnostic.camera_after_image_similarity(intrinsic, pose, [[.9, 0, 0], [0, 1.1, 0]])
+
+
+@pytest.mark.parametrize("regime", ["early", "late"])
+def test_candidate_camera_compiled_frustum_matches_nonplanar_points(regime):
+    diagnostic = load_diagnostic()
+    path = Path(__file__).resolve().parents[2] / "results/v2/camera_render_candidate_20261023.json"
+    evidence = json.loads(path.read_text())
+    candidate = evidence["candidates"][regime]
+    camera, K, transform = (candidate["camera"], np.asarray(candidate["K"]),
+                            np.asarray(candidate["T_optical_native_base"]))
+    # Re-derive the descriptor so a stale saved conversion cannot hide a code regression.
+    assert camera == diagnostic.camera_descriptor(K, transform)
+    root = ET.Element("mujoco")
+    world = ET.SubElement(root, "worldbody")
+    ET.SubElement(world, "camera", name="candidate",
+                  pos=" ".join(map(str, camera["approx_position_task"])),
+                  xyaxes=" ".join(map(str, camera["xyaxes_task"])),
+                  **camera_projection_attributes(camera))
+    model = mujoco.MjModel.from_xml_string(ET.tostring(root).decode())
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    view, scene = mujoco.MjvCamera(), mujoco.MjvScene(model, maxgeom=10)
+    view.type, view.fixedcamid = mujoco.mjtCamera.mjCAMERA_FIXED, 0
+    mujoco.mjv_updateScene(model, data, mujoco.MjvOption(), None, view,
+                          mujoco.mjtCatBit.mjCAT_ALL, scene)
+    frustum = scene.camera[0]
+    optical = np.array([[-.15, -.12, .6], [.2, .1, .9], [0, .15, 1.2], [.05, -.05, .75]])
+    world_points = (optical - transform[:3, 3]) @ transform[:3, :3]
+    compiled_local = (world_points - data.cam_xpos[0]) @ data.cam_xmat[0].reshape(3, 3)
+    plane = compiled_local[:, :2] * frustum.frustum_near / -compiled_local[:, 2:]
+    u = 1280 * (.5 + (plane[:, 0] - frustum.frustum_center) / (2 * frustum.frustum_width))
+    v = 720 * (frustum.frustum_top - plane[:, 1]) / (frustum.frustum_top - frustum.frustum_bottom)
+    expected = optical @ K.T
+    np.testing.assert_allclose(np.c_[u, v], expected[:, :2] / expected[:, 2:], atol=1e-4)
+    assert not evidence["physical_calibration_accepted"]

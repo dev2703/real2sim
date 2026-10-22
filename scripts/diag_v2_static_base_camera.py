@@ -183,6 +183,54 @@ def camera_after_image_similarity(K, T_optical_base, image_matrix):
     return intrinsic, optical_rotation @ transform
 
 
+def camera_descriptor(K, T_optical_base):
+    """Return an opt-in renderer descriptor in the native-base task frame."""
+    K, transform = np.asarray(K, float), np.asarray(T_optical_base, float)
+    rotation, translation = transform[:3, :3], transform[:3, 3]
+    position = -rotation.T @ translation
+    return {
+        "key": "observation.images.iphone", "projection_model": "opencv_pinhole",
+        "width": 1280, "height": 720,
+        "intrinsics_px": {"fx": float(K[0, 0]), "fy": float(K[1, 1]),
+                          "cx": float(K[0, 2]), "cy": float(K[1, 2])},
+        "distortion_coefficients": [0., 0., 0., 0., 0.],
+        "approx_position_task": position.tolist(),
+        "xyaxes_task": np.r_[rotation[0], -rotation[1]].tolist(),
+        "look_at_task": (position + .8 * rotation[2]).tolist(),
+    }
+
+
+def candidate_camera_descriptors(report, report_path):
+    foot = report["base_foot"]
+    report_path = Path(report_path).resolve()
+    return {
+        "schema": "v2_camera_render_candidates_v1", "physical_calibration_accepted": False,
+        "automatically_adopted": False, "task_frame": "native_so101_base",
+        "distortion_status": "All five zero coefficients are assumed, not measured. Source images are not independently proven rectified.",
+        "scope": "Reviewable camera-only descriptors for the selected static-foot hypothesis. A coherent scene registration is required before using these with an existing task configuration; this file does not replace a task config.",
+        "source_report": str(report_path.relative_to(ROOT) if report_path.is_relative_to(ROOT)
+                             else report_path),
+        "source_report_sha256": sha256(report_path),
+        "shared_geometry_metadata_only": {
+            "assumed_table_plane_z_in_native_base_m": -.0024,
+            "candidate_mat_center_in_native_base_m": foot["candidate_mat_center_in_native_base_m"],
+            "assumed_mat_thickness_m": 0.,
+            "physical_hole_identities_verified": False,
+            "competing_alignment_basins_retained_in_source_report": True,
+        },
+        "candidates": {
+            regime: {
+                "camera": camera_descriptor(foot[f"candidate_K_{regime}"],
+                                            foot[f"candidate_T_optical_base_{regime}"]),
+                "K": foot[f"candidate_K_{regime}"],
+                "T_optical_native_base": foot[f"candidate_T_optical_base_{regime}"],
+                "recording_regime_hypothesis": "episodes0–6" if regime == "early" else "episodes7 onward",
+                "physical_calibration_accepted": False,
+            } for regime in ("early", "late")
+        },
+    }
+
+
 def fit_unlabelled_foot(pixels, holes, mat_fit):
     """Enumerate both wings and rotation basins; retain ambiguity rather than adopt."""
     observed = backproject_to_plane(
@@ -387,8 +435,14 @@ def run(output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=ROOT / "outputs/v2/static_base_camera_20261023")
+    parser.add_argument("--camera-descriptors", type=Path)
     args = parser.parse_args()
     result = run(args.out)
+    if args.camera_descriptors:
+        args.camera_descriptors.parent.mkdir(parents=True, exist_ok=True)
+        with args.camera_descriptors.open("x") as stream:
+            stream.write(json.dumps(candidate_camera_descriptors(result, args.out / "report.json"), indent=2,
+                                    allow_nan=False) + "\n")
     print(json.dumps({"image_models": result["image_similarity_models"],
                       "base_foot_errors_px": result["base_foot"]["all_spot_nearest_candidate_error_px"]},
                      indent=2))

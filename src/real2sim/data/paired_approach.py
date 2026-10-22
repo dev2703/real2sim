@@ -52,8 +52,9 @@ def camera_parameters(env):
     rvec = cv2.Rodrigues(R)[0].reshape(3)
     tvec = -R @ pos
     camera = env.task["camera_iphone"]
-    focal = camera["height"] / (2 * np.tan(np.deg2rad(cam.fovy[0]) / 2))
-    K = np.array([[focal, 0, camera["width"] / 2], [0, focal, camera["height"] / 2], [0, 0, 1]])
+    from real2sim.sim.cameras import camera_intrinsics_px
+
+    K = camera_intrinsics_px(env.model, cam.id, camera["width"], camera["height"])
     return rvec, tvec, K, pos, R_mj
 
 

@@ -8,6 +8,7 @@ No physics, success rule, camera calibration or learned checkpoint is changed.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -28,6 +29,7 @@ from real2sim.evaluation.oracle import (
 )
 from real2sim.policy.adapters import ApplyResult
 from real2sim.sim.env import So101PickPlaceEnv
+from real2sim.sim.kinematics import NativeKinematics
 
 CARRY_PHASES = ("LIFT", "TRANSPORT", "LOWER", "RELEASE", "RETREAT")
 
@@ -150,13 +152,123 @@ class MatchedCarryPose(FeasibleCarry):
         return OracleGeometryController.step(self, obs, env)
 
 
+class ReachableGrasp(FeasibleCarry):
+    """Preselect a grasp tilt/IK branch by feasibility and joint travel, never outcomes."""
+
+    def reset(self):
+        super().reset()
+        self.grasp_search = None
+        self.grasp_plan = None
+        self.p.approach_tilt_deg = 15.
+
+    def _choose_grasp(self, env):
+        cfg = copy.deepcopy(env.config)
+        cfg["ik"].update(position_convergence_m=1e-5, orientation_convergence_rad=1e-4)
+        ik = NativeKinematics(env.model, cfg)
+        lo, hi = env.limits.T
+        current = np.clip(env.sim_state(), lo, hi)
+        ball = np.asarray(env.info()["privileged_metrics"]["ball_xyz_task"], float)
+        pan = float(np.arctan2(ball[1], ball[0]))
+        seeds = [current] + [np.clip(np.r_[pan, a, b, c, 0., current[5]], lo, hi)
+            for a, b, c in ((-1.3, 1.3, 1.), (-.8, 1.3, .6), (-.3, .7, .6),
+                            (.5, -1.3, 1.), (-.5, .6, -1.))]
+        grip = float(np.clip(env.mapping.gripper_real_to_sim_rad(self.p.gripper_open_pct), lo[5], hi[5]))
+        reasons, candidates = Counter(), []
+
+        def valid_path(start, end):
+            count = max(1, math.ceil(float(np.max(abs(end - start)
+                / (env.max_velocity / env.control_hz)))))
+            for alpha in np.linspace(0, 1, count + 1):
+                q = start + alpha * (end - start)
+                target = ik.forward(q)
+                result = ik.solve(target, q, gripper=float(q[5]))
+                if not result.accepted:
+                    return result.reason
+            return "accepted"
+
+        for tilt in (10., 15., 20., 25.):
+            target = np.eye(4)
+            target[:3, :3] = grasp_orientation(ball[:2], tilt)
+            target[:3, 3] = ball - target[:3, :3] @ self.p.ball_in_site
+            pre = target.copy()
+            pre[2, 3] += self.p.pre_grasp_height
+            for index, seed in enumerate(seeds):
+                result = ik.solve(pre, seed, gripper=grip)
+                reasons["pre_" + result.reason] += 1
+                if not result.accepted:
+                    continue
+                grasp = ik.solve(target, result.qpos, gripper=grip)
+                reasons["grasp_" + grasp.reason] += 1
+                if not grasp.accepted:
+                    continue
+                pre_q, grasp_q = np.clip(result.qpos, lo, hi), np.clip(grasp.qpos, lo, hi)
+                path = valid_path(current, pre_q)
+                if path == "accepted":
+                    path = valid_path(pre_q, grasp_q)
+                reasons["path_" + path] += 1
+                if path != "accepted":
+                    continue
+                score = float(np.linalg.norm(pre_q[:5] - current[:5])
+                    + np.linalg.norm(grasp_q[:5] - pre_q[:5]))
+                candidates.append({"tilt_deg": tilt, "seed_index": index, "score": score,
+                    "pre_qpos": pre_q.tolist(), "grasp_qpos": grasp_q.tolist()})
+        self.grasp_plan = min(candidates, key=lambda c: (c["score"], c["tilt_deg"], c["seed_index"])) if candidates else None
+        self.grasp_search = {"candidate_count": len(candidates), "reasons": dict(reasons),
+            "selection": self.grasp_plan, "used_task_outcomes": False,
+            "fallback": None if candidates else "original_15_degree_approach"}
+        if self.grasp_plan:
+            self.p.approach_tilt_deg = self.grasp_plan["tilt_deg"]
+
+    def step(self, obs, env):
+        if self.grasp_search is None:
+            self._choose_grasp(env)  # before the first control tick, without trial outcomes
+        if self.grasp_plan is None or self.phase not in ("PRE_GRASP", "DESCEND"):
+            return super().step(obs, env)  # original CLOSE FSM and feasible carry unchanged
+        lo, hi = env.limits.T
+        current = np.clip(env.sim_state(), lo, hi)
+        goal = np.asarray(self.grasp_plan[
+            "pre_qpos" if self.phase == "PRE_GRASP" else "grasp_qpos"], float)
+        step = goal - current
+        # Follow the same joint-space line checked during preflight. Independent
+        # component clipping follows a different path and can introduce collisions.
+        ratio = float(np.max(abs(step) / (env.max_velocity / env.control_hz)))
+        step *= 1 / max(1., ratio)
+        initial = self.ik_grasp.forward(current)
+        for _ in range(5):
+            native = current + step
+            target = self.ik_grasp.forward(native)
+            distance = float(np.linalg.norm(target[:3, 3] - initial[:3, 3]))
+            if distance <= self.p.max_step_m:
+                break
+            step *= self.p.max_step_m / distance * .999
+        checked = self.ik_grasp.solve(target, native, gripper=float(native[5]))
+        rejected = not checked.accepted
+        if rejected:
+            native = current
+            self.ik_rejections += 1
+        obs, _, _, truncated, info = env.step(native)
+        self.tick += 1
+        self.phase_tick += 1
+        phase = self.phase
+        actual, desired = env.ee_pose(), self.ik_grasp.forward(goal)
+        position_error = float(np.linalg.norm(actual[:3, 3] - desired[:3, 3]))
+        rotation_error = float(np.linalg.norm(Rotation.from_matrix(
+            desired[:3, :3] @ actual[:3, :3].T).as_rotvec()))
+        # A joint-space approach must reach the grasp orientation before descending.
+        self._advance(info["privileged_metrics"], max(position_error,
+            rotation_error * self.p.reach_tolerance_m / env.config["ik"]["orientation_tolerance_rad"]), rejected)
+        return ApplyResult(obs, info, truncated, float(np.mean(info["control"]["limit_clipped"])),
+            ik_rejected=rejected, detail={"phase": phase, "ik_reason": checked.reason,
+                "tracking_error_m": position_error, "orientation_error_rad": rotation_error})
+
+
 def run(config, mode, seeds, *, tilt_deg=15.):
     rows = []
     with So101PickPlaceEnv(config, render_images=False) as env:
         params = strict_params(env)
         params.approach_tilt_deg = float(tilt_deg)
         classes = {"strict_pose": OracleGeometryController, "matched_pose": MatchedCarryPose,
-                   "feasible_carry": FeasibleCarry}
+                   "feasible_carry": FeasibleCarry, "reachable_grasp": ReachableGrasp}
         ctrl = classes[mode](env, params)
         for seed in seeds:
             start, settling = settle_start_pose(env, seed)
@@ -186,6 +298,8 @@ def run(config, mode, seeds, *, tilt_deg=15.):
                 "phase_ticks": dict(phases), "phase_log": ctrl.phase_log,
                 "max_table_penetration_m": max_penetration,
                 "start_settling": settling}
+            if isinstance(ctrl, ReachableGrasp):
+                row["grasp_search"] = ctrl.grasp_search
             rows.append(row)
             print(json.dumps({k: row[k] for k in ("mode", "seed", "success", "pick_place_success",
                 "held", "lifted", "phase_failed", "ik_rejections")}), flush=True)
@@ -195,7 +309,7 @@ def run(config, mode, seeds, *, tilt_deg=15.):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--config", type=Path, default=Path("configs/sim_so101.yaml"))
-    p.add_argument("--modes", nargs="+", choices=("strict_pose", "matched_pose", "feasible_carry"),
+    p.add_argument("--modes", nargs="+", choices=("strict_pose", "matched_pose", "feasible_carry", "reachable_grasp"),
                    default=["strict_pose", "matched_pose", "feasible_carry"])
     p.add_argument("--n-trials", type=int, default=10)
     p.add_argument("--seed-start", type=int, default=0)

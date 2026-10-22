@@ -45,6 +45,21 @@ def camera_projection_attributes(camera: dict, render: dict | None = None) -> di
     }
 
 
+def camera_intrinsics_px(model, camera_id: int, width: int, height: int) -> np.ndarray:
+    """Read OpenCV intrinsics from the compiled camera at the requested image size."""
+    if min(width, height) <= 0:
+        raise ValueError("camera image dimensions must be positive")
+    sensor = model.cam_sensorsize[camera_id]
+    if np.all(sensor > 0):
+        intrinsic = model.cam_intrinsic[camera_id]
+        fx, fy = intrinsic[:2] * [width, height] / sensor
+        cx, cy = np.array([width, height]) / 2 - intrinsic[2:] * [width, height] / sensor
+    else:
+        fx = fy = height / (2 * np.tan(np.deg2rad(model.cam_fovy[camera_id]) / 2))
+        cx, cy = width / 2, height / 2
+    return np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
+
+
 def shared_task_hash(task: dict) -> str:
     """Freeze shared task/optics and SO-101 calibration, permitting a later Panda mount.
 

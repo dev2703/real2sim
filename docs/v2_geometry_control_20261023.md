@@ -40,7 +40,8 @@ Reproduce without rendering or training:
   --out outputs/v2/feasible_carry_NEW
 ```
 
-Reports are in `outputs/v2/feasible_carry_20261023`,
+The [combined report](../results/v2/feasible_carry_diagnostic_20261023.json) retains every
+trial and its failure stage. Individual reports are in `outputs/v2/feasible_carry_20261023`,
 `outputs/v2/feasible_carry_20261023_fresh` and
 `outputs/v2/feasible_carry_20261023_no_spacer`. Configuration and retained failures
 matter when comparing them. Dependency hashes recorded after earlier runs are explicitly
@@ -77,6 +78,28 @@ suggests roughly 92 mm disagreement in mat center relative to the legacy scene. 
 hole patterns, unverified physical identities, mat thickness and the assumed pinhole
 model still prevent adoption. The candidate and alternative alignment basins are saved
 in `outputs/v2/static_base_camera_20261023/report.json`.
+The [camera-only descriptors](../results/v2/camera_render_candidate_20261023.json) export
+early/late optical parameters in the renderer's explicit pinhole format. They use the
+native base frame and mark zero distortion as assumed; they are not a registered task
+configuration. The late-view similarity is represented by focal/principal parameters
+and a small optical rotation, without warping the recorded policy images.
+
+An arm-image check, performed without fitting joint offsets, is promising. On validation
+episode 31, source frame 400, distances from three manually identified servo-horn centers
+to their projected joint-axis lines change as follows:
+
+| Visible hinge | Legacy camera | Static-foot candidate |
+|---|---:|---:|
+| Shoulder lift | 22.1 px | 1.7 px |
+| Elbow flex | 66.2 px | 9.9 px |
+| Wrist flex | 152.2 px | 14.9 px |
+
+Combined RMS falls from 96.65 to 10.38 px; the competing foot alignment gives 299.69 px.
+These are distances to axis lines, not verified physical point reprojection errors.
+Manual identification uncertainty is approximately ±8 px. The training frame's shoulder
+axis check worsens, so this is not universal agreement or a passed independent-calibration
+gate. Inspect [the three-way overlay](../outputs/v2/camera_joint_overlay_20261023/ep31_f0400.jpg)
+and [the measurement record](../outputs/v2/camera_joint_overlay_20261023/report.json).
 
 The renderer previously represented optics only through a centered field of view.
 An explicit `projection_model: opencv_pinhole` now supports source-resolution `fx`, `fy`,
@@ -90,6 +113,8 @@ is an image-plane offset rather than an OpenCV principal point. See the
 [MuJoCo camera reference](https://mujoco.readthedocs.io/en/latest/XMLreference.html#body-camera).
 Compiled frusta and rendered sphere pixels were checked against the requested intrinsics
 at two render resolutions, including unequal focal lengths and an off-center principal point.
+The paired-view backprojection helper now reads those same compiled intrinsics, avoiding a
+silent fallback to a centered, square-pixel camera in later camera audits.
 
 ## Why a local projection is insufficient
 
