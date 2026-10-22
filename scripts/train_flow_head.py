@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import time
 import traceback
 from dataclasses import asdict
@@ -50,6 +51,20 @@ def synchronize(device):
         torch.mps.synchronize()
     elif str(device).startswith("cuda"):
         torch.cuda.synchronize()
+
+
+def prune_head_checkpoints(root: Path, best_examples: int, last_examples: int) -> list[str]:
+    """Bound disk usage to best/last, only inside this trainer's numbered outputs."""
+    keep = {f"{best_examples:09d}", f"{last_examples:09d}"}
+    candidates = [p for p in root.iterdir() if p.name.isdigit() and len(p.name) == 9]
+    if root.is_symlink() or any(p.is_symlink() or not p.is_dir() for p in candidates):
+        raise ValueError("refusing to prune unexpected head checkpoint paths")
+    removed = []
+    for path in candidates:
+        if path.name not in keep:
+            shutil.rmtree(path)
+            removed.append(path.name)
+    return removed
 
 
 def image_identity(manifest, arrays, stats):
@@ -327,6 +342,7 @@ def train_head(args):
                         "revision": getattr(config, f"{config.vision_backbone}_revision"),
                         "trainable_final_blocks": 0})
     seen, update = 0, 0
+    best_validation, best_examples = float("inf"), 0
     history = []
     effective = args.batch_size * args.grad_accum
     schedule_examples = getattr(args, "schedule_examples", None) or args.examples
@@ -354,6 +370,8 @@ def train_head(args):
         restore_rng(saved["rng"])
         seen, update = saved["examples_seen"], saved["update"]
         history = saved["history"]
+        best_validation = saved.get("best_validation", float("inf"))
+        best_examples = saved.get("best_examples", seen)
         if seen >= args.examples:
             raise ValueError("resume checkpoint has already reached the requested exposure")
     while seen < args.examples:
@@ -386,15 +404,22 @@ def train_head(args):
             print(json.dumps(entry), flush=True)
         if seen % validation_every == 0 or seen == args.examples:
             validation, _ = evaluate(policy, val, device, args.batch_size, args.seed, 4)
+            score = validation["strata"]["all"]["model"]["l1"]
+            if score < best_validation:
+                best_validation, best_examples = score, seen
             ck = args.out / "checkpoints" / f"{seen:09d}"
             info = {"step": update, "examples_seen": seen, "validation": validation,
+                    "best_validation_l1": best_validation, "best_examples": best_examples,
                     "objective": args.objective, "identity": identity, "seed": args.seed}
             save_flow_checkpoint(ck, policy, normalizer.stats, contract, info,
                                  backbone_state=load_file(args.cache / "backbone.safetensors"))
             torch.save({"optimizer": optimizer.state_dict(), "sampler": iterator.state_dict(),
                         "rng": rng_state(), "noise_generator": noise_generator.get_state(),
-                        "examples_seen": seen, "update": update, "identity": identity, "history": history},
+                        "examples_seen": seen, "update": update, "identity": identity, "history": history,
+                        "best_validation": best_validation, "best_examples": best_examples},
                        ck / "training_state.pt")
+            if getattr(args, "keep_only_best_and_last", False):
+                prune_head_checkpoints(args.out / "checkpoints", best_examples, seen)
     synchronize(device)
     training_s = time.perf_counter() - started
     report = {"objective": args.objective, "seed": args.seed, "device": device,
@@ -487,6 +512,7 @@ def main():
     train.add_argument("--resume", type=Path)
     train.add_argument("--schedule-examples", type=int)
     train.add_argument("--validate-every", type=int, default=8000)
+    train.add_argument("--keep-only-best-and-last", action="store_true")
     profile = commands.add_parser("profile")
     profile.add_argument("--checkpoint", type=Path, required=True)
     profile.add_argument("--repeats", type=int, default=20)

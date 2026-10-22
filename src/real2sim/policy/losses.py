@@ -42,6 +42,30 @@ def masked_reconstruction(pred, target, action_is_pad, config: ReconstructionLos
     return (errors * valid).sum() / denominator, (absolute * valid).sum() / denominator
 
 
+def _rotation_from_vector(vector):
+    """Rodrigues exponential with finite derivatives at zero, including on MPS."""
+    squared_angle = vector.square().sum(-1)
+    # Keep the inactive analytic branch finite too: autograd evaluates both branches.
+    angle = squared_angle.clamp_min(1e-8).sqrt()
+    small = squared_angle < 1e-4
+    a = torch.where(
+        small, 1 - squared_angle / 6 + squared_angle.square() / 120,
+        angle.sin() / angle,
+    )
+    half_angle = angle / 2
+    b = torch.where(
+        small, .5 - squared_angle / 24 + squared_angle.square() / 720,
+        .5 * (half_angle.sin() / half_angle).square(),
+    )
+    x, y, z = vector.unbind(-1)
+    zero = torch.zeros_like(x)
+    skew = torch.stack([zero, -z, y, z, zero, -x, -y, x, zero], -1).reshape(
+        *vector.shape[:-1], 3, 3,
+    )
+    identity = torch.eye(3, dtype=vector.dtype, device=vector.device)
+    return identity + a[..., None, None] * skew + b[..., None, None] * (skew @ skew)
+
+
 def integrated_tool_loss(pred, target, pad, *, tool_frame, translation_scale, rotation_scale):
     """Differentiable rigid-motion composition; no simulator ground truth or robot joints.
 
@@ -53,7 +77,7 @@ def integrated_tool_loss(pred, target, pad, *, tool_frame, translation_scale, ro
     if torch.any(pad[:, :-1] & ~pad[:, 1:]):
         raise ValueError("trajectory padding must be terminal")
     valid = ~pad
-    # Matrix exponential and repeated rotation products are unstable in half precision.
+    # Rotation exponentials and repeated rotation products are unstable in half precision.
     # Disable autocast as well as promoting inputs: autocast would otherwise cast the
     # composition matmuls back down. Casts remain differentiable to the model outputs.
     dtype = torch.promote_types(torch.promote_types(pred.dtype, target.dtype), torch.float32)
@@ -65,10 +89,9 @@ def integrated_tool_loss(pred, target, pad, *, tool_frame, translation_scale, ro
             position = actions.new_zeros(len(actions), 3)
             positions, rotations = [], []
             for action in actions.unbind(1):
-                x, y, z = action[:, 3:6].unbind(-1)
-                zero = torch.zeros_like(x)
-                skew = torch.stack([zero, -z, y, z, zero, -x, -y, x, zero], -1).reshape(-1, 3, 3)
-                step = torch.matrix_exp(skew)
+                # linalg_matrix_exp has no MPS kernel. Rodrigues has the same SO(3)
+                # semantics and keeps this training loss on the selected device.
+                step = _rotation_from_vector(action[:, 3:6])
                 dp = action[:, :3]
                 if tool_frame:
                     position = position + (rotation @ dp[..., None]).squeeze(-1)

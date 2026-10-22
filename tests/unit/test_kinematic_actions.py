@@ -8,7 +8,12 @@ from real2sim.data.labels import episode_labels, tool_frame_actions
 from real2sim.geometry.so3 import apply_delta, delta_action, exp_so3
 from real2sim.policy.adapters import ApplyResult
 from real2sim.policy.kinematic_actions import KinematicDeltaAdapter, bounded_joint_step
-from real2sim.policy.losses import ReconstructionLoss, act_training_loss, integrated_tool_loss
+from real2sim.policy.losses import (
+    ReconstructionLoss,
+    _rotation_from_vector,
+    act_training_loss,
+    integrated_tool_loss,
+)
 
 
 def test_tool_labels_and_execution_roundtrip_under_rotated_base():
@@ -80,6 +85,35 @@ def test_trajectory_loss_accumulation_mask_and_rotation_gradients():
     exact.backward()
     assert exact.item() == 0 and torch.isfinite(zero.grad).all()
     assert integrated_tool_loss(pred, target, torch.ones_like(pad), **kwargs).item() == 0
+
+
+def test_rodrigues_rotation_matches_matrix_exponential_and_gradients_at_zero():
+    vectors = torch.tensor([
+        [0., 0., 0.], [1e-8, -2e-8, 3e-8], [.002, -.003, .004],
+        [.1, -.2, .3], [2., -1., 3.],
+    ], dtype=torch.float64, requires_grad=True)
+    x, y, z = vectors.unbind(-1)
+    zero = torch.zeros_like(x)
+    skew = torch.stack([zero, -z, y, z, zero, -x, -y, x, zero], -1).reshape(-1, 3, 3)
+    expected = torch.matrix_exp(skew)
+    actual = _rotation_from_vector(vectors)
+    torch.testing.assert_close(actual, expected, atol=1e-11, rtol=1e-11)
+    weights = torch.arange(actual.numel(), dtype=vectors.dtype).reshape_as(actual)
+    expected_gradient = torch.autograd.grad((expected * weights).sum(), vectors)[0]
+    actual_gradient = torch.autograd.grad((actual * weights).sum(), vectors)[0]
+    torch.testing.assert_close(actual_gradient, expected_gradient, atol=1e-10, rtol=1e-10)
+    assert torch.isfinite(actual_gradient).all()
+
+
+@pytest.mark.skipif(not torch.backends.mps.is_available(), reason="MPS unavailable")
+def test_mps_trajectory_loss_has_finite_native_gradients():
+    pred = torch.full((2, 25, 7), .001, device="mps", requires_grad=True)
+    loss = integrated_tool_loss(
+        pred, torch.zeros_like(pred), torch.zeros(2, 25, dtype=torch.bool, device="mps"),
+        tool_frame=True, translation_scale=.024, rotation_scale=.24,
+    )
+    loss.backward()
+    assert loss.item() > 0 and torch.isfinite(pred.grad).all().item()
 
 
 @pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
