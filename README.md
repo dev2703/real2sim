@@ -26,7 +26,7 @@ starting with joint-zero and camera correspondence using the measurements alread
 is running with provisional geometry while physical registration remains unresolved.
 The commands below document the retained legacy 10 Hz workflow.
 
-See [cleanup and recovery](docs/cleanup_20261021.md) for removed historical scripts and artifacts.
+See [documentation index](docs/README.md) for the current contracts and runbooks.
 
 ## Install
 
