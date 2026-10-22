@@ -9,12 +9,53 @@ therefore check the recordings. Historical timing and command provenance remain 
 ## Follow-up — 22 October 2026
 
 Joint-zero and camera agreement remain the first execution priority. The current input
-inventory still contains no completed independent camera/joint landmark file: both camera
-intrinsics and distortion are null in the measurement template, and there are no measured
-joint landmark rows. The local static-CAD inventory has 12 nominal anchors, zero verified
+inventory includes useful measurements in [`configs/task.yaml`](../configs/task.yaml): table
+height **0.737 m**, mat size **0.305 × 0.406 m**, camera distance **24 in from the nearest
+robot edge** and height **21 in above the table**, with stated ±3% camera-position uncertainty.
+The bowl dimensions are also operator-supplied. These measurements are preserved in the
+[config inventory](../results/v2/config_measurements_inventory_20261022.json); they should
+be reused rather than requested again.
+
+The saved iPhone `fx=fy=1786`, centred principal point and pose are a v1 fit using those
+position constraints, mat pixels and provisional robot FK. Zero distortion was assumed.
+The generating historical script clipped recorded joint poses before fitting and estimated
+the nearest base edge using bounding spheres. Consequently its fitted task-frame camera pose
+is not an independent reference for verifying joint zeros; the raw operator distance/height
+constraints remain useful. Its report has joint RMS 77.57 px and mat RMS 40.78 px. Historical
+joint-offset candidates also exist, conditional on fitted camera/landmark geometry; they are
+not independently verified v2 offsets.
+
+There is still no completed independent v2 camera/joint landmark file: both camera
+intrinsics and distortion are null in the v2 measurement template, and there are no measured
+v2 joint landmark rows. The local static-CAD inventory has 12 nominal anchors, zero verified
 physical identities and only two tentative image associations. Earlier camera fits used
 unverified robot FK or jointly fitted nuisance geometry, so they cannot independently fix
 the camera for joint-zero verification.
+
+A new [mat-only camera initialization](../results/v2/mat_camera_initialization_20261022.json)
+uses the stored 0.305 × 0.406 m dimensions and annotated straight outer mat edges in training
+episode 0, source frame 200. It uses no robot FK. The fitted source-resolution focal length
+is **1,371.15 px** under centred-principal-point, square-pixel and zero-distortion assumptions.
+The absolute camera-to-mat-plane distance is **529.47 mm**; the historical 21-inch height
+constraint is 533.4 mm and was excluded from fitting/solution selection. Its applicability to
+v2 and the mat thickness remain unverified. Mat-axis assignment follows the existing config
+and is a hypothesis to check, not a new physical measurement.
+
+Moving one corner coordinate at a time by ±3 pixels gives focal lengths **1,339.79–1,403.49 px**
+and plane distances **520.58–538.59 mm**, with no focal-bound hits. This is deterministic
+sensitivity, not a confidence interval; it does not cover joint corner errors, lens model
+error or mat nonplanarity. The 0.074 px fit RMS uses the same four corners as the seven-parameter
+fit and is not held-out verification. The saved transform is optical-from-**mat**, not a
+registered task/base transform, so it cannot yet fix the camera for joint-zero acceptance.
+
+[Annotations](../configs/v2/mat_camera.annotations_20261022.json) and the
+[edge review overlay](../outputs/v2/mat_camera_20261022/edges.png) preserve the selected
+pixels, source hashes and boundary ambiguity. Reproduce with new output paths:
+
+```sh
+.venv/bin/python scripts/diag_v2_mat_camera.py \
+  --output outputs/v2/mat_camera_NEXT.json --overlay outputs/v2/mat_camera_NEXT.png
+```
 
 The existing [iPhone stability diagnostic](../outputs/v2/iphone_stability_20261021/README.md)
 adds a concrete correspondence issue to resolve. Relative to episode 0, static-feature

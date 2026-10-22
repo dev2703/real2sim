@@ -1,0 +1,180 @@
+{
+  "version": "geometry_followup_20261022_v1",
+  "review_date": "2026-10-22",
+  "physical_calibration_accepted": false,
+  "production_task_config_changed": false,
+  "training_screens_started": false,
+  "measurement_inventory": "results/v2/config_measurements_inventory_20261022.json",
+  "existing_measurements_reused": true,
+  "changes": [
+    "Reject a source frame assigned to different calibration capture groups and duplicate frame/landmark observations.",
+    "Require fixed joint/gripper readings per source frame and fixed native body coordinates per joint landmark.",
+    "Expose full data-only Jacobian null directions, weakest parameter directions and per-split optical depth for camera/joint candidates.",
+    "Compute trajectory denormalization and pose composition in at least float32 with autocast disabled to avoid half-precision NaNs.",
+    "Recover existing config measurements and initialize a reproducible camera in mat coordinates from training-image edges without robot FK; record 32 corner-sensitivity cases."
+  ],
+  "camera_stability": {
+    "source_report": "outputs/v2/iphone_stability_20261021/report.json",
+    "saved_frame_hashes_verified": 75,
+    "exactly_reproduced_comparisons": [
+      [
+        0,
+        0,
+        6,
+        0
+      ],
+      [
+        0,
+        0,
+        7,
+        0
+      ],
+      [
+        0,
+        0,
+        31,
+        0
+      ]
+    ],
+    "early_train_median_displacement_px": 0.6451644229371236,
+    "later_train_median_displacement_px": 11.624368888299012,
+    "later_train_median_apparent_scale": 0.9728793325897874,
+    "validation_median_displacement_px": 11.851852698806159,
+    "reserved_episodes_used": false,
+    "interpretation": "Descriptive apparent image change; not metric calibration, not landmark reprojection error, and not identification of its physical/capture cause."
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/pytest -q tests/unit/test_geometry_registration.py tests/unit/test_v2_geometry_cli.py tests/unit/test_planar_camera.py tests/unit/test_kinematic_actions.py tests/unit/test_act_losses.py tests/integration/test_v2_resume.py",
+      "passed": 79,
+      "failed": 0,
+      "skipped": 2,
+      "skip_reason": "CUDA unavailable; CPU half-precision/autocast and synthetic train/resume checks passed. This is implementation validation, not learned task success."
+    },
+    {
+      "command": ".venv/bin/pytest -q tests/unit/test_nominal_geometry.py tests/unit/test_so3.py tests/unit/test_camera_fit.py tests/unit/test_landmark_refit.py tests/integration/test_v2_reference_clipping.py tests/integration/test_v2_kinematics.py tests/integration/test_v2_panda_controller.py",
+      "passed": 91,
+      "failed": 1,
+      "failure": "macOS CoreGraphics unavailable inside sandbox for rendered sphere camera conversion test",
+      "resolution": "Same rendering test rerun with CoreGraphics access: passed."
+    },
+    {
+      "command": ".venv/bin/pytest -q tests/unit/test_camera_fit.py::test_opencv_to_mujoco_rendered_sphere_matches_cv2_projection",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "command": ".venv/bin/ruff check .",
+      "passed": true
+    },
+    {
+      "command": "git diff --check",
+      "passed": true
+    },
+    {
+      "check": "Reproduce mat-camera fit, all 32 sensitivity cases and edge overlay into temporary output paths; compare numerical results and image hash exactly with saved result",
+      "passed": true
+    },
+    {
+      "check": "Validate every saved mat-camera dependency/input SHA256 against current files",
+      "passed": true
+    },
+    {
+      "check": "Mat-camera diagnostic rejects existing output paths, changed source-image hash and validation episode input",
+      "passed": true
+    }
+  ],
+  "experiment_status": {
+    "matrix": "results/v2/screen_matrix_v4.json",
+    "entries": 24,
+    "distinct_training_configurations": 22,
+    "tool_frame_deltas": "Implemented; coordinate and execution checks passed; learning pending geometry/reference replay acceptance.",
+    "trajectory_consistency": "Implemented; mixed-precision fix and synthetic train/resume checks passed; learning pending geometry/reference replay acceptance."
+  },
+  "remaining_alignment_work": [
+    "Independently verify iPhone camera model across recording periods and metric task/base registration.",
+    "Verify fixed body-landmark correspondences and physical joint signs/zeros.",
+    "Verify wrist intrinsics and rigid link transform after arm/base verification.",
+    "Verify jaw closure/gaps, phase-reviewed reference replay and loaded retention."
+  ],
+  "artifacts_sha256": {
+    "scripts/fit_v2_geometry.py": "5305312409a0e40a366da0a41e32fb0afa747b427ac30de5d3225a50b0124aef",
+    "src/real2sim/geometry/registration.py": "3cc8b2948b9889fb10618beaefb2bbecd86d349789f11616b30b0ee050741412",
+    "src/real2sim/policy/losses.py": "236f1406c73c0317d71d1d80c6df4892497585df5a14e006fd7e258a665712d4",
+    "tests/unit/test_geometry_registration.py": "2000155a9ee48317217e54f03e31f95e633ff13f15c9aff65df4a0fa5fe0f4ae",
+    "tests/unit/test_v2_geometry_cli.py": "1144f96f5212cb075aae45fdc45cefd06926b30f10b22de60da055a444bc3ae9",
+    "tests/unit/test_kinematic_actions.py": "25f84d5fb9b57a9f12f20d59d5aebdccc19280849edab19c0ba8b2e62a240350",
+    "configs/task.yaml": "420c379424f7c142fedb6dec86c07ea3420b534519fa127e9a5b416ae8386b9e",
+    "configs/v2/setup_provenance_20261021.json": "2b76d92a023937bde67193b58c449914510e9de1f4fa5f2ee957b6856426d530",
+    "configs/v2/geometry.nominal_so101_v1.json": "75c643eee6f17d93004c0fc61b3feb5d70fad41000756b15a871764379b03821",
+    "results/v2/config_measurements_inventory_20261022.json": "00cdccd7f24d43c8de73455900094d2c16c1ad3aa03300c749012184c81d12d2",
+    "results/v2/screen_matrix_v4.json": "b5d442302a7bd776bf9b342556613cddb73999c7f2e63bf301c536822e7f1018",
+    "outputs/v2/iphone_stability_20261021/report.json": "7526444a90b23945e18ee6de5d5bda9d5ef282c28eec60a3db54716f6d8800c2",
+    "scripts/diag_v2_mat_camera.py": "d84e4a1768673b655f430f61436f17254f1659a5cb2918f5bab9d2dabc7a4db2",
+    "configs/v2/mat_camera.annotations_20261022.json": "ea3ba5bc003f499b2dca01aab12c855ca29ebf9f5bce4eaef098124d78cf4eda",
+    "results/v2/mat_camera_initialization_20261022.json": "ee1bf376d518090981ba94d8a730b4ac2a7031037c03ff4554cacab02cab04ef",
+    "outputs/v2/mat_camera_20261022/edges.png": "ab93f6e7c7354338be6f26ca09ae7585e8c1b8b2db3b70f215e4765b3c2891eb",
+    "docs/v2_geometry_alignment_20261021.md": "a94c2a5707875599a176145e2374f753f502837c2f5d3f91e186fa81a20c7555",
+    "docs/v2_implementation_20261020.md": "f49ba0ed95dcb4b9e40f1bae6ae62cbbad8de8960b4b43a6ff5a12028dd0878d",
+    "docs/calibration.md": "2080163698c87029a911e9227121222fbda7f361961ea74b6af71cd7bffe0046",
+    "README.md": "dc2c234cb498aa5abbf10339d715a6dc9e7c2d82c0cd2fe0eb32cb176b236589"
+  },
+  "mat_only_camera_initialization": {
+    "report": "results/v2/mat_camera_initialization_20261022.json",
+    "annotations": "configs/v2/mat_camera.annotations_20261022.json",
+    "source_episode_frame": [
+      0,
+      200
+    ],
+    "summary": {
+      "focal_px": 1371.1514029093664,
+      "camera_position_in_mat_frame_m": [
+        0.1026145194705863,
+        0.8125789469472627,
+        -0.5294734396033463
+      ],
+      "absolute_camera_to_mat_plane_distance_m": 0.5294734396033463,
+      "fit_rms_px": 0.07411501724133214,
+      "focal_at_bound": false,
+      "optimizer_converged": true
+    },
+    "sensitivity": {
+      "1": {
+        "cases": 16,
+        "focal_range_px": [
+          1360.5908344642119,
+          1381.8207955052198
+        ],
+        "camera_plane_distance_range_m": [
+          0.526485120209,
+          0.5324872742032948
+        ],
+        "focal_bound_cases": 0
+      },
+      "3": {
+        "cases": 16,
+        "focal_range_px": [
+          1339.7914231729092,
+          1403.4910198767516
+        ],
+        "camera_plane_distance_range_m": [
+          0.5205836946270748,
+          0.5385928785893632
+        ],
+        "focal_bound_cases": 0
+      }
+    },
+    "robot_fk_used": false,
+    "independent_scalar_check": {
+      "camera_height_above_table_m": 0.5334,
+      "reported_relative_uncertainty": 0.03,
+      "provenance": "configs/task.yaml camera_iphone comments and extrinsics_provenance: operator 21 inches above table on 2026-10-13 (+/-3 percent); 21*0.0254 m. This predates v2; its applicability to the v2 capture is not independently established. The scalar is not supplied to the planar fitter.",
+      "signed_difference_from_operator_height_m": -0.003926560396653733,
+      "relative_difference": -0.007361380571154355,
+      "used_for_fitting_or_solution_selection": false,
+      "note": "Distance is to the assumed mat plane; camera measurement is to tabletop. The October 13 measurement predates v2; applicability to this recording is not independently established. Mat thickness and operator reference-point uncertainty are not separately measured. One distance does not verify pose, distortion or planar ambiguity."
+    },
+    "physical_acceptance_established": false,
+    "interpretation": "Independent of robot FK but conditional on inherited mat-axis assignment and pinhole assumptions. Four fit corners do not establish independent calibration; mat-to-base registration, distortion and off-plane verification remain unresolved."
+  }
+}

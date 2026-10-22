@@ -4,6 +4,14 @@
 until measurements exist (decision D-012), and supplied four bowl dimensions. Every value below
 carries a provenance label. Results that depend on these values must cite this file.
 
+**Current measurement inventory (22 October 2026):** `configs/task.yaml` already records
+operator-measured table height 0.737 m, mat size 0.305 × 0.406 m, and camera distance/height
+24/21 in with ±3% uncertainty. Some tables below retain older provisional values and
+historical fits. Use the [source-linked inventory](../results/v2/config_measurements_inventory_20261022.json)
+and [current geometry follow-up](v2_geometry_alignment_20261021.md#follow-up--22-october-2026)
+to distinguish those measurements from fitted camera parameters and provisional joint zeros.
+The v2 independent registration remains incomplete.
+
 | Label | Meaning |
 |---|---|
 | OPERATOR-SUPPLIED | Given by the user, 2026-10-12. Takes precedence over any other source. |

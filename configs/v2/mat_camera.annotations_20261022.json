@@ -1,0 +1,161 @@
+{
+  "schema": "v2_mat_edge_annotations_v1",
+  "annotation_date": "2026-10-22",
+  "annotator": "Codex source-image review; these are image annotations, not physical point measurements",
+  "protocol": "Inspect only training episode 0 frame 200. Sample outer mat boundary on straight segments, excluding rounded corners, cable crossings, bowl occlusion and cloth interior. Local grayscale gradients guided half-pixel placement; bottom outer boundary was distinguished visually from the bright stitched line and diffuse shadow. Orthogonal straight-line fits intersect at virtual corners; these intersections are not directly observed physical corner points.",
+  "selection": "Frame 200 has visible straight sections of all four mat edges. No validation or later-frame scores select annotations or solution.",
+  "assumed_corner_sigma_px": 2.0,
+  "corner_sigma_note": "Diagnostic working uncertainty, not a measured statistical confidence interval. Sensitivity is separately evaluated at 1 and 3 pixels.",
+  "side_length_assignment": "table.mat.size_xy[0] is assigned across the image (top-left to top-right), [1] along the mat (top-left to bottom-left). This inherits the existing config axis-assignment hypothesis inferred from older images; the operator measured 12 by 16 inches but did not independently register these axes.",
+  "edge_samples_source_px": {
+    "top": [
+      [
+        480,
+        211.5
+      ],
+      [
+        520,
+        212.5
+      ],
+      [
+        560,
+        211.5
+      ],
+      [
+        600,
+        210.5
+      ],
+      [
+        810,
+        208.5
+      ],
+      [
+        840,
+        208.5
+      ]
+    ],
+    "right": [
+      [
+        885.5,
+        260
+      ],
+      [
+        896.5,
+        300
+      ],
+      [
+        910.5,
+        340
+      ],
+      [
+        922.5,
+        380
+      ],
+      [
+        984.5,
+        580
+      ],
+      [
+        993.5,
+        610
+      ],
+      [
+        999.5,
+        630
+      ]
+    ],
+    "bottom": [
+      [
+        430,
+        684.5
+      ],
+      [
+        500,
+        684.5
+      ],
+      [
+        570,
+        682.5
+      ],
+      [
+        640,
+        680.5
+      ],
+      [
+        710,
+        679.5
+      ],
+      [
+        780,
+        677.5
+      ],
+      [
+        850,
+        675.5
+      ],
+      [
+        920,
+        672.5
+      ]
+    ],
+    "left": [
+      [
+        429.5,
+        260
+      ],
+      [
+        424.5,
+        300
+      ],
+      [
+        419.5,
+        340
+      ],
+      [
+        406.5,
+        440
+      ],
+      [
+        396.5,
+        500
+      ],
+      [
+        390.5,
+        560
+      ],
+      [
+        380.5,
+        620
+      ]
+    ]
+  },
+  "independent_scalar_check": {
+    "camera_height_above_table_m": 0.5334,
+    "reported_relative_uncertainty": 0.03,
+    "provenance": "configs/task.yaml camera_iphone comments and extrinsics_provenance: operator 21 inches above table on 2026-10-13 (+/-3 percent); 21*0.0254 m. This predates v2; its applicability to the v2 capture is not independently established. The scalar is not supplied to the planar fitter."
+  },
+  "source": {
+    "path": "outputs/v2/iphone_stability_20261021/source_frames/ep00_f0200.png",
+    "sha256": "4c4d9ecfddc6ee7aa866d5a98e392e5d6bb7c852a69ebdc6471b62aeca3538c7",
+    "episode": 0,
+    "frame": 200,
+    "camera": "observation.images.iphone",
+    "size_wh": [
+      1280,
+      720
+    ],
+    "partition": "train"
+  },
+  "task_config": {
+    "path": "configs/task.yaml",
+    "sha256": "420c379424f7c142fedb6dec86c07ea3420b534519fa127e9a5b416ae8386b9e"
+  },
+  "split": {
+    "path": "results/v2/split.json",
+    "sha256": "458c5d8900a98ba86f4cff27aebce90d73b9d75f285bade18c1b3524f9e76ce5"
+  },
+  "source_manifest": {
+    "path": "outputs/v2/iphone_stability_20261021/report.json",
+    "sha256": "7526444a90b23945e18ee6de5d5bda9d5ef282c28eec60a3db54716f6d8800c2"
+  }
+}
