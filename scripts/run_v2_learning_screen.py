@@ -16,6 +16,7 @@ import signal
 import subprocess
 import sys
 import time
+from contextlib import nullcontext
 from pathlib import Path
 
 import yaml
@@ -300,6 +301,20 @@ class ScreenRunner:
         if row.get("status") != "completed" or not self.job_complete(job, output):
             raise ValueError("storage release requires a completed full-budget job")
         root = self.out / "runs" / job["id"]
+        if job["family"] == "act":
+            checkpoints = []
+            for info_path in root.glob("attempt-*/checkpoints/[0-9]*/run_info.json"):
+                if (info_path.parent / "model.safetensors").is_file():
+                    info = read_json(info_path)
+                    checkpoints.append((info_path.parent, info))
+            if checkpoints:
+                # A resumed attempt need not improve on the previous attempt's best.
+                # Resolve the original best step across every retained attempt.
+                latest_info = max(checkpoints, key=lambda value: value[1].get("examples_seen", 0))[1]
+                best_step = latest_info.get("best_step")
+                best = [path for path, info in checkpoints if info.get("step") == best_step]
+                if best:
+                    row["best_checkpoint"] = str(best[-1])
         removed = row.setdefault("released_artifacts", [])
         for checkpoint in root.glob("attempt-*/checkpoints/[0-9]*"):
             if checkpoint.is_symlink() or not checkpoint.resolve().is_relative_to(root.resolve()):
@@ -353,12 +368,29 @@ class ScreenRunner:
                     self.release_completed_storage(job)
                     return
             resume, exposure = latest_checkpoint(job, root)
-            if exposure >= job["examples"]:
-                row.update(status="incomplete", error="training budget reached; final evaluation/report incomplete")
+            if exposure > job["examples"]:
+                row.update(status="incomplete", error="checkpoint exceeds the declared training budget")
                 self.write_status()
+                return
+            if exposure == job["examples"] and job["family"] == "act":
+                # ACT validates before saving its final checkpoint. Recover only
+                # the missing post-save report, never another optimizer update.
+                info = read_json(resume / "run_info.json")
+                output = resume.parent.parent
+                atomic_json(output / "training_result.json", {
+                    "steps": job["config"]["train"]["steps"],
+                    "requested_steps": job["config"]["train"]["steps"],
+                    "stopped_early": False, "last_val": info.get("last_val"),
+                    "best_step": info.get("best_step"), "best_val_l1": info.get("best_val_l1"),
+                    "out": str(output), "recovered_from_full_budget_checkpoint": str(resume),
+                    "additional_training_examples": 0})
+                row.update(status="completed", output=str(output), recovered=True)
+                self.release_completed_storage(job)
                 return
             attempt = root / f"attempt-{len(list(root.glob('attempt-*'))) + 1:03d}"
             command = self.train_command(job, attempt, resume, cache)
+            if exposure == job["examples"]:
+                command += ["--finalize-only"]
             row.update(status="running", output=str(attempt), resume=str(resume) if resume else None)
             self.write_status()
             result = self.command(command, self.out / "logs" / f"{name}_{attempt.name}.log", stage=name)
@@ -429,7 +461,8 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     runner = ScreenRunner(args)
-    with queue_lock(args.out):
+    shared_lock = nullcontext() if args.dry_run else queue_lock(REPO / "outputs/v2/training_lock")
+    with queue_lock(args.out), shared_lock:
         signal.signal(signal.SIGTERM, runner.stop)
         signal.signal(signal.SIGINT, runner.stop)
         try:

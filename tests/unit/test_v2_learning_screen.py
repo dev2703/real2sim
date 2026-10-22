@@ -1,5 +1,3 @@
-import copy
-import json
 import sys
 from pathlib import Path
 
@@ -188,7 +186,7 @@ def test_cached_head_commands_share_schedule_and_match_accumulation(tmp_path):
     assert len(jobs) == 4
     for job in jobs:
         command = runner.train_command(job, tmp_path / job["id"], tmp_path / "resume", tmp_path / "cache")
-        values = dict(zip(command[3::2], command[4::2]))
+        values = dict(zip(command[3::2], command[4::2], strict=False))
         assert values["--examples"] == "64000"
         assert values["--schedule-examples"] == "320000"
         assert int(values["--batch-size"]) * int(values["--grad-accum"]) == job["effective_batch"]
@@ -204,6 +202,7 @@ def test_completed_storage_release_preserves_weights_and_unfinished_optimizer(tm
     checkpoint.mkdir(parents=True)
     for name in ("model.safetensors", "training_state.pt", "run_info.json"):
         (checkpoint / name).write_text("retained")
+    atomic_json(checkpoint / "run_info.json", {"step": 4000, "examples_seen": 64000, "best_step": 4000})
     runner.status["jobs"][job["id"]] = {"status": "incomplete", "output": str(output)}
     with pytest.raises(ValueError, match="completed full-budget"):
         runner.release_completed_storage(job)
@@ -235,3 +234,77 @@ def test_head_checkpoint_retention_preserves_best_last_and_unrelated_files(tmp_p
     (checkpoints / "000032000").symlink_to(tmp_path)
     with pytest.raises(ValueError, match="unexpected"):
         prune_head_checkpoints(checkpoints, 8000, 24000)
+
+
+def test_shared_training_lock_prevents_a_second_queue_with_different_output(tmp_path, monkeypatch):
+    import scripts.run_v2_learning_screen as module
+    from scripts.run_so101_experiments import queue_lock
+
+    runner = fixture_runner(tmp_path, "--defer-geometry-checks")
+    monkeypatch.setattr(module, "REPO", tmp_path)
+    monkeypatch.setattr(module, "parse_args", lambda argv: runner.args)
+    called = []
+    monkeypatch.setattr(module.ScreenRunner, "execute", lambda self: called.append(True) or 0)
+    with queue_lock(tmp_path / "outputs/v2/training_lock"):
+        with pytest.raises(RuntimeError, match="already owns"):
+            module.main([])
+    assert not called
+    assert module.main([]) == 0
+    assert called == [True]
+
+
+def test_act_full_checkpoint_crash_recovers_report_and_best_across_attempts(tmp_path, monkeypatch):
+    runner = fixture_runner(tmp_path, "--defer-geometry-checks")
+    runner.prepare()
+    job = runner.plan["jobs"][0]
+    root = runner.out / "runs" / job["id"]
+    for attempt, step, examples in (("attempt-001", 500, 8000), ("attempt-002", 4000, 64000)):
+        path = root / attempt / "checkpoints" / f"{step:06d}"
+        path.mkdir(parents=True)
+        for name in ("model.safetensors", "training_state.pt"):
+            (path / name).write_text("saved")
+        atomic_json(path / "run_info.json", {"step": step, "examples_seen": examples,
+                    "best_step": 500, "best_val_l1": .2, "last_val": {"l1": .25}})
+    monkeypatch.setattr(runner, "command", lambda *a, **k: pytest.fail("recovery trained again"))
+    runner.run_job(job)
+    row = runner.status["jobs"][job["id"]]
+    assert row["status"] == "completed"
+    assert row["best_checkpoint"] == str(root / "attempt-001/checkpoints/000500")
+    recovered = read_json(root / "attempt-002/training_result.json")
+    assert recovered["additional_training_examples"] == 0 and recovered["steps"] == 4000
+    assert recovered["last_val"] == {"l1": .25}
+
+
+def test_full_budget_head_checkpoint_is_finalized_without_more_examples(tmp_path, monkeypatch):
+    runner = fixture_runner(tmp_path, "--defer-geometry-checks")
+    runner.prepare()
+    job = runner.plan["jobs"][0]
+    job["family"] = "regression"
+    job["config"]["model"]["vision_backbone"] = "dinov2"
+    checkpoint = runner.out / "runs" / job["id"] / "attempt-001/checkpoints/000064000"
+    checkpoint.mkdir(parents=True)
+    for name in ("model.safetensors", "training_state.pt"):
+        (checkpoint / name).write_text("saved")
+    atomic_json(checkpoint / "run_info.json", {"examples_seen": 64000})
+    monkeypatch.setattr(runner, "ensure_cache", lambda job: tmp_path / "cache")
+
+    def fake_finalize(command, log, *, stage):
+        assert command[-1] == "--finalize-only"
+        assert command[command.index("--resume") + 1] == str(checkpoint)
+        output = Path(command[command.index("--out") + 1])
+        atomic_json(output / "report.json", {"examples": 64000})
+        atomic_json(output / "COMPLETE.json", {"completed": True})
+        return {"returncode": 0, "timed_out": False}
+
+    monkeypatch.setattr(runner, "command", fake_finalize)
+    runner.run_job(job)
+    assert runner.status["jobs"][job["id"]]["status"] == "completed"
+
+
+def test_finalize_only_rejects_missing_resume_before_accessing_data():
+    from argparse import Namespace
+
+    from scripts.train_flow_head import train_head
+
+    with pytest.raises(ValueError, match="full-budget resume"):
+        train_head(Namespace(finalize_only=True, resume=None))

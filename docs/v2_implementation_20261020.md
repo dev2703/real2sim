@@ -1,5 +1,12 @@
 # V2 implementation and experiment runbook — 20 October 2026
 
+**Execution update, 22 October:** the operator requested the learning comparisons run before
+physical geometry acceptance. The [exploratory learning queue](v2_learning_screen_20261022.md)
+has been launched locally on MPS: 24 matrix entries, 22 unique runs, 64,000 anchors per run.
+Its [live status](../outputs/v2/learning_screen_20261022/STATUS.json) records actual progress.
+The earlier geometry-first status below is historical; physical calibration and task-success
+claims remain unresolved.
+
 The two-camera pipeline and bounded experiment infrastructure are implemented. **No v2
 learned task-success result or SO-101 60% milestone is claimed.** Episode conditions and the 29/6/6 split are now reviewed and saved.
 Measured camera/jaw registration, phase annotations, and reference-task acceptance remain

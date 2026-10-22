@@ -303,6 +303,9 @@ def evaluate(policy, dataset, device, batch_size, seed, sampling_steps=4):
 
 
 def train_head(args):
+    finalize_only = getattr(args, "finalize_only", False)
+    if finalize_only and not getattr(args, "resume", None):
+        raise ValueError("finalize-only requires a full-budget resume checkpoint")
     torch.manual_seed(args.seed)
     device = resolve_device(args.device)
     manifest = json.loads((args.data / "manifest.json").read_text())
@@ -372,7 +375,9 @@ def train_head(args):
         history = saved["history"]
         best_validation = saved.get("best_validation", float("inf"))
         best_examples = saved.get("best_examples", seen)
-        if seen >= args.examples:
+        if finalize_only and seen != args.examples:
+            raise ValueError("finalize-only requires exactly the requested exposure")
+        if not finalize_only and seen >= args.examples:
             raise ValueError("resume checkpoint has already reached the requested exposure")
     while seen < args.examples:
         for group in optimizer.param_groups:
@@ -513,6 +518,8 @@ def main():
     train.add_argument("--schedule-examples", type=int)
     train.add_argument("--validate-every", type=int, default=8000)
     train.add_argument("--keep-only-best-and-last", action="store_true")
+    train.add_argument("--finalize-only", action="store_true",
+                       help="restore a full-budget checkpoint and finish evaluation/report without training")
     profile = commands.add_parser("profile")
     profile.add_argument("--checkpoint", type=Path, required=True)
     profile.add_argument("--repeats", type=int, default=20)

@@ -1,5 +1,10 @@
 # V2 real/simulation geometry alignment — 21 October 2026
 
+**Execution update, 22 October:** the operator subsequently requested all learning comparisons
+run before geometry acceptance. The [offline exploratory queue](v2_learning_screen_20261022.md)
+is running against explicitly provisional labels and recorded images. The physical
+verification requirements in this report remain unmet; the queue does not claim otherwise.
+
 Geometry is the current priority. Learning screens remain deferred until independently
 verified registration and reference replay pass. **Real/sim convergence is not yet established.**
 The operator confirmed motor calibration, robot base and cameras unchanged since v2 recording;
