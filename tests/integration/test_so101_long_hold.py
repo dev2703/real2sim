@@ -70,3 +70,28 @@ def test_encoder_latch_uses_requested_closure_and_measured_angle_only(diagnostic
     # Subsequent arm commands remain intact; releasing bypasses the latch.
     np.testing.assert_array_equal(encoder.command(np.ones(6), .3, "LIFT", 4)[:5], 1.)
     np.testing.assert_array_equal(encoder.command(target, .3, "RELEASE", 5), target)
+
+
+@pytest.mark.parametrize("impratio,noslip", [(None, None), (100., 3)])
+def test_contact_options_apply_before_any_settling_or_acquisition(
+        diagnostic, monkeypatch, impratio, noslip):
+    class ReachedSettling(Exception):
+        pass
+
+    def inspect_options_before_reset(env, seed):
+        assert env.steps == 0 and not env._ready
+        assert env.model.opt.impratio == (10. if impratio is None else impratio)
+        assert env.model.opt.noslip_iterations == (0 if noslip is None else noslip)
+        raise ReachedSettling
+
+    monkeypatch.setattr(diagnostic, "settle_start_pose", inspect_options_before_reset)
+    with pytest.raises(ReachedSettling):
+        diagnostic.trial(Path("configs/sim_so101.yaml"), 0,
+                         impratio=impratio, noslip_iterations=noslip)
+
+
+@pytest.mark.parametrize("options", [{"impratio": 0}, {"impratio": float("nan")},
+                                     {"noslip_iterations": -1}, {"noslip_iterations": 1.5}])
+def test_invalid_contact_options_fail_before_loading_a_scene(diagnostic, options):
+    with pytest.raises(ValueError):
+        diagnostic.trial(Path("nonexistent-scene.yaml"), 0, **options)

@@ -12,6 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 
+import mujoco
 import numpy as np
 from diag_so101_contact_retention import snapshot
 from diag_so101_feasible_carry import ReachableGrasp, strict_params
@@ -81,8 +82,24 @@ class EncoderWidth:
 
 
 def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_z=.03,
-          preload_rad=.0003, max_acquisition_ticks=250, grasp_tilts_deg=(10., 15., 20., 25.)):
+          preload_rad=.0003, max_acquisition_ticks=250, grasp_tilts_deg=(10., 15., 20., 25.),
+          impratio=None, noslip_iterations=None):
+    if impratio is not None and (not np.isfinite(impratio) or impratio <= 0):
+        raise ValueError("impratio must be finite and positive")
+    if noslip_iterations is not None and (not isinstance(noslip_iterations, int)
+                                         or noslip_iterations < 0):
+        raise ValueError("noslip_iterations must be a nonnegative integer")
     with So101PickPlaceEnv(config, render_images=False) as env:
+        # Explicit numerical/contact-formulation probes, applied before settling or
+        # reset. Default None preserves the upstream options and all task physics.
+        if impratio is not None:
+            env.model.opt.impratio = impratio
+        if noslip_iterations is not None:
+            env.model.opt.noslip_iterations = noslip_iterations
+        solver_options = {"impratio": float(env.model.opt.impratio),
+            "noslip_iterations": int(env.model.opt.noslip_iterations),
+            "noslip_tolerance": float(env.model.opt.noslip_tolerance),
+            "solver_iterations": int(env.model.opt.iterations)}
         hold_ticks = round(seconds * env.control_hz)
         env.max_episode_steps = max_acquisition_ticks + hold_ticks + 40
         start, settling = settle_start_pose(env, seed)
@@ -114,6 +131,9 @@ def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_
             if ctrl.phase in ("RELEASE", "RETREAT", "DONE") or result.truncated:
                 break
         common = {"seed": seed, "mode": mode, "grasp_ball_in_site_m": params.ball_in_site,
+            "mujoco_version": mujoco.__version__,
+            "actual_solver_options": solver_options,
+            "numerical_warning_counts": env.data.warning.number.tolist(),
             "grasp_tilts_deg": list(grasp_tilts_deg),
             "acquisition_ticks": len(acquisition), "hold_acquired": target is not None,
             "encoder_event": encoder.event, "grasp_search": ctrl.grasp_search,
@@ -147,7 +167,8 @@ def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_
                 ball_touching_support=pm.get("ball_touching_support", False))
             rows.append(row)
         common.update(hold_target_native=target.tolist(), anchor=anchor,
-            hold=summarize_hold(anchor, rows, env.control_hz))
+            hold=summarize_hold(anchor, rows, env.control_hz),
+            numerical_warning_counts=env.data.warning.number.tolist())
         # One-Hz snapshots plus the loss neighborhood retain the mechanism evidence
         # without producing megabytes of redundant 10-Hz contact rows.
         loss = next((i for i, r in enumerate(rows) if not force_bilateral(r)), len(rows) - 1)
@@ -169,6 +190,8 @@ def main():
     p.add_argument("--grasp-z", type=float, default=.03)
     p.add_argument("--grasp-tilts-deg", type=float, nargs="+", default=[10, 15, 20, 25])
     p.add_argument("--preload-rad", type=float, default=.0003)
+    p.add_argument("--impratio", type=float, default=None)
+    p.add_argument("--noslip-iterations", type=int, default=None)
     args = p.parse_args()
     if not np.isfinite(args.seconds) or args.seconds < 20:
         p.error("--seconds must be finite and at least 20")
@@ -179,13 +202,18 @@ def main():
     sources = [Path(__file__), Path("scripts/diag_so101_feasible_carry.py"),
         Path("scripts/diag_so101_contact_retention.py"), args.config, Path(cfg["task_config"]),
         Path(cfg["model"]), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/model.py"),
+        Path("src/real2sim/sim/ball_support.py"),
         Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/evaluation/oracle.py")]
     before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
     for path in sources:
         dest = args.out / "source" / path.name
         dest.parent.mkdir(exist_ok=True)
         dest.write_bytes(path.read_bytes())
-    report = {"kind": "PRIVILEGED_LONG_HOLD_DIAGNOSTIC_NOT_LEARNED_POLICY", "physics_changed": False,
+    report = {"kind": "PRIVILEGED_LONG_HOLD_DIAGNOSTIC_NOT_LEARNED_POLICY",
+        "mujoco_version": mujoco.__version__,
+        "physical_parameters_changed": False,
+        "numerical_contact_options_requested": args.impratio is not None
+            or args.noslip_iterations is not None,
         "geometry_independently_calibrated": False, "source_sha256_at_start": before,
         "protocol": {"seconds": args.seconds, "bilateral_force_threshold_n": .01,
             "max_ball_tool_displacement_m": .01,
@@ -194,13 +222,16 @@ def main():
             "changes_to_gains_friction_collisions_limits_task_scoring": False,
             "encoder_width_uses": "Only requested target and measured gripper position; acquisition remains GT oracle",
             "grasp_x": args.grasp_x, "grasp_z": args.grasp_z, "preload_rad": args.preload_rad,
-            "grasp_tilts_deg": args.grasp_tilts_deg},
+            "grasp_tilts_deg": args.grasp_tilts_deg,
+            "impratio": args.impratio, "noslip_iterations": args.noslip_iterations,
+            "numerical_intervention_timing": "Before all settling/reset/acquisition; None preserves defaults"},
         "trials": []}
     for mode in args.modes:
         for seed in args.seeds:
             row = trial(args.config, seed, mode=mode, seconds=args.seconds,
                 grasp_x=args.grasp_x, grasp_z=args.grasp_z, preload_rad=args.preload_rad,
-                grasp_tilts_deg=args.grasp_tilts_deg)
+                grasp_tilts_deg=args.grasp_tilts_deg,
+                impratio=args.impratio, noslip_iterations=args.noslip_iterations)
             report["trials"].append(row)
             (args.out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
             print(json.dumps({k: row[k] for k in ("seed", "mode", "hold_acquired")}

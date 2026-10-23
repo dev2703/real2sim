@@ -223,8 +223,9 @@ random seeds would not supply independent placement trials.
 The [long-hold follow-up](../results/v2/grasp_retention_followup_20261023.json) requires
 positive force on both jaws, lift above the initial rest height and no more than 10 mm
 ball/tool displacement throughout a 30-second hold. This catches slip earlier than the
-existing permissive `ball_held` indicator. All 45 exploratory and eight coherent image-scene
-cases fail the strict 30-second criterion. They are diagnostic sensitivities, not task trials.
+existing permissive `ball_held` indicator. With the original contact regularization, all 45
+exploratory and eight coherent image-scene cases fail the strict 30-second criterion.
+They are diagnostic sensitivities, not task trials.
 
 | Comparison | Result |
 |---|---|
@@ -240,6 +241,53 @@ resolution does not fix it; it does not by itself exclude contact regularization
 high-angle searches that fall back to 15 degrees are explicitly labeled in the reports.
 A successful brief carry cannot establish stable retention or physical geometry agreement.
 
+## A contact-model cause and a working retention candidate
+
+The subsequent [exact-state comparison](../results/v2/contact_regularization_20261023.json)
+isolates friction regularization. It acquires each grasp with the original physics and
+restores the complete, bitwise-checked integration state for three predeclared options.
+Geometry, friction coefficients, mass, actuator gains, joint targets and collision gates
+are identical. Four loaded states cover three original-scene placements and the fixed
+10 mm image-support scene.
+
+| Contact option | Strict 30-second holds | Maximum ball/tool drift |
+|---|---:|---:|
+| Original elliptic solver, `impratio=10`, NoSlip disabled | 0/4 | Bilateral loss after 3.9–12.3 s |
+| `impratio=100`, NoSlip disabled | 3/4 | 3.63–10.27 mm; one exceeds the 10 mm limit at 29.5 s |
+| `impratio=10`, `noslip_iterations=3` | 4/4 | 0.023–0.163 mm |
+
+All four NoSlip comparisons have zero robot/table or robot/support penetration and
+less than 0.50 mm arm target error. In the image-scene baseline, early sliding friction
+utilization weighted by normal force is only 0.221; only 0.61% of normal load is on nearly
+saturated contacts. Effective jaw/ball sliding friction is 1.0 because upstream jaw
+priority overrides the scene's nominal 0.6. The diagnostic records compiled contact
+parameters rather than assuming the task coefficient applies to every pair.
+
+A separate [acquisition-first check](../results/v2/contact_regularization_preacquisition_20261023.json)
+applies each option before settling, reset and grasp acquisition. Both original-scene and
+image-scene NoSlip runs acquire and hold for 30 seconds, with 0.154 and 0.022 mm drift.
+The higher-impratio alternatives also hold in these two cases, with 8.16 and 3.49 mm drift.
+No physical model arrays change, and there are no robot/table or robot/support penetrations
+during acquisition or hold. These two deterministic scenes are not a statistical success rate.
+
+This identifies regularized friction creep as a sufficient cause of the tested long-hold
+failures. It agrees with [MuJoCo's slip guidance](https://mujoco.readthedocs.io/en/stable/modeling.html#preventing-slip):
+soft friction can creep even inside its cone; higher `impratio` or the NoSlip postprocessor
+reduces that effect. NoSlip can destabilize more complex contacts and makes inverse
+dynamics ill-defined, so these bounded hold checks do not establish general stability.
+The correction is available only through explicit diagnostic options; benchmark defaults
+and frozen training inputs stay unchanged. This is a useful simulator retention candidate,
+not measured contact calibration, learned-policy improvement or complete task evaluation.
+
+Reproduce a complete acquisition and hold with the explicit diagnostic correction:
+
+```sh
+.venv/bin/python scripts/diag_so101_long_hold.py \
+  --config outputs/v2/image_support_scenes_20261023/image_support_10mm_sim.yaml \
+  --seeds 0 --seconds 30 --noslip-iterations 3 \
+  --out outputs/v2/retention_noslip_NEW
+```
+
 ## Remaining evidence
 
 Independent static CAD correspondences and intrinsics are needed to accept camera/base
@@ -249,3 +297,9 @@ and gripper closure/force response and jaw surfaces remain unverified. Refit joi
 only against the accepted camera, then replay recorded tasks before evaluating learned
 rollouts. Test learned-controller changes on the unchanged benchmark and report them
 separately from privileged simulator diagnostics.
+
+Verification: the CPU unit and selected control/contact integration suite passed **631
+tests**; three MPS/CUDA cases were skipped and three graphics-dependent camera cases
+were excluded from this run (they passed separately in the earlier camera investigation).
+All 59 frozen training metadata hashes match. The queue remains active at 19/22 completed
+jobs, with no reported failures. Focused checks also cover the later diagnostic CLI options.

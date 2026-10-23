@@ -1,0 +1,164 @@
+{
+  "kind": "PRIVILEGED_FULL_ACQUISITION_CONTACT_REGULARIZATION_VERIFICATION_NOT_CALIBRATION_OR_LEARNED_SUCCESS",
+  "mujoco_version": "3.15.0",
+  "physical_calibration_accepted": false,
+  "default_physics_changed": false,
+  "active_training_changed": false,
+  "source_report": "outputs/v2/contact_regularization_preacquisition_20261023/report.json",
+  "source_report_sha256": "7f6c914fa02004dd558014d4457ce933cd46c8a6ee9a9d174e1bf7c4b6cb6104",
+  "source_changed_during_probe": [],
+  "protocol": {
+    "intervention_timing": "in diagnostic-only environment constructor immediately after model compilation and BEFORE every reset, settling, grasp search or acquisition control tick",
+    "hold_seconds": 30,
+    "grasp_ball_in_site_m": [
+      -0.01,
+      0,
+      0.03
+    ],
+    "grasp_tilt_bank_deg": [
+      10,
+      15,
+      20,
+      25
+    ],
+    "options": [
+      {
+        "case": "impratio100",
+        "impratio": 100.0,
+        "noslip_iterations": 0
+      },
+      {
+        "case": "noslip3",
+        "impratio": 10.0,
+        "noslip_iterations": 3
+      }
+    ],
+    "unchanged": "geometry, friction coefficients, contact softness, ball mass/inertia, actuator gains/force caps, native limits, physics500Hz, control10Hz, controller and scoring",
+    "strict_scoring": "positive force>.01N on both jaws, ball/tool drift<=10mm, lift>30mm above actual initial support rest height through all300samples",
+    "physical_calibration_accepted": false,
+    "numerical_contact_formulation_changes_dynamics": true,
+    "zero_jitter_image_scene_is_not_random_independent_trial": true
+  },
+  "results": [
+    {
+      "scene": "original_no_spacer_seed20",
+      "config": "outputs/v2/feasible_carry_20261023_no_spacer_config/sim.yaml",
+      "seed": 20,
+      "option": "impratio100",
+      "hold_acquired": true,
+      "retained30s": true,
+      "max_ball_tool_drift_mm": 8.161272282991023,
+      "first_bilateral_loss_s": null,
+      "first_strict_failure_s": null,
+      "max_tool_target_error_mm": 0.4077497522698067,
+      "hold_max_robot_table_penetration_m": 0.0,
+      "hold_max_robot_support_penetration_m": 0.0,
+      "acquisition_max_robot_table_penetration_m": 0.0,
+      "acquisition_max_robot_support_penetration_m": 0.0,
+      "applied_options_before_all_resets": {
+        "impratio": 100.0,
+        "noslip_iterations": 0,
+        "solver_iterations": 10,
+        "noslip_tolerance": 1e-06
+      },
+      "resets_observed": 2
+    },
+    {
+      "scene": "original_no_spacer_seed20",
+      "config": "outputs/v2/feasible_carry_20261023_no_spacer_config/sim.yaml",
+      "seed": 20,
+      "option": "noslip3",
+      "hold_acquired": true,
+      "retained30s": true,
+      "max_ball_tool_drift_mm": 0.15415672289943205,
+      "first_bilateral_loss_s": null,
+      "first_strict_failure_s": null,
+      "max_tool_target_error_mm": 0.3802521524167174,
+      "hold_max_robot_table_penetration_m": 0.0,
+      "hold_max_robot_support_penetration_m": 0.0,
+      "acquisition_max_robot_table_penetration_m": 0.0,
+      "acquisition_max_robot_support_penetration_m": 0.0,
+      "applied_options_before_all_resets": {
+        "impratio": 10.0,
+        "noslip_iterations": 3,
+        "solver_iterations": 10,
+        "noslip_tolerance": 1e-06
+      },
+      "resets_observed": 2
+    },
+    {
+      "scene": "image10mm_fixed_scene",
+      "config": "outputs/v2/image_support_scenes_20261023/image_support_10mm_sim.yaml",
+      "seed": 0,
+      "option": "impratio100",
+      "hold_acquired": true,
+      "retained30s": true,
+      "max_ball_tool_drift_mm": 3.4949461023926984,
+      "first_bilateral_loss_s": null,
+      "first_strict_failure_s": null,
+      "max_tool_target_error_mm": 0.2951304612797035,
+      "hold_max_robot_table_penetration_m": 0.0,
+      "hold_max_robot_support_penetration_m": 0.0,
+      "acquisition_max_robot_table_penetration_m": 0.0,
+      "acquisition_max_robot_support_penetration_m": 0.0,
+      "applied_options_before_all_resets": {
+        "impratio": 100.0,
+        "noslip_iterations": 0,
+        "solver_iterations": 10,
+        "noslip_tolerance": 1e-06
+      },
+      "resets_observed": 2
+    },
+    {
+      "scene": "image10mm_fixed_scene",
+      "config": "outputs/v2/image_support_scenes_20261023/image_support_10mm_sim.yaml",
+      "seed": 0,
+      "option": "noslip3",
+      "hold_acquired": true,
+      "retained30s": true,
+      "max_ball_tool_drift_mm": 0.022385751106342094,
+      "first_bilateral_loss_s": null,
+      "first_strict_failure_s": null,
+      "max_tool_target_error_mm": 0.3053194846191307,
+      "hold_max_robot_table_penetration_m": 0.0,
+      "hold_max_robot_support_penetration_m": 0.0,
+      "acquisition_max_robot_table_penetration_m": 0.0,
+      "acquisition_max_robot_support_penetration_m": 0.0,
+      "applied_options_before_all_resets": {
+        "impratio": 10.0,
+        "noslip_iterations": 3,
+        "solver_iterations": 10,
+        "noslip_tolerance": 1e-06
+      },
+      "resets_observed": 2
+    }
+  ],
+  "warnings_and_geometry_assertions": {
+    "numerical_warnings": "All environment steps abort on any MuJoCo numerical/capacity warning; every acquisition and all300 hold ticks returned normally. No warning suppression.",
+    "unchanged_model_arrays": "Geometry poses/sizes, geom friction/solref/solimp, mass/inertia, actuator gain/bias/force caps and joint limits hashed before/after intervention and asserted identical. Detailed hashes in source report.",
+    "held_robot_penetrations": "Asserted exactly zero table/support penetration throughout all four loaded holds. Acquisition maxima stay within unchanged2mm native gate."
+  },
+  "interpretation": [
+    "All4 options/scenes acquired a grasp and met strict30s retention with settings applied before settling/reset/acquisition, independently confirming this is not only a mid-hold rescue.",
+    "NoSlip3 maxdrift is0.154mm on original no-spacer seed20 and0.0224mm on coherent image10mm scene. Higher impratio100 retains with8.161mm and3.495mm drift, so it is less stable and close to10mm gate in originalscene.",
+    "These modify numerical/contact formulation and therefore simulated dynamics, despite unchanged physical parameter arrays. They do not identify actual friction, gripper compliance, calibration or real robot retention.",
+    "Earlier tests only increased Newton iteration cap or refined timestep; that does not test soft friction regularization/no-slip postprocessing. Their negative results remain valid within that narrower scope."
+  ],
+  "versioning_note": "Options are diagnostic-only keyword/CLI flags with None defaults preserving upstream settings. No production/core/config or running training input changed. Any subsequent policy/control evaluation must record/version these contact options and compare against the unchanged default benchmark. Thirty-second privileged stationary retention is not learned task completion.",
+  "diagnostic_cli_sources_sha256": {
+    "scripts/diag_so101_long_hold.py": "1cfd3a965ce64eda608502ce36dd00c2298bcd16c7a1bf08c546949e2afa594b",
+    "tests/integration/test_so101_long_hold.py": "d08f25b0a82ef7c485bd7913566fc6b77a756933a40540c5938451ce861a945b"
+  },
+  "reproduction_commands": {
+    "original_impratio100": ".venv/bin/python scripts/diag_so101_long_hold.py --config outputs/v2/feasible_carry_20261023_no_spacer_config/sim.yaml --out outputs/v2/original_impratio100_NEW --seeds 20 --seconds 30 --impratio 100",
+    "original_noslip3": ".venv/bin/python scripts/diag_so101_long_hold.py --config outputs/v2/feasible_carry_20261023_no_spacer_config/sim.yaml --out outputs/v2/original_noslip3_NEW --seeds 20 --seconds 30 --noslip-iterations 3",
+    "image10mm_impratio100": ".venv/bin/python scripts/diag_so101_long_hold.py --config outputs/v2/image_support_scenes_20261023/image_support_10mm_sim.yaml --out outputs/v2/image10mm_impratio100_NEW --seeds 0 --seconds 30 --impratio 100",
+    "image10mm_noslip3": ".venv/bin/python scripts/diag_so101_long_hold.py --config outputs/v2/image_support_scenes_20261023/image_support_10mm_sim.yaml --out outputs/v2/image10mm_noslip3_NEW --seeds 0 --seconds 30 --noslip-iterations 3",
+    "tests": ".venv/bin/python -m pytest tests/integration/test_so101_long_hold.py tests/integration/test_so101_feasible_carry.py -q"
+  },
+  "tests": {
+    "focused_long_hold_and_existing_feasible_carry": "15 passed in8.57s",
+    "ruff": "passed",
+    "git_diff_check": "passed"
+  }
+}
