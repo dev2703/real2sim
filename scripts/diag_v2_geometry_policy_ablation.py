@@ -75,13 +75,13 @@ def validate_task_ablation(original, candidate):
     return changed
 
 
-def make_task(original, camera, scene):
+def make_task(original, camera, scene, camera_candidate="early", observed_layout=None):
     task = copy.deepcopy(original)
     task["geometry_status"] = "unaccepted_geometry_only_learned_policy_ablation"
     task["physical_calibration_accepted"] = False
     task["diagnostic_scope"] = NOTE
     task["robot_so101"]["base_z_offset"] = .0024
-    task["camera_iphone"].update(camera["candidates"]["early"]["camera"])
+    task["camera_iphone"].update(camera["candidates"][camera_candidate]["camera"])
     task["camera_iphone"]["extrinsics_provenance"] = NOTE
     task["table"]["mat"]["center_task_xy"] = camera[
         "shared_geometry_metadata_only"]["candidate_mat_center_in_native_base_m"][:2]
@@ -89,6 +89,20 @@ def make_task(original, camera, scene):
     task["ball"]["start_region"].update(
         center_task_xy=scene["ball_xy"], radius=0., provenance=NOTE)
     task["ball"]["support"] = copy.deepcopy(scene["support"])
+    if observed_layout is not None:
+        if observed_layout["camera_candidate"] != camera_candidate:
+            raise ValueError("observed layout and selected camera candidate disagree")
+        if observed_layout["physical_calibration_accepted"] is not False:
+            raise ValueError("observed layout must remain physically unaccepted")
+        support = observed_layout["support"]
+        if support["height"] != scene["support"]["height"]:
+            raise ValueError("observed layout must preserve the predeclared support height")
+        center = observed_layout["ball_center_on_declared_support_plane_native_m"]
+        expected_z = -.0024 + support["height"] + original["ball"]["radius"]
+        if len(center) != 3 or not np.isfinite(center).all() or abs(center[2] - expected_z) > 1e-9:
+            raise ValueError("observed ball center must lie on the declared support plane")
+        task["ball"]["start_region"]["center_task_xy"] = list(center[:2])
+        task["ball"]["support"] = copy.deepcopy(support)
     task["bowl"]["center_task_xy"] = scene["bowl_xy"]
     task["bowl"]["center_provenance"] = NOTE
     validate_task_ablation(original, task)
@@ -137,10 +151,12 @@ def run(args):
     original_task_path = project_path(original_config["task_config"])
     camera = json.loads(args.camera.read_text())
     scenes = json.loads(args.scenes.read_text())
+    observed_layout = json.loads(args.observed_layout.read_text()) if args.observed_layout else None
     scene = next(case for case in scenes["cases"] if case["case_id"] == args.case)
     args.artifacts.mkdir(parents=True)
     task_path = args.artifacts / "task.yaml"
-    task = make_task(load_yaml(original_task_path), camera, scene)
+    task = make_task(load_yaml(original_task_path), camera, scene, args.camera_candidate,
+                     observed_layout)
     task_path.write_text(yaml.safe_dump(task, sort_keys=False))
     sim = copy.deepcopy(original_config)
     sim["task_config"] = str(task_path.resolve())
@@ -154,6 +170,8 @@ def run(args):
               original_task_path, project_path(sim["data_config"]), task_path, sim_path]
     paths += [args.checkpoint / name for name in (
         "model.safetensors", "config.json", "stats.json", "real2sim_contract.json", "run_info.json")]
+    if args.observed_layout:
+        paths += [args.observed_layout, Path(observed_layout["source_frame_jpeg"])]
     before = fingerprints(paths)
     if any(before[path] != sha for path, sha in frozen.items()):
         raise ValueError("frozen training inputs changed before diagnostic")
@@ -225,9 +243,12 @@ def run(args):
                 "physical_calibration_accepted": False, "checkpoint_contract_modified": False,
                 "production_calibration_gate_unchanged": True,
                 "limitations": ("One fixed scene hypothesis, not a calibrated benchmark or success-rate estimate. "
-                                "Scene inferred from early episode0 frame200; selected collision-free recorded "
-                                "reset is episode9 frame100, so this is not a reconstruction of either capture. "
-                                "Physical joint zeros remain unchanged and unverified. GT used only for scoring."),
+                                + ("Camera, ball, and rigid support footprint inferred from episode9 frame100; "
+                                   "bowl retains the early episode0 frame200 hypothesis. "
+                                   if observed_layout else
+                                   "Scene inferred from early episode0 frame200; recorded reset is episode9 "
+                                   "frame100, so this is not a reconstruction of either capture. ")
+                                + "Physical joint zeros remain unchanged and unverified. GT used only for scoring."),
                 "checkpoint": meta, "original_contract": contract,
                 "declared_task_hash_mismatch": {"checkpoint": contract["calibration_sha256"],
                                                 "scene": file_sha256(task_path)},
@@ -236,6 +257,8 @@ def run(args):
                                      "random_native_fk_max_difference": max_fk_delta,
                                      "native_fk_samples": 16, "joint_mapping_unchanged": True},
                 "scene_case": args.case, "timeout_s": task["episode"]["timeout_s"],
+                "camera_candidate": args.camera_candidate,
+                "observed_layout": observed_layout,
                 "simulated_seconds": tracker.ticks / env.control_hz,
                 "control_hz": env.control_hz, "policy_calls": ctrl.n_policy_calls,
                 "contact_solver": contact_solver_settings(env.model),
@@ -265,6 +288,9 @@ def main():
     parser.add_argument("--camera", type=Path, default=Path("results/v2/camera_render_candidate_20261023.json"))
     parser.add_argument("--scenes", type=Path, default=Path("results/v2/ball_support_scene_candidates_20261023.json"))
     parser.add_argument("--case", default="image_support_10mm")
+    parser.add_argument("--camera-candidate", choices=("early", "late"), default="early")
+    parser.add_argument("--observed-layout", type=Path,
+                        help="Separately declared image-derived ball/support layout sensitivity")
     parser.add_argument("--inputs", type=Path, default=Path("outputs/v2/learning_screen_20261022/INPUTS.json"))
     parser.add_argument("--artifacts", type=Path, default=Path("outputs/v2/geometry_policy_ablation_20261023"))
     parser.add_argument("--out", type=Path, default=Path("results/v2/geometry_policy_ablation_20261023.json"))

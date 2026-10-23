@@ -61,6 +61,32 @@ def test_scene_cannot_claim_accepted_calibration(ablation, tasks):
         ablation.validate_task_ablation(original, candidate)
 
 
+def test_matched_observed_layout_preserves_predeclared_height_and_camera(ablation):
+    original = load_yaml("configs/v2/task.exploratory_20261022.yaml")
+    camera = json.loads(Path("results/v2/camera_render_candidate_20261023.json").read_text())
+    scene = next(case for case in json.loads(Path(
+        "results/v2/ball_support_scene_candidates_20261023.json").read_text())["cases"]
+                 if case["case_id"] == "image_support_10mm")
+    observed = {"camera_candidate": "late", "physical_calibration_accepted": False,
+                "ball_center_on_declared_support_plane_native_m": [.25, .02, .0411],
+                "support": {**scene["support"], "center_task_xy": [.268, .023]}}
+    candidate = ablation.make_task(original, camera, scene, "late", observed)
+    assert candidate["ball"]["start_region"]["center_task_xy"] == [.25, .02]
+    assert candidate["ball"]["support"]["height"] == .010
+    assert candidate["camera_iphone"]["intrinsics_px"] == camera[
+        "candidates"]["late"]["camera"]["intrinsics_px"]
+    assert candidate["bowl"]["center_task_xy"] == scene["bowl_xy"]
+    with pytest.raises(ValueError, match="camera candidate disagree"):
+        ablation.make_task(original, camera, scene, "early", observed)
+    observed["support"]["height"] = .020
+    with pytest.raises(ValueError, match="predeclared support height"):
+        ablation.make_task(original, camera, scene, "late", observed)
+    observed["support"]["height"] = .010
+    observed["ball_center_on_declared_support_plane_native_m"][2] = .0511
+    with pytest.raises(ValueError, match="declared support plane"):
+        ablation.make_task(original, camera, scene, "late", observed)
+
+
 def test_real_scene_preserves_fk_but_production_guard_stays_closed(ablation, tasks, tmp_path):
     original, candidate = tasks
     reference_path = Path("outputs/v2/inference_sim_smoke_20261023/sim.yaml")

@@ -1,0 +1,376 @@
+{
+  "kind": "RECORDED_VALIDATION_MPS_INFERENCE_PROFILE",
+  "device": "mps",
+  "machine": "arm64",
+  "torch_version": "2.11.0",
+  "torch_threads": 2,
+  "batch_size": 1,
+  "script_sha256": "221d354731750c3eb2357cce9a77e9b6c51907b1dd06db502eb25c46dd759863",
+  "synchronization": "torch.mps.synchronize immediately before and after each timed call",
+  "includes": "cached image access, normalization, collation, input transfer, all vision/head computation, action denormalization, output transfer",
+  "excludes": "model loading, sensor acquisition and simulator rendering",
+  "reserved_episodes_used": [],
+  "learned_task_success": null,
+  "models": {
+    "L1_resnet_iphone_top": {
+      "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone_top/attempt-001/checkpoints/004000",
+      "checkpoint_sha256": "41e47452b2a12f9de8f8b2e82fa7d1d51006195785f31cf750c88c94de6b2c9a",
+      "metadata_sha256": {
+        "config.json": "6cba44a13719c8230911583413f0af38c1bebbbbde4ff0ff0bbf39fe265fd2cc",
+        "stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+        "real2sim_contract.json": "48d8a8162dae620f1f5604b52dfee2bb5ed72c7fc57311f55b772ce869712fce",
+        "run_info.json": "6842ce691f5831458d8c70b01e06be1efe992a4a0b800e24c4c622060e003b25"
+      },
+      "manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+      "camera_keys": [
+        "observation.images.iphone",
+        "observation.images.top"
+      ],
+      "warmup_ms": [
+        138.67808307986706,
+        21.73349994700402,
+        24.110584054142237
+      ],
+      "calls": 30,
+      "distinct_anchors": 24,
+      "selected_validation_anchors": [
+        {
+          "tick": 2789,
+          "episode": 9
+        },
+        {
+          "tick": 2887,
+          "episode": 9
+        },
+        {
+          "tick": 2987,
+          "episode": 9
+        },
+        {
+          "tick": 3087,
+          "episode": 9
+        },
+        {
+          "tick": 4049,
+          "episode": 13
+        },
+        {
+          "tick": 4179,
+          "episode": 13
+        },
+        {
+          "tick": 4309,
+          "episode": 13
+        },
+        {
+          "tick": 4439,
+          "episode": 13
+        },
+        {
+          "tick": 7410,
+          "episode": 22
+        },
+        {
+          "tick": 7524,
+          "episode": 22
+        },
+        {
+          "tick": 7638,
+          "episode": 22
+        },
+        {
+          "tick": 7754,
+          "episode": 22
+        },
+        {
+          "tick": 10494,
+          "episode": 31
+        },
+        {
+          "tick": 10594,
+          "episode": 31
+        },
+        {
+          "tick": 10696,
+          "episode": 31
+        },
+        {
+          "tick": 10798,
+          "episode": 31
+        },
+        {
+          "tick": 12127,
+          "episode": 36
+        },
+        {
+          "tick": 12245,
+          "episode": 36
+        },
+        {
+          "tick": 12365,
+          "episode": 36
+        },
+        {
+          "tick": 12485,
+          "episode": 36
+        },
+        {
+          "tick": 12487,
+          "episode": 37
+        },
+        {
+          "tick": 12609,
+          "episode": 37
+        },
+        {
+          "tick": 12731,
+          "episode": 37
+        },
+        {
+          "tick": 12855,
+          "episode": 37
+        },
+        {
+          "tick": 2789,
+          "episode": 9
+        },
+        {
+          "tick": 2887,
+          "episode": 9
+        },
+        {
+          "tick": 2987,
+          "episode": 9
+        },
+        {
+          "tick": 3087,
+          "episode": 9
+        },
+        {
+          "tick": 4049,
+          "episode": 13
+        },
+        {
+          "tick": 4179,
+          "episode": 13
+        }
+      ],
+      "all_outputs_finite": true,
+      "timings_ms": [
+        28.828541981056333,
+        23.197958944365382,
+        24.20062490273267,
+        23.424125043675303,
+        23.99212494492531,
+        23.586791940033436,
+        23.378457990475,
+        23.297457955777645,
+        23.018874926492572,
+        23.289124947041273,
+        23.444458027370274,
+        23.904083063825965,
+        24.307292071171105,
+        24.04662501066923,
+        24.608416948467493,
+        23.694292060099542,
+        24.20962497126311,
+        24.097541929222643,
+        24.54854198731482,
+        24.843625025823712,
+        24.990292033180594,
+        25.794334011152387,
+        26.27720800228417,
+        26.071625063195825,
+        26.59137500450015,
+        25.858375011011958,
+        25.56800004094839,
+        25.588750024326146,
+        26.645499980077147,
+        27.228708029724658
+      ],
+      "median_ms": 24.258458521217108,
+      "p95_ms": 26.966264407383278,
+      "passes_120ms": true
+    },
+    "L7_clip_last2_lr3e-06": {
+      "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/learning_screen_20261022/runs/L7_clip_last2_lr3e-06/attempt-001/checkpoints/003000",
+      "checkpoint_sha256": "4c9ff34576e6934b03a7e4a33fe65504ec32a07e0c2e0a336ae7fb08e2763b05",
+      "metadata_sha256": {
+        "config.json": "db0df669383a2a5becfba9279a4fe807c9f072bbf130871a233a51031e9acb0b",
+        "stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+        "real2sim_contract.json": "9dd669783ee66c78114a9381848c8d8b1b87009571f2d33b8c22e23cf9632dc7",
+        "run_info.json": "54b5ec150d93d3e4e1cd7acd8fa4b95c4101c76f832d05b3f99b899cb509128b"
+      },
+      "manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+      "camera_keys": [
+        "observation.images.iphone",
+        "observation.images.top"
+      ],
+      "warmup_ms": [
+        120.4806249588728,
+        80.19108301959932,
+        78.39545898605138
+      ],
+      "calls": 30,
+      "distinct_anchors": 24,
+      "selected_validation_anchors": [
+        {
+          "tick": 2789,
+          "episode": 9
+        },
+        {
+          "tick": 2887,
+          "episode": 9
+        },
+        {
+          "tick": 2987,
+          "episode": 9
+        },
+        {
+          "tick": 3087,
+          "episode": 9
+        },
+        {
+          "tick": 4049,
+          "episode": 13
+        },
+        {
+          "tick": 4179,
+          "episode": 13
+        },
+        {
+          "tick": 4309,
+          "episode": 13
+        },
+        {
+          "tick": 4439,
+          "episode": 13
+        },
+        {
+          "tick": 7410,
+          "episode": 22
+        },
+        {
+          "tick": 7524,
+          "episode": 22
+        },
+        {
+          "tick": 7638,
+          "episode": 22
+        },
+        {
+          "tick": 7754,
+          "episode": 22
+        },
+        {
+          "tick": 10494,
+          "episode": 31
+        },
+        {
+          "tick": 10594,
+          "episode": 31
+        },
+        {
+          "tick": 10696,
+          "episode": 31
+        },
+        {
+          "tick": 10798,
+          "episode": 31
+        },
+        {
+          "tick": 12127,
+          "episode": 36
+        },
+        {
+          "tick": 12245,
+          "episode": 36
+        },
+        {
+          "tick": 12365,
+          "episode": 36
+        },
+        {
+          "tick": 12485,
+          "episode": 36
+        },
+        {
+          "tick": 12487,
+          "episode": 37
+        },
+        {
+          "tick": 12609,
+          "episode": 37
+        },
+        {
+          "tick": 12731,
+          "episode": 37
+        },
+        {
+          "tick": 12855,
+          "episode": 37
+        },
+        {
+          "tick": 2789,
+          "episode": 9
+        },
+        {
+          "tick": 2887,
+          "episode": 9
+        },
+        {
+          "tick": 2987,
+          "episode": 9
+        },
+        {
+          "tick": 3087,
+          "episode": 9
+        },
+        {
+          "tick": 4049,
+          "episode": 13
+        },
+        {
+          "tick": 4179,
+          "episode": 13
+        }
+      ],
+      "all_outputs_finite": true,
+      "timings_ms": [
+        77.2107500815764,
+        77.99604209139943,
+        79.08695796504617,
+        80.54033294320107,
+        77.35704199876636,
+        76.83566689956933,
+        76.89141598530114,
+        76.69079094193876,
+        81.0177909443155,
+        83.18549999967217,
+        86.05404198169708,
+        88.00275006797165,
+        87.69491605926305,
+        77.27162505034357,
+        76.5645420178771,
+        78.50533397868276,
+        77.37387507222593,
+        77.01625011395663,
+        76.73070800956339,
+        76.84795802924782,
+        76.97045896202326,
+        77.83129205927253,
+        87.94612507335842,
+        99.21479201875627,
+        97.13704197201878,
+        91.77279204595834,
+        84.9681249819696,
+        80.79933398403227,
+        78.14145798329264,
+        77.62112491764128
+      ],
+      "median_ms": 78.06875003734604,
+      "p95_ms": 94.72312950529157,
+      "passes_120ms": true
+    }
+  }
+}

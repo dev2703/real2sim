@@ -81,6 +81,9 @@ class NativeKinematics:
         self.model = model
         self.data = mujoco.MjData(model)
         self.config = config["ik"]
+        self.position_priority_fallback = self.config.get("position_priority_fallback", False)
+        if type(self.position_priority_fallback) is not bool:
+            raise ValueError("ik.position_priority_fallback must be a boolean")
         # Optional numerical convergence is separate from hard residual acceptance.
         # Legacy configs retain their exact early-stop behavior for frozen benchmarks.
         self.polish = any(k in self.config for k in
@@ -127,6 +130,30 @@ class NativeKinematics:
         return False
 
     def solve(self, target: np.ndarray, seed: np.ndarray, *, gripper: float | None = None) -> IKResult:
+        """Retry residual failures with softer orientation optimization when opted in.
+
+        A weighted least-squares compromise can miss the position tolerance even
+        when a candidate satisfying both hard pose tolerances exists. These retries
+        preserve the requested pose and every acceptance condition. Collision and
+        workspace failures never trigger retries; failed retries return the original
+        failure and seed. The default follows the legacy numerical path exactly.
+        """
+        weight = self.config["orientation_weight_m_per_rad"]
+        initial = self._solve(target, seed, gripper=gripper, orientation_weight=weight)
+        if self.position_priority_fallback and initial.reason == "residual_rejected":
+            initial_candidate = self.data.qpos[self.qadr].copy()
+            for scale in (.25, .0625):
+                candidate = self._solve(target, seed, gripper=gripper,
+                                        orientation_weight=weight * scale)
+                if candidate.accepted:
+                    return candidate
+            # Preserve the original failed candidate for diagnostic FK/contact probes,
+            # consistently with the residuals returned in the original failure.
+            self.forward(initial_candidate)
+        return initial
+
+    def _solve(self, target: np.ndarray, seed: np.ndarray, *, gripper: float | None,
+               orientation_weight: float) -> IKResult:
         target, seed = np.asarray(target, dtype=float), np.asarray(seed, dtype=float)
         if target.shape != (4, 4) or not np.all(np.isfinite(target)):
             raise ValueError("IK target must be a finite 4x4 transform")
@@ -146,7 +173,7 @@ class NativeKinematics:
         cfg = self.config
         outside = np.any(target[:3, 3] < cfg["workspace_min"]) or np.any(
             target[:3, 3] > cfg["workspace_max"])
-        weight = cfg["orientation_weight_m_per_rad"]
+        weight = orientation_weight
 
         def error(pose):
             translation = target[:3, 3] - pose[:3, 3]

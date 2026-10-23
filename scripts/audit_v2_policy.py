@@ -33,8 +33,32 @@ def metrics(pred, label, *, action_kind):
         return result
     xyz = np.linalg.norm(error[:, :3], axis=1) * 1000
     result.update(
-        translation_mean_mm=float(xyz.mean()), translation_p95_mm=float(np.quantile(xyz, 0.95))
+        translation_mean_mm=float(xyz.mean()), translation_p95_mm=float(np.quantile(xyz, 0.95)),
+        translation_bias_xyz_mm=(error[:, :3].mean(axis=0) * 1000).tolist(),
     )
+    if action_kind in ("cartesian", "cartesian_tool"):
+        target_norm = np.linalg.norm(label[:, :3], axis=1)
+        predicted_norm = np.linalg.norm(pred[:, :3], axis=1)
+        zero_error = float(target_norm.mean() * 1000)
+        # Motion-sized labels expose small-action collapse hidden by stationary ticks.
+        moving = target_norm > .0004
+        moving_count = int(moving.sum())
+        result["zero_delta_translation_mean_mm"] = zero_error
+        result["translation_skill_vs_zero"] = 1 - float(xyz.mean()) / zero_error if zero_error else None
+        result["translation_motion"] = {
+            "label_step_threshold_mm": .4,
+            "n": moving_count,
+            "translation_mean_mm": float(xyz[moving].mean()) if moving_count else None,
+            "predicted_step_mean_mm": float(predicted_norm[moving].mean() * 1000)
+                if moving_count else None,
+            "label_step_mean_mm": float(target_norm[moving].mean() * 1000)
+                if moving_count else None,
+            "median_predicted_to_label_step_ratio": float(np.median(
+                predicted_norm[moving] / target_norm[moving])) if moving_count else None,
+            "positive_direction_fraction": float(np.mean(
+                np.sum(pred[moving, :3] * label[moving, :3], axis=1) > 0))
+                if moving_count else None,
+        }
     rotation = []
     invalid = 0
     if action_kind == "cartesian_absolute":
