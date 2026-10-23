@@ -1,15 +1,54 @@
 """Explicit extra-camera mounts shared by both robot scenes.
 
 Local camera axes follow MuJoCo (x right, y up, camera looks along -z).
-No placeholder mount is supplied: a wrist view needs a measured body transform.
+Measured transforms are required for physical acceptance. An explicit nominal CAD
+camera descriptor is available for provisional experiments; it is never enabled by default.
 """
 
 import copy
 import hashlib
 import json
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import numpy as np
+
+
+def nominal_so101_wrist_camera(mjcf: str | Path) -> dict:
+    """Expose the model's existing wrist optical mount as an opt-in image input.
+
+    The pinned SO-101 includes both mount CAD and ``wrist_cam``. Copy the compiled
+    local camera transform, including quaternion normalization, rather than inventing
+    an optical center from a mesh. Model optics are a hypothesis, not measurements
+    of the recording camera's intrinsics, crop, distortion or installed pose.
+    """
+    import mujoco
+
+    path = Path(mjcf)
+    model = mujoco.MjModel.from_xml_path(str(path))
+    camera = model.camera("wrist_cam")
+    body = model.body(int(camera.bodyid[0]))
+    if body.name != "camera_mount" or int(camera.mode[0]) != int(mujoco.mjtCamLight.mjCAMLIGHT_FIXED):
+        raise ValueError("nominal wrist camera requires fixed wrist_cam on camera_mount")
+    rotation = np.empty(9)
+    mujoco.mju_quat2Mat(rotation, camera.quat)
+    axes = rotation.reshape(3, 3)[:, :2].T.ravel()
+    return {
+        "key": "observation.images.top", "name": "top_nominal_cad",
+        "projection_model": "fovy", "fovy_deg": float(camera.fovy[0]),
+        "mounts": {"so101": {
+            "body": body.name, "position_body_m": camera.pos.tolist(),
+            "xyaxes_body": axes.tolist(),
+        }},
+        "physical_calibration_accepted": False,
+        "provenance": {
+            "kind": "NOMINAL_CAD_OPTICS_NOT_PHYSICALLY_VERIFIED",
+            "source_model": str(path),
+            "source_model_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+            "source_camera": "wrist_cam",
+            "scope": "Explicit provisional two-view experiment. Recorded top camera correspondence, intrinsics/distortion and installed optical transform remain unverified.",
+        },
+    }
 
 
 def camera_projection_attributes(camera: dict, render: dict | None = None) -> dict[str, str]:

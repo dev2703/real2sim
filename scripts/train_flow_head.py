@@ -38,6 +38,8 @@ from real2sim.policy.flow_matching import (
 from real2sim.policy.paired import file_sha256
 from real2sim.policy.sampling import ResumableBatches, restore_rng, rng_state
 from real2sim.policy.schedule import learning_rate
+from real2sim.policy.validation import VERSION as VALIDATION_VERSION
+from real2sim.policy.validation import action_metrics, executed_prefix_report
 
 
 def write_json(path: Path, value):
@@ -238,7 +240,8 @@ def metric(pred, label, std):
     directional = (target_magnitude > .001) & (magnitude > 1e-8)
     cosine = (pred[directional, :3] * label[directional, :3]).sum(1) / (
         magnitude[directional] * target_magnitude[directional])
-    return {"n": len(pred), "l1": float(np.abs(error / std).mean()),
+    return {**action_metrics(pred, label, action_kind="cartesian", std=std),
+            "n": len(pred), "l1": float(np.abs(error / std).mean()),
             "mae_raw_per_dim": np.abs(error).mean(0).tolist(),
             "translation_mean_m": float(trans.mean()), "translation_p95_m": float(np.quantile(trans, .95)),
             "rotation_mean_rad": float(rotation.mean()), "rotation_p95_rad": float(np.quantile(rotation, .95)),
@@ -299,6 +302,10 @@ def evaluate(policy, dataset, device, batch_size, seed, sampling_steps=4):
                     (values - label)[a["episode_index"][ticks] == ep, :3].sum(0)))}
             for p, values in predictions_by_name.items()} for ep in episodes},
     }
+    common = executed_prefix_report(predictions, ticks, anchors, a, dataset.manifest,
+                                    dataset.normalizer.action_std, episodes)
+    report["executed_prefix"] = common
+    report["offline_selection"] = common["offline_selection"]
     return report, {"tick": ticks, "anchor_tick": anchors, "label": label, **predictions_by_name}
 
 
@@ -346,6 +353,7 @@ def train_head(args):
                         "trainable_final_blocks": 0})
     seen, update = 0, 0
     best_validation, best_examples = float("inf"), 0
+    best_offline_score = float("inf")
     history = []
     effective = args.batch_size * args.grad_accum
     schedule_examples = getattr(args, "schedule_examples", None) or args.examples
@@ -360,6 +368,7 @@ def train_head(args):
                 "config": asdict(config), "batch_size": args.batch_size, "grad_accum": args.grad_accum,
                 "lr": args.lr, "weight_decay": args.weight_decay, "schedule_examples": schedule_examples,
                 "validation_every": validation_every}
+    identity["selection_protocol"] = VALIDATION_VERSION
     resume = getattr(args, "resume", None)
     if resume:
         saved = torch.load(resume / "training_state.pt", map_location="cpu", weights_only=False)
@@ -374,6 +383,7 @@ def train_head(args):
         seen, update = saved["examples_seen"], saved["update"]
         history = saved["history"]
         best_validation = saved.get("best_validation", float("inf"))
+        best_offline_score = saved.get("best_offline_score", float("inf"))
         best_examples = saved.get("best_examples", seen)
         if finalize_only and seen != args.examples:
             raise ValueError("finalize-only requires exactly the requested exposure")
@@ -409,19 +419,22 @@ def train_head(args):
             print(json.dumps(entry), flush=True)
         if seen % validation_every == 0 or seen == args.examples:
             validation, _ = evaluate(policy, val, device, args.batch_size, args.seed, 4)
-            score = validation["strata"]["all"]["model"]["l1"]
-            if score < best_validation:
-                best_validation, best_examples = score, seen
+            score = validation["offline_selection"]["score"]
+            best_validation = min(best_validation, validation["strata"]["all"]["model"]["l1"])
+            if score < best_offline_score:
+                best_offline_score, best_examples = score, seen
             ck = args.out / "checkpoints" / f"{seen:09d}"
             info = {"step": update, "examples_seen": seen, "validation": validation,
                     "best_validation_l1": best_validation, "best_examples": best_examples,
+                    "selection_protocol": VALIDATION_VERSION, "best_offline_score": best_offline_score,
                     "objective": args.objective, "identity": identity, "seed": args.seed}
             save_flow_checkpoint(ck, policy, normalizer.stats, contract, info,
                                  backbone_state=load_file(args.cache / "backbone.safetensors"))
             torch.save({"optimizer": optimizer.state_dict(), "sampler": iterator.state_dict(),
                         "rng": rng_state(), "noise_generator": noise_generator.get_state(),
                         "examples_seen": seen, "update": update, "identity": identity, "history": history,
-                        "best_validation": best_validation, "best_examples": best_examples},
+                        "best_validation": best_validation, "best_examples": best_examples,
+                        "best_offline_score": best_offline_score},
                        ck / "training_state.pt")
             if getattr(args, "keep_only_best_and_last", False):
                 prune_head_checkpoints(args.out / "checkpoints", best_examples, seen)
@@ -434,6 +447,9 @@ def train_head(args):
               "split": split, "trainable_parameters": sum(p.numel() for p in policy.parameters()),
               "feature_cache": str(args.cache.resolve()), "feature_cache_sha256": cache["sha256"],
               "train_wall_s": training_s, "config": asdict(config), "history": history}
+    report.update(selection_protocol=VALIDATION_VERSION, best_offline_score=best_offline_score,
+                  best_validation_l1=best_validation, best_examples=best_examples,
+                  checkpoint_selection_scope="offline shortlist only; bounded development rollouts then reserved evaluation")
     if device.startswith("cuda"):
         report["cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated()
         report["cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved()

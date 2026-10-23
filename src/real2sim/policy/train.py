@@ -45,8 +45,10 @@ from real2sim.policy.losses import ReconstructionLoss, act_training_loss
 from real2sim.policy.paired import PairedViewDataset, file_sha256
 from real2sim.policy.sampling import ResumableBatches, restore_rng, rng_state
 from real2sim.policy.schedule import learning_rate
+from real2sim.policy.validation import VERSION as VALIDATION_VERSION
+from real2sim.policy.validation import evaluate_executed_prefix
 
-HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "trajectory", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "lr_backbone", "sec_per_step", "wall_s", "samples"]
+HISTORY_FIELDS = ["step", "split", "loss", "l1", "kld", "reconstruction", "weighted_kl", "trajectory", "grad_norm", "l1_raw_mean", "l1_raw_per_dim", "lr", "lr_backbone", "sec_per_step", "wall_s", "samples", "executed_prefix_l1", "offline_selection_score", "executed_prefix_report"]
 
 
 def update_last_link(checkpoints: Path, target_name: str) -> None:
@@ -167,6 +169,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     seed_everything(int(tcfg["seed"]))
 
     manifest = json.loads((data_dir / "manifest.json").read_text())
+    motion_validation = bool(manifest.get("contract_version")) or tcfg.get("validation_protocol") == VALIDATION_VERSION
+    selection_protocol = VALIDATION_VERSION if motion_validation else "overlapping_chunk_l1_legacy"
     if manifest.get("contract_version"):
         for name, digest in manifest["files_sha256"].items():
             if Path(name).name != name or file_sha256(data_dir / name) != digest:
@@ -205,6 +209,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         for key in ("source", "split", "camera_keys", "state_names", "action_names", "policy_hz", "label_semantics"):
             if parent_contract[key] != manifest[key]:
                 raise ValueError(f"initial checkpoint {key} differs from data")
+        if parent_contract.get("visual_grounding") != manifest.get("visual_grounding"):
+            raise ValueError("initial checkpoint visual_grounding differs from data")
         if parent_contract["derived_files_sha256"] != manifest["files_sha256"] or parent_norm.stats != train_ds.normalizer.stats:
             raise ValueError("initial checkpoint data hashes or normalization differ")
         transfer = None
@@ -228,9 +234,11 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             raise ValueError("cannot resume with a different reconstruction loss")
         resumed, resumed_norm, resumed_contract = load_checkpoint(resume, device="cpu")
         for key in ("source", "split", "camera_keys", "state_names", "action_names", "policy_hz", "label_semantics",
-                    "contract_version", "controller_semantics", "calibration_sha256", "camera_transforms"):
+                    "contract_version", "controller_semantics", "calibration_sha256", "camera_transforms", "visual_grounding"):
             if resumed_contract.get(key) != manifest.get(key):
                 raise ValueError(f"resume checkpoint {key} differs from data")
+        if json.loads((resume / "run_info.json").read_text()).get("selection_protocol", "overlapping_chunk_l1_legacy") != selection_protocol:
+            raise ValueError("cannot resume with a different validation/checkpoint selection protocol")
         if resumed_contract["derived_files_sha256"] != manifest["files_sha256"] or resumed_norm.stats != train_ds.normalizer.stats:
             raise ValueError("resume checkpoint data hashes or normalization differ")
         policy.load_state_dict(resumed.state_dict(), strict=True)
@@ -279,6 +287,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         "n_trainable_params": sum(p.numel() for p in policy.parameters() if p.requires_grad),
         "platform": {"python": platform.python_version(), "torch": str(torch.__version__), "machine": platform.machine(), "system": platform.system()},
         "smoke_steps": smoke_steps,
+        "selection_protocol": selection_protocol,
+        "checkpoint_selection_scope": "offline shortlist; task promotion requires bounded development rollouts followed by reserved evaluation",
     }
     (out_dir / "resolved_config.yaml").write_text(yaml.safe_dump(resolved, sort_keys=False))
     hist_path = out_dir / "training_history.csv"
@@ -310,10 +320,12 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     created_checkpoints: set[str] = set()
     last_val = None
     best_l1, patience_reference, bad_validations, best_step = math.inf, math.inf, 0, None
+    best_offline_score = math.inf
     if resume is not None:
         previous = json.loads((resume / "run_info.json").read_text())
         best_l1 = previous.get("best_val_l1", math.inf)
         best_step = previous.get("best_step")
+        best_offline_score = previous.get("best_offline_score", math.inf)
         patience_reference = previous.get("patience_reference", best_l1)
         bad_validations = previous.get("bad_validations", 0)
     stopped_early = False
@@ -379,15 +391,30 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             last_val = evaluate(policy, val_loader, device, action_std, tcfg.get("val_max_batches"))
             if not math.isfinite(last_val["l1"]):
                 raise FloatingPointError("non-finite validation loss")
-            improved = last_val["l1"] < best_l1
+            if motion_validation:
+                # Full episode coverage is required even when the legacy chunk
+                # diagnostic has val_max_batches set for a short smoke run.
+                executed, _ = evaluate_executed_prefix(policy, val_ds, device, bs, seed=int(tcfg["seed"]))
+                last_val["executed_prefix"] = executed
+                score = executed["offline_selection"]["score"]
+                report_path = out_dir / "validation" / f"{step:06d}.json"
+                report_path.parent.mkdir(parents=True, exist_ok=True)
+                report_path.write_text(json.dumps(executed, indent=2, allow_nan=False) + "\n")
+            else:
+                score = last_val["l1"]
+            improved = score < (best_offline_score if motion_validation else best_l1)
+            best_l1 = min(best_l1, last_val["l1"])
             if improved:
-                best_l1, best_step = last_val["l1"], step
-            if last_val["l1"] < patience_reference - min_delta:
-                patience_reference, bad_validations = last_val["l1"], 0
+                best_offline_score, best_step = score, step
+            if score < patience_reference - min_delta:
+                patience_reference, bad_validations = score, 0
             else:
                 bad_validations += 1
             stopped_early = bool(patience and step >= min_steps and bad_validations >= patience)
-            writer.writerow({"step": step, "split": "val", "l1": round(last_val["l1"], 6), "l1_raw_mean": round(last_val["l1_raw_mean"], 4), "l1_raw_per_dim": json.dumps(last_val["l1_raw_per_dim"]), "wall_s": round(time.time() - t_start, 1), "samples": last_val["samples"]})
+            writer.writerow({"step": step, "split": "val", "l1": round(last_val["l1"], 6), "l1_raw_mean": round(last_val["l1_raw_mean"], 4), "l1_raw_per_dim": json.dumps(last_val["l1_raw_per_dim"]), "wall_s": round(time.time() - t_start, 1), "samples": last_val["samples"],
+                             "executed_prefix_l1": executed["scores"]["model"]["all"]["l1"] if motion_validation else None,
+                             "offline_selection_score": score if motion_validation else None,
+                             "executed_prefix_report": str(report_path) if motion_validation else None})
             hist_f.flush()
             print(f"  val step {step}: l1 {last_val['l1']:.4f} raw mean {last_val['l1_raw_mean']:.3f} per-dim {last_val['l1_raw_per_dim']}", file=sys.stderr)
             t_window = time.time()
@@ -397,6 +424,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             save_checkpoint(ck, policy, data_dir / "stats.json", manifest, {
                 "step": step, "seed": int(tcfg["seed"]), "name": cfg.get("name"), "device": device, "last_val": last_val,
                 "best_val_l1": best_l1, "best_step": best_step,
+                "selection_protocol": selection_protocol, "best_offline_score": best_offline_score,
                 "patience_reference": patience_reference, "bad_validations": bad_validations,
                 "augmentation": cfg.get("augmentation"),
                 "diagnostic_episodes": train_episodes if tiny_fit else None,
@@ -424,6 +452,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     result = {"steps": step, "requested_steps": steps, "stopped_early": stopped_early,
               "reconstruction_loss": asdict(loss_config),
               "best_step": best_step, "best_val_l1": best_l1, "last_val": last_val,
+              "selection_protocol": selection_protocol, "best_offline_score": best_offline_score,
+              "checkpoint_selection_scope": "offline shortlist; bounded development rollout promotion required before reserved evaluation",
               "paired_images": paired_provenance, "initial_checkpoint": initial_provenance,
               "out": str(out_dir), "device": device, "wall_s": round(time.time() - t_start, 1)}
     (out_dir / "training_result.json").write_text(json.dumps(result, indent=2) + "\n")

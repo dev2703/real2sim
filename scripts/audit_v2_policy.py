@@ -11,75 +11,14 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
 
-from real2sim.geometry.so3 import log_so3, matrix_from_rot6d
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.paired import file_sha256
+from real2sim.policy.validation import action_metrics, executed_prefix_report
 
 
 def metrics(pred, label, *, action_kind):
-    if not len(pred):
-        return {"n": 0}
-    error = pred - label
-    result = {
-        "n": len(pred),
-        "mae_per_dimension": np.abs(error).mean(axis=0).tolist(),
-        "gripper_mae": float(
-            np.abs(error[:, -1]).mean() / (100 if action_kind == "canonical_joint" else 1)
-        ),
-    }
-    if action_kind == "canonical_joint":
-        result["arm_joint_mae_deg"] = np.abs(error[:, :5]).mean(axis=0).tolist()
-        return result
-    xyz = np.linalg.norm(error[:, :3], axis=1) * 1000
-    result.update(
-        translation_mean_mm=float(xyz.mean()), translation_p95_mm=float(np.quantile(xyz, 0.95)),
-        translation_bias_xyz_mm=(error[:, :3].mean(axis=0) * 1000).tolist(),
-    )
-    if action_kind in ("cartesian", "cartesian_tool"):
-        target_norm = np.linalg.norm(label[:, :3], axis=1)
-        predicted_norm = np.linalg.norm(pred[:, :3], axis=1)
-        zero_error = float(target_norm.mean() * 1000)
-        # Motion-sized labels expose small-action collapse hidden by stationary ticks.
-        moving = target_norm > .0004
-        moving_count = int(moving.sum())
-        result["zero_delta_translation_mean_mm"] = zero_error
-        result["translation_skill_vs_zero"] = 1 - float(xyz.mean()) / zero_error if zero_error else None
-        result["translation_motion"] = {
-            "label_step_threshold_mm": .4,
-            "n": moving_count,
-            "translation_mean_mm": float(xyz[moving].mean()) if moving_count else None,
-            "predicted_step_mean_mm": float(predicted_norm[moving].mean() * 1000)
-                if moving_count else None,
-            "label_step_mean_mm": float(target_norm[moving].mean() * 1000)
-                if moving_count else None,
-            "median_predicted_to_label_step_ratio": float(np.median(
-                predicted_norm[moving] / target_norm[moving])) if moving_count else None,
-            "positive_direction_fraction": float(np.mean(
-                np.sum(pred[moving, :3] * label[moving, :3], axis=1) > 0))
-                if moving_count else None,
-        }
-    rotation = []
-    invalid = 0
-    if action_kind == "cartesian_absolute":
-        for a, b in zip(pred, label, strict=True):
-            try:
-                rotation.append(
-                    np.linalg.norm(log_so3(matrix_from_rot6d(a[3:9]) @ matrix_from_rot6d(b[3:9]).T))
-                )
-            except ValueError:
-                invalid += 1
-    else:
-        from real2sim.geometry.so3 import exp_so3
-
-        rotation = [
-            np.linalg.norm(log_so3(exp_so3(a[3:6]) @ exp_so3(b[3:6]).T))
-            for a, b in zip(pred, label, strict=True)
-        ]
-    result.update(
-        rotation_mean_rad=float(np.mean(rotation)) if rotation else None, invalid_rotations=invalid
-    )
-    return result
+    return action_metrics(pred, label, action_kind=action_kind)
 
 
 def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
@@ -102,6 +41,7 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
     anchors = [i for i, t in enumerate(ds.indices) if (t - a["ep_start"][t]) % n == 0]
     ticks = []
     predictions = []
+    anchor_ticks = []
     for batch in DataLoader(Subset(ds, anchors), batch_size=16, shuffle=False):
         obs = {k: v.to(device) for k, v in batch.items() if k.startswith("observation.")}
         kwargs = (
@@ -114,6 +54,7 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
         valid = ~batch["action_is_pad"][:, :n].numpy()
         grid = batch["tick"].numpy()[:, None] + np.arange(n)[None, :]
         ticks.extend(grid[valid].tolist())
+        anchor_ticks.extend(np.broadcast_to(batch["tick"].numpy()[:, None], valid.shape)[valid].tolist())
         predictions.extend(pred[valid])
     ticks = np.asarray(ticks, dtype=int)
     pred = np.asarray(predictions)
@@ -121,7 +62,8 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
     if not np.array_equal(ticks, expected) or not np.isfinite(pred).all():
         raise ValueError("invalid prediction or nonunique executed-prefix coverage")
     label = a["action"][ticks]
-    active = np.linalg.norm(a["state"][ticks, 9:12], axis=1) > 0.005
+    canonical = a.get("canonical_state", a["state"])
+    active = np.linalg.norm(canonical[ticks, 9:12], axis=1) > 0.005
     groups = {"all": np.ones(len(ticks), bool), "active": active, "stationary": ~active}
     if annotations:
         rows = {r["episode_index"]: r for r in annotations["episodes"]}
@@ -147,6 +89,7 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
                 np.linalg.norm((pred[mask, :3] - label[mask, :3]).sum(axis=0)) * 1000
             )
     return {
+        "executed_prefix": executed_prefix_report(pred, ticks, anchor_ticks, a, manifest, norm.action_std, episodes),
         "checkpoint_sha256": file_sha256(checkpoint / "model.safetensors"),
         "action_representation": kind,
         "episodes": episodes,

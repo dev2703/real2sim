@@ -77,7 +77,15 @@ def contract_kind(contract: dict) -> str:
     if shape != IMAGE_SHAPE_CHW:
         raise ContractError(f"contract image_shape_chw {shape} != {IMAGE_SHAPE_CHW}; refusing to adapt")
     names = list(contract.get("state_names", []))
-    if "observation_variant" in contract:
+    if "visual_grounding" in contract:
+        from real2sim.policy.visual_grounding import BallImageFeatures, grounded_state_names
+
+        spec = BallImageFeatures.from_dict(contract["visual_grounding"])
+        if (names != grounded_state_names() or spec.camera_key not in cams
+                or "observation_variant" in contract):
+            raise ContractError("visual grounding state names/camera differ from its transform")
+        kind = "cartesian"
+    elif "observation_variant" in contract:
         from real2sim.policy.observation_variants import ObservationVariant, state_names
 
         variant = ObservationVariant.from_dict(contract["observation_variant"])
@@ -123,6 +131,11 @@ class ObservationAdapter:
         # velocity slot is zero exactly as ``labels.episode_labels`` zeroes vel[0]).
         self._prev_ee_pos: np.ndarray | None = None
         self._transform = None
+        self._visual_grounding = None
+        if "visual_grounding" in contract:
+            from real2sim.policy.visual_grounding import BallImageFeatures
+
+            self._visual_grounding = BallImageFeatures.from_dict(contract["visual_grounding"])
         if "observation_variant" in contract:
             from real2sim.policy.observation_variants import StreamingObservationTransform
 
@@ -155,7 +168,7 @@ class ObservationAdapter:
     def _canonical_state(self, env) -> np.ndarray:
         return np.asarray(env.canonical_proprio(self._prev_ee_pos), np.float32)
 
-    def state(self, env) -> np.ndarray:
+    def state(self, env, images: dict | None = None) -> np.ndarray:
         """Observable state in contract units; never simulator object poses.
 
         Pure read: the velocity uses the position stored by :meth:`advance_tick` at the previous
@@ -171,6 +184,13 @@ class ObservationAdapter:
                 joints = env.real_state() if self._transform.config.requires_joints else None
                 x = self._transform.update(x, joints, self._tick / self._transform.config.policy_hz)
                 self._cached_state, self._cached_tick = x.copy(), self._tick
+        if self._visual_grounding is not None:
+            from real2sim.policy.visual_grounding import append_ball_features, rgb_from_env
+
+            if images is None or self._visual_grounding.camera_key not in images:
+                raise ContractError("visual grounding requires the current observed image")
+            image = rgb_from_env(images[self._visual_grounding.camera_key], self._visual_grounding)
+            x = append_ball_features(x, image, self._visual_grounding)
         if x.shape != (self.state_dim,):
             raise ContractError(f"state length {x.shape} != contract {self.state_dim}")
         return x
@@ -183,7 +203,7 @@ class ObservationAdapter:
         missing = [key for key in self.camera_keys if key not in obs]
         if missing:
             raise ContractError(f"observation lacks {missing}")
-        state = self.normalizer.state(self.state(env)).astype(np.float32)
+        state = self.normalizer.state(self.state(env, obs)).astype(np.float32)
         if not np.all(np.isfinite(state)):
             raise ContractError("normalised state is not finite")
         batch = {

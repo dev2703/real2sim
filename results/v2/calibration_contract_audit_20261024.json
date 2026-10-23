@@ -1,0 +1,239 @@
+{
+  "schema": "v2_calibration_readiness_audit_v1",
+  "dataset": {
+    "root": "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v2",
+    "episodes": 41,
+    "raw_fps": 25.0,
+    "metadata_total_frames": 27736,
+    "camera_keys": [
+      "observation.images.top",
+      "observation.images.iphone"
+    ],
+    "source_files_sha256": {
+      "meta/episodes/chunk-000/file-000.parquet": "a9016ec21e9598fbf01b141d92c896d7515ac11c714004bce93ea9ad7e338148",
+      "meta/episodes/chunk-000/file-001.parquet": "14c9f956596c85e5b397eb2d1e8608a61772a898cf2d8f33f55cbe8d1679e313",
+      "meta/episodes/chunk-000/file-002.parquet": "aa0a28acae57d93d35f007fd041873485c80643c63e7fc0c14db0183e37f79c5",
+      "meta/episodes/chunk-000/file-003.parquet": "e3b539068dae3505e1ff5411696273fbcf9c7c0b82d81feb9666c89bcf401faa",
+      "meta/episodes/chunk-000/file-004.parquet": "4b91aaf941df4762ab486807ed884f1c55635ba94d5e822d260b96e9abc3c977",
+      "meta/episodes/chunk-000/file-005.parquet": "9a4cb4bbb3d94e0c73f194bfdcd11fac29da59fa1735f63524b14b21e20828c9",
+      "meta/episodes/chunk-000/file-006.parquet": "4fd3d7be23468539fe8dd20fbb6b0f548a761dd34e7b350011309663a1798219",
+      "meta/episodes/chunk-000/file-007.parquet": "ed15bda13a438b768aa534b9828c165fc811225ae14330e8a4c0bb3601f28a57",
+      "meta/info.json": "d0f8ee2efc2ce84ab168b21757c3d1abe60a1f8fa306f1907f7e5ea6d2f17a4d",
+      "meta/stats.json": "70c6c379c4e9632a21d9a889619c95309a733d993078a8f7d6c664fc9134cb93",
+      "meta/tasks.parquet": "d0ea0f33fcda1910bacee2244a41069f69ec2c84ae06d2665afcc5a6eaadd50c",
+      "data/chunk-000/file-000.parquet": "d2605c0cc1e5f3a5f3665a44c56d171982aaa27916a84d24b937f232efa2d1c7",
+      "data/chunk-000/file-001.parquet": "e8fcaa40f44f506d64d3f2cd9d474705adfc5d5e976dafa9235f3570b436383c",
+      "data/chunk-000/file-002.parquet": "cb19adac2a14d1faf869fa3d973abd55f80c5c220127ad29a2644eec4d177e98",
+      "data/chunk-000/file-003.parquet": "322576b56491b4dd046bd386b1e503182939a9c8c079928b58546260b7952c75",
+      "data/chunk-000/file-004.parquet": "bf7891d3e7d9b4da726d94b4a39b7dc0badfcb0012377c49cdac8283622c9928",
+      "data/chunk-000/file-005.parquet": "a48a48c5515331067441e02ea798742e1028fbc6edd0f58a239038b5c47bfdcd",
+      "data/chunk-000/file-006.parquet": "751ced26a16236f310a0831c6a673ece66ed834e69f09c38ac6b2dc6ed52e8f0",
+      "data/chunk-000/file-007.parquet": "ae38419e4ccc6854cdb3b7d0af00054ab6a1465eb92648efc4fa3516165f028a",
+      "videos/observation.images.iphone/chunk-000/file-000.mp4": "68b8fa79b16891ef39afb43763e74243ed2532d48d2188a02eca92dfa95f6eba",
+      "videos/observation.images.iphone/chunk-000/file-001.mp4": "ef69498e97441fac155b0bc01503b59cf683449e0380855e70d64e536902b4f8",
+      "videos/observation.images.iphone/chunk-000/file-002.mp4": "329588798d23f4e5d79715ef9aceb4ab1d81b4cd317b380280acef326853d194",
+      "videos/observation.images.iphone/chunk-000/file-003.mp4": "6ce4c34cd398c5d0217e06793680fa598ca15e998dd8e455f9df02b465fd7c76",
+      "videos/observation.images.iphone/chunk-000/file-004.mp4": "139fb5bd962611825430764f52d00530ec04b4c0a4814096c389c731d13a78a2",
+      "videos/observation.images.iphone/chunk-000/file-005.mp4": "068d120ee59e9f730267534c8fc2a050fd942c84e283f1ef97ac8517b9413a18",
+      "videos/observation.images.iphone/chunk-000/file-006.mp4": "5dcddbc6e2a2e10f45f83baec27548d19ad378272e0f7e65d9dcc2cdb5e9fed2",
+      "videos/observation.images.iphone/chunk-000/file-007.mp4": "ab1f31ad817e3650b7912013a4b1bca0552651f3d1ad8481d20f9ccccab875ac",
+      "videos/observation.images.top/chunk-000/file-000.mp4": "e2d0a80d1075d8dcdb1ed6874ce1182edc73a4a24c90571bcaed8b4d41a39986",
+      "videos/observation.images.top/chunk-000/file-001.mp4": "f8006341055ef0bfecc526b8baa2f2e3231df1c925befa5adf587f6d22940c08",
+      "videos/observation.images.top/chunk-000/file-002.mp4": "dbda18c7f32c14d514238a4fac918a2e1bbb151844a388f6a76695b9168f45be",
+      "videos/observation.images.top/chunk-000/file-003.mp4": "30b6167a34391c139933db7da92792e68afe37ee8ae8aa28d60433880e90f857",
+      "videos/observation.images.top/chunk-000/file-004.mp4": "dc9c4c8b8f5cfe94e600171aae71f2a5d5ce860dbe628e65591cbd933b61f1b2",
+      "videos/observation.images.top/chunk-000/file-005.mp4": "ac57c3fa7788f5f89f5b5fe0c6732a60e09a2dcf920433db906c8ba1edfdca91",
+      "videos/observation.images.top/chunk-000/file-006.mp4": "5fc38842c152b7c2c94c8ec4c6b3e9efa8b757b552a09865d7bff48b6c60b22f",
+      "videos/observation.images.top/chunk-000/file-007.mp4": "1fd90f8dd615b3a6320be1b79a4d4d163b1e8abd65637bfccca4fd0999ddfe6f"
+    },
+    "upstream_repo_requested": "bottowork/so101_act_pickplace_v2",
+    "upstream_local_identity_verified": false,
+    "identity_note": "Local source is content-addressed. Hashes do not establish equivalence with an inaccessible upstream revision."
+  },
+  "scope": {
+    "train_and_validation_episodes": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    "reserved_episodes_not_scored": [
+      1,
+      10,
+      19,
+      21,
+      33,
+      40
+    ],
+    "state_plus_action_raw_rows_scored": 46744,
+    "optimization_performed": false,
+    "reference_clipping": false
+  },
+  "numerical_units": {
+    "arm_degree_lattice": {
+      "shoulder_pan": {
+        "degree_inverse_tick_residual_p95": 0.49999988079071045,
+        "degree_inverse_tick_residual_max": 0.5,
+        "alternative_pm100_tick_residual_p95": 0.47598386907578677
+      },
+      "shoulder_lift": {
+        "degree_inverse_tick_residual_p95": 0.1250016689300537,
+        "degree_inverse_tick_residual_max": 0.12504291534423828,
+        "alternative_pm100_tick_residual_p95": 0.48663871765131717
+      },
+      "elbow_flex": {
+        "degree_inverse_tick_residual_p95": 0.1250009536743164,
+        "degree_inverse_tick_residual_max": 0.12504291534423828,
+        "alternative_pm100_tick_residual_p95": 0.4624130392075583
+      },
+      "wrist_flex": {
+        "degree_inverse_tick_residual_p95": 0.12499868869781494,
+        "degree_inverse_tick_residual_max": 0.12504291534423828,
+        "alternative_pm100_tick_residual_p95": 0.46373579025248546
+      },
+      "wrist_roll": {
+        "degree_inverse_tick_residual_p95": 4.5299530029296875e-06,
+        "degree_inverse_tick_residual_max": 0.12500464916229248,
+        "alternative_pm100_tick_residual_p95": 0.40000214576730286
+      }
+    },
+    "interpretation": "Degree lattice supports recorded units; it cannot verify signs, physical zeros, link geometry or historical timing."
+  },
+  "current_mapping": {
+    "sign": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "offset_deg": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "state_plus_action_rows_outside_native_arm_limits": 14788,
+    "native_arm_limits_rad": [
+      [
+        -1.91986,
+        1.91986
+      ],
+      [
+        -1.7453293,
+        1.7453293
+      ],
+      [
+        -1.69,
+        1.69
+      ],
+      [
+        -1.658063,
+        1.658063
+      ],
+      [
+        -2.7438473,
+        2.8412063
+      ]
+    ],
+    "independent_signs_and_zeros_established": false
+  },
+  "independent_evidence_inventory": {
+    "selected_geometry_document": "configs/v2/geometry_landmarks.template.json",
+    "geometry_document_evidence_kind": "measured",
+    "fixed_camera_intrinsics_present": false,
+    "fixed_camera_distortion_present": false,
+    "wrist_intrinsics_present": false,
+    "complete_measured_static_landmark_rows": 0,
+    "complete_measured_joint_landmark_rows": 0,
+    "complete_jaw_measurement_rows": 0,
+    "complete_verification_only_jaw_rows": 0,
+    "loaded_trace_measurement_records": 0,
+    "jaw_gap_definition": null,
+    "jaw_measurement_uncertainty_m": null
+  },
+  "nominal_camera_mount": {
+    "key": "observation.images.top",
+    "name": "top_nominal_cad",
+    "projection_model": "fovy",
+    "fovy_deg": 61.0,
+    "mounts": {
+      "so101": {
+        "body": "camera_mount",
+        "position_body_m": [
+          -0.00296,
+          0.05436,
+          -0.0531
+        ],
+        "xyaxes_body": [
+          0.9999538073433512,
+          0.009603976089842824,
+          0.00038317463534446455,
+          -0.00782520796612942,
+          0.8366046330269252,
+          -0.5477512703026529
+        ]
+      }
+    },
+    "physical_calibration_accepted": false,
+    "provenance": {
+      "kind": "NOMINAL_CAD_OPTICS_NOT_PHYSICALLY_VERIFIED",
+      "source_model": "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml",
+      "source_model_sha256": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+      "source_camera": "wrist_cam",
+      "scope": "Explicit provisional two-view experiment. Recorded top camera correspondence, intrinsics/distortion and installed optical transform remain unverified."
+    }
+  },
+  "physical_acceptance_established": false,
+  "label_repair_status": "Safe regeneration tool available; no independently justified arm mapping correction is available to adopt from these inputs.",
+  "remaining_measurement_dependencies": [
+    "Independent source-resolution intrinsics/distortion applicable to each capture regime",
+    "Unique static landmark identities and independently registered base/table frame",
+    "Varied joint landmarks with independently fixed camera/base/sign conventions and held-out captures",
+    "Jaw registration with gap definition, uncertainty and held-out openings",
+    "Loaded hold/release measurements with observed relative ball/jaw motion and physical timing"
+  ],
+  "input_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/audit_v2_calibration_readiness.py": "e84640f47923956d261ceb55274c56a423d1c4e915e4b2f895bdd968ae9ac9a1",
+    "results/v2/split.json": "458c5d8900a98ba86f4cff27aebce90d73b9d75f285bade18c1b3524f9e76ce5",
+    "configs/v2/geometry_landmarks.template.json": "adea0895d52a27dfed7f2402cfdd0b8f49f783a316abf2ac4df8115b6f43c277",
+    "configs/v2/measurements.template.json": "bfbd276c06ffea6c982df8a921c76735b00928cfc2589640be431e507c3f634e",
+    "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+    "configs/v2/task.exploratory_20261022.yaml": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v2/meta/info.json": "d0f8ee2efc2ce84ab168b21757c3d1abe60a1f8fa306f1907f7e5ea6d2f17a4d",
+    "src/real2sim/sim/cameras.py": "0c0ea3f954ac8fa8d20f305d93c4553f70362525925d96f924e57aa2ce507bb4"
+  }
+}

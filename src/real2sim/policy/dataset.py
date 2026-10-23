@@ -65,6 +65,16 @@ class DerivedTickDataset(Dataset):
         a = np.load(self.root / "arrays.npz")
         self.arrays = {k: a[k] for k in a.files}
         self.camera_keys: list[str] = self.manifest["camera_keys"]
+        self.visual_grounding = None
+        if "visual_grounding" in self.manifest:
+            from real2sim.policy.visual_grounding import BallImageFeatures, grounded_state_names
+
+            self.visual_grounding = BallImageFeatures.from_dict(self.manifest["visual_grounding"])
+            if (self.manifest["state_names"] != grounded_state_names()
+                    or self.visual_grounding.camera_key not in self.camera_keys
+                    or self.arrays["state"].shape[1] != 13
+                    or "observation_variant" in self.manifest):
+                raise ValueError("visual grounding data contract differs from canonical image features")
         self._images: dict | None = None  # opened lazily per process (memmaps must not be pickled)
         ep = self.arrays["episode_index"]
         self.indices = np.flatnonzero(np.isin(ep, np.asarray(episodes)))
@@ -96,16 +106,22 @@ class DerivedTickDataset(Dataset):
             # placeholder, so the loss ignores it exactly like padding (labels.py contract).
             pad = pad | self.arrays["label_is_extrapolated"][idx]
         n = self.normalizer
+        images = {}
+        for k in self.camera_keys:
+            image = np.asarray(self.images[k][t])
+            images[k] = self.augmentation(image) if self.augmentation is not None else image
+        state = self.arrays["state"][t]
+        if self.visual_grounding is not None:
+            from real2sim.policy.visual_grounding import append_ball_features
+
+            state = append_ball_features(state, images[self.visual_grounding.camera_key], self.visual_grounding)
         item = {
-            "observation.state": torch.from_numpy(n.state(self.arrays["state"][t]).astype(np.float32)),
+            "observation.state": torch.from_numpy(n.state(state).astype(np.float32)),
             "action": torch.from_numpy(n.action(self.arrays["action"][idx]).astype(np.float32)),
             "action_is_pad": torch.from_numpy(pad),
             "episode_index": int(self.arrays["episode_index"][t]),
             "tick": t,
         }
         for k in self.camera_keys:
-            image = np.asarray(self.images[k][t])
-            if self.augmentation is not None:
-                image = self.augmentation(image)
-            item[k] = torch.from_numpy(np.ascontiguousarray(n.image(image)))
+            item[k] = torch.from_numpy(np.ascontiguousarray(n.image(images[k])))
         return item

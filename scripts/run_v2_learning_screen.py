@@ -27,6 +27,7 @@ except ModuleNotFoundError:
     from run_so101_experiments import atomic_json, hash_file, now, queue_lock, read_json
 
 from real2sim.experiments.v2 import gate_failures
+from real2sim.policy.validation import VERSION as VALIDATION_VERSION
 
 VERSION = "v2_exploratory_learning_screen_v1"
 REPO = Path(__file__).resolve().parents[1]
@@ -57,7 +58,7 @@ def compile_plan(matrix: dict, data_root: Path, *, device: str, physical_batch: 
         cfg["data"] = str((data_root / Path(cfg["data"]).name).resolve())
         train.update(batch_size=physical_batch, grad_accum=effective // physical_batch,
                      device=device, precision="float32", num_workers=0, exact_resume=True,
-                     keep_only_best_and_last=True)
+                     keep_only_best_and_last=True, validation_protocol=VALIDATION_VERSION)
         cfg["model"]["attention_backend"] = "sdpa"
         cfg["experiment"] = {"kind": VERSION, "geometry_acceptance": "deferred_by_user",
                              "physical_grasp_success": "not_evaluated"}
@@ -382,6 +383,8 @@ class ScreenRunner:
                     "requested_steps": job["config"]["train"]["steps"],
                     "stopped_early": False, "last_val": info.get("last_val"),
                     "best_step": info.get("best_step"), "best_val_l1": info.get("best_val_l1"),
+                    "selection_protocol": info.get("selection_protocol", "overlapping_chunk_l1_legacy"),
+                    "best_offline_score": info.get("best_offline_score"),
                     "out": str(output), "recovered_from_full_budget_checkpoint": str(resume),
                     "additional_training_examples": 0})
                 row.update(status="completed", output=str(output), recovered=True)
