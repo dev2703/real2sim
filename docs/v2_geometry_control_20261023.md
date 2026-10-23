@@ -399,7 +399,7 @@ a small aggregate error cannot hide stationary drift or missed movement.
 ## Correcting numerical IK rejection
 
 Exact replay reproduces all 351 original rejection reasons. Collision failures are real
-gripper/table checks. The remaining 142 requests fail position by 3.008–7.469 mm even
+gripper/table checks. The remaining 142 requests have position residuals of 3.008–7.469 mm even
 though orientation error is only 0.057–0.163 rad, below the unchanged 0.35 rad limit.
 A softer orientation optimization weight finds candidates satisfying both original pose
 limits for those logged requests, while all 209 collision requests stay rejected. See the
@@ -416,7 +416,10 @@ A matched full seed-1 diagnostic reduces rejections from 142 to 136, with 12 ind
 targets recovered along the altered trajectory. It still fails approach, reaching 90.1 mm
 versus the original 88.8 mm. The existing local projection reduces rejections to 40 but
 also fails, reaching 95.0 mm. These are feasible-execution corrections, not evidence that
-either option improves task completion. The primary learned visual-approach problem remains.
+either option improves task completion. The production flag reproduces the diagnostic
+trajectory exactly, including actions, joints, ball positions and rejection pattern. See the
+[controller follow-up](../results/v2/controller_failure_followup_20261024.json). The primary
+learned visual-approach problem remains.
 
 All eight completed experiment comparisons, best checkpoint locations and fair-comparison
 limits are in the [learning results](v2_learning_results_20261024.md). Offline validation
@@ -433,7 +436,7 @@ only against the accepted camera, then replay recorded tasks before evaluating l
 rollouts. Test learned-controller changes on the unchanged benchmark and report them
 separately from privileged simulator diagnostics.
 
-Verification: the latest CPU unit and selected control/contact integration suite passed **665
+Verification: the latest CPU unit and selected control/contact integration suite passed **691
 tests**; three MPS/CUDA cases were skipped and three graphics-dependent camera cases
 were excluded from this run (they passed separately in the earlier camera investigation).
 All 59 frozen training metadata hashes match. All **22/22 jobs completed without failures**.
