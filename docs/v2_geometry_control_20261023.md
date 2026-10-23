@@ -1,7 +1,9 @@
 # Geometry and control investigation — 23 October 2026
 
-The historical learned-policy results remain 0/10. The current offline learning screen
-has not demonstrated task completion. This investigation tests separate causes while
+The historical learned-policy results remain 0/10. All 22 offline learning runs are now
+complete, but have not demonstrated task completion. Full development diagnostics on
+24 October also fail: 0/3 in the original scene, plus two unsuccessful geometry sensitivities.
+This investigation tests separate causes while
 preserving all frozen training inputs and original evaluation artifacts.
 
 ## Reachable carry targets
@@ -328,8 +330,10 @@ These sparse teacher-forced errors are not a model ranking or rollout score. Swa
 paired images changes predictions, but does not consistently worsen every error; visual
 grounding is not established. CPU timings use two threads during the active training run
 and exclude live capture/rendering. CLIP exceeds the 160 ms interval between two-action
-chunks at 12.5 Hz on this CPU configuration; GPU timing remains to be measured once the
-training device is free.
+chunks at 12.5 Hz on this CPU configuration. Once training finished, a synchronized
+[MPS profile](../results/v2/mps_inference_profile_20261024.json) measured p95 policy-call
+latencies of 26.97 ms for ResNet and 94.72 ms for CLIP. Both meet the 120 ms policy-call
+target in this bounded test, excluding rendering and sensor acquisition.
 
 An actual single-camera ResNet simulator check executes **25 ticks / 2 seconds / 13 policy
 calls**, with no abort, IK rejection or action saturation. Mean CPU inference is 55.94 ms,
@@ -350,6 +354,75 @@ cover both resource cleanup and existing target-reference behavior. Actual robot
 penetration tests also confirm both IK solvers reject moved support obstacles under their
 existing tolerance; no collision-gate change was needed.
 
+## Full learned-policy tests — 24 October
+
+The completed iPhone-only ResNet checkpoint was run for the frozen task's full **30-second
+timeout** (375 ticks) using the same strict recorded validation start. Three seeds vary
+ball position within the original task region. The saved checkpoint, action contract,
+native limits, collision gates and physics stay unchanged. These remain development
+diagnostics on provisional geometry, separate from the gated calibrated evaluation.
+
+| Scene | Pick/place | Closest tool-to-ball distance | IK failures |
+|---|---:|---:|---:|
+| Original frozen scene, three placements | 0/3 | 258.7 / 88.8 / 245.7 mm | 209 collision + 142 residual |
+| Early camera and episode-0 support/layout hypothesis | 0/1 | 68.5 mm | 241 collision |
+| Late camera and independently observed episode-9 ball/support | 0/1 | 63.8 mm after an action | 267 residual |
+
+The [original report](../outputs/v2/full_policy_rollouts_20261023/report.json) retains every
+failure and all per-tick actions, targets and native states. No run aborts or lifts the ball.
+The [early-scene sensitivity](../results/v2/geometry_policy_ablation_20261024.json) preserves
+policy FK exactly while changing the explicitly listed scene fields. The
+[matched episode-9 sensitivity](../results/v2/geometry_policy_ablation_matched_ep9_20261024.json)
+uses the late camera and ball/support pixels read independently of policy outcomes. The
+support height stays predeclared at 10 mm; bowl placement remains unmatched. This run
+starts 62.4 mm from the ball and moves farther away immediately. None of these scene
+hypotheses is an accepted physical calibration, and the cases are not pooled into a
+statistical success rate.
+
+The [image/state audit](../results/v2/anchor_domain_gap_20261023.json) finds that the reset's
+position, orientation and gripper match the prepared recorded state exactly. Only initial
+velocity differs because the selected frame lies during motion. On the actual recorded
+image, the checkpoint predicts roughly 0.05–0.07 mm lateral movement where the recorded
+next actions require 2.60–3.16 mm. The wrong scene image worsens that prediction, but
+correcting the image alone does not remove this learned-action error.
+
+The [full validation prefix audit](../results/v2/iphone_motion_audit_20261024.json) covers
+all 2,071 unique nonextrapolated actions without reserved episodes. Translation error is
+2.55 mm overall and 3.10 mm on active ticks. For label steps exceeding 0.4 mm, median
+predicted/recorded step magnitude is 0.792 and positive-direction agreement is 92.2%.
+The model beats a zero-delta baseline overall, but predicts more movement than that
+baseline on stationary ticks. Per-episode summed error vectors have magnitudes of
+57–254 mm; these are teacher-forced accumulation proxies, not measured rollout drift.
+The audit now reports signed axis bias, motion magnitude and direction separately, so
+a small aggregate error cannot hide stationary drift or missed movement.
+
+## Correcting numerical IK rejection
+
+Exact replay reproduces all 351 original rejection reasons. Collision failures are real
+gripper/table checks. The remaining 142 requests fail position by 3.008–7.469 mm even
+though orientation error is only 0.057–0.163 rad, below the unchanged 0.35 rad limit.
+A softer orientation optimization weight finds candidates satisfying both original pose
+limits for those logged requests, while all 209 collision requests stay rejected. See the
+[target replay](../results/v2/rejected_policy_targets_20261024.json).
+
+The optional `ik.position_priority_fallback: true` retries only residual failures with
+one-quarter and one-sixteenth of the original orientation optimization weight. The
+requested pose, hard 3 mm / 0.35 rad tolerances, workspace, joints and collisions are
+unchanged. Failed retries return the original failure and seed and restore its diagnostic
+candidate; independent solver probes do not change the live simulation. The option is
+off by default, preserving historical execution.
+
+A matched full seed-1 diagnostic reduces rejections from 142 to 136, with 12 individual
+targets recovered along the altered trajectory. It still fails approach, reaching 90.1 mm
+versus the original 88.8 mm. The existing local projection reduces rejections to 40 but
+also fails, reaching 95.0 mm. These are feasible-execution corrections, not evidence that
+either option improves task completion. The primary learned visual-approach problem remains.
+
+All eight completed experiment comparisons, best checkpoint locations and fair-comparison
+limits are in the [learning results](v2_learning_results_20261024.md). Offline validation
+favours fine-tuned CLIP among matched two-view ACT models, but no such model can yet be
+faithfully evaluated in the simulator without the wrist-camera mount.
+
 ## Remaining evidence
 
 Independent static CAD correspondences and intrinsics are needed to accept camera/base
@@ -363,7 +436,8 @@ separately from privileged simulator diagnostics.
 Verification: the latest CPU unit and selected control/contact integration suite passed **665
 tests**; three MPS/CUDA cases were skipped and three graphics-dependent camera cases
 were excluded from this run (they passed separately in the earlier camera investigation).
-All 59 frozen training metadata hashes match. The queue remains active at 19/22 completed
-jobs, with no reported failures. This includes the explicit contact settings, evaluation
+All 59 frozen training metadata hashes match. All **22/22 jobs completed without failures**.
+The detached post-training review hit a usage limit; this session resumed that work directly.
+This includes the explicit contact settings, evaluation
 cleanup, target-reference behavior and support collision regressions. Ruff and whitespace
 checks pass for the changed files.

@@ -1,13 +1,16 @@
 # Project documentation
 
-Start with the [learning screen](v2_learning_screen_20261022.md) for the current
-experiment budget, commands, data provenance and artifact locations. Read live
+All 22 learning runs have completed. Start with the [completed results](v2_learning_results_20261024.md)
+for the experiment comparisons and the [geometry/control investigation](v2_geometry_control_20261023.md)
+for full learned-policy failures and corrective tests. The [learning screen](v2_learning_screen_20261022.md)
+records the experiment budget, commands, data provenance and artifact locations. Read live
 progress from `outputs/v2/learning_screen_20261022/STATUS.json`; dated documents
 are not a substitute for the runner status.
 
 | Topic | Reference |
 |---|---|
 | V2 preparation, evaluation and geometry gates | [V2 runbook](v2_implementation_20261020.md) |
+| Results from all eight experiment groups | [Completed learning results](v2_learning_results_20261024.md) |
 | Physical joint zeros and camera alignment | [Geometry findings](v2_geometry_alignment_20261021.md) |
 | New camera, joint and feasible-carry comparisons | [23 October investigation](v2_geometry_control_20261023.md) |
 | Calibration conventions | [Calibration](calibration.md) |

@@ -1,0 +1,182 @@
+{
+  "kind": "LEARNED_CONTROLLER_FAILURE_FOLLOWUP",
+  "physical_calibration_accepted": false,
+  "learned_policy_success_demonstrated": false,
+  "conclusion": "A weighted optimization compromise falsely rejects some feasible poses. Optional position-priority retries correct this numerical issue under unchanged hard gates, but the full learned policy still fails approach.",
+  "provenance": {
+    "baseline": {
+      "path": "outputs/v2/full_policy_rollouts_20261023/report.json",
+      "sha256": "2e64c77360c8dcd5a83324052df48d3fd85fa0708b4e7e42450a6386e06ed9e0"
+    },
+    "offline_replay": {
+      "path": "results/v2/rejected_policy_targets_20261024.json",
+      "sha256": "c73a2ce8a70814aadf4360ad42cc55ab01a722e2bf4d8dbe4d52ffbfb452af7b"
+    },
+    "existing_projection": {
+      "path": "outputs/v2/controller_projection_20261024/rollout/report.json",
+      "sha256": "c23db6fc9c68800006b097829e52e9277b751def7808bede94a4bf9dbdc68827"
+    },
+    "standalone_fallback": {
+      "path": "outputs/v2/controller_position_priority_20261024/report.json",
+      "sha256": "d71d2a1cb7a15087e0f639a457ea51cabaead3cbd00ce999c161fe1f0fcd1f0f"
+    },
+    "production_fallback": {
+      "path": "outputs/v2/controller_position_priority_production_20261024/rollout/report.json",
+      "sha256": "67999e217e1a8f7f34c6009198ab42fcb7aa425226784088b7d6b71807bcced9"
+    }
+  },
+  "offline_replay": {
+    "targets": 351,
+    "reproduced_logged_reasons": 351,
+    "primary_reasons": {
+      "collision": 209,
+      "residual_rejected": 142
+    },
+    "collision_targets": 209,
+    "collision_type": "gripper versus table/world; every such target remains rejected at all tested optimization weights",
+    "residual_targets_seed1": 142,
+    "optimizer_weight_0_002": {
+      "n": 142,
+      "accepted": 142,
+      "reasons": {
+        "accepted": 142
+      },
+      "position_error_m_median": 0.002068277906403954,
+      "orientation_error_rad_max": 0.1704788192332417
+    },
+    "optimizer_weight_0_0005": {
+      "n": 142,
+      "accepted": 142,
+      "reasons": {
+        "accepted": 142
+      },
+      "position_error_m_median": 0.00026387928994260303,
+      "orientation_error_rad_max": 0.15836700324415492
+    },
+    "not_production_recovery_count": "These isolated fixed-state alternatives are distinct from the production .25/.0625 retry schedule and from the changed closed-loop trajectory."
+  },
+  "matched_full_seed1_trials": {
+    "baseline": {
+      "ticks": 375,
+      "success": false,
+      "approached": false,
+      "held_ever": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.08875755053812466,
+      "final_ee_ball_distance_m": 0.09128351617411051,
+      "ik_rejections": 142,
+      "ik_reason_counts": {
+        "accepted": 233,
+        "residual_rejected": 142
+      },
+      "phase_failed": "approach",
+      "abort": null,
+      "maximum_robot_table_penetration_m": 0.0
+    },
+    "existing_projection": {
+      "ticks": 375,
+      "success": false,
+      "approached": false,
+      "held_ever": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.09503,
+      "final_ee_ball_distance_m": 0.1203786120143584,
+      "ik_rejections": 40,
+      "ik_reason_counts": {
+        "accepted": 335,
+        "residual_rejected": 40
+      },
+      "phase_failed": "approach",
+      "abort": null,
+      "maximum_robot_table_penetration_m": 0.0
+    },
+    "standalone_fallback": {
+      "ticks": 375,
+      "success": false,
+      "approached": false,
+      "held_ever": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.09009,
+      "final_ee_ball_distance_m": 0.09328917989236764,
+      "ik_rejections": 136,
+      "ik_reason_counts": {
+        "accepted": 239,
+        "residual_rejected": 136
+      },
+      "phase_failed": "approach",
+      "abort": null,
+      "maximum_robot_table_penetration_m": 0.0
+    },
+    "production_fallback": {
+      "ticks": 375,
+      "success": false,
+      "approached": false,
+      "held_ever": false,
+      "lifted": false,
+      "min_ee_ball_distance_m": 0.09009,
+      "final_ee_ball_distance_m": 0.09328917989236764,
+      "ik_rejections": 136,
+      "ik_reason_counts": {
+        "accepted": 239,
+        "residual_rejected": 136
+      },
+      "phase_failed": "approach",
+      "abort": null,
+      "maximum_robot_table_penetration_m": 0.0
+    }
+  },
+  "production_fallback": {
+    "flag": "ik.position_priority_fallback",
+    "default": false,
+    "type": "boolean",
+    "optimizer_orientation_weight_scales": [
+      0.25,
+      0.0625
+    ],
+    "trigger": "original residual_rejected only",
+    "requested_target_changed": false,
+    "position_tolerance_m": 0.003,
+    "orientation_tolerance_rad": 0.35,
+    "penetration_tolerance_m": 0.002,
+    "workspace_joint_limits_physics_changed": false,
+    "all_failed_retries_return_original_failure": true,
+    "all_failed_retries_restore_original_diagnostic_candidate": true,
+    "recovered_encountered_targets": 12,
+    "required_recovered_joint_step_rad": {
+      "min": 0.004335953116717084,
+      "median": 0.011389409501982861,
+      "max": 0.033323950001847624
+    },
+    "production_vs_standalone": {
+      "ticks": 375,
+      "native_joints_bit_identical": true,
+      "actions_bit_identical": true,
+      "ik_rejection_patterns_identical": true,
+      "ball_positions_bit_identical": true
+    }
+  },
+  "projection_limitation": {
+    "in_range_measured_state_failures": 49,
+    "first_tick": 327,
+    "note": "MuJoCo soft joint-stop overshoot causes the existing projection to decline the action and retain the original request. No new clipping or tolerance relaxation was introduced."
+  },
+  "validation": {
+    "focused_integration_tests": 15,
+    "new_real_target_and_gate_regressions": 7,
+    "ruff": "passed",
+    "files_sha256": {
+      "src/real2sim/sim/kinematics.py": "3b211879ea4127f67913036eb333a1928f13bebe58f4788067f466a963f4d106",
+      "tests/integration/test_position_priority_ik.py": "4c3a36cd0e3651c005d24fb5bf49833b96ffadc5bbbafaf9773b1fd8dc741ba9",
+      "scripts/diag_v2_rejected_policy_targets.py": "7baf1f8d6f22b0f702b950df3df0aea649325c26e81cc6324bed8bc9ae6773ea",
+      "scripts/diag_v2_position_priority_fallback.py": "fc5e4c7c01e5cdf320689f6a619af8ce4d1387dfa2308b3abb99b26f4fc5a3cf"
+    }
+  },
+  "reproduction_commands": [
+    ".venv/bin/python scripts/diag_v2_rejected_policy_targets.py --out /tmp/rejected_policy_targets_fresh.json",
+    ".venv/bin/python scripts/diag_v2_full_policy_rollouts.py --eval-config outputs/v2/controller_projection_20261024/eval.yaml --seeds 1 --out /tmp/controller_projection_fresh",
+    ".venv/bin/python scripts/diag_v2_position_priority_fallback.py --seeds 1 --out /tmp/controller_position_priority_fresh",
+    ".venv/bin/python scripts/diag_v2_full_policy_rollouts.py --config outputs/v2/controller_position_priority_production_20261024/sim.yaml --seeds 1 --out /tmp/controller_position_priority_production_fresh",
+    ".venv/bin/pytest -q tests/integration/test_position_priority_ik.py tests/integration/test_kinematics.py tests/integration/test_v2_kinematics.py"
+  ],
+  "limitations": "One frozen ResNet iPhone checkpoint, one recorded validation initial arm pose and selected development seeds. Whole runs use 375ticks/30s in the original provisional scene. No hardware, reserved data, geometry adoption, learned success, privileged action guidance, or retraining."
+}
