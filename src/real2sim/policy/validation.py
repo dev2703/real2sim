@@ -82,9 +82,9 @@ def _motions(values, arrays, ticks, kind):
     if kind == "canonical_joint":
         return values[:, :5] - arrays["joint_state"][ticks, :5], None, MOTION_DEG, "deg"
     if kind == "cartesian_absolute":
-        rotation = np.array([np.linalg.norm(log_so3(matrix_from_rot6d(target[3:9]) @ matrix_from_rot6d(current[3:9]).T))
-                             for target, current in zip(values, state[ticks], strict=True)])
-        return (values[:, :3] - state[ticks, :3]) * 1000, rotation, MOTION_MM, "mm"
+        # Rotation validity is reported by action_metrics. Movement vectors do
+        # not need to decode predicted orientations, which can be degenerate.
+        return (values[:, :3] - state[ticks, :3]) * 1000, None, MOTION_MM, "mm"
     vectors = values[:, :3] * 1000
     if kind == "cartesian_tool":
         rotations = np.stack([matrix_from_rot6d(row[3:9]) for row in state[ticks]])
@@ -163,6 +163,13 @@ def executed_prefix_report(predictions, ticks, anchors, arrays, manifest, std, e
     predictions = np.asarray(predictions)
     model = action_metrics(predictions, label, action_kind=kind, std=std)
     label_motion, label_rotation, threshold, unit = _motions(label, arrays, ticks, kind)
+    if kind == "cartesian_absolute":
+        # Stationarity is a property of the recorded label and current pose,
+        # never the predicted orientation. Pure rotation is not a hold.
+        label_rotation = np.array([
+            np.linalg.norm(log_so3(matrix_from_rot6d(target[3:9]) @ matrix_from_rot6d(current[3:9]).T))
+            for target, current in zip(label, _canonical(arrays)[ticks], strict=True)
+        ])
     magnitude = np.linalg.norm(label_motion, axis=1)
     moving = magnitude > threshold
     stationary = ~moving
@@ -203,6 +210,8 @@ def executed_prefix_report(predictions, ticks, anchors, arrays, manifest, std, e
               "baseline_contract": "Hold uses observed pose/joints and gripper at the inference anchor; persistence repeats the prior achieved delta/recorded target and holds the anchor gripper. Tool deltas are transported between observed tool frames. Neither uses future observations.",
               "geometry_caution": "Cartesian metrics inherit the prepared FK calibration; joint metrics are degrees, not Cartesian task error.",
               "physical_grasp_success": "not_evaluated"}
+    if kind == "canonical_joint":
+        result["baseline_contract"] = "Hold uses observed follower joints and gripper at the inference anchor. Persistence repeats the prior recorded leader joint command target, not achieved follower motion, and holds the anchor's observed gripper. Neither uses future observations."
     result["offline_selection"] = offline_selection(result)
     return result
 

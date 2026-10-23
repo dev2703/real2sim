@@ -129,7 +129,7 @@
           "alternative_pm100_tick_residual_p95": 0.4000031113625937
         }
       },
-      "leader_action": {
+      "recorded_action_vs_current_leader_calibration": {
         "shoulder_pan": {
           "degree_inverse_tick_residual_p95": 1.0013580322265625e-05,
           "degree_inverse_tick_residual_max": 0.37502050399780273,
@@ -157,7 +157,7 @@
         }
       }
     },
-    "interpretation": "Degree lattice supports recorded units; it cannot verify signs, physical zeros, link geometry or historical timing."
+    "interpretation": "Follower readbacks support degree units. Recorded actions are commands and can contain limiter-generated noninteger tick targets; current leader-calibration comparison does not establish historical action provenance. The lattice cannot verify signs, physical zeros, link geometry or historical timing."
   },
   "current_mapping": {
     "sign": [
@@ -246,7 +246,7 @@
     }
   },
   "physical_acceptance_established": false,
-  "label_repair_status": "Safe regeneration tool available; no independently justified arm mapping correction is available to adopt from these inputs.",
+  "label_repair_status": "Safe regeneration tool available; no independently justified arm mapping correction is available to adopt from the selected inspected documents. Independent measurements may exist elsewhere and must be linked before their applicability can be checked.",
   "remaining_measurement_dependencies": [
     "Independent source-resolution intrinsics/distortion applicable to each capture regime",
     "Unique static landmark identities and independently registered base/table frame",
@@ -255,7 +255,7 @@
     "Loaded hold/release measurements with observed relative ball/jaw motion and physical timing"
   ],
   "input_sha256": {
-    "/Users/deveshvyas/Downloads/real2sim/scripts/audit_v2_calibration_readiness.py": "8f1432a88d384ea39c6e059da1bcc08ea3bb0b3119c759035eaf1a30d84392f1",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/audit_v2_calibration_readiness.py": "44f7a06104d9124b08dd738c36b633d25ce16d53c9b5fb55de49a1f2a2c67917",
     "results/v2/split.json": "458c5d8900a98ba86f4cff27aebce90d73b9d75f285bade18c1b3524f9e76ce5",
     "configs/v2/geometry_landmarks.template.json": "adea0895d52a27dfed7f2402cfdd0b8f49f783a316abf2ac4df8115b6f43c277",
     "configs/v2/measurements.template.json": "bfbd276c06ffea6c982df8a921c76735b00928cfc2589640be431e507c3f634e",

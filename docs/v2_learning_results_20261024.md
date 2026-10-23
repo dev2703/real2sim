@@ -2,7 +2,7 @@
 
 All **22 unique training runs completed without failure**. The 24 matrix entries include two reused controls. Each run consumed 64,000 examples with seed 0, using 29 training and six validation episodes. The six reserved episodes were not evaluated. These are exploratory learning results on provisional geometry; they do not establish successful pick-and-place.
 
-The best two-view Cartesian ACT validation result is CLIP with its final two blocks trained at backbone learning rate `3e-6`: **0.43749**, 4.51% below the matched ResNet result. The only iPhone-only checkpoint remains the practical full-simulator candidate because the recorded wrist view, named `top` in the dataset, has no measured simulator camera mount.
+The best two-view Cartesian ACT validation result is CLIP with its final two blocks trained at backbone learning rate `3e-6`: **0.43749**, 4.51% below the matched ResNet result. The iPhone-only checkpoint was the available full-simulator candidate in this screen. The [corrective follow-up](v2_corrective_experiments_20261024.md) subsequently verified that the pinned model already contains a nominal wrist camera and added an explicit binding for recorded `top`. Its physical optical transform remains unverified; old checkpoint camera contracts are retained.
 
 Evidence and complete checkpoint hashes are in [completed_screen_review_20261024.json](../results/v2/completed_screen_review_20261024.json). The source training reports remain unchanged under `outputs/v2/learning_screen_20261022`.
 
@@ -114,4 +114,4 @@ Both pass the 120 ms policy-call target in this bounded check. These times inclu
 
 Reproduce with `.venv/bin/python scripts/diag_v2_mps_inference.py --out <new-report.json>`. See [mps_inference_profile_20261024.json](../results/v2/mps_inference_profile_20261024.json) for every timing, selected tick, device, synchronization, and checkpoint hash.
 
-The full learned-policy geometry diagnostics still fail during approach. The camera and wrist fits are unaccepted, and missing wrist-camera placement blocks faithful two-view simulator input. Better offline error or scripted retention is not learned pick-and-place success. Continue with the single-camera full rollout, executed-prefix motion/bias analysis, controller feasibility, and measured geometry before spending another full training budget.
+The full learned-policy geometry diagnostics still fail during approach. The camera and wrist fits are unaccepted; the nominal CAD wrist binding enables diagnostics but does not establish faithful recorded optical registration. Better offline error or scripted retention is not learned pick-and-place success. Continue with development rollouts, executed-prefix motion/bias analysis, controller feasibility, and measured geometry before spending another full training budget.

@@ -1,0 +1,997 @@
+{
+  "kind": "BALL_IMAGE_INPUT_PARITY_AND_SENSITIVITY",
+  "models": {
+    "disabled_control": {
+      "checkpoint": "outputs/v2/ball_grounding_pilot_20261024/disabled_control/checkpoints/best",
+      "checkpoint_sha256": "27c712bbdec554e0a69b6d5ad7958539bd9d19c818587ea0ac4fd0c554335472",
+      "data_manifest_sha256": "c5b438fc4d92c266082b7b45da38cd34a255227facae8a3d1499dabb963fd60c",
+      "feature_spec": {
+        "version": "hsv_ball_v1",
+        "enabled": false,
+        "camera_key": "observation.images.iphone",
+        "height": 192,
+        "width": 256,
+        "hue_min": 24,
+        "hue_max": 44,
+        "saturation_min": 90,
+        "value_min": 85,
+        "min_area_px": 18,
+        "max_area_fraction": 0.08,
+        "min_circularity": 0.35
+      },
+      "validation_anchors": [
+        {
+          "tick": 2789,
+          "episode": 9,
+          "frame": 0,
+          "donor_tick": 4049
+        },
+        {
+          "tick": 2887,
+          "episode": 9,
+          "frame": 196,
+          "donor_tick": 4179
+        },
+        {
+          "tick": 2987,
+          "episode": 9,
+          "frame": 396,
+          "donor_tick": 4309
+        },
+        {
+          "tick": 3087,
+          "episode": 9,
+          "frame": 596,
+          "donor_tick": 4439
+        },
+        {
+          "tick": 4049,
+          "episode": 13,
+          "frame": 0,
+          "donor_tick": 7410
+        },
+        {
+          "tick": 4179,
+          "episode": 13,
+          "frame": 260,
+          "donor_tick": 7524
+        },
+        {
+          "tick": 4309,
+          "episode": 13,
+          "frame": 520,
+          "donor_tick": 7638
+        },
+        {
+          "tick": 4439,
+          "episode": 13,
+          "frame": 780,
+          "donor_tick": 7754
+        },
+        {
+          "tick": 7410,
+          "episode": 22,
+          "frame": 0,
+          "donor_tick": 10494
+        },
+        {
+          "tick": 7524,
+          "episode": 22,
+          "frame": 228,
+          "donor_tick": 10594
+        },
+        {
+          "tick": 7638,
+          "episode": 22,
+          "frame": 456,
+          "donor_tick": 10696
+        },
+        {
+          "tick": 7754,
+          "episode": 22,
+          "frame": 688,
+          "donor_tick": 10798
+        },
+        {
+          "tick": 10494,
+          "episode": 31,
+          "frame": 0,
+          "donor_tick": 12127
+        },
+        {
+          "tick": 10594,
+          "episode": 31,
+          "frame": 200,
+          "donor_tick": 12245
+        },
+        {
+          "tick": 10696,
+          "episode": 31,
+          "frame": 404,
+          "donor_tick": 12365
+        },
+        {
+          "tick": 10798,
+          "episode": 31,
+          "frame": 608,
+          "donor_tick": 12485
+        },
+        {
+          "tick": 12127,
+          "episode": 36,
+          "frame": 0,
+          "donor_tick": 12487
+        },
+        {
+          "tick": 12245,
+          "episode": 36,
+          "frame": 236,
+          "donor_tick": 12609
+        },
+        {
+          "tick": 12365,
+          "episode": 36,
+          "frame": 476,
+          "donor_tick": 12731
+        },
+        {
+          "tick": 12485,
+          "episode": 36,
+          "frame": 716,
+          "donor_tick": 12855
+        },
+        {
+          "tick": 12487,
+          "episode": 37,
+          "frame": 0,
+          "donor_tick": 2789
+        },
+        {
+          "tick": 12609,
+          "episode": 37,
+          "frame": 244,
+          "donor_tick": 2887
+        },
+        {
+          "tick": 12731,
+          "episode": 37,
+          "frame": 488,
+          "donor_tick": 2987
+        },
+        {
+          "tick": 12855,
+          "episode": 37,
+          "frame": 736,
+          "donor_tick": 3087
+        }
+      ],
+      "raw_detections": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "feature_train_live_max_abs_difference": 0.0,
+      "scores": {
+        "original": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.001337839406915009,
+            0.0011381471995264292,
+            0.0013212800258770585,
+            0.0017964333528652787,
+            0.006014715414494276,
+            0.003721982939168811,
+            0.04423274099826813
+          ],
+          "gripper_mae": 0.04423273727297783,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.2976337671279907,
+          "translation_mean_mm": 2.5409233570098877,
+          "translation_p95_mm": 7.8846940994262695,
+          "translation_bias_xyz_mm": [
+            -0.8098493814468384,
+            -0.09991476684808731,
+            -0.22242744266986847
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": 0.029361672673156813,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.516220569610596,
+            "predicted_step_mean_mm": 3.3184807300567627,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.5961882472038269,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008363241822338606,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.0
+        },
+        "paired_image_and_features_swap": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.001243652543053031,
+            0.0010797253344208002,
+            0.0014009635196998715,
+            0.0017725942889228463,
+            0.006198765244334936,
+            0.0034882379695773125,
+            0.05286254361271858
+          ],
+          "gripper_mae": 0.05286253243684769,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.2982644736766815,
+          "translation_mean_mm": 2.4839024543762207,
+          "translation_p95_mm": 7.770840644836426,
+          "translation_bias_xyz_mm": [
+            -0.7383435964584351,
+            -0.15696477890014648,
+            -0.26943761110305786
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": 0.051143783259971265,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.436100006103516,
+            "predicted_step_mean_mm": 3.1343536376953125,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.6587483882904053,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008177553585286395,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.8553798198699951
+        },
+        "image_only_swap": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.001243652543053031,
+            0.0010797253344208002,
+            0.0014009635196998715,
+            0.0017725942889228463,
+            0.006198765244334936,
+            0.0034882379695773125,
+            0.05286254361271858
+          ],
+          "gripper_mae": 0.05286253243684769,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.2982644736766815,
+          "translation_mean_mm": 2.4839024543762207,
+          "translation_p95_mm": 7.770840644836426,
+          "translation_bias_xyz_mm": [
+            -0.7383435964584351,
+            -0.15696477890014648,
+            -0.26943761110305786
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": 0.051143783259971265,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.436100006103516,
+            "predicted_step_mean_mm": 3.1343536376953125,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.6587483882904053,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008177553585286395,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.8553798198699951
+        },
+        "features_only_swap": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.001337839406915009,
+            0.0011381471995264292,
+            0.0013212800258770585,
+            0.0017964333528652787,
+            0.006014715414494276,
+            0.003721982939168811,
+            0.04423274099826813
+          ],
+          "gripper_mae": 0.04423273727297783,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.2976337671279907,
+          "translation_mean_mm": 2.5409233570098877,
+          "translation_p95_mm": 7.8846940994262695,
+          "translation_bias_xyz_mm": [
+            -0.8098493814468384,
+            -0.09991476684808731,
+            -0.22242744266986847
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": 0.029361672673156813,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.516220569610596,
+            "predicted_step_mean_mm": 3.3184807300567627,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.5961882472038269,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008363241822338606,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.0
+        }
+      },
+      "reserved_episodes_used": [],
+      "limitations": "Sparse teacher-forced sensitivity on validation images. Image-only and features-only swaps deliberately break the feature/image relation to isolate input dependence; only joint swaps preserve the input contract. These interventions cannot establish correct localization, causal task improvement or rollout success."
+    },
+    "ball_input": {
+      "checkpoint": "outputs/v2/ball_grounding_pilot_20261024/ball_input/checkpoints/best",
+      "checkpoint_sha256": "98e50e87f654329157b821d694573de97fde8dd427051c5f552243c4ab084b6b",
+      "data_manifest_sha256": "28751c61a0efdae380591e4f4b430618f80c925220130666d6eed013fb47c312",
+      "feature_spec": {
+        "version": "hsv_ball_v1",
+        "enabled": true,
+        "camera_key": "observation.images.iphone",
+        "height": 192,
+        "width": 256,
+        "hue_min": 24,
+        "hue_max": 44,
+        "saturation_min": 90,
+        "value_min": 85,
+        "min_area_px": 18,
+        "max_area_fraction": 0.08,
+        "min_circularity": 0.35
+      },
+      "validation_anchors": [
+        {
+          "tick": 2789,
+          "episode": 9,
+          "frame": 0,
+          "donor_tick": 4049
+        },
+        {
+          "tick": 2887,
+          "episode": 9,
+          "frame": 196,
+          "donor_tick": 4179
+        },
+        {
+          "tick": 2987,
+          "episode": 9,
+          "frame": 396,
+          "donor_tick": 4309
+        },
+        {
+          "tick": 3087,
+          "episode": 9,
+          "frame": 596,
+          "donor_tick": 4439
+        },
+        {
+          "tick": 4049,
+          "episode": 13,
+          "frame": 0,
+          "donor_tick": 7410
+        },
+        {
+          "tick": 4179,
+          "episode": 13,
+          "frame": 260,
+          "donor_tick": 7524
+        },
+        {
+          "tick": 4309,
+          "episode": 13,
+          "frame": 520,
+          "donor_tick": 7638
+        },
+        {
+          "tick": 4439,
+          "episode": 13,
+          "frame": 780,
+          "donor_tick": 7754
+        },
+        {
+          "tick": 7410,
+          "episode": 22,
+          "frame": 0,
+          "donor_tick": 10494
+        },
+        {
+          "tick": 7524,
+          "episode": 22,
+          "frame": 228,
+          "donor_tick": 10594
+        },
+        {
+          "tick": 7638,
+          "episode": 22,
+          "frame": 456,
+          "donor_tick": 10696
+        },
+        {
+          "tick": 7754,
+          "episode": 22,
+          "frame": 688,
+          "donor_tick": 10798
+        },
+        {
+          "tick": 10494,
+          "episode": 31,
+          "frame": 0,
+          "donor_tick": 12127
+        },
+        {
+          "tick": 10594,
+          "episode": 31,
+          "frame": 200,
+          "donor_tick": 12245
+        },
+        {
+          "tick": 10696,
+          "episode": 31,
+          "frame": 404,
+          "donor_tick": 12365
+        },
+        {
+          "tick": 10798,
+          "episode": 31,
+          "frame": 608,
+          "donor_tick": 12485
+        },
+        {
+          "tick": 12127,
+          "episode": 36,
+          "frame": 0,
+          "donor_tick": 12487
+        },
+        {
+          "tick": 12245,
+          "episode": 36,
+          "frame": 236,
+          "donor_tick": 12609
+        },
+        {
+          "tick": 12365,
+          "episode": 36,
+          "frame": 476,
+          "donor_tick": 12731
+        },
+        {
+          "tick": 12485,
+          "episode": 36,
+          "frame": 716,
+          "donor_tick": 12855
+        },
+        {
+          "tick": 12487,
+          "episode": 37,
+          "frame": 0,
+          "donor_tick": 2789
+        },
+        {
+          "tick": 12609,
+          "episode": 37,
+          "frame": 244,
+          "donor_tick": 2887
+        },
+        {
+          "tick": 12731,
+          "episode": 37,
+          "frame": 488,
+          "donor_tick": 2987
+        },
+        {
+          "tick": 12855,
+          "episode": 37,
+          "frame": 736,
+          "donor_tick": 3087
+        }
+      ],
+      "raw_detections": [
+        [
+          0.51171875,
+          0.4088541567325592,
+          0.04389141499996185,
+          1.0
+        ],
+        [
+          0.5146484375,
+          0.4088541567325592,
+          0.04239940270781517,
+          1.0
+        ],
+        [
+          0.66796875,
+          0.6666666865348816,
+          0.056876249611377716,
+          1.0
+        ],
+        [
+          0.7038280963897705,
+          0.6484375,
+          0.05486097186803818,
+          1.0
+        ],
+        [
+          0.6148437261581421,
+          0.37812498211860657,
+          0.0418756827712059,
+          1.0
+        ],
+        [
+          0.6141786575317383,
+          0.37788569927215576,
+          0.04133680462837219,
+          1.0
+        ],
+        [
+          0.6338592171669006,
+          0.6435456871986389,
+          0.061344459652900696,
+          1.0
+        ],
+        [
+          0.634765625,
+          0.6510416865348816,
+          0.059913914650678635,
+          1.0
+        ],
+        [
+          0.599609375,
+          0.375,
+          0.04026509448885918,
+          1.0
+        ],
+        [
+          0.602047324180603,
+          0.37568333745002747,
+          0.040435854345560074,
+          1.0
+        ],
+        [
+          0.4379870295524597,
+          0.46004045009613037,
+          0.06538059562444687,
+          1.0
+        ],
+        [
+          0.4267003536224365,
+          0.685661792755127,
+          0.06943979859352112,
+          1.0
+        ],
+        [
+          0.586422324180603,
+          0.38473331928253174,
+          0.040435854345560074,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.626953125,
+          0.6796875,
+          0.059305962175130844,
+          1.0
+        ],
+        [
+          0.6251037120819092,
+          0.6652378439903259,
+          0.059161294251680374,
+          1.0
+        ],
+        [
+          0.5869593620300293,
+          0.38888314366340637,
+          0.04176248610019684,
+          1.0
+        ],
+        [
+          0.5872738361358643,
+          0.38884320855140686,
+          0.04171204939484596,
+          1.0
+        ],
+        [
+          0.658203125,
+          0.6640625,
+          0.06032634899020195,
+          1.0
+        ],
+        [
+          0.66015625,
+          0.6848958134651184,
+          0.053737957030534744,
+          1.0
+        ],
+        [
+          0.597044050693512,
+          0.3829679787158966,
+          0.04175807908177376,
+          1.0
+        ],
+        [
+          0.5973694324493408,
+          0.3828853368759155,
+          0.04175446182489395,
+          1.0
+        ],
+        [
+          0.638671875,
+          0.6458333134651184,
+          0.0574435219168663,
+          1.0
+        ],
+        [
+          0.62890625,
+          0.6744791865348816,
+          0.06117406114935875,
+          1.0
+        ]
+      ],
+      "feature_train_live_max_abs_difference": 0.0,
+      "scores": {
+        "original": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.0013671383494511247,
+            0.001140781445428729,
+            0.0013707466423511505,
+            0.0018303629476577044,
+            0.006262398324906826,
+            0.003767091780900955,
+            0.043099697679281235
+          ],
+          "gripper_mae": 0.043099697679281235,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.3029037117958069,
+          "translation_mean_mm": 2.6280479431152344,
+          "translation_p95_mm": 7.799496173858643,
+          "translation_bias_xyz_mm": [
+            -0.8552333116531372,
+            -0.12784510850906372,
+            -0.12211460620164871
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": -0.003920111404680737,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.661187648773193,
+            "predicted_step_mean_mm": 3.162762403488159,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.5619949102401733,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008656140136070422,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.0
+        },
+        "paired_image_and_features_swap": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.0013032247079536319,
+            0.001078321016393602,
+            0.001418326166458428,
+            0.0018028883496299386,
+            0.006419636309146881,
+            0.00344491028226912,
+            0.04951700568199158
+          ],
+          "gripper_mae": 0.04951700195670128,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.30081507563591003,
+          "translation_mean_mm": 2.5428848266601562,
+          "translation_p95_mm": 7.495110988616943,
+          "translation_bias_xyz_mm": [
+            -0.7660045623779297,
+            -0.15695632994174957,
+            -0.16945655643939972
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": 0.02861238694000523,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.5322160720825195,
+            "predicted_step_mean_mm": 3.0253162384033203,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.6440035104751587,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008356215793467835,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.8571532964706421
+        },
+        "image_only_swap": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.0012802251148968935,
+            0.0010876944288611412,
+            0.0014310939004644752,
+            0.0018108283402398229,
+            0.006445677485316992,
+            0.0034695197828114033,
+            0.0494254007935524
+          ],
+          "gripper_mae": 0.0494254007935524,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.3011893928050995,
+          "translation_mean_mm": 2.5490753650665283,
+          "translation_p95_mm": 7.479522228240967,
+          "translation_bias_xyz_mm": [
+            -0.7800736427307129,
+            -0.16628259420394897,
+            -0.16482841968536377
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": 0.026247587613242196,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.538086414337158,
+            "predicted_step_mean_mm": 3.0085256099700928,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.6411322355270386,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.008385077181547273,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.8439098000526428
+        },
+        "features_only_swap": {
+          "n": 45,
+          "mae_per_dimension": [
+            0.0013751337537541986,
+            0.001131309662014246,
+            0.0013573502656072378,
+            0.001831183210015297,
+            0.006198369897902012,
+            0.003754346864297986,
+            0.04291629418730736
+          ],
+          "gripper_mae": 0.04291628673672676,
+          "gripper_unit": "fraction of calibrated range",
+          "l1": 0.3017324209213257,
+          "translation_mean_mm": 2.622227907180786,
+          "translation_p95_mm": 7.811074733734131,
+          "translation_bias_xyz_mm": [
+            -0.8321995139122009,
+            -0.1230468899011612,
+            -0.12791702151298523
+          ],
+          "raw_dimension_units": [
+            "m",
+            "m",
+            "m",
+            "rad",
+            "rad",
+            "rad",
+            "fraction"
+          ],
+          "zero_delta_translation_mean_mm": 2.617785930633545,
+          "translation_skill_vs_zero": -0.0016968448394731883,
+          "translation_motion": {
+            "label_step_threshold_mm": 0.4,
+            "n": 23,
+            "translation_mean_mm": 4.651350498199463,
+            "predicted_step_mean_mm": 3.172776937484741,
+            "label_step_mean_mm": 5.121755599975586,
+            "median_predicted_to_label_step_ratio": 0.5511413812637329,
+            "positive_direction_fraction": 0.8260869565217391
+          },
+          "rotation_mean_rad": 0.0085736341984128,
+          "invalid_rotations": 0,
+          "action_translation_change_mean_mm": 0.09680546820163727
+        }
+      },
+      "reserved_episodes_used": [],
+      "limitations": "Sparse teacher-forced sensitivity on validation images. Image-only and features-only swaps deliberately break the feature/image relation to isolate input dependence; only joint swaps preserve the input contract. These interventions cannot establish correct localization, causal task improvement or rollout success."
+    }
+  }
+}

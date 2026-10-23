@@ -1,0 +1,90 @@
+{
+  "schema": "v2_fk_label_regeneration_v1",
+  "source_dataset": "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone_top",
+  "source_manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+  "data_config_sha256": "e464af8b9b21939a2c8964f9c9afe2a25f59214931cda9bb357c7e2d6d722bb3",
+  "task_config_sha256": "5c8b56d84fa0b9ca86f3f9e915bf61c17f10efa1649d7b114aa6fa69ba7f2e37",
+  "dependencies_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/regenerate_v2_fk_labels.py": "e8b90e32231bf504776bbbcae52a44cf9617113f7921dcf081be234f60afd525",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "src/real2sim/geometry/so101_fk.py": "0a918095d5794309e4a68e60b3b485fa3aeda029201eff5ee861e7f541051395",
+    "src/real2sim/data/labels.py": "9539f6afaf0fc2b1a01475393a1fea875b3721276aed87cc92054eb275bca2a8",
+    "src/real2sim/data/prepare.py": "937ef41a220e5e3dc5fb70447352357522d792775f451f7a752cfc71a364f5b0",
+    "src/real2sim/sim/cameras.py": "0c0ea3f954ac8fa8d20f305d93c4553f70362525925d96f924e57aa2ce507bb4",
+    "src/real2sim/config.py": "8b113777aa547df82052a77b86ed11aaf82b175ecf55492414d7a32d6705d6e5"
+  },
+  "arm_sign": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "arm_offset_deg": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "coordinate_frame": "SO101 native base; scene camera/base placement does not transform these labels",
+  "physical_calibration_accepted": false,
+  "calibration_acceptance_note": "Regeneration proves lineage only. Independent metrology and reference replay acceptance are separate requirements.",
+  "split_ticks_images_and_gripper_commands_preserved": true,
+  "reference_joint_clipping": false,
+  "native_joint_limits_rad": [
+    [
+      -1.91986,
+      1.91986
+    ],
+    [
+      -1.7453293,
+      1.7453293
+    ],
+    [
+      -1.69,
+      1.69
+    ],
+    [
+      -1.658063,
+      1.658063
+    ],
+    [
+      -2.7438473,
+      2.8412063
+    ]
+  ],
+  "partitions": {
+    "train": {
+      "ticks": 9617,
+      "out_of_native_arm_limits_ticks": 3219,
+      "state_position_change_mm_p95": 0.0,
+      "state_position_change_mm_max": 0.0,
+      "action_change_abs_max_per_dimension": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "val": {
+      "ticks": 2077,
+      "out_of_native_arm_limits_ticks": 642,
+      "state_position_change_mm_p95": 0.0,
+      "state_position_change_mm_max": 0.0,
+      "action_change_abs_max_per_dimension": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "reserved_ticks_preserved_but_not_scored": 2184
+}

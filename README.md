@@ -27,6 +27,11 @@ is running with provisional geometry while physical registration remains unresol
 The commands below document the retained legacy 10 Hz workflow.
 
 See [documentation index](docs/README.md) for the current contracts and runbooks.
+The [24 October corrective experiments](docs/v2_corrective_experiments_20261024.md)
+add explicit ball-image features and motion-sensitive validation, verify the existing
+nominal wrist camera binding, and compare feasible control targets. Independent
+physical registration is still required before corrected-label retraining or
+reserved checkpoint promotion.
 
 ## Install
 

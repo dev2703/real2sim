@@ -92,6 +92,12 @@ def test_regeneration_versions_lineage_reuses_images_and_keeps_reserved_out_of_s
     assert sha256_file(source / "arrays.npz") == manifest["files_sha256"]["arrays.npz"]
     with pytest.raises(FileExistsError):
         MODULE.regenerate(source, config, out)
+    for field in ("visual_grounding", "observation_variant"):
+        transformed = {**manifest, field: {"schema": "an_existing_transform"}}
+        (source / "manifest.json").write_text(json.dumps(transformed))
+        with pytest.raises(ValueError, match="canonical source first"):
+            MODULE.regenerate(source, config, tmp_path / f"reject_{field}")
+    (source / "manifest.json").write_text(json.dumps(manifest))
     cfg["contract_version"] = "old-v1"
     config.write_text(yaml.safe_dump(cfg))
     with pytest.raises(ValueError, match="new explicit contract_version"):

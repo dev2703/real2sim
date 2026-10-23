@@ -1,0 +1,574 @@
+{
+  "kind": "BOUNDED_DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+  "physical_calibration_accepted": false,
+  "checkpoint_promoted": false,
+  "reserved_episodes_used": [],
+  "full_report": "outputs/v2/ball_grounding_rollouts_20261024_graphics/report.json",
+  "full_report_sha256": "c432572bf875b0959e32bc1679c8d134b1488aec52267e78953302b75417b2d0",
+  "development_seeds": [
+    0,
+    1,
+    2
+  ],
+  "budget": {
+    "ticks_per_trial": 125,
+    "control_hz": 12.5,
+    "maximum_simulated_seconds_per_trial": 10,
+    "trials_per_candidate": 3,
+    "total_control_ticks": 750
+  },
+  "matched_initial_native_tool_and_ball_states_verified_exactly": true,
+  "source_changed_during_run": [],
+  "source_provenance_in_full_report": true,
+  "sim_config": "outputs/v2/inference_sim_smoke_20261023/sim.yaml",
+  "sim_config_sha256": "971040ecb90172defc1a3ad1538d247fee9333f9399b3ac21d3359e0c9756f6d",
+  "eval_config": "configs/v2/eval_so101.yaml",
+  "eval_config_sha256": "052ff85b9dbc21aa529923e5fdf50ac8ffe83c79fc32dd0eb2693cdeeec996ae",
+  "candidates": {
+    "disabled_control": {
+      "checkpoint": {
+        "checkpoint": "outputs/v2/ball_grounding_pilot_20261024/disabled_control/checkpoints/best",
+        "checkpoint_sha256": "27c712bbdec554e0a69b6d5ad7958539bd9d19c818587ea0ac4fd0c554335472",
+        "checkpoint_step": 256,
+        "kind": "cartesian",
+        "chunk_size": 25,
+        "n_action_steps": 2,
+        "device": "cpu",
+        "target_reference": "accepted_target",
+        "execution_interface_ablation": false,
+        "kinematic_projection": null,
+        "checkpoint_contract_modified": false
+      },
+      "visual_grounding": {
+        "version": "hsv_ball_v1",
+        "enabled": false,
+        "camera_key": "observation.images.iphone",
+        "height": 192,
+        "width": 256,
+        "hue_min": 24,
+        "hue_max": 44,
+        "saturation_min": 90,
+        "value_min": 85,
+        "min_area_px": 18,
+        "max_area_fraction": 0.08,
+        "min_circularity": 0.35
+      },
+      "summary": {
+        "n": 3,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 55,
+        "mean_latency_ms": 16.299618041938952,
+        "max_action_saturation": 0.0
+      },
+      "trials": [
+        {
+          "experiment_id": "DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+          "controller_source": "LEARNED_ACT",
+          "robot": "so101",
+          "seed": 0,
+          "checkpoint_sha256": "27c712bbdec554e0a69b6d5ad7958539bd9d19c818587ea0ac4fd0c554335472",
+          "checkpoint_step": 256,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.17898,
+          "ticks": 125,
+          "ik_rejections": 0,
+          "mean_latency_ms": 16.918457680261664,
+          "max_action_saturation": 0.0,
+          "video_path": "",
+          "abort": null,
+          "initial_ee_ball_distance_m_scoring_only": 0.2757746826227291,
+          "initial_native_joint_state_rad": [
+            -0.04142759712386541,
+            -1.7046687742612723,
+            1.5136415608504334,
+            1.1131748372002752,
+            0.037591708886580574,
+            0.6419791769294739
+          ],
+          "initial_ball_xyz_task_scoring_only": [
+            0.35273098696389027,
+            0.22845816659973406,
+            0.022499999999999964
+          ],
+          "initial_tool_xyz_task_scoring_only": [
+            0.19103546007207578,
+            0.005779604854951829,
+            0.04040224282375393
+          ],
+          "policy_calls": 63,
+          "ik_reasons": {
+            "accepted": 125
+          },
+          "ball_feature_visible_ticks": 0,
+          "max_robot_table_penetration_m": 0.0,
+          "tick_trace": "outputs/v2/ball_grounding_rollouts_20261024_graphics/disabled_control/seed_00/ticks.jsonl"
+        },
+        {
+          "experiment_id": "DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+          "controller_source": "LEARNED_ACT",
+          "robot": "so101",
+          "seed": 1,
+          "checkpoint_sha256": "27c712bbdec554e0a69b6d5ad7958539bd9d19c818587ea0ac4fd0c554335472",
+          "checkpoint_step": 256,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.21361,
+          "ticks": 125,
+          "ik_rejections": 55,
+          "mean_latency_ms": 15.92801607424213,
+          "max_action_saturation": 0.0,
+          "video_path": "",
+          "abort": null,
+          "initial_ee_ball_distance_m_scoring_only": 0.26754170502716085,
+          "initial_native_joint_state_rad": [
+            -0.04142759712386541,
+            -1.7046687742612723,
+            1.5136415608504334,
+            1.1131748372002752,
+            0.037591708886580574,
+            0.6419791769294739
+          ],
+          "initial_ball_xyz_task_scoring_only": [
+            0.37613129922371574,
+            0.19812721716004372,
+            0.022499999999999964
+          ],
+          "initial_tool_xyz_task_scoring_only": [
+            0.19103546007207578,
+            0.005779604854951829,
+            0.04040224282375393
+          ],
+          "policy_calls": 63,
+          "ik_reasons": {
+            "accepted": 70,
+            "collision": 55
+          },
+          "ball_feature_visible_ticks": 0,
+          "max_robot_table_penetration_m": 0.0005525679905230564,
+          "tick_trace": "outputs/v2/ball_grounding_rollouts_20261024_graphics/disabled_control/seed_01/ticks.jsonl"
+        },
+        {
+          "experiment_id": "DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+          "controller_source": "LEARNED_ACT",
+          "robot": "so101",
+          "seed": 2,
+          "checkpoint_sha256": "27c712bbdec554e0a69b6d5ad7958539bd9d19c818587ea0ac4fd0c554335472",
+          "checkpoint_step": 256,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.16528,
+          "ticks": 125,
+          "ik_rejections": 0,
+          "mean_latency_ms": 16.05238037131306,
+          "max_action_saturation": 0.0,
+          "video_path": "",
+          "abort": null,
+          "initial_ee_ball_distance_m_scoring_only": 0.2674830971988423,
+          "initial_native_joint_state_rad": [
+            -0.04142759712386541,
+            -1.7046687742612723,
+            1.5136415608504334,
+            1.1131748372002752,
+            0.037591708886580574,
+            0.6419791769294739
+          ],
+          "initial_ball_xyz_task_scoring_only": [
+            0.35109687918227855,
+            0.21933769789146654,
+            0.022499999999999964
+          ],
+          "initial_tool_xyz_task_scoring_only": [
+            0.19103546007207578,
+            0.005779604854951829,
+            0.04040224282375393
+          ],
+          "policy_calls": 63,
+          "ik_reasons": {
+            "accepted": 125
+          },
+          "ball_feature_visible_ticks": 0,
+          "max_robot_table_penetration_m": 0.0,
+          "tick_trace": "outputs/v2/ball_grounding_rollouts_20261024_graphics/disabled_control/seed_02/ticks.jsonl"
+        }
+      ],
+      "contact_solver": {
+        "impratio": 10.0,
+        "noslip_iterations": 0,
+        "noslip_tolerance": 1e-06,
+        "solver": 2,
+        "cone": 1
+      },
+      "native_joint_limits_rad": [
+        [
+          -1.91986,
+          1.91986
+        ],
+        [
+          -1.7453293,
+          1.7453293
+        ],
+        [
+          -1.69,
+          1.69
+        ],
+        [
+          -1.65806,
+          1.65806
+        ],
+        [
+          -2.7438473,
+          2.8412063
+        ],
+        [
+          -0.17453,
+          1.7453292
+        ]
+      ],
+      "original_ik_gates": {
+        "solver": "mujoco_damped_least_squares_diagnostic",
+        "position_tolerance_m": 0.003,
+        "orientation_tolerance_rad": 0.35,
+        "orientation_weight_m_per_rad": 0.025,
+        "damping": 0.001,
+        "max_iterations": 150,
+        "max_joint_step_rad": 0.12,
+        "workspace_min": [
+          -0.1,
+          -0.45,
+          -0.012
+        ],
+        "workspace_max": [
+          0.55,
+          0.45,
+          0.6
+        ],
+        "penetration_tolerance_m": 0.002,
+        "position_convergence_m": 1e-05,
+        "orientation_convergence_rad": 0.0001
+      }
+    },
+    "ball_input": {
+      "checkpoint": {
+        "checkpoint": "outputs/v2/ball_grounding_pilot_20261024/ball_input/checkpoints/best",
+        "checkpoint_sha256": "98e50e87f654329157b821d694573de97fde8dd427051c5f552243c4ab084b6b",
+        "checkpoint_step": 256,
+        "kind": "cartesian",
+        "chunk_size": 25,
+        "n_action_steps": 2,
+        "device": "cpu",
+        "target_reference": "accepted_target",
+        "execution_interface_ablation": false,
+        "kinematic_projection": null,
+        "checkpoint_contract_modified": false
+      },
+      "visual_grounding": {
+        "version": "hsv_ball_v1",
+        "enabled": true,
+        "camera_key": "observation.images.iphone",
+        "height": 192,
+        "width": 256,
+        "hue_min": 24,
+        "hue_max": 44,
+        "saturation_min": 90,
+        "value_min": 85,
+        "min_area_px": 18,
+        "max_area_fraction": 0.08,
+        "min_circularity": 0.35
+      },
+      "summary": {
+        "n": 3,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_latency_ms": 16.39466689053362,
+        "max_action_saturation": 0.0
+      },
+      "trials": [
+        {
+          "experiment_id": "DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+          "controller_source": "LEARNED_ACT",
+          "robot": "so101",
+          "seed": 0,
+          "checkpoint_sha256": "98e50e87f654329157b821d694573de97fde8dd427051c5f552243c4ab084b6b",
+          "checkpoint_step": 256,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.17812,
+          "ticks": 125,
+          "ik_rejections": 0,
+          "mean_latency_ms": 16.349811835454837,
+          "max_action_saturation": 0.0,
+          "video_path": "",
+          "abort": null,
+          "initial_ee_ball_distance_m_scoring_only": 0.2757746826227291,
+          "initial_native_joint_state_rad": [
+            -0.04142759712386541,
+            -1.7046687742612723,
+            1.5136415608504334,
+            1.1131748372002752,
+            0.037591708886580574,
+            0.6419791769294739
+          ],
+          "initial_ball_xyz_task_scoring_only": [
+            0.35273098696389027,
+            0.22845816659973406,
+            0.022499999999999964
+          ],
+          "initial_tool_xyz_task_scoring_only": [
+            0.19103546007207578,
+            0.005779604854951829,
+            0.04040224282375393
+          ],
+          "policy_calls": 63,
+          "ik_reasons": {
+            "accepted": 125
+          },
+          "ball_feature_visible_ticks": 125,
+          "max_robot_table_penetration_m": 0.0,
+          "tick_trace": "outputs/v2/ball_grounding_rollouts_20261024_graphics/ball_input/seed_00/ticks.jsonl"
+        },
+        {
+          "experiment_id": "DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+          "controller_source": "LEARNED_ACT",
+          "robot": "so101",
+          "seed": 1,
+          "checkpoint_sha256": "98e50e87f654329157b821d694573de97fde8dd427051c5f552243c4ab084b6b",
+          "checkpoint_step": 256,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.19718,
+          "ticks": 125,
+          "ik_rejections": 0,
+          "mean_latency_ms": 16.355850765736953,
+          "max_action_saturation": 0.0,
+          "video_path": "",
+          "abort": null,
+          "initial_ee_ball_distance_m_scoring_only": 0.26754170502716085,
+          "initial_native_joint_state_rad": [
+            -0.04142759712386541,
+            -1.7046687742612723,
+            1.5136415608504334,
+            1.1131748372002752,
+            0.037591708886580574,
+            0.6419791769294739
+          ],
+          "initial_ball_xyz_task_scoring_only": [
+            0.37613129922371574,
+            0.19812721716004372,
+            0.022499999999999964
+          ],
+          "initial_tool_xyz_task_scoring_only": [
+            0.19103546007207578,
+            0.005779604854951829,
+            0.04040224282375393
+          ],
+          "policy_calls": 63,
+          "ik_reasons": {
+            "accepted": 125
+          },
+          "ball_feature_visible_ticks": 125,
+          "max_robot_table_penetration_m": 0.0,
+          "tick_trace": "outputs/v2/ball_grounding_rollouts_20261024_graphics/ball_input/seed_01/ticks.jsonl"
+        },
+        {
+          "experiment_id": "DEVELOPMENT_BALL_INPUT_APPROACH_SCREEN",
+          "controller_source": "LEARNED_ACT",
+          "robot": "so101",
+          "seed": 2,
+          "checkpoint_sha256": "98e50e87f654329157b821d694573de97fde8dd427051c5f552243c4ab084b6b",
+          "checkpoint_step": 256,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.15769,
+          "ticks": 125,
+          "ik_rejections": 0,
+          "mean_latency_ms": 16.478338070409073,
+          "max_action_saturation": 0.0,
+          "video_path": "",
+          "abort": null,
+          "initial_ee_ball_distance_m_scoring_only": 0.2674830971988423,
+          "initial_native_joint_state_rad": [
+            -0.04142759712386541,
+            -1.7046687742612723,
+            1.5136415608504334,
+            1.1131748372002752,
+            0.037591708886580574,
+            0.6419791769294739
+          ],
+          "initial_ball_xyz_task_scoring_only": [
+            0.35109687918227855,
+            0.21933769789146654,
+            0.022499999999999964
+          ],
+          "initial_tool_xyz_task_scoring_only": [
+            0.19103546007207578,
+            0.005779604854951829,
+            0.04040224282375393
+          ],
+          "policy_calls": 63,
+          "ik_reasons": {
+            "accepted": 125
+          },
+          "ball_feature_visible_ticks": 125,
+          "max_robot_table_penetration_m": 0.0,
+          "tick_trace": "outputs/v2/ball_grounding_rollouts_20261024_graphics/ball_input/seed_02/ticks.jsonl"
+        }
+      ],
+      "contact_solver": {
+        "impratio": 10.0,
+        "noslip_iterations": 0,
+        "noslip_tolerance": 1e-06,
+        "solver": 2,
+        "cone": 1
+      },
+      "native_joint_limits_rad": [
+        [
+          -1.91986,
+          1.91986
+        ],
+        [
+          -1.7453293,
+          1.7453293
+        ],
+        [
+          -1.69,
+          1.69
+        ],
+        [
+          -1.65806,
+          1.65806
+        ],
+        [
+          -2.7438473,
+          2.8412063
+        ],
+        [
+          -0.17453,
+          1.7453292
+        ]
+      ],
+      "original_ik_gates": {
+        "solver": "mujoco_damped_least_squares_diagnostic",
+        "position_tolerance_m": 0.003,
+        "orientation_tolerance_rad": 0.35,
+        "orientation_weight_m_per_rad": 0.025,
+        "damping": 0.001,
+        "max_iterations": 150,
+        "max_joint_step_rad": 0.12,
+        "workspace_min": [
+          -0.1,
+          -0.45,
+          -0.012
+        ],
+        "workspace_max": [
+          0.55,
+          0.45,
+          0.6
+        ],
+        "penetration_tolerance_m": 0.002,
+        "position_convergence_m": 1e-05,
+        "orientation_convergence_rad": 0.0001
+      }
+    }
+  },
+  "retained_setup_failure": {
+    "path": "outputs/v2/ball_grounding_rollouts_20261024/setup_failure.json",
+    "reason": "Sandbox CoreGraphics access blocked reset rendering before any control tick. The same authorized workload completed with native graphics access.",
+    "control_ticks": 0,
+    "counted_as_task_trial": false
+  },
+  "interpretation": "All six bounded development trials fail approach without a lift or pick/place. Explicit image features improve closest tool-to-ball distance in these three matched seeds and remove the baseline seed-1 IK rejection streak, but the change does not reach the 30mm approach threshold and is not a success or promotion result.",
+  "limitations": "Single training seed and bounded ten-second development rollouts in the unchanged provisional simulator scene. Strict valid recorded episode-9 frame-100 reset; seeds vary only the original configured ball region. No reserved episodes, geometry acceptance, physical measurements or checkpoint promotion. Detector features come only from the current rendered image through the saved training/inference contract. Simulator ground truth is scoring only. Success flags cover this bounded screen, not full-timeout evaluation."
+}

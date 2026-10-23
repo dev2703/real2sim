@@ -27,7 +27,7 @@ accepted-target integration remains active within each two-action prefix.
 | Cartesian bounded joint step, orientation weight 0.025 m/rad | 80/90 | 4.666 mm | 0.656 mm |
 | Cartesian bounded joint step, orientation weight 0.0015625 m/rad | 80/90 | 4.661 mm | 0.656 mm |
 | Learned canonical joint commands | 76/90 | 12.991 mm | 6.583 mm |
-| Hold baseline | See endpoint counts in report | 5.400 mm | 0 mm |
+| Hold baseline | 80/90 | 5.400 mm | 0 mm |
 
 The fallback does not change any sampled request because this sample has no
 numerical residual failures: Cartesian rejections are four workspace failures
@@ -52,7 +52,9 @@ cannot identify the better controller.
 
 The recorded follower's next joint state is also included as a label-feasibility
 reference. It specifies the same provisional FK target as the Cartesian label
-before acceptance/rate handling. This is a useful future joint-space training
+before acceptance/rate handling: raw FK target mismatch is zero, 79/90 targets
+pass the original gates, and mean error after rejection/rate handling is 0.298 mm.
+This is a useful future joint-space training
 target, but no checkpoint has been trained on it in this comparison. It must
 retain explicit invalid-label handling and a matching next-follower-joint
 inference contract; silently clipping original leader commands would create a
@@ -99,3 +101,40 @@ loaded/unloaded poses, requested/sent/readback commands and timing provenance,
 ball/tool displacement with registration uncertainty, loaded jaw response, and
 release onset/separation/settling at declared ordinary openings. Geometry and
 contact fitting must remain separate from verification trials.
+
+## Separate learned ball-input approach screen
+
+The [bounded ball-input comparison](../results/v2/ball_grounding_rollouts_20261024.json)
+executes the matched 4,096-example pilot checkpoints on three common development
+seeds for 125 ticks each (10 seconds at 12.5 Hz). Each model uses its saved
+training/inference detector contract through the normal policy adapter.
+Initial native, tool and ball states match exactly across each seed pair.
+The unchanged provisional scene uses the strict recorded episode-9 frame-100
+start. NoSlip remains disabled; native joint and collision gates stay unchanged.
+
+| Development seed | Disabled features closest distance | Ball-input closest distance |
+| --- | ---: | ---: |
+| 0 | 178.98 mm | 178.12 mm |
+| 1 | 213.61 mm | 197.18 mm |
+| 2 | 165.28 mm | 157.69 mm |
+
+Both candidates are **0/3**, with approach failure in every case, no lifts,
+releases or aborts. The disabled control has 55 collision IK rejections on seed
+1; the ball-input candidate has no IK rejections on these three trajectories.
+Its detector supplies a visible ball feature on all 125 ticks in each run.
+Maximum table penetration is 0.553 mm for the control and zero for ball input,
+under the unchanged 2 mm gate. All source hashes stay unchanged during execution.
+
+These three small improvements remain over 150 mm from the ball. They do not
+establish grasping, complete task success or a checkpoint-promotion decision.
+Reserved evaluation remains unused. The full report retains per-tick observed
+features, action requests, IK results, native states and privileged scoring.
+A sandbox graphics failure before any control tick is retained separately;
+the same workload completed with native CoreGraphics access.
+
+Reproduce with the completed pilot checkpoints:
+
+```sh
+.venv/bin/python scripts/diag_v2_ball_grounding_rollouts.py \
+  --out outputs/v2/ball_grounding_rollouts_NEW
+```

@@ -43,6 +43,8 @@ def regenerate_arrays(arrays: dict, cfg: dict, mode: str) -> tuple[dict, So101FK
     fk = So101FK(mapping=JointMapping.from_task_config(load_yaml(project_path(cfg["task_config"]))))
     result = {key: value.copy() for key, value in arrays.items()}
     N = len(arrays["episode_index"])
+    if arrays["state"].shape != (N, 13):
+        raise ValueError("regeneration requires untransformed canonical 13-dimensional TCP states")
     for key in ("joint_state", "joint_action"):
         if arrays[key].shape != (N, 6) or not np.isfinite(arrays[key]).all():
             raise ValueError("finite sampled observation and command joints [N,6] are required")
@@ -82,6 +84,8 @@ def regenerate(source: Path, config: Path, out: Path) -> dict:
         raise FileExistsError(f"refusing to overwrite any existing dataset/directory: {out}")
     cfg = load_yaml(config)
     manifest = json.loads((source / "manifest.json").read_text())
+    if "visual_grounding" in manifest or "observation_variant" in manifest:
+        raise ValueError("regenerate the canonical source first, then rebuild visual_grounding/observation_variant transforms for the new FK lineage")
     if not cfg.get("contract_version") or cfg["contract_version"] == manifest.get("contract_version"):
         raise ValueError("a new explicit contract_version is required for regenerated FK lineage")
     if cfg["policy_hz"] != manifest["policy_hz"] or cfg["camera_keys"] != manifest["camera_keys"]:
@@ -143,7 +147,10 @@ def regenerate(source: Path, config: Path, out: Path) -> dict:
         source_manifest_sha256=lineage["source_manifest_sha256"],
         preparation_config_sha256=sha256_file(config),
         camera_transforms={key: task[key] for key in ("camera_iphone", "additional_cameras") if key in task},
-        label_semantics=f"Regenerated {mode}: achieved FK under explicitly hashed mapping; native SO101 base axes; recorded gripper command semantics preserved",
+        label_semantics=(
+            "Regenerated canonical_joint: observed native-base TCP state from explicitly hashed FK mapping; action is the recorded joint command at the sampled row in degrees/gripper percent"
+            if mode == "canonical_joint" else
+            f"Regenerated {mode}: achieved FK under explicitly hashed mapping; native SO101 base axes; recorded gripper command semantics preserved"),
         label_diagnostics={
             "jump_flags": int(result["jump_flag"].sum()),
             "extrapolated_ticks": int(result["label_is_extrapolated"].sum()),

@@ -27,6 +27,9 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
     for key in ("camera_keys", "state_names", "action_names", "split", "policy_hz"):
         if contract[key] != manifest[key]:
             raise ValueError(f"checkpoint/data mismatch: {key}")
+    for key in ("visual_grounding", "observation_variant"):
+        if contract.get(key) != manifest.get(key):
+            raise ValueError(f"checkpoint/data mismatch: {key}")
     if contract["derived_files_sha256"] != manifest["files_sha256"]:
         raise ValueError("checkpoint data hashes differ")
     episodes = manifest["split"]["val"] if episodes is None else episodes

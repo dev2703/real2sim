@@ -342,8 +342,10 @@ in-range recorded validation start (episode 9, frame 100). All 47 source/configu
 hashes remain stable during that run. The ball is not approached or lifted in two seconds;
 this is an execution smoke test, not a full task attempt or success-rate estimate.
 
-Two-camera simulator inference still lacks a declared wrist-camera mount. The code
-correctly refuses to invent one. The default v2 calibrated task is also absent, and its
+The earlier two-camera smoke lacked a declared recorded-`top` binding. The pinned
+CAD camera has since been exposed explicitly in the
+[corrective follow-up](v2_corrective_experiments_20261024.md); its physical optical
+registration remains unverified. The default v2 calibrated task is also absent, and its
 configured start exceeds native joint bounds. The single-camera diagnostic supplies an
 explicit valid recorded start without weakening strict reset checks or formal calibration
 gates. Its separate command and source snapshots are linked in the report.
@@ -423,8 +425,11 @@ learned visual-approach problem remains.
 
 All eight completed experiment comparisons, best checkpoint locations and fair-comparison
 limits are in the [learning results](v2_learning_results_20261024.md). Offline validation
-favours fine-tuned CLIP among matched two-view ACT models, but no such model can yet be
-faithfully evaluated in the simulator without the wrist-camera mount.
+favours fine-tuned CLIP among matched two-view ACT models. The later
+[corrective follow-up](v2_corrective_experiments_20261024.md) confirms that the pinned
+model contains a nominal wrist mount and optical camera and exposes an explicit
+two-view binding. Independent optical registration remains unresolved, and old
+checkpoint contracts are preserved.
 
 ## Remaining evidence
 

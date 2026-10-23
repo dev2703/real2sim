@@ -33,6 +33,9 @@ def check(checkpoint: Path, data: Path, device: str = "auto", max_batches: int |
     for key in ("camera_keys", "state_names", "action_names", "label_semantics"):
         if contract[key] != manifest[key]:
             problems.append(f"{key} differs between checkpoint and data")
+    for key in ("visual_grounding", "observation_variant"):
+        if contract.get(key) != manifest.get(key):
+            problems.append(f"{key} differs between checkpoint and data")
     if contract["split"]["sha256"] != manifest["split"]["sha256"]:
         problems.append("split hash differs")
     if contract.get("derived_files_sha256") != manifest.get("files_sha256"):

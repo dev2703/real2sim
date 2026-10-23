@@ -1,5 +1,11 @@
 # Project documentation
 
+Start with the [24 October corrective experiments](v2_corrective_experiments_20261024.md)
+for the ball-image input pilot, executed-prefix selection metrics, nominal CAD wrist
+camera binding, calibration search, and control-target comparisons. The nominal
+wrist camera exists in the pinned robot model; independent optical registration
+and physical joint/jaw verification remain separate gates.
+
 All 22 learning runs have completed. Start with the [completed results](v2_learning_results_20261024.md)
 for the experiment comparisons and the [geometry/control investigation](v2_geometry_control_20261023.md)
 for full learned-policy failures and corrective tests. The [learning screen](v2_learning_screen_20261022.md)
@@ -9,6 +15,10 @@ are not a substitute for the runner status.
 
 | Topic | Reference |
 |---|---|
+| Corrective experiments and remaining evidence | [24 October follow-up](v2_corrective_experiments_20261024.md) |
+| Existing wrist camera, measurement search and FK regeneration | [Calibration follow-up](v2_calibration_followup_20261024.md) |
+| Executed-prefix and physical-unit selection metrics | [Motion selection](v2_motion_selection_20261024.md) |
+| Feasible joint targets and soft orientation comparison | [Control contracts](v2_control_contract_comparison_20261024.md) |
 | V2 preparation, evaluation and geometry gates | [V2 runbook](v2_implementation_20261020.md) |
 | Results from all eight experiment groups | [Completed learning results](v2_learning_results_20261024.md) |
 | Physical joint zeros and camera alignment | [Geometry findings](v2_geometry_alignment_20261021.md) |

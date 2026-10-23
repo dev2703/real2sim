@@ -24,6 +24,8 @@ Both baseline actions use the gripper observed at the inference anchor. Hold use
 zero deltas or the anchor's observed absolute pose/joints. Persistence repeats the
 previous achieved delta or target, transporting tool deltas into the anchor frame.
 Neither baseline uses observations after the inference anchor.
+For canonical joint targets, persistence specifically repeats the prior recorded
+leader command target; it does not measure achieved follower joint motion.
 
 The offline shortlist score is the equal mean of available fixed components:
 

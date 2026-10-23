@@ -56,7 +56,7 @@ def audit(root: Path, split_path: Path, geometry_path: Path, measurements_path: 
     real = np.concatenate(list(raw_rows.values()))
     lattice = {
         "follower_observation.state": encoder_lattice(raw_rows["observation.state"], calibration),
-        "leader_action": encoder_lattice(raw_rows["action"], json.loads(leader_calibration_path.read_text())),
+        "recorded_action_vs_current_leader_calibration": encoder_lattice(raw_rows["action"], json.loads(leader_calibration_path.read_text())),
     }
     fk = So101FK(mapping=JointMapping.from_task_config(task))
     measured_geometry = geometry.get("evidence_kind") == "measured"
@@ -85,7 +85,7 @@ def audit(root: Path, split_path: Path, geometry_path: Path, measurements_path: 
                   "state_plus_action_raw_rows_scored": len(real),
                   "optimization_performed": False, "reference_clipping": False},
         "numerical_units": {"arm_degree_lattice": lattice,
-                            "interpretation": "Degree lattice supports recorded units; it cannot verify signs, physical zeros, link geometry or historical timing."},
+                            "interpretation": "Follower readbacks support degree units. Recorded actions are commands and can contain limiter-generated noninteger tick targets; current leader-calibration comparison does not establish historical action provenance. The lattice cannot verify signs, physical zeros, link geometry or historical timing."},
         "current_mapping": {"sign": list(fk.mapping.sign), "offset_deg": list(fk.mapping.offset_deg),
                             "state_plus_action_rows_outside_native_arm_limits": int(fk.out_of_range(real).any(axis=1).sum()),
                             "native_arm_limits_rad": fk.joint_range.tolist(),
@@ -106,7 +106,7 @@ def audit(root: Path, split_path: Path, geometry_path: Path, measurements_path: 
         },
         "nominal_camera_mount": nominal_so101_wrist_camera(DEFAULT_MJCF),
         "physical_acceptance_established": False,
-        "label_repair_status": "Safe regeneration tool available; no independently justified arm mapping correction is available to adopt from these inputs.",
+        "label_repair_status": "Safe regeneration tool available; no independently justified arm mapping correction is available to adopt from the selected inspected documents. Independent measurements may exist elsewhere and must be linked before their applicability can be checked.",
         "remaining_measurement_dependencies": [
             "Independent source-resolution intrinsics/distortion applicable to each capture regime",
             "Unique static landmark identities and independently registered base/table frame",
