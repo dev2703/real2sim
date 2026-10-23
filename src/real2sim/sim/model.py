@@ -294,8 +294,11 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     _add_bowl(world, dims, [*dims["center_xy"], top], contact_attrs, rgba=_numbers(look["bowl_rgba"]))
     ball = task["ball"]
     start = ball["start_region"]["center_task_xy"]
+    from real2sim.sim.ball_support import add_ball_support, spawn_center_above_table
+
+    add_ball_support(world, task, contact_attrs, offset)
     body = ET.SubElement(world, "body", name="ball",
-                         pos=_numbers([*start, top + ball["radius"] + 0.001]))
+                         pos=_numbers([*start, top + spawn_center_above_table(task, start) + 0.001]))
     ET.SubElement(body, "freejoint", name="ball_free")
     ET.SubElement(body, "geom", name="ball_geom", type="sphere", size=str(ball["radius"]),
                   mass=str(ball["mass"]), rgba=_numbers(look["ball_rgba"]), **contact_attrs)

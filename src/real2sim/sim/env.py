@@ -126,7 +126,8 @@ class So101PickPlaceEnv:
     def reset(self, *, seed: int | None = None, scenario: dict | None = None) -> tuple[dict, dict]:
         """Deterministic reset. ``scenario`` keys are task-frame metres (``ball_xy``, ``bowl_xy``)."""
         scenario = dict(scenario or {})
-        allowed = {"ball_xy", "bowl_xy", "ball_drop_height", "ball_velocity", "joint_positions"}
+        allowed = {"ball_xy", "bowl_xy", "ball_drop_height", "ball_velocity", "joint_positions",
+                   "ball_support_xy"}
         if unknown := scenario.keys() - allowed:
             raise ValueError(f"unknown scenario fields: {sorted(unknown)}")
         rng = np.random.default_rng(seed)
@@ -149,9 +150,12 @@ class So101PickPlaceEnv:
         self.model.body_pos[self.model.body("bowl").id, :2] = bowl_xy
         self.data.qpos[self.qadr] = q
         self.data.ctrl[self.actuator_ids] = q
+        from real2sim.sim.ball_support import reset_ball_support
+
+        spawn_height = reset_ball_support(self, ball_xy, scenario.get("ball_support_xy"))
         bq, bv = self._ball_q, self._ball_v
         self.data.qpos[bq:bq + 3] = [*(ball_xy + self.offset[:2]),
-                                    self.table_top + self.task["ball"]["radius"] + drop]
+                                    self.table_top + spawn_height + drop]
         self.data.qpos[bq + 3:bq + 7] = [1, 0, 0, 0]
         self.data.qvel[bv:bv + 3] = velocity
         mujoco.mj_forward(self.model, self.data)
@@ -295,6 +299,8 @@ class So101PickPlaceEnv:
         rim_z = bowl[2] + self.bowl["height"]
         floor_z = bowl[2] + self.bowl["floor"]
         touching = self._ball_contacts()
+        from real2sim.sim.ball_support import support_contact_metrics
+
         fixed, moving = (touching & self.gripper_geoms[n] for n in GRIPPER_BODIES)
         above = ball[2] > self.table_top + radius + 0.01
         ball_held = bool((fixed and moving) or ((fixed or moving) and above))
@@ -320,6 +326,7 @@ class So101PickPlaceEnv:
             # Start-pose validity (D-014): penetration at reset and now; see reset().
             "start_pose": dict(self.start_pose),
             **self._robot_table_penetration(),
+            **support_contact_metrics(self.model, self.data),
         }
         return {"controller_source": "NATIVE_SIM_DIAGNOSTIC", "calibrated": False,
                 "time_s": float(self.data.time), "step": self.steps,

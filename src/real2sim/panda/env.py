@@ -162,7 +162,7 @@ class PandaPickPlaceEnv:
         """Deterministic reset. ``scenario`` keys are task-frame metres (``ball_xy``, ``bowl_xy``)."""
         scenario = dict(scenario or {})
         allowed = {"ball_xy", "bowl_xy", "ball_drop_height", "ball_velocity", "joint_positions",
-                   "gripper_opening"}
+                   "gripper_opening", "ball_support_xy"}
         if unknown := scenario.keys() - allowed:
             raise ValueError(f"unknown scenario fields: {sorted(unknown)}")
         rng = np.random.default_rng(seed)
@@ -190,9 +190,12 @@ class PandaPickPlaceEnv:
         self.data.qpos[self.finger_qadr] = opening / 2
         self.data.ctrl[self.actuator_ids] = q
         self.data.ctrl[self.gripper_actuator] = self._gripper_ctrl(opening)
+        from real2sim.sim.ball_support import reset_ball_support
+
+        spawn_height = reset_ball_support(self, ball_xy, scenario.get("ball_support_xy"))
         bq, bv = self._ball_q, self._ball_v
         self.data.qpos[bq:bq + 3] = [*(ball_xy + self.offset[:2]),
-                                    self.table_top + self.task["ball"]["radius"] + drop]
+                                    self.table_top + spawn_height + drop]
         self.data.qpos[bq + 3:bq + 7] = [1, 0, 0, 0]
         self.data.qvel[bv:bv + 3] = velocity
         mujoco.mj_forward(self.model, self.data)
@@ -342,6 +345,8 @@ class PandaPickPlaceEnv:
         rim_z = bowl[2] + self.bowl["height"]
         floor_z = bowl[2] + self.bowl["floor"]
         touching = self._ball_contacts()
+        from real2sim.sim.ball_support import support_contact_metrics
+
         left, right = (touching & self.finger_geoms[n] for n in FINGER_BODIES)
         above = ball[2] > self.table_top + radius + 0.01
         ball_held = bool((left and right) or ((left or right) and above))
@@ -365,6 +370,7 @@ class PandaPickPlaceEnv:
             "lifted": bool(ball[2] > self.table_top + radius + 0.03),
             "gripper_opening_m": self.gripper_opening(),
             "contacts": self._contact_pairs(),
+            **support_contact_metrics(self.model, self.data),
         }
         return {"controller_source": "NATIVE_SIM_DIAGNOSTIC", "calibrated": False,
                 "robot": "panda", "time_s": float(self.data.time), "step": self.steps,
