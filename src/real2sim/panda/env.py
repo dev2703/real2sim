@@ -190,12 +190,13 @@ class PandaPickPlaceEnv:
         self.data.qpos[self.finger_qadr] = opening / 2
         self.data.ctrl[self.actuator_ids] = q
         self.data.ctrl[self.gripper_actuator] = self._gripper_ctrl(opening)
-        from real2sim.sim.ball_support import reset_ball_support
+        from real2sim.sim.ball_support import reset_ball_support, support_contact_metrics
 
         spawn_height = reset_ball_support(self, ball_xy, scenario.get("ball_support_xy"))
+        self._ball_rest_center_z = self.table_top + spawn_height
         bq, bv = self._ball_q, self._ball_v
         self.data.qpos[bq:bq + 3] = [*(ball_xy + self.offset[:2]),
-                                    self.table_top + spawn_height + drop]
+                                    self._ball_rest_center_z + drop]
         self.data.qpos[bq + 3:bq + 7] = [1, 0, 0, 0]
         self.data.qvel[bv:bv + 3] = velocity
         mujoco.mj_forward(self.model, self.data)
@@ -203,11 +204,14 @@ class PandaPickPlaceEnv:
         self._ready = True
         self._ee_velocity = np.zeros(3)  # first tick: zero velocity, as in the labels
         if self.config.get("strict_initial_state"):
-            for contact in self.data.contact[:self.data.ncon]:
-                pair = {int(contact.geom1), int(contact.geom2)}
-                if self.table_geom in pair and self.ball_geom not in pair and contact.dist < -1e-6:
-                    self._ready = False
-                    raise ValueError("v2 initial pose penetrates the table")
+            table_penetration = any(
+                self.table_geom in (contact.geom1, contact.geom2)
+                and self.ball_geom not in (contact.geom1, contact.geom2) and contact.dist < -1e-6
+                for contact in self.data.contact[:self.data.ncon])
+            support = support_contact_metrics(self.model, self.data, self.base_body)
+            if table_penetration or support.get("robot_support_penetration_m", 0) > 1e-6:
+                self._ready = False
+                raise ValueError("v2 initial pose penetrates the table or ball support")
         return self.observation(), self.info()
 
     def _gripper_ctrl(self, opening_m: float) -> float:
@@ -342,13 +346,14 @@ class PandaPickPlaceEnv:
         bowl = self.data.xpos[self.bowl_body].copy()
         tool = self.data.site_xpos[self.site_id].copy()
         radius = float(self.task["ball"]["radius"])
+        rest_z = getattr(self, "_ball_rest_center_z", self.table_top + radius)
         rim_z = bowl[2] + self.bowl["height"]
         floor_z = bowl[2] + self.bowl["floor"]
         touching = self._ball_contacts()
         from real2sim.sim.ball_support import support_contact_metrics
 
         left, right = (touching & self.finger_geoms[n] for n in FINGER_BODIES)
-        above = ball[2] > self.table_top + radius + 0.01
+        above = ball[2] > rest_z + 0.01
         ball_held = bool((left and right) or ((left or right) and above))
         metrics = {
             "frame": "world (z up; table top at task.table.height); *_task = world - offset",
@@ -367,10 +372,10 @@ class PandaPickPlaceEnv:
             "ball_touching_table": self.table_geom in touching,
             "ee_ball_distance_m": float(np.linalg.norm(tool - ball)),
             "ee_bowl_distance_m": float(np.linalg.norm(tool - bowl)),
-            "lifted": bool(ball[2] > self.table_top + radius + 0.03),
+            "lifted": bool(ball[2] > rest_z + 0.03),
             "gripper_opening_m": self.gripper_opening(),
             "contacts": self._contact_pairs(),
-            **support_contact_metrics(self.model, self.data),
+            **support_contact_metrics(self.model, self.data, self.base_body),
         }
         return {"controller_source": "NATIVE_SIM_DIAGNOSTIC", "calibrated": False,
                 "robot": "panda", "time_s": float(self.data.time), "step": self.steps,

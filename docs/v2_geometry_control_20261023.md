@@ -175,20 +175,77 @@ padded. Second-prefix predictions use recorded successor states, not simulated r
 See [the manifold diagnostic](../results/v2/action_manifold_resnet_20261023.json).
 The full-pose carry planning problem above is a different, longer-horizon constraint.
 
-## Remaining obstacles
+## Camera uncertainty and wrist zeros
 
-The source images show the ball on folded white material, while the scene starts it directly
-on the table. Support height/contact geometry and the background appearance therefore do
-not match yet. Existing fixed-target loaded-hold diagnostics also lose grasp after roughly
-11–15 seconds, despite good unloaded arm tracking. A successful brief carry does not settle
-retention geometry.
+The [follow-up analysis](../results/v2/wrist_camera_followup_20261023.md) tests 36 explicit
+camera assumptions and additional wrist landmarks. Camera height spans 0.499–0.560 m
+across these assumptions; this is a sensitivity envelope, not a confidence interval.
+Nonrepeating fixed-base contours reject the 180-degree registration alias, but another
+alias fits them better than the selected registration. All candidates fail the roughly
+3 px annotation scale. The camera/base transform is therefore still unaccepted.
 
-Resolve the camera/base correspondences against independent visible features, then assess
-joint zeros using those fixed transforms. Version the actual object support and grasp
-geometry before replaying complete recorded tasks. Test any learned controller change on
-the unchanged benchmark and report it separately from these privileged diagnostics.
+With a fixed nominal lens mount, a full-cycle wrist search gives additional offsets of
+flex +2.74 degrees and roll −59.40 degrees. Validation RMS improves from 51.03 to 16.75 px,
+which is still inadequate. Illustrative one-degree camera rotations move the fitted roll
+between −81 and −38 degrees. Freeing the lens mount exposes an exact roll/mount ambiguity
+(Jacobian rank 4 of 5). More optimization of those same unknowns cannot identify physical
+wrist zeros. Neither these landmarks nor the previous hinge-axis landmarks identify the
+gripper closure zero. No offsets or native limits have been changed.
 
-Verification: the final CPU unit/control suite passed 609 tests; three graphics-dependent
-camera tests passed separately with macOS graphics access. Three MPS/CUDA hardware cases
-were skipped in the CPU sandbox. Ruff and whitespace checks passed. All 59 frozen training
-metadata hashes still match, and the learning queue continued running throughout this work.
+## Ball-support geometry
+
+Both robot environments now support an optional `ball.support` box with explicit height,
+footprint, task-frame center and yaw. It participates in actual contacts, resets separately
+from the ball and reports support contacts. Sphere spawn height clears box sides and
+corners as well as the top. Lift and one-jaw height thresholds use the ball's initial rest
+height, preventing a tall support from receiving pickup credit. Absent support preserves
+the previous scene and metrics. A rigid box does not model folded material compliance.
+
+The [silhouette diagnostic](../results/v2/ball_support_sensitivity_20261023.json) estimates
+ball center by fitting its exact optical tangent cone, independently of arm FK. Under the
+nominal camera and 33.5 mm radius, six captures suggest support heights of 10.6–23.2 mm
+above the tabletop. Including the disclosed camera assumptions and a ±1 mm ball-radius
+sensitivity expands their combined range to approximately −28–56 mm. Sphere radius and
+optical distance have an exact scale ambiguity. These images do not identify support
+thickness; no height has been accepted. Native tabletop Z stays −2.4 mm even when a
+hypothesis includes mat thickness, which is subtracted separately for height above the mat.
+
+Four [image-based scene hypotheses](../results/v2/ball_support_scene_candidates_20261023.json)
+use the observed off-center paper footprint and predeclared heights of 0/5/10/20 mm.
+Ball, bowl, mat and camera positions change coherently. These are whole scene hypotheses,
+not an isolated height sweep or accepted calibration. The executed configurations retain
+their exact bytes and hashes; the manifest flags inherited legacy provenance strings that
+do not describe the new coordinates. Fixed image placement has zero jitter, so different
+random seeds would not supply independent placement trials.
+
+## Loaded grasp retention
+
+The [long-hold follow-up](../results/v2/grasp_retention_followup_20261023.json) requires
+positive force on both jaws, lift above the initial rest height and no more than 10 mm
+ball/tool displacement throughout a 30-second hold. This catches slip earlier than the
+existing permissive `ball_held` indicator. All 45 exploratory and eight coherent image-scene
+cases fail the strict 30-second criterion. They are diagnostic sensitivities, not task trials.
+
+| Comparison | Result |
+|---|---|
+| Image-scene default grasps, 0/5/10/20 mm support | Bilateral loss at 11.3/12.2/12.3/12.5 s; strict slip failure at 6.2–6.8 s |
+| Encoder-width latch at three preloads | Worse retention than fixed closure |
+| Deeper grasps and 45/60-degree approach bank | No retained 30-second case; only one high-angle scene had feasible paths and it failed acquisition |
+| Newton iteration caps 10/50/100, same loaded state | Bit-identical contact trajectories; actual iterations never exceed seven |
+| Physics rates 500/1000/2000 Hz, same loaded state | Bilateral loss at 9.1/9.1/9.2 s; strict slip failure at 5.1 s in every case |
+
+Image-scene arm tracking remains within 0.3 mm while the ball slides toward the jaw tips.
+This implicates contact/grasp modeling independently of arm tracking. Increasing numerical
+resolution does not fix it; it does not by itself exclude contact regularization. Failed
+high-angle searches that fall back to 15 degrees are explicitly labeled in the reports.
+A successful brief carry cannot establish stable retention or physical geometry agreement.
+
+## Remaining evidence
+
+Independent static CAD correspondences and intrinsics are needed to accept camera/base
+registration. A verified wrist landmark or mount location must break the roll/mount
+ambiguity. Ball radius and folded-support thickness/shape need independent measurements,
+and gripper closure/force response and jaw surfaces remain unverified. Refit joint zeros
+only against the accepted camera, then replay recorded tasks before evaluating learned
+rollouts. Test learned-controller changes on the unchanged benchmark and report them
+separately from privileged simulator diagnostics.

@@ -155,6 +155,13 @@ class MatchedCarryPose(FeasibleCarry):
 class ReachableGrasp(FeasibleCarry):
     """Preselect a grasp tilt/IK branch by feasibility and joint travel, never outcomes."""
 
+    def __init__(self, env, params=None, *, grasp_tilts_deg=(10., 15., 20., 25.)):
+        tilts = np.asarray(grasp_tilts_deg, float)
+        if tilts.ndim != 1 or not len(tilts) or not np.isfinite(tilts).all():
+            raise ValueError("grasp tilt bank must contain finite angles")
+        self.grasp_tilts_deg = tuple(float(t) for t in tilts)
+        super().__init__(env, params)
+
     def reset(self):
         super().reset()
         self.grasp_search = None
@@ -186,7 +193,7 @@ class ReachableGrasp(FeasibleCarry):
                     return result.reason
             return "accepted"
 
-        for tilt in (10., 15., 20., 25.):
+        for tilt in self.grasp_tilts_deg:
             target = np.eye(4)
             target[:3, :3] = grasp_orientation(ball[:2], tilt)
             target[:3, 3] = ball - target[:3, :3] @ self.p.ball_in_site

@@ -51,8 +51,10 @@ def add_ball_support(world, task, contacts, offset):
     spec = support_spec(task)
     if spec is None or spec["height"] == 0:
         return
+
     def numbers(values):
         return " ".join(f"{float(v):.12g}" for v in values)
+
     ET.SubElement(world, "geom", name="ball_support", type="box",
                   size=numbers([*(spec["size_xy"] / 2), spec["height"] / 2]),
                   pos=numbers([*(spec["center_task_xy"] + np.asarray(offset)[:2]),
@@ -71,10 +73,13 @@ def reset_ball_support(env, ball_xy, support_xy=None):
     return height
 
 
-def support_contact_metrics(model, data):
+def support_contact_metrics(model, data, robot_root_body):
+    """Report ball contact and only the named robot subtree's support contacts."""
     geom = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "ball_support")
     if geom < 0:
         return {}
+    if not 0 < robot_root_body < model.nbody:
+        raise ValueError("robot root must identify a non-world body")
     ball = model.geom("ball_geom").id
     count, depth, touching = 0, 0., False
     for contact in data.contact[:data.ncon]:
@@ -83,7 +88,12 @@ def support_contact_metrics(model, data):
             continue
         if ball in pair:
             touching = True
-        else:
+            continue
+        other = int(contact.geom2) if int(contact.geom1) == geom else int(contact.geom1)
+        body = int(model.geom_bodyid[other])
+        while body not in (0, robot_root_body):
+            body = int(model.body_parentid[body])
+        if body == robot_root_body:
             count += 1
             depth = max(depth, -float(contact.dist))
     return {"ball_touching_support": touching, "robot_support_contacts": count,

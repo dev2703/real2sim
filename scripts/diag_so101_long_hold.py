@@ -28,7 +28,8 @@ def force_bilateral(row, threshold_n=.01):
 
 
 def ready(rows, count=5):
-    return len(rows) >= count and all(force_bilateral(r) and r["height_m"] > .03
+    return len(rows) >= count and all(force_bilateral(r)
+                                      and r.get("height_above_rest_m", r["height_m"]) > .03
                                       for r in rows[-count:])
 
 
@@ -36,7 +37,8 @@ def summarize_hold(anchor, rows, hz, max_displacement_m=.01):
     """Require sustained bilateral load and stable ball-to-tool pose for the full hold."""
     displacement = [float(np.linalg.norm(np.asarray(r["ball_tool_m"])
                                          - anchor["ball_tool_m"])) for r in rows]
-    good = [force_bilateral(r) and r["height_m"] > .03 and d <= max_displacement_m
+    good = [force_bilateral(r) and r.get("height_above_rest_m", r["height_m"]) > .03
+            and d <= max_displacement_m
             for r, d in zip(rows, displacement, strict=True)]
     first_loss = next(((i + 1) / hz for i, r in enumerate(rows) if not force_bilateral(r)), None)
     return {"duration_s": len(rows) / hz, "retained_entire_hold": bool(rows) and all(good),
@@ -79,7 +81,7 @@ class EncoderWidth:
 
 
 def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_z=.03,
-          preload_rad=.0003, max_acquisition_ticks=250):
+          preload_rad=.0003, max_acquisition_ticks=250, grasp_tilts_deg=(10., 15., 20., 25.)):
     with So101PickPlaceEnv(config, render_images=False) as env:
         hold_ticks = round(seconds * env.control_hz)
         env.max_episode_steps = max_acquisition_ticks + hold_ticks + 40
@@ -87,7 +89,7 @@ def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_
         obs, _ = env.reset(seed=seed, scenario={"joint_positions": start})
         params = strict_params(env)
         params.ball_in_site = (grasp_x, 0., grasp_z)
-        ctrl = ReachableGrasp(env, params)
+        ctrl = ReachableGrasp(env, params, grasp_tilts_deg=grasp_tilts_deg)
         encoder = EncoderWidth(preload_rad)
         raw_step = env.step
         if mode == "encoder_width":
@@ -100,6 +102,11 @@ def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_
             result = ctrl.step(obs, env)
             obs = result.obs
             row = snapshot(env)
+            pm = result.info["privileged_metrics"]
+            row.update(height_above_rest_m=float(env.data.xpos[env.ball_body, 2]
+                                                - env._ball_rest_center_z),
+                robot_table_penetration_m=pm["robot_table_penetration_m"],
+                robot_support_penetration_m=pm.get("robot_support_penetration_m", 0.))
             acquisition.append(row)
             if ready(acquisition):
                 target = np.asarray(result.info["control"]["applied_radians"]).copy()
@@ -107,9 +114,14 @@ def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_
             if ctrl.phase in ("RELEASE", "RETREAT", "DONE") or result.truncated:
                 break
         common = {"seed": seed, "mode": mode, "grasp_ball_in_site_m": params.ball_in_site,
+            "grasp_tilts_deg": list(grasp_tilts_deg),
             "acquisition_ticks": len(acquisition), "hold_acquired": target is not None,
             "encoder_event": encoder.event, "grasp_search": ctrl.grasp_search,
-            "start_settling": settling, "acquisition_final": acquisition[-1]}
+            "start_settling": settling, "acquisition_final": acquisition[-1],
+            "acquisition_max_robot_table_penetration_m": max(
+                r["robot_table_penetration_m"] for r in acquisition),
+            "acquisition_max_robot_support_penetration_m": max(
+                r["robot_support_penetration_m"] for r in acquisition)}
         if target is None:
             return common
         anchor = acquisition[-1]
@@ -123,7 +135,9 @@ def trial(config, seed, *, mode="fixed_close", seconds=30., grasp_x=-.01, grasp_
             _, _, _, _, info = raw_step(target)
             row = snapshot(env)
             pm = info["privileged_metrics"]
-            row.update(tool_target_error_m=float(np.linalg.norm(
+            row.update(height_above_rest_m=float(env.data.xpos[env.ball_body, 2]
+                                                - env._ball_rest_center_z),
+                tool_target_error_m=float(np.linalg.norm(
                 env.ee_pose()[:3, 3] - target_pose[:3, 3])),
                 robot_table_penetration_m=pm["robot_table_penetration_m"],
                 robot_support_penetration_m=pm.get("robot_support_penetration_m", 0.),
@@ -153,6 +167,7 @@ def main():
     p.add_argument("--seconds", type=float, default=30.)
     p.add_argument("--grasp-x", type=float, default=-.01)
     p.add_argument("--grasp-z", type=float, default=.03)
+    p.add_argument("--grasp-tilts-deg", type=float, nargs="+", default=[10, 15, 20, 25])
     p.add_argument("--preload-rad", type=float, default=.0003)
     args = p.parse_args()
     if not np.isfinite(args.seconds) or args.seconds < 20:
@@ -173,16 +188,19 @@ def main():
     report = {"kind": "PRIVILEGED_LONG_HOLD_DIAGNOSTIC_NOT_LEARNED_POLICY", "physics_changed": False,
         "geometry_independently_calibrated": False, "source_sha256_at_start": before,
         "protocol": {"seconds": args.seconds, "bilateral_force_threshold_n": .01,
-            "max_ball_tool_displacement_m": .01, "min_ball_bottom_above_table_m": .03,
-            "acquisition": "Five consecutive positive-force bilateral samples above30mm",
+            "max_ball_tool_displacement_m": .01,
+            "min_ball_lift_above_initial_rest_m": .03,
+            "acquisition": "Five positive-force bilateral samples lifted30mm above initial support rest height",
             "changes_to_gains_friction_collisions_limits_task_scoring": False,
             "encoder_width_uses": "Only requested target and measured gripper position; acquisition remains GT oracle",
-            "grasp_x": args.grasp_x, "grasp_z": args.grasp_z, "preload_rad": args.preload_rad},
+            "grasp_x": args.grasp_x, "grasp_z": args.grasp_z, "preload_rad": args.preload_rad,
+            "grasp_tilts_deg": args.grasp_tilts_deg},
         "trials": []}
     for mode in args.modes:
         for seed in args.seeds:
             row = trial(args.config, seed, mode=mode, seconds=args.seconds,
-                grasp_x=args.grasp_x, grasp_z=args.grasp_z, preload_rad=args.preload_rad)
+                grasp_x=args.grasp_x, grasp_z=args.grasp_z, preload_rad=args.preload_rad,
+                grasp_tilts_deg=args.grasp_tilts_deg)
             report["trials"].append(row)
             (args.out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
             print(json.dumps({k: row[k] for k in ("seed", "mode", "hold_acquired")}

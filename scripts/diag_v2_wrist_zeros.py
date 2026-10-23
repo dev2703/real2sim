@@ -130,8 +130,22 @@ class WristFit:
 
 
 def solve(function, x0, bounds):
-    return least_squares(function, np.asarray(x0, float), bounds=bounds, loss="soft_l1",
-                         f_scale=1., diff_step=1e-4, max_nfev=1000)
+    solution = least_squares(function, np.asarray(x0, float), bounds=bounds, loss="soft_l1",
+                             f_scale=1., diff_step=1e-4, max_nfev=1000)
+    if not solution.success or not np.all(np.isfinite(solution.fun)):
+        raise ValueError("conditional wrist fit did not converge to finite residuals")
+    return solution
+
+
+def native_limit_check(fit, real_states, offsets_deg):
+    """Inspect raw arm coordinates; never clip, rescale, or fit to these counts."""
+    arm = fit.mapping.arm_real_to_sim_rad(real_states) + np.deg2rad(offsets_deg)
+    limits = np.array([fit.model.jnt_range[fit.model.joint(j).id] for j in ARM_JOINTS])
+    violations = (arm < limits[:, 0]) | (arm > limits[:, 1])
+    return {"ticks": len(arm), "ticks_with_any_violation": int(violations.any(1).sum()),
+        "per_joint_violating_ticks": dict(zip(ARM_JOINTS, violations.sum(0).tolist(), strict=True)),
+        "mapped_range_deg": np.rad2deg(np.c_[arm.min(0), arm.max(0)]).tolist(),
+        "native_limits_deg": np.rad2deg(limits).tolist(), "used_in_fitting": False}
 
 
 def save_overlay(rows, out):
@@ -182,21 +196,29 @@ def main():
                      for start in ([0., 0.], [10., -10.], [-10., 10.])]
     best = min(fixed_results, key=lambda s: s.cost)
     candidate_rows = fit.rows(best.x)
-    horn_fun = lambda x: fit.residuals(x[:2], horn_axial_mm=x[2])
+    def horn_fun(x):
+        return fit.residuals(x[:2], horn_axial_mm=x[2])
+
     horn_best = solve(horn_fun, np.r_[best.x, 0.], ([-30., -30., -30.], [30., 30., 30.]))
     horn_rows = fit.rows(horn_best.x[:2], horn_axial_mm=horn_best.x[2])
     # A boundary optimum is a rejected small-offset model, not a measurement.
     # Explicitly test the entire roll cycle with multistart, chosen by train only.
-    broad_fun = lambda x: fit.residuals(x[:2], horn_axial_mm=x[2])
+    def broad_fun(x):
+        return fit.residuals(x[:2], horn_axial_mm=x[2])
+
     broad_results = [solve(broad_fun, [0., roll, 10.],
         ([-45., -180., -30.], [45., 180., 30.])) for roll in (-150., -90., -30., 30., 90., 150.)]
     broad_best = min(broad_results, key=lambda s: s.cost)
     broad_rows = fit.rows(broad_best.x[:2], horn_axial_mm=broad_best.x[2])
     # Known-CAD lens alone versus a freely relocated lens. Roll zero and an
     # arbitrary rigid point's azimuth have an exact algebraic gauge freedom.
-    lens_fun = lambda x: fit.residuals(x, landmarks=("lens",))
+    def lens_fun(x):
+        return fit.residuals(x, landmarks=("lens",))
+
     lens_best = solve(lens_fun, best.x, (-30., 30.))
-    free_fun = lambda x: fit.residuals(x[:2], lens_offset_mm=x[2:], landmarks=("lens",))
+    def free_fun(x):
+        return fit.residuals(x[:2], lens_offset_mm=x[2:], landmarks=("lens",))
+
     free_best = solve(free_fun, np.r_[lens_best.x, np.zeros(3)],
                       ([-30., -30., -20., -20., -20.], [30., 30., 20., 20., 20.]))
     # First-three uncertainty is an explicit sensitivity, not a camera/zero fit.
@@ -205,7 +227,8 @@ def main():
         for sign in (-1, 1):
             perturbed = first.copy()
             perturbed[j] += 3 * sign
-            sol = solve(lambda x: fit.residuals(x, first_three=perturbed), best.x, (-30., 30.))
+            sol = solve(lambda x, first=perturbed: fit.residuals(x, first_three=first),
+                        best.x, (-30., 30.))
             sensitivities.append({"first_three_deg": perturbed.tolist(), "wrist_deg": sol.x.tolist(),
                 "train_cost": float(sol.cost), "summary": summary(fit.rows(sol.x, first_three=perturbed))})
     # Pose perturbations are illustrative systematic tests, not a confidence interval.
@@ -223,6 +246,29 @@ def main():
                 "wrist_deg": sol.x.tolist(), "train_cost": float(sol.cost),
                 "summary": summary(fit.rows(sol.x))})
     fit.transform = nominal_transform
+    # Repeat systematic tests away from the rejected small-offset roll boundary.
+    # The wider diagnostic bound does not change any model/native joint limits.
+    broad_sensitivities = []
+    broad_bounds = ([-45., -180., -30.], [45., 180., 30.])
+    for kind in ("first_three_deg", "optical_rotation_deg"):
+        for axis in range(3):
+            for sign in (-1, 1):
+                first_perturbed = first.copy()
+                delta = np.zeros(3)
+                delta[axis] = sign * (3 if kind == "first_three_deg" else 1)
+                if kind == "first_three_deg":
+                    first_perturbed += delta
+                else:
+                    fit.transform = nominal_transform.copy()
+                    fit.transform[:3] = (Rotation.from_rotvec(np.deg2rad(delta)).as_matrix()
+                                         @ nominal_transform[:3])
+                sol = solve(lambda x, q=first_perturbed: fit.residuals(
+                    x[:2], first_three=q, horn_axial_mm=x[2]), broad_best.x, broad_bounds)
+                broad_sensitivities.append({"kind": kind, "delta_deg": delta.tolist(),
+                    "parameters_flex_roll_deg_axial_mm": sol.x.tolist(),
+                    "train_cost": float(sol.cost), "summary": summary(fit.rows(sol.x[:2],
+                        first_three=first_perturbed, horn_axial_mm=sol.x[2]))})
+                fit.transform = nominal_transform
     # Conditional joint fit including all five offsets, while the earlier fixed
     # physical horn coordinates remain nuisance parameters learned on train only.
     proximal = ConditionalFit(arrays, task, camera)
@@ -256,7 +302,10 @@ def main():
             "start_costs": [float(s.cost) for s in broad_results],
             "start_parameters": [s.x.tolist() for s in broad_results],
             "summary": summary(broad_rows), "rows": broad_rows,
-            "identifiability": identifiability(broad_fun, broad_best.x)},
+            "identifiability": identifiability(broad_fun, broad_best.x),
+            "native_limit_check": {split: native_limit_check(fit, arrays["joint_state"][
+                np.isin(arrays["episode_index"], splits[split])], np.r_[first, broad_best.x[:2]])
+                for split in ("train", "val")}},
         "known_CAD_lens_only": {"offsets_deg": lens_best.x.tolist(),
             "summary": summary(fit.rows(lens_best.x)), "identifiability": identifiability(lens_fun, lens_best.x)},
         "free_lens_mount_point": {"parameters_flex_roll_deg_xyz_mm": free_best.x.tolist(),
@@ -270,6 +319,7 @@ def main():
             "summary": summary(all_rows), "identifiability": identifiability(all_residuals, all_best.x)},
         "first_three_plus_minus_3deg_sensitivity": sensitivities,
         "illustrative_camera_optical_plus_minus_1deg_sensitivity": camera_sensitivities,
+        "whole_roll_cycle_systematic_sensitivity": broad_sensitivities,
         "baseline_rows": baseline_rows,
         "sources": [{"episode": c["episode"], "frame": c["frame"], "split": c["split"],
             "real_state_deg_percent": c["real"].tolist(),
@@ -280,9 +330,10 @@ def main():
             "Horn point and camera lens front centre are manual/partly occluded, not measured fiducials.",
             "Gripper opening does not rotate the lens or gripper hinge axis; these cannot identify its zero.",
             "Known-CAD lens is nominal manufacturer geometry, not a measured camera mount on this robot.",
+            "Small-offset models hit the roll bound; their local covariance is not a bounded confidence interval.",
             "Finite-difference local covariance does not include camera/base/CAD/timing systematics.",
             "Sensitivity bounds are diagnostic hypotheses and do not widen native joint limits."]}
-    report["overlay"] = save_overlay({"baseline": baseline_rows, "candidate": candidate_rows}, args.out)
+    report["overlay"] = save_overlay({"baseline": baseline_rows, "candidate": broad_rows}, args.out)
     (args.out / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     print(json.dumps({k: report[k] for k in ("zero_wrist_baseline", "known_CAD_lens_and_horn",
         "shared_gripper_horn_axial_nuisance", "free_lens_mount_point",

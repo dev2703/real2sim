@@ -153,9 +153,10 @@ class So101PickPlaceEnv:
         from real2sim.sim.ball_support import reset_ball_support
 
         spawn_height = reset_ball_support(self, ball_xy, scenario.get("ball_support_xy"))
+        self._ball_rest_center_z = self.table_top + spawn_height
         bq, bv = self._ball_q, self._ball_v
         self.data.qpos[bq:bq + 3] = [*(ball_xy + self.offset[:2]),
-                                    self.table_top + spawn_height + drop]
+                                    self._ball_rest_center_z + drop]
         self.data.qpos[bq + 3:bq + 7] = [1, 0, 0, 0]
         self.data.qvel[bv:bv + 3] = velocity
         mujoco.mj_forward(self.model, self.data)
@@ -164,10 +165,15 @@ class So101PickPlaceEnv:
         # Known limitation: the clamped dataset rest pose still puts gripper geoms 11.4 mm into the
         # table with the D-014 lift, so the first control tick is a contact-driven jump. Recorded
         # here so every trial carries the confound explicitly.
-        self.start_pose = self._robot_table_penetration()
-        if self.config.get("strict_initial_state") and self.start_pose["robot_table_penetration_m"] > 1e-6:
+        from real2sim.sim.ball_support import support_contact_metrics
+
+        self.start_pose = {**self._robot_table_penetration(),
+                           **support_contact_metrics(self.model, self.data, self.base_body)}
+        if self.config.get("strict_initial_state") and (
+                self.start_pose["robot_table_penetration_m"] > 1e-6
+                or self.start_pose.get("robot_support_penetration_m", 0) > 1e-6):
             self._ready = False
-            raise ValueError("v2 initial pose penetrates the table")
+            raise ValueError("v2 initial pose penetrates the table or ball support")
         return self.observation(), self.info()
 
     def step(self, action) -> tuple[dict, float, bool, bool, dict]:
@@ -296,13 +302,14 @@ class So101PickPlaceEnv:
         bowl = self.data.xpos[self.model.body("bowl").id].copy()
         tool = self.data.site_xpos[self.site_id].copy()
         radius = float(self.task["ball"]["radius"])
+        rest_z = getattr(self, "_ball_rest_center_z", self.table_top + radius)
         rim_z = bowl[2] + self.bowl["height"]
         floor_z = bowl[2] + self.bowl["floor"]
         touching = self._ball_contacts()
         from real2sim.sim.ball_support import support_contact_metrics
 
         fixed, moving = (touching & self.gripper_geoms[n] for n in GRIPPER_BODIES)
-        above = ball[2] > self.table_top + radius + 0.01
+        above = ball[2] > rest_z + 0.01
         ball_held = bool((fixed and moving) or ((fixed or moving) and above))
         metrics = {
             "frame": "world (z up; table top at task.table.height); *_task = world - offset",
@@ -321,12 +328,12 @@ class So101PickPlaceEnv:
             "ball_touching_table": self.table_geom in touching,
             "ee_ball_distance_m": float(np.linalg.norm(tool - ball)),
             "ee_bowl_distance_m": float(np.linalg.norm(tool - bowl)),
-            "lifted": bool(ball[2] > self.table_top + radius + 0.03),
+            "lifted": bool(ball[2] > rest_z + 0.03),
             "contacts": self._contact_pairs(),
             # Start-pose validity (D-014): penetration at reset and now; see reset().
             "start_pose": dict(self.start_pose),
             **self._robot_table_penetration(),
-            **support_contact_metrics(self.model, self.data),
+            **support_contact_metrics(self.model, self.data, self.base_body),
         }
         return {"controller_source": "NATIVE_SIM_DIAGNOSTIC", "calibrated": False,
                 "time_s": float(self.data.time), "step": self.steps,
