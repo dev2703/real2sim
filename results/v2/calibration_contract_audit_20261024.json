@@ -102,30 +102,59 @@
   },
   "numerical_units": {
     "arm_degree_lattice": {
-      "shoulder_pan": {
-        "degree_inverse_tick_residual_p95": 0.49999988079071045,
-        "degree_inverse_tick_residual_max": 0.5,
-        "alternative_pm100_tick_residual_p95": 0.47598386907578677
+      "follower_observation.state": {
+        "shoulder_pan": {
+          "degree_inverse_tick_residual_p95": 9.059906005859375e-06,
+          "degree_inverse_tick_residual_max": 2.1457672119140625e-05,
+          "alternative_pm100_tick_residual_p95": 0.47384592771527423
+        },
+        "shoulder_lift": {
+          "degree_inverse_tick_residual_p95": 4.291534423828125e-05,
+          "degree_inverse_tick_residual_max": 4.291534423828125e-05,
+          "alternative_pm100_tick_residual_p95": 0.48663871765131717
+        },
+        "elbow_flex": {
+          "degree_inverse_tick_residual_p95": 3.528594970703125e-05,
+          "degree_inverse_tick_residual_max": 4.291534423828125e-05,
+          "alternative_pm100_tick_residual_p95": 0.4558311271666753
+        },
+        "wrist_flex": {
+          "degree_inverse_tick_residual_p95": 3.24249267578125e-05,
+          "degree_inverse_tick_residual_max": 4.291534423828125e-05,
+          "alternative_pm100_tick_residual_p95": 0.46197618722908373
+        },
+        "wrist_roll": {
+          "degree_inverse_tick_residual_p95": 4.5299530029296875e-06,
+          "degree_inverse_tick_residual_max": 1.0728836059570312e-05,
+          "alternative_pm100_tick_residual_p95": 0.4000031113625937
+        }
       },
-      "shoulder_lift": {
-        "degree_inverse_tick_residual_p95": 0.1250016689300537,
-        "degree_inverse_tick_residual_max": 0.12504291534423828,
-        "alternative_pm100_tick_residual_p95": 0.48663871765131717
-      },
-      "elbow_flex": {
-        "degree_inverse_tick_residual_p95": 0.1250009536743164,
-        "degree_inverse_tick_residual_max": 0.12504291534423828,
-        "alternative_pm100_tick_residual_p95": 0.4624130392075583
-      },
-      "wrist_flex": {
-        "degree_inverse_tick_residual_p95": 0.12499868869781494,
-        "degree_inverse_tick_residual_max": 0.12504291534423828,
-        "alternative_pm100_tick_residual_p95": 0.46373579025248546
-      },
-      "wrist_roll": {
-        "degree_inverse_tick_residual_p95": 4.5299530029296875e-06,
-        "degree_inverse_tick_residual_max": 0.12500464916229248,
-        "alternative_pm100_tick_residual_p95": 0.40000214576730286
+      "leader_action": {
+        "shoulder_pan": {
+          "degree_inverse_tick_residual_p95": 1.0013580322265625e-05,
+          "degree_inverse_tick_residual_max": 0.37502050399780273,
+          "alternative_pm100_tick_residual_p95": 0.4725363254547119
+        },
+        "shoulder_lift": {
+          "degree_inverse_tick_residual_p95": 0.12500953674316406,
+          "degree_inverse_tick_residual_max": 0.12504291534423828,
+          "alternative_pm100_tick_residual_p95": 0.46768177032481617
+        },
+        "elbow_flex": {
+          "degree_inverse_tick_residual_p95": 0.12500905990600586,
+          "degree_inverse_tick_residual_max": 0.12504291534423828,
+          "alternative_pm100_tick_residual_p95": 0.4693951290844325
+        },
+        "wrist_flex": {
+          "degree_inverse_tick_residual_p95": 0.12500417232513428,
+          "degree_inverse_tick_residual_max": 0.12504291534423828,
+          "alternative_pm100_tick_residual_p95": 0.47077594757047336
+        },
+        "wrist_roll": {
+          "degree_inverse_tick_residual_p95": 4.410743713378906e-06,
+          "degree_inverse_tick_residual_max": 0.12500464916229248,
+          "alternative_pm100_tick_residual_p95": 0.40000214576730286
+        }
       }
     },
     "interpretation": "Degree lattice supports recorded units; it cannot verify signs, physical zeros, link geometry or historical timing."
@@ -226,11 +255,12 @@
     "Loaded hold/release measurements with observed relative ball/jaw motion and physical timing"
   ],
   "input_sha256": {
-    "/Users/deveshvyas/Downloads/real2sim/scripts/audit_v2_calibration_readiness.py": "e84640f47923956d261ceb55274c56a423d1c4e915e4b2f895bdd968ae9ac9a1",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/audit_v2_calibration_readiness.py": "8f1432a88d384ea39c6e059da1bcc08ea3bb0b3119c759035eaf1a30d84392f1",
     "results/v2/split.json": "458c5d8900a98ba86f4cff27aebce90d73b9d75f285bade18c1b3524f9e76ce5",
     "configs/v2/geometry_landmarks.template.json": "adea0895d52a27dfed7f2402cfdd0b8f49f783a316abf2ac4df8115b6f43c277",
     "configs/v2/measurements.template.json": "bfbd276c06ffea6c982df8a921c76735b00928cfc2589640be431e507c3f634e",
     "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+    "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/aligned_leader.json": "2032a3d2d5227f30c582b9ba446c944ef667a7c996d594090973145b5ed7cc94",
     "configs/v2/task.exploratory_20261022.yaml": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
     "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
     "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v2/meta/info.json": "d0f8ee2efc2ce84ab168b21757c3d1abe60a1f8fa306f1907f7e5ea6d2f17a4d",

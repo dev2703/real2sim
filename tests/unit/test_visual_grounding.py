@@ -77,6 +77,22 @@ def test_grounding_contract_rejects_missing_camera_and_wrong_feature_order():
     c["state_names"] = list(reversed(c["state_names"]))
     with pytest.raises(ContractError, match="visual grounding"):
         contract_kind(c)
+
+
+def test_disabled_control_has_identical_feature_shape_and_no_image_signal():
+    spec = BallImageFeatures(enabled=False)
+    np.testing.assert_array_equal(ball_features(image(), spec), np.zeros(4))
+    np.testing.assert_array_equal(ball_features(np.roll(image(), 10, axis=1), spec), np.zeros(4))
+
+
+def test_paired_replacement_cannot_leave_stale_real_image_features():
+    from real2sim.policy.paired import PairedViewDataset
+
+    class Base:
+        manifest = contract()
+
+    with pytest.raises(ValueError, match="recomputing visual grounding"):
+        PairedViewDataset(Base(), "/unused")
     c = contract()
     c["camera_keys"] = ["observation.images.top"]
     with pytest.raises(ContractError, match="visual grounding"):

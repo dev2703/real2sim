@@ -16,6 +16,8 @@ def file_sha256(path):
 
 class PairedViewDataset(Dataset):
     def __init__(self, base, root, probability=0.5, *, evaluation=False):
+        if base.manifest.get("visual_grounding") is not None:
+            raise ValueError("paired image replacement requires recomputing visual grounding; this combination is unsupported")
         self.base, self.root = base, Path(root)
         self.probability = float(probability)
         if not 0 <= self.probability <= 1:

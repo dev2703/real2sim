@@ -97,6 +97,8 @@ def regenerate(source: Path, config: Path, out: Path) -> dict:
         arrays = {key: loaded[key] for key in loaded.files}
     mode = manifest["mode"]
     result, fk = regenerate_arrays(arrays, cfg, mode)
+    if mode != "canonical_joint" and not np.array_equal(result["action"][:, -1], arrays["action"][:, -1]):
+        raise ValueError("FK regeneration must preserve gripper targets; changing gripper semantics requires a separate explicit experiment")
     train = np.isin(result["episode_index"], manifest["split"]["train"])
     valid = train & ~result["label_is_extrapolated"]
     stats = json.loads((source / "stats.json").read_text())
@@ -104,7 +106,9 @@ def regenerate(source: Path, config: Path, out: Path) -> dict:
     stats["action"] = compute_stats(result["action"][valid])
     task_path = project_path(cfg["task_config"])
     task = load_yaml(task_path)
-    dependencies = [Path(__file__), DEFAULT_MJCF, Path("src/real2sim/geometry/so101_fk.py"), Path("src/real2sim/data/labels.py")]
+    dependencies = [Path(__file__), DEFAULT_MJCF, *map(Path, (
+        "src/real2sim/geometry/so101_fk.py", "src/real2sim/data/labels.py",
+        "src/real2sim/data/prepare.py", "src/real2sim/sim/cameras.py", "src/real2sim/config.py"))]
     lineage = {
         "schema": "v2_fk_label_regeneration_v1", "source_dataset": str(source.resolve()),
         "source_manifest_sha256": sha256_file(source / "manifest.json"),
