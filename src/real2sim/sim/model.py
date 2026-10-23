@@ -227,6 +227,9 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
     option = root.find("option")
     option.set("timestep", str(1 / config["physics_hz"]))
     option.set("gravity", "0 0 -9.81")
+    from real2sim.sim.contact_solver import contact_solver_attributes
+
+    option.attrib.update(contact_solver_attributes(config))
     offset = task_frame_offset(task)
     camera = task["camera_iphone"]
     render = config["render"]

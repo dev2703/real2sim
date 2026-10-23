@@ -275,8 +275,8 @@ failures. It agrees with [MuJoCo's slip guidance](https://mujoco.readthedocs.io/
 soft friction can creep even inside its cone; higher `impratio` or the NoSlip postprocessor
 reduces that effect. NoSlip can destabilize more complex contacts and makes inverse
 dynamics ill-defined, so these bounded hold checks do not establish general stability.
-The correction is available only through explicit diagnostic options; benchmark defaults
-and frozen training inputs stay unchanged. This is a useful simulator retention candidate,
+The correction requires explicit options; benchmark defaults and frozen training inputs
+stay unchanged. This is a useful simulator retention candidate,
 not measured contact calibration, learned-policy improvement or complete task evaluation.
 
 Reproduce a complete acquisition and hold with the explicit diagnostic correction:
@@ -288,6 +288,68 @@ Reproduce a complete acquisition and hold with the explicit diagnostic correctio
   --out outputs/v2/retention_noslip_NEW
 ```
 
+The standard SO-101 and Panda scene loaders now also accept explicit simulator settings:
+
+```yaml
+contact_solver:
+  impratio: 10.0
+  noslip_iterations: 3
+```
+
+Omitting this block preserves each pinned model's original settings. Only these two options
+are supported; invalid values and unknown fields fail before simulation. This permits
+versioned comparisons through normal environment/evaluation entry points without runtime
+monkeypatching. Evaluation summaries record the actual compiled options, including defaults.
+Tests compare compiled geometry, friction, mass, inertia, gains and force limits bitwise.
+No active task or simulator configuration has been changed.
+
+The [full transport check](../results/v2/contact_transport_20261023.json) also exercises
+grasp, lift, carry, release and one-second settled placement: original solver **4/4**,
+NoSlip **4/4**, across three original-scene placements and one fixed image-support case.
+There are no aborts, numerical warnings or IK rejections. Maximum table penetration is
+0.0432 mm versus 0.0421 mm; support penetration is zero. This small matched test finds no
+release regression. It uses privileged object positions and remains separate from learned
+task performance and the stricter stationary retention test.
+
+## Small learned inference check
+
+The [inference report](../results/v2/inference_smoke_20261023.json) checks completed
+both-camera ResNet and fine-tuned CLIP checkpoints on 24 recorded observations spanning
+all six validation episodes. Each outputs a finite `[1, 25, 7]` chunk; 45 nonpadded
+executed-prefix actions per model are scored. No reserved episodes are used.
+
+| Checkpoint | Sample translation error | CPU median / p95 |
+|---|---:|---:|
+| Both-camera ResNet | 1.82 mm | 73 / 111 ms |
+| CLIP last-two-block fine-tuning | 1.91 mm | 472 / 754 ms |
+| Zero-translation reference on the same sample | 2.62 mm | — |
+
+These sparse teacher-forced errors are not a model ranking or rollout score. Swapping
+paired images changes predictions, but does not consistently worsen every error; visual
+grounding is not established. CPU timings use two threads during the active training run
+and exclude live capture/rendering. CLIP exceeds the 160 ms interval between two-action
+chunks at 12.5 Hz on this CPU configuration; GPU timing remains to be measured once the
+training device is free.
+
+An actual single-camera ResNet simulator check executes **25 ticks / 2 seconds / 13 policy
+calls**, with no abort, IK rejection or action saturation. Mean CPU inference is 55.94 ms,
+maximum 131.9 ms. It uses the exact frozen provisional task and a strict, collision-free,
+in-range recorded validation start (episode 9, frame 100). All 47 source/configuration
+hashes remain stable during that run. The ball is not approached or lifted in two seconds;
+this is an execution smoke test, not a full task attempt or success-rate estimate.
+
+Two-camera simulator inference still lacks a declared wrist-camera mount. The code
+correctly refuses to invent one. The default v2 calibrated task is also absent, and its
+configured start exceeds native joint bounds. The single-camera diagnostic supplies an
+explicit valid recorded start without weakening strict reset checks or formal calibration
+gates. Its separate command and source snapshots are linked in the report.
+
+Evaluation now closes environments exactly once after setup or rollout failures, including
+checkpoint, tracker and video errors. Physics aborts remain failed rows. Regression checks
+cover both resource cleanup and existing target-reference behavior. Actual robot/support
+penetration tests also confirm both IK solvers reject moved support obstacles under their
+existing tolerance; no collision-gate change was needed.
+
 ## Remaining evidence
 
 Independent static CAD correspondences and intrinsics are needed to accept camera/base
@@ -298,8 +360,10 @@ only against the accepted camera, then replay recorded tasks before evaluating l
 rollouts. Test learned-controller changes on the unchanged benchmark and report them
 separately from privileged simulator diagnostics.
 
-Verification: the CPU unit and selected control/contact integration suite passed **631
+Verification: the latest CPU unit and selected control/contact integration suite passed **665
 tests**; three MPS/CUDA cases were skipped and three graphics-dependent camera cases
 were excluded from this run (they passed separately in the earlier camera investigation).
 All 59 frozen training metadata hashes match. The queue remains active at 19/22 completed
-jobs, with no reported failures. Focused checks also cover the later diagnostic CLI options.
+jobs, with no reported failures. This includes the explicit contact settings, evaluation
+cleanup, target-reference behavior and support collision regressions. Ruff and whitespace
+checks pass for the changed files.

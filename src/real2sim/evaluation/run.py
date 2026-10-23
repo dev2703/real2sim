@@ -34,6 +34,7 @@ import json
 import math
 import platform
 import time
+from contextlib import closing
 from pathlib import Path
 
 import numpy as np
@@ -53,6 +54,7 @@ from real2sim.policy.adapters import (
     PandaActionAdapter,
     PandaObservationAdapter,
 )
+from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
 from real2sim.sim.model import project_path
@@ -262,88 +264,83 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
     config_robot = str(load_yaml(config).get("robot", "so101"))
     if config_robot != robot:
         raise ValueError(f"--config is a {config_robot} scene but --robot is {robot}")
-    env = make_env(robot, config)
-    task = env.task
-    hold_ticks = int(math.ceil(task["episode"]["success_hold_s"] * env.control_hz))
-    ticks_cap = env.max_episode_steps if max_ticks is None else min(int(max_ticks), env.max_episode_steps)
-    contract: dict | None = None
-    if controller == "learned":
-        if checkpoint is None:
-            raise ValueError("--checkpoint is required for the learned controller")
-        try:
+    with closing(make_env(robot, config)) as env:
+        task = env.task
+        hold_ticks = int(math.ceil(task["episode"]["success_hold_s"] * env.control_hz))
+        ticks_cap = env.max_episode_steps if max_ticks is None else min(int(max_ticks), env.max_episode_steps)
+        contract: dict | None = None
+        if controller == "learned":
+            if checkpoint is None:
+                raise ValueError("--checkpoint is required for the learned controller")
             ctrl, contract, meta = build_learned_controller(env, Path(checkpoint), eval_cfg, device,
                                                            robot=robot)
-        except Exception:
-            env.close()
-            raise
-        experiment_kind = ("panda" if robot == "panda" else
-                           "cartesian_persistent_target" if meta["execution_interface_ablation"]
-                           else meta["kind"])
-        exp_id = experiment_id or EXPERIMENT_IDS[experiment_kind]
-    else:
-        ctrl = HoldPoseController(env, hold_action(robot, env))
-        meta = {"checkpoint": None, "checkpoint_sha256": None, "checkpoint_step": None,
-                "kind": "hold", "target_reference": None, "execution_interface_ablation": False,
-                "checkpoint_contract_modified": False}
-        exp_id = experiment_id or EXPERIMENT_IDS["hold_panda" if robot == "panda" else "hold"]
-    caption = CAPTIONS[(robot, controller)]
-    if meta["execution_interface_ablation"]:
-        caption += " persistent target (execution ablation)"
-    source = CONTROLLER_SOURCES[controller]
-    if controller == "learned" and getattr(ctrl.policy.config, "type", "") == "small_chunk_head":
-        source = "LEARNED_FLOW" if ctrl.policy.config.objective == "flow" else "LEARNED_REGRESSION"
-        caption = f"{source} ({robot} sim)"
-    vcfg = eval_cfg["video"]
-    rows, trials = [], []
-    t_start = time.perf_counter()
-    for i in range(n_trials):
-        seed = seed_start + i
-        tracker = TrialTracker(success_hold_ticks=hold_ticks,
-                               approach_distance_m=float(eval_cfg["phase"]["approach_distance_m"]),
-                               table_top_z=env.table_top, ball_radius_m=float(task["ball"]["radius"]))
-        writer, video_path = None, ""
-        if video:
-            h, w = env.data_config["image"]["height"], env.data_config["image"]["width"]
-            video_path = str(out / f"trial_seed{seed:04d}_{source}.mp4")
-            writer = CaptionedVideo(video_path, vcfg["fps"], (h * vcfg["upscale"], w * vcfg["upscale"]),
-                                    vcfg["codec"])
-        t0 = time.perf_counter()
-        try:
-            run_trial(env, ctrl, seed=seed, max_ticks=ticks_cap, tracker=tracker,
-                      caption_prefix=caption, video=writer, upscale=int(vcfg["upscale"]),
-                      reset_scenario=None if reset_scenarios is None else reset_scenarios[i])
-            abort = None
-        except ContractError:  # a checkpoint/observation contract mismatch is a setup bug: stop
-            raise
-        except (RuntimeError, ValueError) as exc:  # physics/IK/action abort = failed trial, never dropped
-            abort = str(exc)
-        finally:
-            if writer is not None:
-                writer.close()
-        lat = ctrl.latencies_ms
-        adapter_stats = getattr(getattr(ctrl, "action_adapter", None), "stats", None)
-        if adapter_stats is not None and adapter_stats["rejected"] != tracker.ik_rejections:
-            raise RuntimeError("Panda adapter rejection tally disagrees with the trial tracker")
-        # The first inference includes one-off warm-up (allocation, kernel selection); report it
-        # separately so mean_latency_ms describes steady-state control latency.
-        steady = lat[1:] if len(lat) > 1 else lat
-        row = tracker.row(
-            experiment_id=exp_id, controller_source=source, robot=robot, seed=seed,
-            checkpoint_sha256=meta["checkpoint_sha256"], checkpoint_step=meta["checkpoint_step"],
-            mean_latency_ms=(round(float(np.mean(steady)), 2) if steady else None), video_path=video_path,
-            abort=abort)
-        rows.append(row)
-        trials.append({**row, "wall_s": round(time.perf_counter() - t0, 2),
-                       "warmup_latency_ms": (round(float(lat[0]), 2) if lat else None),
-                       "policy_calls": getattr(ctrl, "n_policy_calls", 0),
-                       "max_latency_ms": (round(float(np.max(lat)), 2) if lat else None),
-                       "adapter_stats": _compact_stats(adapter_stats),
-                       "history": tracker.history})
-        print(f"[trial seed={seed}] source={source} success={row['success']} phase_failed="
-              f"{row['phase_failed']} ticks={row['ticks']} ik_rej={row['ik_rejections']} "
-              f"latency_ms={row['mean_latency_ms']} wall_s={trials[-1]['wall_s']}"
-              + (f" ABORT={abort}" if abort else ""), flush=True)
-    env.close()
+            experiment_kind = ("panda" if robot == "panda" else
+                               "cartesian_persistent_target" if meta["execution_interface_ablation"]
+                               else meta["kind"])
+            exp_id = experiment_id or EXPERIMENT_IDS[experiment_kind]
+        else:
+            ctrl = HoldPoseController(env, hold_action(robot, env))
+            meta = {"checkpoint": None, "checkpoint_sha256": None, "checkpoint_step": None,
+                    "kind": "hold", "target_reference": None, "execution_interface_ablation": False,
+                    "checkpoint_contract_modified": False}
+            exp_id = experiment_id or EXPERIMENT_IDS["hold_panda" if robot == "panda" else "hold"]
+        caption = CAPTIONS[(robot, controller)]
+        if meta["execution_interface_ablation"]:
+            caption += " persistent target (execution ablation)"
+        source = CONTROLLER_SOURCES[controller]
+        if controller == "learned" and getattr(ctrl.policy.config, "type", "") == "small_chunk_head":
+            source = "LEARNED_FLOW" if ctrl.policy.config.objective == "flow" else "LEARNED_REGRESSION"
+            caption = f"{source} ({robot} sim)"
+        vcfg = eval_cfg["video"]
+        rows, trials = [], []
+        t_start = time.perf_counter()
+        for i in range(n_trials):
+            seed = seed_start + i
+            tracker = TrialTracker(success_hold_ticks=hold_ticks,
+                                   approach_distance_m=float(eval_cfg["phase"]["approach_distance_m"]),
+                                   table_top_z=env.table_top, ball_radius_m=float(task["ball"]["radius"]))
+            writer, video_path = None, ""
+            if video:
+                h, w = env.data_config["image"]["height"], env.data_config["image"]["width"]
+                video_path = str(out / f"trial_seed{seed:04d}_{source}.mp4")
+                writer = CaptionedVideo(video_path, vcfg["fps"], (h * vcfg["upscale"], w * vcfg["upscale"]),
+                                        vcfg["codec"])
+            t0 = time.perf_counter()
+            try:
+                run_trial(env, ctrl, seed=seed, max_ticks=ticks_cap, tracker=tracker,
+                          caption_prefix=caption, video=writer, upscale=int(vcfg["upscale"]),
+                          reset_scenario=None if reset_scenarios is None else reset_scenarios[i])
+                abort = None
+            except ContractError:  # a checkpoint/observation contract mismatch is a setup bug: stop
+                raise
+            except (RuntimeError, ValueError) as exc:  # physics/IK/action abort = failed trial, never dropped
+                abort = str(exc)
+            finally:
+                if writer is not None:
+                    writer.close()
+            lat = ctrl.latencies_ms
+            adapter_stats = getattr(getattr(ctrl, "action_adapter", None), "stats", None)
+            if adapter_stats is not None and adapter_stats["rejected"] != tracker.ik_rejections:
+                raise RuntimeError("Panda adapter rejection tally disagrees with the trial tracker")
+            # The first inference includes one-off warm-up (allocation, kernel selection); report it
+            # separately so mean_latency_ms describes steady-state control latency.
+            steady = lat[1:] if len(lat) > 1 else lat
+            row = tracker.row(
+                experiment_id=exp_id, controller_source=source, robot=robot, seed=seed,
+                checkpoint_sha256=meta["checkpoint_sha256"], checkpoint_step=meta["checkpoint_step"],
+                mean_latency_ms=(round(float(np.mean(steady)), 2) if steady else None), video_path=video_path,
+                abort=abort)
+            rows.append(row)
+            trials.append({**row, "wall_s": round(time.perf_counter() - t0, 2),
+                           "warmup_latency_ms": (round(float(lat[0]), 2) if lat else None),
+                           "policy_calls": getattr(ctrl, "n_policy_calls", 0),
+                           "max_latency_ms": (round(float(np.max(lat)), 2) if lat else None),
+                           "adapter_stats": _compact_stats(adapter_stats),
+                           "history": tracker.history})
+            print(f"[trial seed={seed}] source={source} success={row['success']} phase_failed="
+                  f"{row['phase_failed']} ticks={row['ticks']} ik_rej={row['ik_rejections']} "
+                  f"latency_ms={row['mean_latency_ms']} wall_s={trials[-1]['wall_s']}"
+                  + (f" ABORT={abort}" if abort else ""), flush=True)
     with (out / "trials.csv").open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=TRIAL_COLUMNS)
         w.writeheader()
@@ -364,7 +361,8 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         "reset_scenarios": reset_scenarios,
         "resolved": {"sim_config": env.config, "task_config": task, "eval_config": eval_cfg,
                      "data_config": env.data_config, "max_ticks": ticks_cap,
-                     "success_hold_ticks": hold_ticks},
+                     "success_hold_ticks": hold_ticks,
+                     "contact_solver": contact_solver_settings(env.model)},
         "platform": {"python": platform.python_version(), "machine": platform.machine(),
                      "system": platform.system()},
         "wall_s_total": round(time.perf_counter() - t_start, 2),

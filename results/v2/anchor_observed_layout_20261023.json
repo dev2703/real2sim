@@ -1,0 +1,31 @@
+{
+  "episode": 9,
+  "source_frame": 100,
+  "kind": "OBSERVED_IMAGE_CONDITIONAL_LAYOUT_DIAGNOSTIC",
+  "source_frame_jpeg": "outputs/v2/anchor_domain_gap_20261023/ep9_f0100.jpg",
+  "sphere_boundary_source_mean_px": [
+    662.3684210526316,
+    272.5263157894737
+  ],
+  "sphere_center_projected_source_px": [
+    657.6644537563717,
+    274.7510784421033
+  ],
+  "sphere_center_conditional_native_m": [
+    0.2508633234697234,
+    -0.0031645357100983837,
+    0.060182758879880775
+  ],
+  "sphere_fit": {
+    "boundary_points": 38,
+    "rms_equivalent_pixels": 2.4905059698442775,
+    "cost": 50.69428126627255
+  },
+  "ball_center_on_declared_10mm_support_plane_native_m": [
+    0.2508296001820062,
+    0.023521097039153838,
+    0.041100000000000025
+  ],
+  "camera_candidate": "late",
+  "assumptions": "Existing unaccepted late camera; nominal radius33.5mm; top of native table -2.4mm plus declared10mm support. No fitting using policy outcome."
+}

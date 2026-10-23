@@ -202,7 +202,7 @@ def main():
     sources = [Path(__file__), Path("scripts/diag_so101_feasible_carry.py"),
         Path("scripts/diag_so101_contact_retention.py"), args.config, Path(cfg["task_config"]),
         Path(cfg["model"]), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/model.py"),
-        Path("src/real2sim/sim/ball_support.py"),
+        Path("src/real2sim/sim/ball_support.py"), Path("src/real2sim/sim/contact_solver.py"),
         Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/evaluation/oracle.py")]
     before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
     for path in sources:
@@ -212,7 +212,7 @@ def main():
     report = {"kind": "PRIVILEGED_LONG_HOLD_DIAGNOSTIC_NOT_LEARNED_POLICY",
         "mujoco_version": mujoco.__version__,
         "physical_parameters_changed": False,
-        "numerical_contact_options_requested": args.impratio is not None
+        "numerical_contact_options_requested": bool(cfg.get("contact_solver")) or args.impratio is not None
             or args.noslip_iterations is not None,
         "geometry_independently_calibrated": False, "source_sha256_at_start": before,
         "protocol": {"seconds": args.seconds, "bilateral_force_threshold_n": .01,
@@ -223,8 +223,9 @@ def main():
             "encoder_width_uses": "Only requested target and measured gripper position; acquisition remains GT oracle",
             "grasp_x": args.grasp_x, "grasp_z": args.grasp_z, "preload_rad": args.preload_rad,
             "grasp_tilts_deg": args.grasp_tilts_deg,
+            "contact_solver_config": cfg.get("contact_solver"),
             "impratio": args.impratio, "noslip_iterations": args.noslip_iterations,
-            "numerical_intervention_timing": "Before all settling/reset/acquisition; None preserves defaults"},
+            "numerical_intervention_timing": "Before all settling/reset/acquisition; None preserves configured options"},
         "trials": []}
     for mode in args.modes:
         for seed in args.seeds:

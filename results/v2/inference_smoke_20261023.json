@@ -1,0 +1,508 @@
+{
+  "kind": "RECORDED_VALIDATION_AND_PROVISIONAL_SIMULATOR_INFERENCE_SMOKE",
+  "learned_task_success": null,
+  "physical_calibration_accepted": false,
+  "script_sha256": "b2165c6aa078b91c6e71a7dced40c280c83bbd88e72b2a1bed06cd3072bffa0d",
+  "limitations": {
+    "offline": "Sparse teacher-forced recorded validation inputs, with 45 valid prefix actions per model after padded-tail exclusion. Camera swaps measure sensitivity, not causal visual grounding or task success. No retraining, hardware or reserved episodes.",
+    "simulator": "Two-second inference smoke using a selected collision-free recorded validation pose in an unaccepted provisional scene. Not a full task attempt, success-rate estimate, physically calibrated evaluation or hardware test. Task timeout and calibrated evaluation gate unchanged."
+  },
+  "models": {
+    "L1_resnet_iphone_top": {
+      "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone_top/attempt-001/checkpoints/004000",
+      "checkpoint_sha256": "41e47452b2a12f9de8f8b2e82fa7d1d51006195785f31cf750c88c94de6b2c9a",
+      "checkpoint_metadata_sha256": {
+        "config.json": "6cba44a13719c8230911583413f0af38c1bebbbbde4ff0ff0bbf39fe265fd2cc",
+        "stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+        "real2sim_contract.json": "48d8a8162dae620f1f5604b52dfee2bb5ed72c7fc57311f55b772ce869712fce",
+        "run_info.json": "6842ce691f5831458d8c70b01e06be1efe992a4a0b800e24c4c622060e003b25"
+      },
+      "manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+      "model_load_seconds": 0.9620514579582959,
+      "device": "cpu",
+      "torch_threads": 2,
+      "camera_keys": [
+        "observation.images.iphone",
+        "observation.images.top"
+      ],
+      "action_names": [
+        "dx",
+        "dy",
+        "dz",
+        "d_rx",
+        "d_ry",
+        "d_rz",
+        "gripper_target"
+      ],
+      "units": "dx/dy/dz metres; d_rx/d_ry/d_rz rotation-vector radians; gripper fraction",
+      "full_output_shape": [
+        1,
+        25,
+        7
+      ],
+      "executed_prefix_actions": 45,
+      "selected_validation_anchors": [
+        {
+          "episode": 9,
+          "tick": 2789,
+          "source_frame": 0
+        },
+        {
+          "episode": 9,
+          "tick": 2887,
+          "source_frame": 196
+        },
+        {
+          "episode": 9,
+          "tick": 2987,
+          "source_frame": 396
+        },
+        {
+          "episode": 9,
+          "tick": 3087,
+          "source_frame": 596
+        },
+        {
+          "episode": 13,
+          "tick": 4049,
+          "source_frame": 0
+        },
+        {
+          "episode": 13,
+          "tick": 4179,
+          "source_frame": 260
+        },
+        {
+          "episode": 13,
+          "tick": 4309,
+          "source_frame": 520
+        },
+        {
+          "episode": 13,
+          "tick": 4439,
+          "source_frame": 780
+        },
+        {
+          "episode": 22,
+          "tick": 7410,
+          "source_frame": 0
+        },
+        {
+          "episode": 22,
+          "tick": 7524,
+          "source_frame": 228
+        },
+        {
+          "episode": 22,
+          "tick": 7638,
+          "source_frame": 456
+        },
+        {
+          "episode": 22,
+          "tick": 7754,
+          "source_frame": 688
+        },
+        {
+          "episode": 31,
+          "tick": 10494,
+          "source_frame": 0
+        },
+        {
+          "episode": 31,
+          "tick": 10594,
+          "source_frame": 200
+        },
+        {
+          "episode": 31,
+          "tick": 10696,
+          "source_frame": 404
+        },
+        {
+          "episode": 31,
+          "tick": 10798,
+          "source_frame": 608
+        },
+        {
+          "episode": 36,
+          "tick": 12127,
+          "source_frame": 0
+        },
+        {
+          "episode": 36,
+          "tick": 12245,
+          "source_frame": 236
+        },
+        {
+          "episode": 36,
+          "tick": 12365,
+          "source_frame": 476
+        },
+        {
+          "episode": 36,
+          "tick": 12485,
+          "source_frame": 716
+        },
+        {
+          "episode": 37,
+          "tick": 12487,
+          "source_frame": 0
+        },
+        {
+          "episode": 37,
+          "tick": 12609,
+          "source_frame": 244
+        },
+        {
+          "episode": 37,
+          "tick": 12731,
+          "source_frame": 488
+        },
+        {
+          "episode": 37,
+          "tick": 12855,
+          "source_frame": 736
+        }
+      ],
+      "reserved_episodes_used": [],
+      "all_outputs_finite": true,
+      "prediction": {
+        "translation_mean_mm": 1.8216784000396729,
+        "rotation_vector_mae_rad": [
+          0.00158524583093822,
+          0.005005679093301296,
+          0.002079079393297434
+        ],
+        "gripper_mae_fraction": 0.011519382707774639
+      },
+      "paired_images_from_other_episode": {
+        "translation_mean_mm": 1.8421655893325806,
+        "rotation_vector_mae_rad": [
+          0.0015640329802408814,
+          0.004449358209967613,
+          0.0021376479417085648
+        ],
+        "gripper_mae_fraction": 0.021740086376667023
+      },
+      "training_mean_baseline": {
+        "translation_mean_mm": 2.6200010776519775,
+        "rotation_vector_mae_rad": [
+          0.0018719906220212579,
+          0.005557975731790066,
+          0.004580971319228411
+        ],
+        "gripper_mae_fraction": 0.23556025326251984
+      },
+      "zero_translation_baseline_mean_mm": 2.617785930633545,
+      "image_swap_translation_change_mean_mm": 0.9854753613471985,
+      "image_swap_gripper_change_mean_fraction": 0.020773937925696373,
+      "action_translation_norm_max_m": 0.010384363122284412,
+      "action_rotation_norm_max_rad": 0.03092839941382408,
+      "gripper_range": [
+        0.0015658438205718994,
+        0.5638132691383362
+      ],
+      "latency": {
+        "warmup_ms": [
+          78.50854203570634,
+          53.71445801574737,
+          53.56070806737989
+        ],
+        "steady_calls": 21,
+        "median_ms": 73.28950008377433,
+        "p95_ms": 110.71075010113418,
+        "includes": "cached image access, normalization, vision/head forward, denormalization; batch size 1; image-swap calls excluded"
+      },
+      "simulator_preflight": {
+        "configured_calibrated_task_exists": false,
+        "missing_recorded_camera_mounts": [
+          "observation.images.top"
+        ],
+        "configured_initial_arm_joint_limit_violations": 1,
+        "physical_calibration_accepted": false,
+        "closed_loop_executed": false
+      }
+    },
+    "L7_clip_last2_lr3e-06": {
+      "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/learning_screen_20261022/runs/L7_clip_last2_lr3e-06/attempt-001/checkpoints/003000",
+      "checkpoint_sha256": "4c9ff34576e6934b03a7e4a33fe65504ec32a07e0c2e0a336ae7fb08e2763b05",
+      "checkpoint_metadata_sha256": {
+        "config.json": "db0df669383a2a5becfba9279a4fe807c9f072bbf130871a233a51031e9acb0b",
+        "stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+        "real2sim_contract.json": "9dd669783ee66c78114a9381848c8d8b1b87009571f2d33b8c22e23cf9632dc7",
+        "run_info.json": "54b5ec150d93d3e4e1cd7acd8fa4b95c4101c76f832d05b3f99b899cb509128b"
+      },
+      "manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+      "model_load_seconds": 4.144185791956261,
+      "device": "cpu",
+      "torch_threads": 2,
+      "camera_keys": [
+        "observation.images.iphone",
+        "observation.images.top"
+      ],
+      "action_names": [
+        "dx",
+        "dy",
+        "dz",
+        "d_rx",
+        "d_ry",
+        "d_rz",
+        "gripper_target"
+      ],
+      "units": "dx/dy/dz metres; d_rx/d_ry/d_rz rotation-vector radians; gripper fraction",
+      "full_output_shape": [
+        1,
+        25,
+        7
+      ],
+      "executed_prefix_actions": 45,
+      "selected_validation_anchors": [
+        {
+          "episode": 9,
+          "tick": 2789,
+          "source_frame": 0
+        },
+        {
+          "episode": 9,
+          "tick": 2887,
+          "source_frame": 196
+        },
+        {
+          "episode": 9,
+          "tick": 2987,
+          "source_frame": 396
+        },
+        {
+          "episode": 9,
+          "tick": 3087,
+          "source_frame": 596
+        },
+        {
+          "episode": 13,
+          "tick": 4049,
+          "source_frame": 0
+        },
+        {
+          "episode": 13,
+          "tick": 4179,
+          "source_frame": 260
+        },
+        {
+          "episode": 13,
+          "tick": 4309,
+          "source_frame": 520
+        },
+        {
+          "episode": 13,
+          "tick": 4439,
+          "source_frame": 780
+        },
+        {
+          "episode": 22,
+          "tick": 7410,
+          "source_frame": 0
+        },
+        {
+          "episode": 22,
+          "tick": 7524,
+          "source_frame": 228
+        },
+        {
+          "episode": 22,
+          "tick": 7638,
+          "source_frame": 456
+        },
+        {
+          "episode": 22,
+          "tick": 7754,
+          "source_frame": 688
+        },
+        {
+          "episode": 31,
+          "tick": 10494,
+          "source_frame": 0
+        },
+        {
+          "episode": 31,
+          "tick": 10594,
+          "source_frame": 200
+        },
+        {
+          "episode": 31,
+          "tick": 10696,
+          "source_frame": 404
+        },
+        {
+          "episode": 31,
+          "tick": 10798,
+          "source_frame": 608
+        },
+        {
+          "episode": 36,
+          "tick": 12127,
+          "source_frame": 0
+        },
+        {
+          "episode": 36,
+          "tick": 12245,
+          "source_frame": 236
+        },
+        {
+          "episode": 36,
+          "tick": 12365,
+          "source_frame": 476
+        },
+        {
+          "episode": 36,
+          "tick": 12485,
+          "source_frame": 716
+        },
+        {
+          "episode": 37,
+          "tick": 12487,
+          "source_frame": 0
+        },
+        {
+          "episode": 37,
+          "tick": 12609,
+          "source_frame": 244
+        },
+        {
+          "episode": 37,
+          "tick": 12731,
+          "source_frame": 488
+        },
+        {
+          "episode": 37,
+          "tick": 12855,
+          "source_frame": 736
+        }
+      ],
+      "reserved_episodes_used": [],
+      "all_outputs_finite": true,
+      "prediction": {
+        "translation_mean_mm": 1.9135240316390991,
+        "rotation_vector_mae_rad": [
+          0.0014227282954379916,
+          0.004247625824064016,
+          0.0033441109117120504
+        ],
+        "gripper_mae_fraction": 0.02445988915860653
+      },
+      "paired_images_from_other_episode": {
+        "translation_mean_mm": 2.040088415145874,
+        "rotation_vector_mae_rad": [
+          0.0012692830059677362,
+          0.003815300529822707,
+          0.0029352917335927486
+        ],
+        "gripper_mae_fraction": 0.02505521848797798
+      },
+      "training_mean_baseline": {
+        "translation_mean_mm": 2.6200010776519775,
+        "rotation_vector_mae_rad": [
+          0.0018719906220212579,
+          0.005557975731790066,
+          0.004580971319228411
+        ],
+        "gripper_mae_fraction": 0.23556025326251984
+      },
+      "zero_translation_baseline_mean_mm": 2.617785930633545,
+      "image_swap_translation_change_mean_mm": 1.340812087059021,
+      "image_swap_gripper_change_mean_fraction": 0.016863210126757622,
+      "action_translation_norm_max_m": 0.0137020880356431,
+      "action_rotation_norm_max_rad": 0.03769967705011368,
+      "gripper_range": [
+        -0.002666294574737549,
+        0.6214142441749573
+      ],
+      "latency": {
+        "warmup_ms": [
+          221.0768749937415,
+          355.03149998839945,
+          538.0660840310156
+        ],
+        "steady_calls": 21,
+        "median_ms": 472.1458329586312,
+        "p95_ms": 753.580457996577,
+        "includes": "cached image access, normalization, vision/head forward, denormalization; batch size 1; image-swap calls excluded"
+      },
+      "simulator_preflight": {
+        "configured_calibrated_task_exists": false,
+        "missing_recorded_camera_mounts": [
+          "observation.images.top"
+        ],
+        "configured_initial_arm_joint_limit_violations": 1,
+        "physical_calibration_accepted": false,
+        "closed_loop_executed": false
+      }
+    }
+  },
+  "executed_script_path": "outputs/v2/inference_sim_smoke_20261023/offline_executed_script.py",
+  "reproduce_command": ".venv/bin/python scripts/diag_v2_inference_smoke.py --out results/v2/inference_smoke_repeat.json",
+  "simulator_smoke": {
+    "kind": "DIAGNOSTIC_PROVISIONAL_SCENE_RECORDED_VALIDATION_RESET",
+    "model_job": "L1_resnet_iphone",
+    "checkpoint": {
+      "checkpoint": "outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone/attempt-001/checkpoints/004000",
+      "checkpoint_sha256": "814ca2cdc1ae53ce4adb0a1fc3e4941e40746c609f7f6c23a1f740acd1e8e3ab",
+      "checkpoint_step": 4000,
+      "kind": "cartesian",
+      "chunk_size": 25,
+      "n_action_steps": 2,
+      "device": "cpu",
+      "target_reference": "accepted_target",
+      "execution_interface_ablation": false,
+      "kinematic_projection": null,
+      "checkpoint_contract_modified": false
+    },
+    "ticks": 25,
+    "control_hz": 12.5,
+    "simulated_seconds": 2.0,
+    "policy_calls": 13,
+    "aborted": false,
+    "ik_rejections": 0,
+    "max_action_saturation": 0.0,
+    "mean_latency_ms": 55.94,
+    "warmup_latency_ms": 42.32,
+    "max_latency_ms": 131.9,
+    "start": {
+      "tick": 2839,
+      "episode": 9,
+      "source_frame": 100,
+      "joint_real_deg_percent": [
+        -2.373626470565796,
+        -97.67032623291016,
+        86.72527313232422,
+        63.78022003173828,
+        2.153846263885498,
+        42.52717208862305
+      ],
+      "joint_native_radians": [
+        -0.04142759712386541,
+        -1.7046687742612723,
+        1.5136415608504334,
+        1.1131748372002752,
+        0.037591708886580574,
+        0.6419791769294739
+      ],
+      "start_pose": {
+        "robot_table_contacts": 0,
+        "robot_table_penetration_m": 0.0,
+        "tool_height_above_table_m": 0.05240224282375394
+      }
+    },
+    "strict_initial_state": true,
+    "frozen_exploratory_task_unchanged": true,
+    "checkpoint_contract_modified": false,
+    "source_config_files_hashed": 47,
+    "runtime_source_config_changes": [],
+    "source_hashes_before": "outputs/v2/inference_sim_smoke_20261023/source_hashes_before.json",
+    "source_hashes_after": "outputs/v2/inference_sim_smoke_20261023/source_hashes_after.json",
+    "raw_summary": "outputs/v2/inference_sim_smoke_20261023/rollout/summary.json",
+    "initial_measured_ee_ball_distance_m": 0.27656290568934855,
+    "final_measured_ee_ball_distance_m": 0.2833016356752782,
+    "lifted": false,
+    "limitation": "Two-second inference smoke using a selected collision-free recorded validation pose in an unaccepted provisional scene. Not a full task attempt, success-rate estimate, physically calibrated evaluation or hardware test. Task timeout and calibrated evaluation gate unchanged.",
+    "reproduce_command": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 .venv/bin/python -m real2sim.evaluation.run --robot so101 --checkpoint outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone/attempt-001/checkpoints/004000 --config outputs/v2/inference_sim_smoke_20261023/sim.yaml --eval-config configs/v2/eval_so101.yaml --n-trials 1 --seed-start 0 --out outputs/v2/inference_sim_smoke_repeat --controller learned --device cpu --max-ticks 25 --experiment-id DIAGNOSTIC_RECORDED_RESET_INFERENCE_SMOKE"
+  }
+}

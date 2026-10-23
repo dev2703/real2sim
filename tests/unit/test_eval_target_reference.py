@@ -22,7 +22,10 @@ def fake_checkpoint(tmp_path, monkeypatch):
     checkpoint.mkdir()
     (checkpoint / "model.safetensors").write_bytes(b"unchanged frozen checkpoint")
     env = SimpleNamespace(
-        mapping=SimpleNamespace(), model=object(), config={"robot": "so101"}, control_hz=10,
+        mapping=SimpleNamespace(),
+        model=SimpleNamespace(opt=SimpleNamespace(
+            impratio=1., noslip_iterations=0, noslip_tolerance=1e-6, solver=2, cone=0)),
+        config={"robot": "so101"}, control_hz=10,
         data_config={"image": {"height": 192, "width": 256}}, max_episode_steps=200,
         task={"episode": {"success_hold_s": .2}, "ball": {"radius": .0335}},
         table_top=.75, initial_qpos=np.zeros(6), close=lambda: None)

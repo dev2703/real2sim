@@ -165,6 +165,9 @@ def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None
         option = ET.SubElement(root, "option")
     option.set("timestep", str(1 / config["physics_hz"]))
     option.set("gravity", "0 0 -9.81")
+    from real2sim.sim.contact_solver import contact_solver_attributes
+
+    option.attrib.update(contact_solver_attributes(config))
     for keyframe in root.findall("keyframe"):
         root.remove(keyframe)  # nq changes once the ball's free joint is added
     render = config["render"]
