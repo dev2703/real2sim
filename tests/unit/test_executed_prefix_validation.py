@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from real2sim.policy.validation import evaluate_executed_prefix, executed_prefix_anchors, executed_prefix_report
+from real2sim.policy.validation import (\n    evaluate_executed_prefix,\n    executed_prefix_anchors,\n    executed_prefix_report,\n)
 
 
 def fixture(kind="cartesian"):
