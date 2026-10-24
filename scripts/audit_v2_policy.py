@@ -14,7 +14,11 @@ from torch.utils.data import DataLoader, Subset
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.paired import file_sha256
-from real2sim.policy.validation import (\n    action_metrics,\n    executed_prefix_anchors,\n    executed_prefix_report,\n)
+from real2sim.policy.validation import (
+    action_metrics,
+    executed_prefix_anchors,
+    executed_prefix_report,
+)
 
 
 def metrics(pred, label, *, action_kind):
