@@ -12,8 +12,10 @@ import yaml
 
 from real2sim.config import load_yaml
 from real2sim.evaluation.run import check_contract_timing_and_image
+from real2sim.geometry.so101_fk import JointMapping
 from real2sim.policy.adapters import ContractError
-from real2sim.sim.env import So101PickPlaceEnv
+from real2sim.policy.paired import file_sha256
+from real2sim.sim.env import So101PickPlaceEnv, real_from_sim
 from real2sim.sim.kinematics import NativeKinematics
 
 
@@ -89,7 +91,20 @@ def test_matched_observed_layout_preserves_predeclared_height_and_camera(ablatio
 
 def test_real_scene_preserves_fk_but_production_guard_stays_closed(ablation, tasks, tmp_path):
     original, candidate = tasks
-    reference_path = Path("outputs/v2/inference_sim_smoke_20261023/sim.yaml")
+    reference_task = tmp_path / "reference_task.yaml"
+    reference_task.write_text(yaml.safe_dump(original))
+    data_config = load_yaml("configs/v2/data.exploratory_20261022.yaml")
+    data_config["camera_keys"] = ["observation.images.iphone"]
+    data_path = tmp_path / "data.yaml"
+    data_path.write_text(yaml.safe_dump(data_config))
+    reference_config = load_yaml("configs/v2/sim_so101.yaml")
+    reference_config.update(task_config=str(reference_task), data_config=str(data_path))
+    # Both scenes use an explicit native-range fixture pose, with strict validation enabled.
+    reference_config["initial_qpos"] = [0.] * 6
+    reference_config["initial_qpos_real_deg"] = real_from_sim(
+        JointMapping.from_task_config(original), np.zeros(6)).tolist()
+    reference_path = tmp_path / "reference_sim.yaml"
+    reference_path.write_text(yaml.safe_dump(reference_config))
     task_path = tmp_path / "task.yaml"
     task_path.write_text(yaml.safe_dump(candidate))
     config = load_yaml(reference_path)
@@ -97,9 +112,16 @@ def test_real_scene_preserves_fk_but_production_guard_stays_closed(ablation, tas
     config["ik"]["workspace_min"][2] = -.0024
     config_path = tmp_path / "sim.yaml"
     config_path.write_text(yaml.safe_dump(config))
-    contract = json.loads(Path(
-        "outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone/attempt-001/"
-        "checkpoints/004000/real2sim_contract.json").read_text())
+    contract = {
+        "contract_version": data_config["contract_version"],
+        "calibration_sha256": file_sha256(reference_task),
+        "camera_keys": data_config["camera_keys"],
+        "controller_semantics": data_config["controller_semantics"],
+        "policy_hz": data_config["policy_hz"],
+        "letterbox": {"src_w": 1280, "src_h": 720,
+                      "dst_h": data_config["image"]["height"],
+                      "dst_w": data_config["image"]["width"]},
+    }
     saved_contract = copy.deepcopy(contract)
     with closing(So101PickPlaceEnv(reference_path, render_images=False)) as reference:
         with closing(So101PickPlaceEnv(config_path, render_images=False)) as env:
