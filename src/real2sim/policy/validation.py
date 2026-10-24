@@ -27,6 +27,30 @@ def _mean(values):
     return float(np.mean(values)) if len(values) else None
 
 
+def executed_prefix_anchors(arrays, episodes, n_action_steps=2):
+    """Restart execution cadence after every invalid observation/action gap."""
+    if n_action_steps < 1:
+        raise ValueError("positive execution prefix required")
+    count = len(arrays["action"])
+    selected = np.isin(arrays["episode_index"], episodes)
+    for field in ("label_is_extrapolated", "action_is_invalid", "observation_is_invalid"):
+        mask = np.asarray(arrays.get(field, np.zeros(count, bool)), bool)
+        if mask.shape != (count,):
+            raise ValueError(f"invalid {field} mask shape")
+        selected &= ~mask
+    ticks = np.flatnonzero(selected)
+    anchors = np.empty_like(ticks)
+    previous, segment_start, anchor = None, None, None
+    for i, tick in enumerate(ticks):
+        if previous is None or tick != previous + 1 or arrays["episode_index"][tick] != arrays["episode_index"][previous]:
+            segment_start = tick
+        if (tick - segment_start) % n_action_steps == 0:
+            anchor = tick
+        anchors[i] = anchor
+        previous = tick
+    return ticks, anchors
+
+
 def action_metrics(pred, label, *, action_kind, std=None):
     """Physical errors; absolute poses are never treated as delta motion."""
     pred, label = np.asarray(pred), np.asarray(label)
@@ -146,16 +170,15 @@ def executed_prefix_report(predictions, ticks, anchors, arrays, manifest, std, e
         raise ValueError("offline selection may consume train/validation episodes only")
     ticks, anchors = np.asarray(ticks, dtype=np.int64), np.asarray(anchors, dtype=np.int64)
     extrapolated = arrays.get("label_is_extrapolated", np.zeros(len(arrays["action"]), bool))
-    expected = np.flatnonzero(np.isin(arrays["episode_index"], episodes) & ~extrapolated)
+    invalid = arrays.get("action_is_invalid", np.zeros(len(arrays["action"]), bool))
+    observation_invalid = arrays.get("observation_is_invalid", np.zeros(len(arrays["action"]), bool))
+    expected, expected_anchors = executed_prefix_anchors(arrays, episodes, n_action_steps)
     if not len(expected):
         raise ValueError("selected episodes have no nonextrapolated actions")
-    if n_action_steps < 1:
-        raise ValueError("positive execution prefix required")
-    expected_anchors = arrays["ep_start"][expected] + ((expected - arrays["ep_start"][expected]) // n_action_steps) * n_action_steps
     if (not np.array_equal(ticks, expected) or len(np.unique(ticks)) != len(ticks)
             or anchors.shape != ticks.shape or np.any(anchors > ticks)
             or not np.array_equal(anchors, expected_anchors)):
-        raise ValueError("executed prefixes must cover each nonpadding/nonextrapolated action exactly once")
+        raise ValueError("executed prefixes must cover each nonpadding/nonextrapolated valid action exactly once")
     kind = manifest.get("action_representation", "cartesian")
     if kind not in (*DELTA_KINDS, "cartesian_absolute", "canonical_joint"):
         raise ValueError(f"unsupported action representation: {kind}")
@@ -204,6 +227,8 @@ def executed_prefix_report(predictions, ticks, anchors, arrays, manifest, std, e
             }
     result = {"version": VERSION, "action_representation": kind, "episodes": episodes,
               "valid_actions": len(ticks), "excluded_extrapolated_actions": int((np.isin(arrays["episode_index"], episodes) & extrapolated).sum()),
+              "excluded_invalid_actions": int((np.isin(arrays["episode_index"], episodes) & invalid & ~extrapolated).sum()),
+              "excluded_invalid_observation_actions": int((np.isin(arrays["episode_index"], episodes) & observation_invalid & ~extrapolated & ~invalid).sum()),
               "inference_calls": len(np.unique(anchors)), "scores": reports,
               "thresholds": {"translation_mm_per_tick": MOTION_MM, "rotation_rad_per_tick": MOTION_RAD, "joint_vector_deg_per_tick": MOTION_DEG},
               "protocol": "Raw teacher-forced predictions; episode-local nonoverlapping prefixes; each valid action once; training episodes measure fitting only.",
@@ -212,6 +237,9 @@ def executed_prefix_report(predictions, ticks, anchors, arrays, manifest, std, e
               "physical_grasp_success": "not_evaluated"}
     if kind == "canonical_joint":
         result["baseline_contract"] = "Hold uses observed follower joints and gripper at the inference anchor. Persistence repeats the prior recorded leader joint command target, not achieved follower motion, and holds the anchor's observed gripper. Neither uses future observations."
+        if manifest.get("joint_target_semantics"):
+            result["baseline_contract"] = "Hold uses observed follower joints and gripper at the inference anchor. Persistence repeats the previous recorded action target under joint_target_semantics, with the gripper held at the anchor observation. The prior arm target may be next-tick follower or current-tick leader, as declared by that contract. Neither uses future observations at inference."
+            result["joint_target_semantics"] = manifest["joint_target_semantics"]
     result["offline_selection"] = offline_selection(result)
     return result
 
@@ -247,7 +275,9 @@ def evaluate_executed_prefix(policy, dataset, device, batch_size=16, *, seed=0, 
     allowed = set(split["train"]) | set(split["val"])
     if not set(episodes) <= allowed or set(episodes) & set(split.get("reserved", [])):
         raise ValueError("offline selection may consume train/validation episodes only")
-    selected = [i for i, tick in enumerate(dataset.indices) if (tick - arrays["ep_start"][tick]) % n == 0]
+    _, all_anchors = executed_prefix_anchors(arrays, episodes, n)
+    required = set(all_anchors.tolist())
+    selected = [i for i, tick in enumerate(dataset.indices) if int(tick) in required]
     was_training = policy.training
     policy.eval()
     predictions, ticks, anchors = [], [], []
@@ -258,6 +288,12 @@ def evaluate_executed_prefix(policy, dataset, device, batch_size=16, *, seed=0, 
             raw = dataset.normalizer.unaction(policy.predict_action_chunk(obs, **kwargs)[:, :n]).cpu().numpy()
             valid = ~batch["action_is_pad"][:, :n].numpy()
             anchor = np.broadcast_to(batch["tick"].numpy()[:, None], valid.shape)
+            if "action_is_invalid" in arrays:
+                grid = anchor + np.arange(n)[None]
+                valid &= ~arrays["action_is_invalid"][np.minimum(grid, len(arrays["action"]) - 1)]
+            if "observation_is_invalid" in arrays:
+                grid = anchor + np.arange(n)[None]
+                valid &= ~arrays["observation_is_invalid"][np.minimum(grid, len(arrays["action"]) - 1)]
             ticks.extend((anchor + np.arange(n)[None])[valid].tolist())
             anchors.extend(anchor[valid].tolist())
             predictions.append(raw[valid])

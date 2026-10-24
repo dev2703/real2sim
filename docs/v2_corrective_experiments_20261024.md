@@ -133,7 +133,7 @@ shortlist score; full-chunk L1 remains descriptive. Resume rejects a changed met
 protocol or image-feature transform. Offline shortlisting does not authorize
 reserved evaluation.
 
-The complete unit suite passes **679 tests**, with two CUDA-only skips, including
+The complete unit suite passes **682 tests**, with two CUDA-only skips, including
 the actual camera projection render tests with CoreGraphics access. Thirteen
 targeted controller/collision integration checks pass. Focused ACT/head resume and
 full-coverage validation integration checks also pass. Ruff and whitespace checks pass.

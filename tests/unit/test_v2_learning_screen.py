@@ -308,3 +308,15 @@ def test_finalize_only_rejects_missing_resume_before_accessing_data():
 
     with pytest.raises(ValueError, match="full-budget resume"):
         train_head(Namespace(finalize_only=True, resume=None))
+
+
+@pytest.mark.parametrize("operation", ["cache", "train"])
+def test_cached_heads_reject_on_demand_visual_grounding_before_reading_arrays(tmp_path, operation):
+    from argparse import Namespace
+
+    from scripts.train_flow_head import build_cache, train_head
+
+    atomic_json(tmp_path / "manifest.json", {"visual_grounding": {"kind": "ball_image_features"}})
+    args = Namespace(data=tmp_path, device="cpu", seed=0)
+    with pytest.raises(ValueError, match="requires ACT on-demand image features"):
+        {"cache": build_cache, "train": train_head}[operation](args)

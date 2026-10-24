@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Subset
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.paired import file_sha256
-from real2sim.policy.validation import action_metrics, executed_prefix_report
+from real2sim.policy.validation import action_metrics, executed_prefix_anchors, executed_prefix_report
 
 
 def metrics(pred, label, *, action_kind):
@@ -41,7 +41,9 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
     if n != 2:
         raise ValueError("v2 uses two executed actions per call")
     a = ds.arrays
-    anchors = [i for i, t in enumerate(ds.indices) if (t - a["ep_start"][t]) % n == 0]
+    expected, coverage_anchors = executed_prefix_anchors(a, episodes, n)
+    required = set(coverage_anchors.tolist())
+    anchors = [i for i, t in enumerate(ds.indices) if int(t) in required]
     ticks = []
     predictions = []
     anchor_ticks = []
@@ -56,12 +58,15 @@ def audit(checkpoint, data, device="cpu", episodes=None, annotations=None):
             pred = norm.unaction(policy.predict_action_chunk(obs, **kwargs)[:, :n]).cpu().numpy()
         valid = ~batch["action_is_pad"][:, :n].numpy()
         grid = batch["tick"].numpy()[:, None] + np.arange(n)[None, :]
+        if "action_is_invalid" in a:
+            valid &= ~a["action_is_invalid"][np.minimum(grid, len(a["action"]) - 1)]
+        if "observation_is_invalid" in a:
+            valid &= ~a["observation_is_invalid"][np.minimum(grid, len(a["action"]) - 1)]
         ticks.extend(grid[valid].tolist())
         anchor_ticks.extend(np.broadcast_to(batch["tick"].numpy()[:, None], valid.shape)[valid].tolist())
         predictions.extend(pred[valid])
     ticks = np.asarray(ticks, dtype=int)
     pred = np.asarray(predictions)
-    expected = np.flatnonzero(np.isin(a["episode_index"], episodes) & ~a["label_is_extrapolated"])
     if not np.array_equal(ticks, expected) or not np.isfinite(pred).all():
         raise ValueError("invalid prediction or nonunique executed-prefix coverage")
     label = a["action"][ticks]

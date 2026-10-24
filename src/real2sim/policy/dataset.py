@@ -105,6 +105,12 @@ class DerivedTickDataset(Dataset):
             # The last tick of each cartesian episode has no successor; its zero-motion label is a
             # placeholder, so the loss ignores it exactly like padding (labels.py contract).
             pad = pad | self.arrays["label_is_extrapolated"][idx]
+        if "action_is_invalid" in self.arrays:
+            # Feasibility exclusions are distinct from terminal placeholders and padding.
+            invalid = self.arrays["action_is_invalid"]
+            if invalid.dtype != np.bool_ or invalid.shape != self.arrays["episode_index"].shape:
+                raise ValueError("action_is_invalid must be a boolean per-tick mask")
+            pad = pad | invalid[idx]
         n = self.normalizer
         images = {}
         for k in self.camera_keys:

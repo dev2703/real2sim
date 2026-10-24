@@ -83,6 +83,8 @@ def image_identity(manifest, arrays, stats):
 
 def build_cache(args):
     manifest = json.loads((args.data / "manifest.json").read_text())
+    if manifest.get("visual_grounding"):
+        raise ValueError("visual_grounding requires ACT on-demand image features; frozen-feature caches/heads do not support this contract")
     arrays = dict(np.load(args.data / "arrays.npz", allow_pickle=False))
     norm = Normalizer.from_json(args.data / "stats.json")
     model = yaml.safe_load(args.vision_config.read_text())["model"]
@@ -150,8 +152,10 @@ class CachedFeatureDataset(Dataset):
     def __init__(self, data: Path, cache: Path, episodes: list[int], normalizer: Normalizer,
                  chunk_size=20, *, executed_prefix=False):
         self.manifest = json.loads((data / "manifest.json").read_text())
-        self.cache_manifest = json.loads((cache / "manifest.json").read_text())
         self.arrays = dict(np.load(data / "arrays.npz", allow_pickle=False))
+        if np.any(self.arrays.get("action_is_invalid", False)):
+            raise ValueError("cached heads do not support action_is_invalid filtered targets; use ACT with the shared valid-action mask")
+        self.cache_manifest = json.loads((cache / "manifest.json").read_text())
         self.normalizer = normalizer
         self.chunk_size = chunk_size
         identity = image_identity(self.manifest, self.arrays, normalizer.stats)
@@ -316,6 +320,8 @@ def train_head(args):
     torch.manual_seed(args.seed)
     device = resolve_device(args.device)
     manifest = json.loads((args.data / "manifest.json").read_text())
+    if manifest.get("visual_grounding"):
+        raise ValueError("visual_grounding requires ACT on-demand image features; frozen-feature caches/heads do not support this contract")
     if manifest["action_names"] != ["dx", "dy", "dz", "d_rx", "d_ry", "d_rz", "gripper_target"]:
         raise ValueError("F0 requires the unchanged seven-dimensional Cartesian action contract")
     split = resolve_split(manifest, args.split_json)
