@@ -77,7 +77,13 @@ class DerivedTickDataset(Dataset):
                 raise ValueError("visual grounding data contract differs from canonical image features")
         self._images: dict | None = None  # opened lazily per process (memmaps must not be pickled)
         ep = self.arrays["episode_index"]
-        self.indices = np.flatnonzero(np.isin(ep, np.asarray(episodes)))
+        selected = np.isin(ep, np.asarray(episodes))
+        if "observation_is_invalid" in self.arrays:
+            invalid = self.arrays["observation_is_invalid"]
+            if invalid.dtype != np.bool_ or invalid.shape != ep.shape:
+                raise ValueError("observation_is_invalid must be a boolean per-tick mask")
+            selected &= ~invalid
+        self.indices = np.flatnonzero(selected)
         if len(self.indices) == 0:
             raise ValueError(f"no ticks for episodes {episodes}")
         self.chunk_size = chunk_size

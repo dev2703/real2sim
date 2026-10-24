@@ -183,7 +183,12 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
             if target_reference == "accepted_target":
                 raise ContractError("accepted_target requires a Cartesian checkpoint; "
                                     "joint targets do not use a Cartesian target reference")
-            action_adapter = JointActionAdapter(env)
+            if "joint_target_semantics" in contract:
+                from real2sim.policy.follower_joint import GuardedJointActionAdapter
+
+                action_adapter = GuardedJointActionAdapter(env, NativeKinematics(env.model, env.config), contract)
+            else:
+                action_adapter = JointActionAdapter(env)
         else:
             action_adapter = CartesianActionAdapter(
                 env, NativeKinematics(env.model, env.config),

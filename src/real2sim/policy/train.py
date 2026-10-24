@@ -211,6 +211,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                 raise ValueError(f"initial checkpoint {key} differs from data")
         if parent_contract.get("visual_grounding") != manifest.get("visual_grounding"):
             raise ValueError("initial checkpoint visual_grounding differs from data")
+        if parent_contract.get("joint_target_semantics") != manifest.get("joint_target_semantics"):
+            raise ValueError("initial checkpoint joint_target_semantics differs from data")
         if parent_contract["derived_files_sha256"] != manifest["files_sha256"] or parent_norm.stats != train_ds.normalizer.stats:
             raise ValueError("initial checkpoint data hashes or normalization differ")
         transfer = None
@@ -234,7 +236,7 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
             raise ValueError("cannot resume with a different reconstruction loss")
         resumed, resumed_norm, resumed_contract = load_checkpoint(resume, device="cpu")
         for key in ("source", "split", "camera_keys", "state_names", "action_names", "policy_hz", "label_semantics",
-                    "contract_version", "controller_semantics", "calibration_sha256", "camera_transforms", "visual_grounding"):
+                    "contract_version", "controller_semantics", "calibration_sha256", "camera_transforms", "visual_grounding", "joint_target_semantics"):
             if resumed_contract.get(key) != manifest.get(key):
                 raise ValueError(f"resume checkpoint {key} differs from data")
         if json.loads((resume / "run_info.json").read_text()).get("selection_protocol", "overlapping_chunk_l1_legacy") != selection_protocol:

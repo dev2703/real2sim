@@ -44,6 +44,9 @@ class KeypointBottleneckConfig:
             raise ValueError("this bounded experiment requires canonical13, Cartesian7, two actions and one ball")
         if min(self.rows, self.cols, self.patch_size, self.feature_dim) < 1:
             raise ValueError("positive image feature grid required")
+        if (self.rows != (self.image_height + self.patch_size - 1) // self.patch_size
+                or self.cols != (self.image_width + self.patch_size - 1) // self.patch_size):
+            raise ValueError("feature grid must match replicate-padded image dimensions")
 
 
 class KeypointBottleneckPolicy(nn.Module):
@@ -70,16 +73,23 @@ class KeypointBottleneckPolicy(nn.Module):
 
     def features(self, batch):
         if FEATURE_KEY in batch:
-            return batch[FEATURE_KEY]
+            return batch[FEATURE_KEY].float()
         if self.backbone is None:
             raise ValueError("raw-image inference requires the saved frozen backbone")
         with torch.no_grad():
-            return self.backbone(batch[self.config.camera_key])["feature_map"].flatten(2).transpose(1, 2)
+            features = self.backbone(batch[self.config.camera_key])["feature_map"].flatten(2).transpose(1, 2)
+            # Cache precision is part of the inference contract, rather than a
+            # training-only approximation hidden from the live image path.
+            return features.to(torch.float16).float()
+
+    def reset(self):
+        """The two-action prediction has no temporal state to reset."""
 
     def predictions(self, batch):
         features = self.features(batch)
         c = self.config
-        if features.shape[1:] != (c.rows * c.cols, c.feature_dim):
+        if (features.ndim != 3 or features.shape[1:] != (c.rows * c.cols, c.feature_dim)
+                or not torch.isfinite(features).all()):
             raise ValueError("keypoint feature grid differs from checkpoint")
         logits = self.localization(features).squeeze(-1)
         uv = logits.softmax(-1) @ self.coordinates
@@ -89,6 +99,12 @@ class KeypointBottleneckPolicy(nn.Module):
         grounded = torch.cat([uv * probability[:, None], probability[:, None]], -1)
         actions = self.actions(torch.cat([batch["observation.state"], grounded], -1))
         return actions.reshape(-1, c.chunk_size, c.action_dim), uv, visibility_logits, logits
+
+    def actions_from_keypoints(self, state, uv, probability):
+        """Controlled dependence probe; inference normally predicts its own keypoints."""
+        grounded = torch.cat([uv * probability[:, None], probability[:, None]], -1)
+        return self.actions(torch.cat([state, grounded], -1)).reshape(
+            -1, self.config.chunk_size, self.config.action_dim)
 
     def forward(self, batch, *, auxiliary_weight=0.):
         action, uv, visible_logits, logits = self.predictions(batch)

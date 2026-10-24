@@ -129,7 +129,7 @@ def save_checkpoint(
         "derived_files_sha256": manifest["files_sha256"],
         "prepare_version": manifest["prepare_version"],
     }
-    for key in ("observation_variant", "visual_grounding", "experiment_split", "source_manifest_sha256",
+    for key in ("observation_variant", "visual_grounding", "joint_target_semantics", "experiment_split", "source_manifest_sha256",
                 "contract_version", "action_representation", "controller_semantics",
                 "calibration_sha256", "camera_transforms", "timing_basis", "transfer_shared_task_sha256"):
         if key in manifest:
@@ -163,6 +163,10 @@ def save_checkpoint(
 def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[ACTPolicy, Normalizer, dict]:
     path = Path(path)
     config_json = json.loads((path / "config.json").read_text())
+    if config_json.get("type") == "keypoint_bottleneck_v1":
+        from real2sim.policy.keypoint_bottleneck import load_keypoint_checkpoint
+
+        return load_keypoint_checkpoint(path, device)
     if config_json.get("type") == "small_chunk_head":
         from real2sim.policy.flow_matching import load_flow_checkpoint
 

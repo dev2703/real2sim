@@ -138,6 +138,11 @@ def fit_regime(rows, lengths, source_size):
     sigma = float(max(row["sigma_px"] for row in fit))
     baseline = fit_planar_camera(corners, source_size_wh=source_size, side_lengths_m=lengths, sigma_px=sigma)
     K, T = np.asarray(baseline["K"]), np.asarray(baseline["T_optical_plane"])
+    camera_position = -T[:3, :3].T @ T[:3, 3]
+    baseline.update(camera_position_mat_m=camera_position.tolist(),
+                    camera_plane_distance_m=float(abs(camera_position[2])),
+                    horizontal_fov_deg=float(np.degrees(2 * np.arctan(source_size[0] / (2 * K[0, 0])))),
+                    vertical_fov_deg=float(np.degrees(2 * np.arctan(source_size[1] / (2 * K[1, 1])))))
     prediction = project(mat_points(lengths), K, T)
     scores = []
     for row in fit + verification:
@@ -191,6 +196,16 @@ def load_annotations(path):
         raise ValueError("unsupported annotation schema")
     split_path = Path(document.get("split_path", "results/v2/split.json"))
     split = json.loads(split_path.read_text())
+    selections = None
+    if "selection_path" in document:
+        selection_path = Path(document["selection_path"])
+        if sha256_file(selection_path) != document["selection_sha256"]:
+            raise ValueError("random source-selection checksum mismatch")
+        selection = json.loads(selection_path.read_text())
+        if selection.get("split_sha256") != sha256_file(split_path):
+            raise ValueError("random selection uses a different episode split")
+        selections = {(row["episode"], row["frame"], row["camera_key"]): row
+                      for row in selection["images"]}
     size = np.asarray(document["source_size_wh"], int)
     if size.shape != (2,) or np.any(size <= 0):
         raise ValueError("source_size_wh must be positive dimensions")
@@ -201,12 +216,20 @@ def load_annotations(path):
         if identity in identities:
             raise ValueError("source frame cannot be duplicated under a different role/regime")
         identities.add(identity)
+        if selections is not None:
+            selected = selections.get(identity)
+            if (selected is None or row["path"] != selected["path"] or row["sha256"] != selected["sha256"]
+                    or row["camera_regime"] != selected["camera_regime"]
+                    or (row["role"] != "excluded" and row["role"] != selected["role"])):
+                raise ValueError("annotations changed random selection identity, fit/verification role or regime")
         if row["episode"] in split.get("reserved", []):
             raise ValueError("reserved policy episodes cannot enter this geometry diagnostic")
         if row["role"] not in ("fit", "verification", "excluded"):
             raise ValueError("role must be fit, verification or excluded")
         if row["role"] == "fit" and row["episode"] not in split["train"]:
             raise ValueError("fitting frames must come from training episodes")
+        if identity[2] != "observation.images.iphone":
+            raise ValueError("this static-camera fit cannot pool a moving wrist camera")
         if row["episode"] not in split["train"] + split["val"]:
             raise ValueError("source episode is not in the declared development split")
         image_path = Path(row["path"])
@@ -224,6 +247,9 @@ def load_annotations(path):
         if not np.isfinite(row["sigma_px"]) or row["sigma_px"] <= 0:
             raise ValueError("annotation sigma_px must be finite and positive")
         if "mat_edge_samples_source_px" in row:
+            for points in row["mat_edge_samples_source_px"].values():
+                if np.any(np.asarray(points) < 0) or np.any(np.asarray(points) > size):
+                    raise ValueError("mat edge samples must remain inside the source image")
             corners, edge_report = edge_intersections(row["mat_edge_samples_source_px"])
             row["edge_fit"] = edge_report
         else:
@@ -232,6 +258,10 @@ def load_annotations(path):
             raise ValueError("four ordered finite mat corners are required")
         row["corners"] = corners
         rows.append(row)
+    if selections is not None:
+        expected = {key for key in selections if key[2] == "observation.images.iphone"}
+        if identities != expected:
+            raise ValueError("retain every randomly selected fixed-camera frame, using explicit exclusions where needed")
     return document, rows, split_path
 
 
@@ -261,6 +291,7 @@ def run(annotations, out):
               "robot_fk_used": False, "regimes": results,
               "source_annotations_sha256": sha256_file(annotations), "split_sha256": sha256_file(split_path),
               "selection": document.get("selection"),
+              "random_selection": {key: document[key] for key in ("selection_path", "selection_sha256") if key in document},
               "excluded_frames": [row for row in rows if row["role"] == "excluded"],
               "source_frames": [{key: row[key] for key in ("episode", "frame", "path", "sha256", "role", "camera_regime")} for row in rows],
               "code_sha256": {str(p): sha256_file(p) for p in (Path(__file__), Path("src/real2sim/geometry/planar_camera.py"), Path("src/real2sim/geometry/registration.py"))},
