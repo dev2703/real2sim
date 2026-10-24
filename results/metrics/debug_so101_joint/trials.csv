@@ -1,4 +1,0 @@
-experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path
-E1_joint_ACT,LEARNED_ACT,so101,0,f788bcbd14a704297c11aa605e194e440da92c5bdcc916659b84767da8459fc4,2000,False,False,False,False,False,False,approach,0.11448,300,0,121.19,0.1667,results/metrics/debug_so101_joint/trial_seed0000_LEARNED_ACT.mp4
-E1_joint_ACT,LEARNED_ACT,so101,1,f788bcbd14a704297c11aa605e194e440da92c5bdcc916659b84767da8459fc4,2000,False,False,False,False,False,False,approach,0.12509,300,0,128.57,0.1667,results/metrics/debug_so101_joint/trial_seed0001_LEARNED_ACT.mp4
-E1_joint_ACT,LEARNED_ACT,so101,2,f788bcbd14a704297c11aa605e194e440da92c5bdcc916659b84767da8459fc4,2000,False,False,False,False,False,False,approach,0.11836,300,0,123.74,0.1667,results/metrics/debug_so101_joint/trial_seed0002_LEARNED_ACT.mp4
