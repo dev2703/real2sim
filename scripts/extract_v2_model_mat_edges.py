@@ -29,7 +29,7 @@ def source_edges(mask, image):
     center = (low + high) / 2
     gray = cv2.GaussianBlur(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32), (5, 5), 1.)
     selected, diagnostics = {}, {}
-    for j, name in enumerate(("top", "right", "bottom", "left")):
+    for name in ("top", "right", "bottom", "left"):
         # Occlusion can remove a true corner from a convex hull; do not use the
         # resulting paper/cable corner as the orientation of the physical edge.
         bands = {"top": (points[:, 1] < low[1] + .18 * size[1]) & (points[:, 0] > low[0] + .12 * size[0]) & (points[:, 0] < high[0] - .12 * size[0]),
@@ -85,7 +85,7 @@ def source_edges(mask, image):
         offsets = np.arange(-6., 6.1, .5)
         sample = candidates[:, None, :] + offsets[None, :, None] * normal
 
-        def values(shift):
+        def values(shift, sample=sample, normal=normal):
             sample_xy = sample + shift * normal
             return cv2.remap(gray, sample_xy[:, :, 0].astype(np.float32), sample_xy[:, :, 1].astype(np.float32),
                              cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)

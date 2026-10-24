@@ -86,6 +86,9 @@ def test_first_only_valid_run_has_finite_segment_summary():
     np.testing.assert_array_equal(starts, [0, 1, 2])
     np.testing.assert_array_equal(lengths, [1, 1, 1])
     np.testing.assert_array_equal(segment, [0, -1, -1])
+    _, report = make_matched_targets(source_arrays(), JointMapping(), np.array([[-2, 2]] * 6), [0])
+    assert report["shared_valid_rows"] == 1
+    assert report["valid_segment_length_median"] == 1
 
 
 class Kinematics:

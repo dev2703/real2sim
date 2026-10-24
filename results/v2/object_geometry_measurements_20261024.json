@@ -1,0 +1,649 @@
+{
+  "schema": "conditional_source_object_geometry_v1",
+  "physical_calibration_accepted": false,
+  "robot_fk_used": false,
+  "reserved_episodes_used": [],
+  "production_geometry_changed": false,
+  "source_sha256": {
+    "outputs/v2/grounded_geometry_20261024/report.json": "750e9d2110f7fb5c778eb12f2c775f3fc34c73ae8ea488195fc5623acef9baad",
+    "outputs/v2/model_multiframe_camera_20261024_v4/report.json": "a68be5d8ac650199503d2cc5958c2fedf3e6c96802001ed3e83cac6bbf5abb93",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/measure_v2_object_geometry.py": "0b0934dadb1142a18d129dd62fc16a330eb2d72ac4a8d2b8b56dd8a53d490f7a",
+    "src/real2sim/geometry/image_measurements.py": "629d281d6afbb2552ff80d679fd2b9932d8caa95e7042499ebb9edb372f1ccda"
+  },
+  "reviewer": "Multimodal assistant source-frame review; shape models refine source pixels; annotations are not physical metrology",
+  "wrist_camera": {
+    "intrinsics_measured": false,
+    "reason": "The random wrist views contain cropped/occluded objects and model class confusions (ball also labeled bowl); known-radius/optical-pose ambiguities remain. Unverified detections are retained as raw predictions only."
+  },
+  "unobservable_parameters": [
+    "absolute world table height without an independently referenced world point",
+    "mass, friction, compliance, contact force/current response",
+    "physical joint sign/zero and wrist optical mount separated from each other without verified robot-to-mat registration",
+    "hidden jaw gap, exactTCP/ball load offset and full release response from these sparse unsynchronized exposure captures"
+  ],
+  "full_report": {
+    "path": "outputs/v2/model_object_geometry_20261024/report.json",
+    "sha256": "a24e1cd90110b3b4331ad98ea7b7346df89af32460e62dd512ee08f491cb525c"
+  },
+  "pretrained_models": {
+    "detector": {
+      "repo": "IDEA-Research/grounding-dino-tiny",
+      "revision": "a2bb814dd30d776dcf7e30523b00659f4f141c71",
+      "weights_sha256": "1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3",
+      "prompt": "a tennis ball. a bowl. a black mat. a white paper.",
+      "box_threshold": 0.22,
+      "text_threshold": 0.22
+    },
+    "segmenter": {
+      "repo": "facebook/sam2.1-hiera-tiny",
+      "revision": "de431c4043854a71d8101e17995dfe596bf101a5",
+      "weights_sha256": "48c14467e5cf9e51870511feb72c89688e82dd74523142c0538b663e193ac2a7",
+      "prompts": "Highest-scoring detector box per named class; additional iPhone foot box is a declared visual prompt, not an independently verified CAD identity."
+    }
+  },
+  "selection": {
+    "path": "outputs/v2/random_vision_geometry_20261024/selection.json",
+    "sha256": "a102c61df48682e07da315764ac1f9ae855d3ead2a44ab17ad76aeeb6743d1df",
+    "seed": 20261024,
+    "source_capture_pairs": 8,
+    "model_images": 16,
+    "physical_exposure_synchronization_verified": false
+  },
+  "frames": [
+    {
+      "episode": 4,
+      "frame": 179,
+      "role": "fit",
+      "partition": "train",
+      "camera_regime": "early",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep004_f0179_iphone.png",
+      "sha256": "d882fad225b2fc1979c66a1fcaa8d906ccb4ff1c4f3c6f0e4b895ead35181354",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "visual_review": "Full visible ball resting on paper; silhouette retained fromSAM2, no robot pose used",
+        "baseline": {
+          "camera_scenario": "baseline",
+          "radius_assumption_m": 0.0335,
+          "center_mat_m": [
+            0.22616641482777453,
+            0.07558328426618102,
+            -0.03059124262790542
+          ],
+          "support_height_above_mat_mm": -2.9087573720945823,
+          "boundary_points": 301,
+          "rms_equivalent_pixels": 0.8902449965508279,
+          "cost": 88.90496693236156
+        },
+        "declared_assumption_height_range_mm": [
+          -35.17948512242838,
+          28.006196610802323
+        ],
+        "physical_height_accepted": false,
+        "limitations": "Envelope is not a confidence interval. It inherits failed shared-camera verification, nominal ball-radius scale, segmentation error and mat plane uncertainty; paper thickness is not independently known."
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              850.3837738037109,
+              495.06787109375
+            ],
+            "diameters_px": [
+              154.5414276123047,
+              230.76132202148438
+            ],
+            "angle_deg": 98.3862533569336,
+            "contour_points": 1090,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.2908086822759404
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.23766937244829142,
+              0.30961974538169934
+            ],
+            "radius_m": 0.05810015411920407,
+            "diameter_m": 0.11620030823840814,
+            "circle_rms_m": 0.0006668558713645121,
+            "second_moment_axis_ratio": 0.9680355326671898
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          111.96213744107459,
+          119.26081539822371
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 0,
+      "frame": 98,
+      "role": "fit",
+      "partition": "train",
+      "camera_regime": "early",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep000_f0098_iphone.png",
+      "sha256": "4de41bb77557f074645a5fd3f060cded00001ac9948f4450b427499339918080",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "visual_review": "Full visible ball resting on paper; silhouette retained fromSAM2, no robot pose used",
+        "baseline": {
+          "camera_scenario": "baseline",
+          "radius_assumption_m": 0.0335,
+          "center_mat_m": [
+            0.20738676012376883,
+            0.07718378778661489,
+            -0.02960366601643768
+          ],
+          "support_height_above_mat_mm": -3.896333983562324,
+          "boundary_points": 298,
+          "rms_equivalent_pixels": 0.4993929484065619,
+          "cost": 32.525709250244155
+        },
+        "declared_assumption_height_range_mm": [
+          -36.18240547639233,
+          27.032760369428054
+        ],
+        "physical_height_accepted": false,
+        "limitations": "Envelope is not a confidence interval. It inherits failed shared-camera verification, nominal ball-radius scale, segmentation error and mat plane uncertainty; paper thickness is not independently known."
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              845.8484344482422,
+              490.59415435791016
+            ],
+            "diameters_px": [
+              153.71665954589844,
+              229.53176879882812
+            ],
+            "angle_deg": 98.07476043701172,
+            "contour_points": 1038,
+            "angular_coverage_fraction": 0.9722222222222222,
+            "radial_rms_px": 0.2898691346944034
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.23587466833943485,
+              0.30629310712261726
+            ],
+            "radius_m": 0.05808801761967458,
+            "diameter_m": 0.11617603523934916,
+            "circle_rms_m": 0.0006486774832994921,
+            "second_moment_axis_ratio": 0.9688872360203495
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          111.94342626725738,
+          119.23063142827586
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 5,
+      "frame": 405,
+      "role": "verification",
+      "partition": "train",
+      "camera_regime": "early",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep005_f0405_iphone.png",
+      "sha256": "22b1bf3808d27623e5cbe6a0c1832ec281e3ae4e8d0a45470e4cb2ada1d0d67a",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "excluded": true,
+        "reason": "Visual review: ball occluded by jaw or bowl, or held off support; a complete spherical tangent cone is unavailable"
+      },
+      "bowl_rim": {
+        "pixel_candidates": [],
+        "baseline_30mm_rim_plane": [],
+        "declared_assumption_diameter_range_mm": null,
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 27,
+      "frame": 541,
+      "role": "fit",
+      "partition": "train",
+      "camera_regime": "late",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep027_f0541_iphone.png",
+      "sha256": "9b373709a50a355ce28be958c6e529111290b4a378d22bd89fba9a456a946f4d",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "excluded": true,
+        "reason": "Visual review: ball occluded by jaw or bowl, or held off support; a complete spherical tangent cone is unavailable"
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              831.4563446044922,
+              503.9518814086914
+            ],
+            "diameters_px": [
+              152.07286071777344,
+              227.68984985351562
+            ],
+            "angle_deg": 98.46342468261719,
+            "contour_points": 854,
+            "angular_coverage_fraction": 0.8333333333333334,
+            "radial_rms_px": 0.33241454383892016
+          },
+          {
+            "center_source_px": [
+              831.2617034912109,
+              504.8983840942383
+            ],
+            "diameters_px": [
+              160.79324340820312,
+              236.346923828125
+            ],
+            "angle_deg": 98.23863983154297,
+            "contour_points": 572,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.3427879825027233
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.24462846939963495,
+              0.307800339916154
+            ],
+            "radius_m": 0.05785554236094168,
+            "diameter_m": 0.11571108472188336,
+            "circle_rms_m": 0.0008684160339173146,
+            "second_moment_axis_ratio": 0.9583984374117945
+          },
+          {
+            "ellipse_index": 1,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.24446788806229697,
+              0.30810503028513575
+            ],
+            "radius_m": 0.06054666173352927,
+            "diameter_m": 0.12109332346705853,
+            "circle_rms_m": 0.0005979127417141755,
+            "second_moment_axis_ratio": 0.9724360999495006
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          111.46105109121045,
+          124.27787213161852
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 26,
+      "frame": 150,
+      "role": "fit",
+      "partition": "train",
+      "camera_regime": "late",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep026_f0150_iphone.png",
+      "sha256": "17adc6f93ddd9c2ae6df940ce382f0349d76dbda856dd32ac5c1b0d4652deb4b",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "visual_review": "Full visible ball resting on paper; silhouette retained fromSAM2, no robot pose used",
+        "baseline": {
+          "camera_scenario": "baseline",
+          "radius_assumption_m": 0.0335,
+          "center_mat_m": [
+            0.2341945052070523,
+            0.07520330357127626,
+            -0.030348930666726264
+          ],
+          "support_height_above_mat_mm": -3.151069333273738,
+          "boundary_points": 291,
+          "rms_equivalent_pixels": 0.6459590339035599,
+          "cost": 50.06532361046855
+        },
+        "declared_assumption_height_range_mm": [
+          -35.32409234363229,
+          27.708419029050926
+        ],
+        "physical_height_accepted": false,
+        "limitations": "Envelope is not a confidence interval. It inherits failed shared-camera verification, nominal ball-radius scale, segmentation error and mat plane uncertainty; paper thickness is not independently known."
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              832.3328552246094,
+              503.74017333984375
+            ],
+            "diameters_px": [
+              152.34356689453125,
+              227.97012329101562
+            ],
+            "angle_deg": 98.45695495605469,
+            "contour_points": 1088,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.31719872936744686
+          },
+          {
+            "center_source_px": [
+              832.0226593017578,
+              504.60191345214844
+            ],
+            "diameters_px": [
+              160.99655151367188,
+              236.60215759277344
+            ],
+            "angle_deg": 98.14311981201172,
+            "contour_points": 572,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.34012164697977454
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.24511547045352797,
+              0.3076491070086272
+            ],
+            "radius_m": 0.057958097159670256,
+            "diameter_m": 0.11591619431934051,
+            "circle_rms_m": 0.000855560395215482,
+            "second_moment_axis_ratio": 0.9590729664950431
+          },
+          {
+            "ellipse_index": 1,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.2449066520006166,
+              0.30789300765299243
+            ],
+            "radius_m": 0.06064102751597255,
+            "diameter_m": 0.1212820550319451,
+            "circle_rms_m": 0.0006106485778013533,
+            "second_moment_axis_ratio": 0.9719002638447398
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          111.6590477947383,
+          124.47271384681679
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 28,
+      "frame": 252,
+      "role": "verification",
+      "partition": "train",
+      "camera_regime": "late",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep028_f0252_iphone.png",
+      "sha256": "61a397ec431a76bc5a95dc8cd02a12aae874cfa2b04f5df4d02397926eb3aa68",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "excluded": true,
+        "reason": "Visual review: ball occluded by jaw or bowl, or held off support; a complete spherical tangent cone is unavailable"
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              831.9685211181641,
+              503.18395233154297
+            ],
+            "diameters_px": [
+              152.1762237548828,
+              227.8069305419922
+            ],
+            "angle_deg": 98.41021728515625,
+            "contour_points": 1096,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.3237980534827627
+          },
+          {
+            "center_source_px": [
+              831.6958160400391,
+              504.08068084716797
+            ],
+            "diameters_px": [
+              160.71701049804688,
+              236.48178100585938
+            ],
+            "angle_deg": 98.04981231689453,
+            "contour_points": 571,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.3131293668161944
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.24498918697347413,
+              0.3072405912568776
+            ],
+            "radius_m": 0.057943820919755445,
+            "diameter_m": 0.11588764183951089,
+            "circle_rms_m": 0.000858603264851858,
+            "second_moment_axis_ratio": 0.9589204428742467
+          },
+          {
+            "ellipse_index": 1,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.24479655191341626,
+              0.3075165733477361
+            ],
+            "radius_m": 0.06061113689187644,
+            "diameter_m": 0.12122227378375287,
+            "circle_rms_m": 0.0006389454817784504,
+            "second_moment_axis_ratio": 0.9706027467071497
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          111.6313159797091,
+          124.41359355929242
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 31,
+      "frame": 299,
+      "role": "verification",
+      "partition": "val",
+      "camera_regime": "late",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep031_f0299_iphone.png",
+      "sha256": "446a49bb4c567e735a8e32b62cc5f055fb61d376ab7b4dff0e9c9f5cec2d3653",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "excluded": true,
+        "reason": "Visual review: ball occluded by jaw or bowl, or held off support; a complete spherical tangent cone is unavailable"
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              831.5912628173828,
+              503.71453857421875
+            ],
+            "diameters_px": [
+              152.0325927734375,
+              227.81956481933594
+            ],
+            "angle_deg": 98.4145736694336,
+            "contour_points": 1090,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.3288020989880372
+          },
+          {
+            "center_source_px": [
+              831.2688140869141,
+              504.5073471069336
+            ],
+            "diameters_px": [
+              160.7045440673828,
+              236.30838012695312
+            ],
+            "angle_deg": 98.15001678466797,
+            "contour_points": 571,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.29394847281009523
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.24472771504210683,
+              0.3076297982576712
+            ],
+            "radius_m": 0.05788197735868209,
+            "diameter_m": 0.11576395471736418,
+            "circle_rms_m": 0.0008856164612972355,
+            "second_moment_axis_ratio": 0.9576104965316928
+          },
+          {
+            "ellipse_index": 1,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.2445194601437466,
+              0.3078226234916113
+            ],
+            "radius_m": 0.06055395196416177,
+            "diameter_m": 0.12110790392832355,
+            "circle_rms_m": 0.0006141860203246893,
+            "second_moment_axis_ratio": 0.9716997285517986
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          111.51031513441693,
+          124.29407895546821
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    },
+    {
+      "episode": 13,
+      "frame": 696,
+      "role": "verification",
+      "partition": "val",
+      "camera_regime": "late",
+      "path": "outputs/v2/random_vision_geometry_20261024/ep013_f0696_iphone.png",
+      "sha256": "c3b197e3ed4baa4a7d2376a6efc8d2a7cad81627db84075d92f594ad74febd57",
+      "camera_acceptance": "conditional only; shared-pose held-out residuals exceed the declared3px premise",
+      "mat_frame_convention": "x top-left\u2192top-right, y top-left\u2192bottom-left; visible objects have negative z; height above mat=-z",
+      "ball_support": {
+        "excluded": true,
+        "reason": "Visual review: ball occluded by jaw or bowl, or held off support; a complete spherical tangent cone is unavailable"
+      },
+      "bowl_rim": {
+        "pixel_candidates": [
+          {
+            "center_source_px": [
+              845.9361724853516,
+              484.3627395629883
+            ],
+            "diameters_px": [
+              155.1188507080078,
+              233.33285522460938
+            ],
+            "angle_deg": 97.9866943359375,
+            "contour_points": 561,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.32834121863622573
+          },
+          {
+            "center_source_px": [
+              845.9156188964844,
+              484.36995697021484
+            ],
+            "diameters_px": [
+              155.2850341796875,
+              234.16009521484375
+            ],
+            "angle_deg": 97.88192749023438,
+            "contour_points": 566,
+            "angular_coverage_fraction": 1.0,
+            "radial_rms_px": 0.35396110717059515
+          }
+        ],
+        "baseline_30mm_rim_plane": [
+          {
+            "ellipse_index": 0,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.2546921746429758,
+              0.2932749209659605
+            ],
+            "radius_m": 0.06059269406454686,
+            "diameter_m": 0.12118538812909373,
+            "circle_rms_m": 0.0007526836074241747,
+            "second_moment_axis_ratio": 0.9654489118157451
+          },
+          {
+            "ellipse_index": 1,
+            "camera_scenario": "baseline",
+            "rim_height_assumption_m": 0.03,
+            "center_plane_xy_m": [
+              0.2546825010575088,
+              0.29327046179368044
+            ],
+            "radius_m": 0.06073547695671046,
+            "diameter_m": 0.12147095391342091,
+            "circle_rms_m": 0.0008161141922206024,
+            "second_moment_axis_ratio": 0.9626769089861756
+          }
+        ],
+        "declared_assumption_diameter_range_mm": [
+          116.73560236366288,
+          124.69826069409416
+        ],
+        "operator_inner_plus_wall_outer_diameter_mm": 104.0,
+        "limitations": "Near-complete observed arcs only; inner/outer rim identity remains ambiguous. Radius and elevation of a parallel circular rim cannot both be independently recovered here. Heights and optical assumptions are declared sensitivities, not measured truth."
+      }
+    }
+  ],
+  "conclusions": [
+    "Nominal-camera/ball-radius assumptions imply negative support heights (-2.9 to -3.9mm) in three unobscured fitting captures. These are physically inconsistent diagnostics, not measured negative paper thickness; sensitivity spans approximately -36 to +28mm.",
+    "Complete rim-arc candidates imply conditional bowl diameters around116-121mm at a declared30mm rim elevation, compared with104mm from supplied inner radius plus wall. The full declared optical/height envelope is roughly111-125mm and not a confidence interval. Keep supplied values unchanged until identity/height/scale/camera assumptions are resolved.",
+    "Wrist false-positive class predictions and occlusion prevent reliable independent optical calibration from the sampled wrist views.",
+    "RGB segmentation does not identify mass, friction, compliance, force response, hidden jaw gaps or independent physical joint zeros. Robot-base registration remains required for metric labels."
+  ]
+}

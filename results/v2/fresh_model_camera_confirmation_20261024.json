@@ -1,0 +1,170 @@
+{
+  "schema": "v2_fresh_model_camera_confirmation_v1",
+  "physical_calibration_accepted": false,
+  "seed": 2026102402,
+  "frames": [
+    {
+      "episode": 2,
+      "frame": 82,
+      "camera_regime": "early",
+      "role": "confirmation",
+      "path": "outputs/v2/fresh_camera_confirmation_20261024/ep002_f0082_iphone.png",
+      "sha256": "f9263c314844141ed6b7045647e88772e4d37ce9f4534759ca86927639bf50bb",
+      "status": "scored_original_camera_without_refit",
+      "corners_source_px": [
+        [
+          448.236693463284,
+          209.3949395134232
+        ],
+        [
+          883.5479271626019,
+          210.75707993686973
+        ],
+        [
+          1011.6909715021943,
+          677.4189448426334
+        ],
+        [
+          369.97604641392445,
+          683.2789402121338
+        ]
+      ],
+      "original_camera_prediction_px": [
+        [
+          430.19282014082364,
+          215.28373385526115
+        ],
+        [
+          865.9960444016456,
+          208.39376877229668
+        ],
+        [
+          1015.6065944017301,
+          672.862009098243
+        ],
+        [
+          374.93734342619234,
+          693.8375357130932
+        ]
+      ],
+      "per_corner_error_px": [
+        18.980496918612502,
+        17.710274648207808,
+        6.008141648619205,
+        11.666122191920456
+      ],
+      "rms_px": 14.543978689298731,
+      "p95_px": 18.789963578051797,
+      "passes_3px": false
+    },
+    {
+      "episode": 15,
+      "frame": 19,
+      "camera_regime": "late",
+      "role": "confirmation",
+      "path": "outputs/v2/fresh_camera_confirmation_20261024/ep015_f0019_iphone.png",
+      "sha256": "8358dcec61382e764d84299c4cd635a9c8d8f8789f7bbaa0487cce944633d89d",
+      "status": "scored_original_camera_without_refit",
+      "corners_source_px": [
+        [
+          431.06557885622345,
+          221.41872028193907
+        ],
+        [
+          853.5881769231753,
+          210.36269970970073
+        ],
+        [
+          1006.2063612742672,
+          658.180374448319
+        ],
+        [
+          385.1827478058727,
+          686.4675714968163
+        ]
+      ],
+      "original_camera_prediction_px": [
+        [
+          415.11494808165133,
+          228.23463421920448
+        ],
+        [
+          843.0190131986845,
+          221.15717509899267
+        ],
+        [
+          979.6197265296696,
+          683.8418312148603
+        ],
+        [
+          345.99300214343975,
+          704.0415012989715
+        ]
+      ],
+      "per_corner_error_px": [
+        17.34587284938224,
+        15.107214196042909,
+        36.950771445583094,
+        42.94972844823656
+      ],
+      "rms_px": 30.57427803674617,
+      "p95_px": 42.04988489783854,
+      "passes_3px": false
+    }
+  ],
+  "all_frames_pass_3px": false,
+  "parameters_refitted": false,
+  "rules_adapted_after_confirmation": false,
+  "reserved_episodes_used": [],
+  "frozen_plan": {
+    "schema": "v2_fresh_camera_confirmation_plan_v1",
+    "seed": 2026102402,
+    "created_at_utc": "2026-10-24T05:59:27.199676+00:00",
+    "frozen_files_sha256": {
+      "outputs/v2/model_multiframe_camera_20261024_v4/report.json": "a68be5d8ac650199503d2cc5958c2fedf3e6c96802001ed3e83cac6bbf5abb93",
+      "outputs/v2/model_mat_edges_20261024_v4/executed_extractor.py": "e0638d71ade5e7caf4e1a6d20ec8c4216fd1e09d7137f9a87a7f35f8120bb264",
+      "outputs/v2/random_vision_geometry_20261024/selection.json": "a102c61df48682e07da315764ac1f9ae855d3ead2a44ab17ad76aeeb6743d1df",
+      "scripts/measure_v2_vision_geometry.py": "5778c7d538dd9331ebb29eedf60973a5eca2ab691a4a11b8c2b50d74768c3053",
+      "results/v2/split.json": "458c5d8900a98ba86f4cff27aebce90d73b9d75f285bade18c1b3524f9e76ce5",
+      "/Users/deveshvyas/Downloads/real2sim/scripts/confirm_v2_model_camera.py": "d754149c94047ac2fe2596e24f9c5d00364ad1311c1116e9d04d9ef57d64a830"
+    },
+    "original_episodes_excluded": [
+      0,
+      4,
+      5,
+      13,
+      26,
+      27,
+      28,
+      31
+    ],
+    "selections": [
+      {
+        "episode": 2,
+        "frame": 82,
+        "camera_regime": "early",
+        "role": "confirmation",
+        "partition": "train"
+      },
+      {
+        "episode": 15,
+        "frame": 19,
+        "camera_regime": "late",
+        "role": "confirmation",
+        "partition": "train"
+      }
+    ],
+    "rule": "Both frames are confirmation only. No model prompt, edge rule, camera K/T, bounds, parameter or frame substitution may change after this plan. Missing/failed measurements remain explicit failures; reserved episodes are excluded.",
+    "working_corner_rms_threshold_px": 3.0,
+    "reserved_episodes_used": []
+  },
+  "frozen_plan_sha256": "cc37ca7c247bf153627b8edf9aa705eb6f072cb1bc55c42ee115ae51253acbc2",
+  "artifact_sha256": {
+    "outputs/v2/fresh_camera_confirmation_20261024/selection.json": "c63b9a6d583f3bf567ab62d1ef1102bf16054e786b8ada6aca1ff425fa1291c1",
+    "outputs/v2/fresh_camera_confirmation_models_20261024/report.json": "ea49220cc5504efe97fd15e62380425e1e75172853edbed3abfc570cf16e8ea2",
+    "outputs/v2/fresh_camera_confirmation_edges_20261024/annotations.json": "a7e5e97e0101169853b054d725f0c65e2c195e4f81b7d8dc005ef995ed3dad64",
+    "outputs/v2/model_multiframe_camera_20261024_v4/report.json": "a68be5d8ac650199503d2cc5958c2fedf3e6c96802001ed3e83cac6bbf5abb93",
+    "outputs/v2/model_mat_edges_20261024_v4/executed_extractor.py": "e0638d71ade5e7caf4e1a6d20ec8c4216fd1e09d7137f9a87a7f35f8120bb264"
+  },
+  "interpretation": "Fresh measurement-pipeline confirmation independent of the eight development frames, under the same conditional mat dimensions/optical assumptions. Passing two images would not identify all intrinsics, verify CAD identities or establish physical calibration. Failure receives no fitting, detector changes or frame replacement."
+}

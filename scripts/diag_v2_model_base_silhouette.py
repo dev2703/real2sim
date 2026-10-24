@@ -16,15 +16,23 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 from real2sim.data.raw import sha256_file
-from scripts.diag_v2_multiframe_camera import project
-from scripts.diag_v2_static_base_camera import base_transform, native_base_mesh
+
+try:
+    from scripts.diag_v2_multiframe_camera import project
+    from scripts.diag_v2_static_base_camera import base_transform, native_base_mesh
+except ModuleNotFoundError as exc:
+    if exc.name != "scripts":
+        raise
+    from diag_v2_multiframe_camera import project
+    from diag_v2_static_base_camera import base_transform, native_base_mesh
 
 
-def projected_top_surface(vertices, faces, *, K, T_optical_base, shape_hw, wing_sign):
-    """Rasterize only exact nominal foot-top triangles; no renderer or model mutation."""
+def projected_top_surface(vertices, faces, *, K, T_optical_base, shape_hw, wing_sign, include_sidewalls=False):
+    """Rasterize the nominal foot top or complete lower foot, without model mutation."""
     vertices, faces = np.asarray(vertices), np.asarray(faces)
     triangle = vertices[faces]
-    selected = np.all(np.abs(triangle[:, :, 2] - .0151) < 1e-6, axis=1)
+    selected = (np.all(triangle[:, :, 2] <= .0151 + 1e-6, axis=1) if include_sidewalls else
+                np.all(np.abs(triangle[:, :, 2] - .0151) < 1e-6, axis=1))
     selected &= np.mean(triangle[:, :, 1], axis=1) * wing_sign > 0
     if wing_sign not in (-1, 1) or not selected.any():
         raise ValueError("one nominal foot wing with exact top-surface faces is required")
@@ -99,21 +107,25 @@ def run(mask_document, camera_path, prior_path, out):
                 T_optical_base=transform, shape_hw=mask.shape, wing_sign=alias["wing_sign"])
             score = {"prior_basin_index": i, "xy_yaw_radians": alias["xy_yaw_radians"],
                      "wing_sign": alias["wing_sign"], **compare_masks(mask, projection)}
+            solid = projected_top_surface(vertices, faces, K=camera["K"], T_optical_base=transform,
+                                          shape_hw=mask.shape, wing_sign=alias["wing_sign"], include_sidewalls=True)
+            score["solid_lower_foot"] = compare_masks(mask, solid)
             scores.append(score)
-            overlay = source.copy()
-            for footprint, color in ((mask, (0, 220, 0)), (projection, (0, 0, 255))):
-                points = boundary(footprint).astype(int)
-                overlay[points[:, 1], points[:, 0]] = color
-            cv2.imwrite(str(out / f"ep{row['episode']:02d}_f{row['frame']:04d}_basin{i}.png"), overlay)
+            for label, nominal in (("top", projection), ("solid", solid)):
+                overlay = source.copy()
+                for footprint, color in ((mask, (0, 220, 0)), (nominal, (0, 0, 255))):
+                    points = boundary(footprint).astype(int)
+                    overlay[points[:, 1], points[:, 0]] = color
+                cv2.imwrite(str(out / f"ep{row['episode']:02d}_f{row['frame']:04d}_basin{i}_{label}.png"), overlay)
         output_rows.append({**row, "scores": scores})
     report = {"schema": "v2_model_fixed_foot_contour_check_v1", "physical_calibration_accepted": False,
               "robot_joint_readings_used": False, "production_inputs_changed": False,
               "all_candidates_retained_without_adoption": True, "reserved_episodes_used": [],
               "native_foot_top_plane_z_m": .0151,
-              "method": "Project the exact pinned CAD top triangles for each previously declared wing/XY/yaw basin through the new conditional mat camera. Compare every model-mask external component with uncapped bidirectional nearest-contour errors; report IoU separately. No frame pixels refit a base pose.",
+              "method": "Project the exact pinned CAD top triangles and, separately, all lower-foot triangles including sidewalls for each previously declared wing/XY/yaw basin through the new conditional mat camera. Compare every model-mask external component with uncapped bidirectional nearest-contour errors; report IoU separately. No frame pixels refit a base pose.",
               "frames": output_rows,
               "limitations": ["SAM-visible foot material is not an independently registered CAD identity.",
-                  "Nominal top-plane projection omits visible side thickness, occlusion by the holder/arm/clamp and print/CAD mismatch.",
+                  "Nominal top-plane projection omits visible side thickness. The separate solid-lower-foot projection includes sides but both omit holder/arm/clamp occlusion and print/CAD mismatch.",
                   "Mat camera and mat/base height remain conditional assumptions. A better contour score cannot grant physical calibration or joint-zero acceptance.",
                   "Prior candidate basins came from an earlier explored training foot image. New capture scores can reject inconsistency but do not turn ambiguous matches into metrology."],
               "provenance_sha256": {str(path): sha256_file(path) for path in (mask_document, camera_path, prior_path, Path(__file__), split_path,

@@ -1,5 +1,9 @@
 # Corrective experiments after approach failure — 24 October 2026
 
+The later [vision alignment and bottleneck experiments](v2_vision_alignment_and_bottlenecks_20261024.md)
+add actual pretrained-model measurements, fresh camera confirmation, auxiliary
+localization and matched next-follower joint supervision.
+
 The explicit ball-input pilot does **not** establish an improvement or task success.
 Both matched candidates fail all three bounded development approach trials. Offline
 motion errors worsen with ball features at this small budget. The implementation

@@ -10,6 +10,7 @@ import pytest
 from real2sim.data.raw import sha256_file
 from scripts import diag_v2_multiframe_camera as diagnostic
 from scripts.diag_v2_model_base_silhouette import compare_masks
+from scripts.extract_v2_model_mat_edges import source_edges
 
 
 def synthetic_camera():
@@ -128,3 +129,26 @@ def test_uncapped_bidirectional_contour_scores_retain_extra_model_components():
     extra = mask.copy()
     extra[95:105, 120:140] = True
     assert compare_masks(extra, mask)["observed_to_nominal"]["max_px"] > 30
+
+
+def test_model_cut_around_white_gripper_does_not_become_physical_top_edge():
+    image = np.full((300, 380, 3), 200, np.uint8)
+    mask = np.zeros(image.shape[:2], np.uint8)
+    quad = np.array([[60, 40], [300, 40], [340, 260], [30, 260]])
+    cv2.fillConvexPoly(mask, quad, 1)
+    image[mask.astype(bool)] = 40
+    # A longer interior white-gripper cut must not replace the shorter, visible
+    # outer top pieces at y40. This is synthetic geometry, not a measured image.
+    mask[20:80, 110:250] = 0
+    image[20:80, 110:250] = 230
+    samples, info = source_edges(mask.astype(bool), image)
+    top = np.asarray(samples["top"])
+    assert np.max(np.abs(top[:, 1] - 40)) < 2
+    assert info["top"]["visible_span_px"] > 80
+
+
+def test_model_mask_alone_cannot_override_missing_raw_image_contrast():
+    mask = np.zeros((300, 380), np.uint8)
+    cv2.fillConvexPoly(mask, np.array([[60, 40], [300, 40], [340, 260], [30, 260]]), 1)
+    with pytest.raises(ValueError, match="contrast"):
+        source_edges(mask.astype(bool), np.full((300, 380, 3), 100, np.uint8))
