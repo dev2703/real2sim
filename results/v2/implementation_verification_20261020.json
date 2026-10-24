@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-20",
+  "combined_unit_and_targeted_integration": {
+    "passed": 498,
+    "seconds": 44.37
+  },
+  "additional_data_and_DINO_CLIP_cache_lifecycle": {
+    "passed": 18,
+    "seconds": 47.64
+  },
+  "final_kinematics_checks": {
+    "passed": 6,
+    "seconds": 1.21
+  },
+  "note": "Follow-up suites overlap the combined run; counts must not be summed as unique tests. Synthetic/offline checks are not learned task success.",
+  "cleanup": {
+    "baseline_bytes": 408903018,
+    "current_bytes_before_this_report": 80532785,
+    "reduction_percent": 80.30516248231751,
+    "protected_paths_present": true,
+    "archive_restore_sha256_verified": true
+  },
+  "v2_learning_started": false,
+  "pending": [
+    "measured task-coordinate shift vectors (semantic direction and episode IDs now reviewed)",
+    "measured camera/jaw/base/table calibration",
+    "phase annotations and demonstrated loaded retention",
+    "reference placements and tiny-set acceptance"
+  ],
+  "followup_controller_protocol_checks": {
+    "passed": 19,
+    "seconds": 2.69
+  },
+  "executed_diagnostics": {
+    "controller_comparisons": 36,
+    "controller_report": "results/v2/kinematic_control_diagnosis_v2.json",
+    "full_geometry_report": "results/v2/r0_full_geometry_scan_v1.json",
+    "episodes": 41,
+    "in_limit_poses_scanned": 9392,
+    "out_of_limit_poses": 4486,
+    "table_collision_episodes": 36,
+    "self_collision_episodes": 40,
+    "provisional": true,
+    "phase_annotations_pending": true,
+    "kinematic_projection_promoted": false
+  },
+  "condition_review_update_20261021": {
+    "report": "results/v2/condition_review_v1.json",
+    "split": "results/v2/split.json",
+    "counts": [
+      32,
+      4,
+      5
+    ],
+    "unit_protocol_tests_passed": 14
+  }
+}

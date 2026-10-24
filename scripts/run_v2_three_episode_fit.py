@@ -85,9 +85,11 @@ def audit_training_checkpoint(checkpoint: Path, data: Path, device: str) -> dict
     return report
 
 
-def run(data: Path, out: Path, device: str):
-    if out.exists():
+def run(data: Path, out: Path, device: str, *, resume: bool = False):
+    if out.exists() and not resume:
         raise FileExistsError(out)
+    if resume and not out.is_dir():
+        raise FileNotFoundError(out)
     base = load_yaml(Path("outputs/v2/learning_screen_20261022/configs/L1_resnet_iphone.yaml"))
     cfg = copy.deepcopy(base)
     cfg.update(name="three_episode_deterministic_capacity", data=str(data.resolve()))
@@ -102,9 +104,13 @@ def run(data: Path, out: Path, device: str):
                           "scope": "training-fit only; original provisional FK and current labels; no geometry or task-success claim",
                           "stopping": "Check the final checkpoint at 16,000 examples; continue identical optimizer/RNG to 32,000 only if per-episode fit/movement/drift gate fails"}
     torch.set_num_threads(2)
-    out.mkdir(parents=True)
-    (out / "plan.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
-    (out / "executed_runner.py").write_bytes(Path(__file__).read_bytes())
+    if resume:
+        if load_yaml(out / "plan.yaml") != cfg:
+            raise ValueError("resume must retain the original plan, data path and device")
+    else:
+        out.mkdir(parents=True)
+        (out / "plan.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
+        (out / "executed_runner.py").write_bytes(Path(__file__).read_bytes())
     dependencies = [Path(__file__), Path("src/real2sim/policy/train.py"),
                     Path("src/real2sim/policy/act.py"), Path("src/real2sim/policy/dataset.py"),
                     Path("src/real2sim/policy/validation.py"), data / "manifest.json", data / "stats.json"]
@@ -113,10 +119,46 @@ def run(data: Path, out: Path, device: str):
               "training_episodes": list(EPISODES), "gate_version": GATE_VERSION,
               "source_sha256": {str(p): sha256_file(p) for p in dependencies},
               "stages": [], "limitations": "Training-fit diagnostic under provisional FK. Includes recorded references outside native bounds; their presence is not simulator feasibility or physical calibration. No validation or reserved performance is established."}
+    resume_checkpoint = None
+    if resume:
+        path = out / "report.json"
+        if path.exists():
+            report = json.loads(path.read_text())
+            if report["gate_version"] != GATE_VERSION:
+                raise ValueError("cannot change the gate during a resumed run")
+            for name, digest in report["source_sha256"].items():
+                if name != str(Path(__file__)) and sha256_file(Path(name)) != digest:
+                    raise ValueError(f"resume dependency changed: {name}")
+        else:
+            report["initial_report_missing"] = "Earlier runner wrote its first report only at a completed stage; recovered source hashes begin at restart. Checkpoint contract verifies original data and statistics."
+        resume_checkpoint = (out / "training/checkpoints/last").resolve()
+        info = json.loads((resume_checkpoint / "run_info.json").read_text())
+        if info.get("diagnostic_episodes") != list(EPISODES) or info.get("scheduler_total_steps") != 2000:
+            raise ValueError("checkpoint is not from this bounded training plan")
+        snapshot = out / f"resume_runner_{info['step']:06d}.py"
+        snapshot.write_bytes(Path(__file__).read_bytes())
+        report.setdefault("interruptions", []).append({"resumed_from_step": info["step"],
+            "checkpoint": str(resume_checkpoint),
+            "training_state_sha256": sha256_file(resume_checkpoint / "training_state.pt"),
+            "runner_snapshot": str(snapshot.resolve()), "runner_sha256": sha256_file(snapshot),
+            "scope": "Restore saved optimizer, sampler and RNG; recompute any unsaved updates under the original schedule."})
+    (out / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     for steps in (1000, 2000):
+        if report.get("gate_passed"):
+            break
+        if any(stage["examples_seen"] == steps * 16 for stage in report["stages"]):
+            continue
         cfg["train"]["steps"] = steps
-        resume = None if steps == 1000 else (out / "training/checkpoints/001000")
-        result = train(cfg, data, out / "training", resume=resume)
+        restored_step = (json.loads((resume_checkpoint / "run_info.json").read_text())["step"]
+                         if resume_checkpoint is not None else 0)
+        if restored_step > steps:
+            raise ValueError("completed earlier stage audit is missing; do not silently skip the gate")
+        if restored_step == steps:
+            info = json.loads((resume_checkpoint / "run_info.json").read_text())
+            result = {"steps": steps, "device": info["device"],
+                      "recovered_completed_checkpoint_for_audit": True}
+        else:
+            result = train(cfg, data, out / "training", resume=resume_checkpoint)
         ck = (out / "training/checkpoints/last").resolve()
         audited = audit_training_checkpoint(ck, data, result["device"])
         audit_path = out / f"training_motion_{steps:06d}.json"
@@ -128,6 +170,7 @@ def run(data: Path, out: Path, device: str):
         report.update(gate_passed=gate["pass"], total_examples_seen=steps * 16)
         (out / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
         print(json.dumps({"steps": steps, "gate": gate}), flush=True)
+        resume_checkpoint = ck
         if gate["pass"]:
             break
     return report
@@ -138,6 +181,7 @@ if __name__ == "__main__":
     parser.add_argument("--data", type=Path, default=Path(".cache/v2_exploratory_20261022/cartesian_iphone"))
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", default="auto")
+    parser.add_argument("--resume", action="store_true", help="Resume the same saved plan from its last exact checkpoint")
     args = parser.parse_args()
-    result = run(args.data, args.out, args.device)
+    result = run(args.data, args.out, args.device, resume=args.resume)
     print(json.dumps({"gate_passed": result["gate_passed"], "total_examples_seen": result["total_examples_seen"]}))

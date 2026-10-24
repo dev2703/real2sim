@@ -1,0 +1,60 @@
+{
+  "version": "geometry_alignment_verification_20261021_v1",
+  "physical_calibration_accepted": false,
+  "production_task_config_changed": false,
+  "training_started": false,
+  "operator_setup_record": "configs/v2/setup_provenance_20261021.json",
+  "checks": [
+    {
+      "command": ".venv/bin/pytest -q tests/unit tests/integration/test_v2_reference_clipping.py tests/integration/test_v2_kinematics.py tests/integration/test_v2_panda_controller.py",
+      "passed": 528,
+      "failed": 1,
+      "failure": "macOS CoreGraphics unavailable inside sandbox in test_camera_fit.py::test_opencv_to_mujoco_rendered_sphere_matches_cv2_projection",
+      "resolution": "Same rendering test passed with CoreGraphics access in subsequent run; wrist tests were extended after this collection."
+    },
+    {
+      "command": ".venv/bin/pytest -q tests/unit/test_camera_fit.py::test_opencv_to_mujoco_rendered_sphere_matches_cv2_projection tests/unit/test_v2_geometry_cli.py tests/integration/test_v2_cameras.py tests/integration/test_so101_scene.py::test_real_unit_adapters_round_trip tests/integration/test_so101_scene.py::test_scene_uses_task_yaml_single_source tests/integration/test_so101_scene.py::test_observation_schema_and_no_privileged_state",
+      "passed": 31,
+      "failed": 0,
+      "note": "Includes 25 synthetic calibration tests; test counts overlap previous run."
+    },
+    {
+      "command": ".venv/bin/ruff check .",
+      "passed": true
+    },
+    {
+      "command": "git diff --check",
+      "passed": true
+    },
+    {
+      "check": "Both diagnostic report script hashes match generating files; new report local links resolve",
+      "passed": true
+    }
+  ],
+  "artifacts_sha256": {
+    "configs/v2/setup_provenance_20261021.json": "53d61cf86d443d01d42e998bf952816a41aeabaaf42ac9aa7429b8992092ad92",
+    "configs/v2/measurements.template.json": "bfbd276c06ffea6c982df8a921c76735b00928cfc2589640be431e507c3f634e",
+    "configs/v2/geometry_landmarks.template.json": "adea0895d52a27dfed7f2402cfdd0b8f49f783a316abf2ac4df8115b6f43c277",
+    "docs/v2_geometry_alignment_20261021.md": "72e5ca983db3416f06e810db76a2121d084aaa3342d0c531b37dfdcd5456353c",
+    "src/real2sim/geometry/so101_fk.py": "0a918095d5794309e4a68e60b3b485fa3aeda029201eff5ee861e7f541051395",
+    "src/real2sim/geometry/registration.py": "2c88971b930e84aa7a6118843106c32b8ba0dcb173b167e8bf4da2b2e9855d3b",
+    "src/real2sim/sim/env.py": "85ec03555f325c1c8a9f742c23e9e64cddd1253d2a9bfdea0856007dc5b866bd",
+    "src/real2sim/sim/camera_fit.py": "9a03fb7d8fb2dfa79249d024061e4166d40156abba53b3c379b859041ad3dc5b",
+    "src/real2sim/policy/adapters.py": "0ede60ee000494a2b963f329044be0728db5c0f0ff2355c1ab09d79bc1761597",
+    "scripts/fit_v2_geometry.py": "8e744941a7bfec3ef55eff029c53dc9fdbc42359f95aec49a27e13e833e781ea",
+    "scripts/diag_v2_geometry_collision.py": "e6444001b340f413abb6db1226feeea6c808540baca7ab304c088f55aa5b1b75",
+    "scripts/diag_v2_mapping.py": "86dab7ab55b774f22be40b9fa61ea7635ad73b7cc4ec18dd788a3fd393169114",
+    "scripts/replay_v2_references.py": "24447b61383ce0a69f70528b0bf6621d3ea4f9d46a2636c13ab6ce114149a708",
+    "scripts/diag_v2_kinematic_control.py": "186a7686c0ec2e95bd7a66a38e5efeb69d4524825db1af660525b83e6459b901",
+    "results/v2/geometry_collision_cad_20261021_v1.json": "b63d203b75a05c66f24b78d8227062b118c2da87e9796eb56fe19a9f60a24042",
+    "results/v2/mapping_gripper_20261021_v1.json": "670658d7b547979ee74aeced4c3d9721894ef6ab5468cba6dfa144f0cdbb2252"
+  },
+  "pending_physical_checks": [
+    "joint zero/sign and base/table registration",
+    "independent iPhone intrinsics/extrinsics",
+    "jaw gap/closure/drive relation",
+    "wrist intrinsics and rigid link transform",
+    "phase-reviewed reference replay and loaded retention"
+  ],
+  "no_automatic_promotion": true
+}

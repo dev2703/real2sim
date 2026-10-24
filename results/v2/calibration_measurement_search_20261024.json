@@ -1,0 +1,118 @@
+{
+  "schema": "local_calibration_measurement_search_v1",
+  "date": "2026-10-24",
+  "scope": "Read-only targeted local search requested by user; no secrets or unrelated document contents included.",
+  "method": "rg --files -uuu and rg --no-ignore --hidden with calibration/intrinsic/measurement/jaw/hold/release/trace/landmark patterns; cat of plausible JSON/YAML/CSV; source vs fitted provenance reviewed.",
+  "searched_locations": [
+    "/Users/deveshvyas/Downloads/real2sim",
+    "/Users/deveshvyas/Downloads/lerobot",
+    "/Users/deveshvyas/Downloads/ai-agnets",
+    "/Users/deveshvyas/Downloads/financial_agent",
+    "/Users/deveshvyas/Desktop",
+    "/Users/deveshvyas/Documents",
+    "/Users/deveshvyas/.cache/huggingface/lerobot",
+    "/Users/deveshvyas/data/ros2_ws",
+    "/Users/deveshvyas/data/ros2_ws_hw2",
+    "/Users/deveshvyas/.ros",
+    "/Users/deveshvyas/.config/ros.org",
+    "/Users/deveshvyas/.gz",
+    "/Users/deveshvyas/.ignition"
+  ],
+  "not_present": "/Users/deveshvyas/.cache/calibration",
+  "exclusions": "Git internals, virtualenv/package caches, node_modules, weight files, unrelated private document contents. Robot CAD inspected only for provenance and nominal transforms.",
+  "candidate_evidence": [
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/configs/task.yaml",
+      "exists": true,
+      "sha256": "420c379424f7c142fedb6dec86c07ea3420b534519fa127e9a5b416ae8386b9e",
+      "classification": "operator_measurements_and_fitted_fields",
+      "interpretation": "Contains independently supplied scalar table/mat/camera distance-height/bowl measurements; fitted focal length/pose, provisional joint zeros and nominal jaw conversion are separate."
+    },
+    {
+      "path": "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json",
+      "exists": true,
+      "sha256": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+      "classification": "motor_encoder_calibration",
+      "interpretation": "Actual encoder homing offsets and endpoint ranges, not measured physical joint-axis zeros or jaw gaps."
+    },
+    {
+      "path": "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/aligned_leader.json",
+      "exists": true,
+      "sha256": "2032a3d2d5227f30c582b9ba446c944ef667a7c996d594090973145b5ed7cc94",
+      "classification": "motor_encoder_calibration",
+      "interpretation": "Actual leader encoder homing offsets/ranges; commands can be limiter-generated and are not readbacks."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/lerobot/so101-calibration-backup/follower/aligned_follower.json",
+      "exists": true,
+      "sha256": "67a9b4441581c9fe66885e301b72268ee463b29a19f4fce439139028a61f17f9",
+      "classification": "historical_motor_encoder_calibration",
+      "interpretation": "Backup uses different endpoints/homing; no independent source-image/metric-jaw registration."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/results/audit/camera_fit/operator_anchored_20261013/camera_measured.json",
+      "exists": true,
+      "sha256": "acb3c8df8602e94ce9d1592a53083ea8709bdeb3df7c213f1bbda27f74cd9646",
+      "classification": "historical_fit_conditioned_on_fk",
+      "interpretation": "Filename says measured, but focal/orientation/camera-X/mat placement were fitted to provisional FK and mat pixels. Joint RMS77.574px, mat RMS40.785px."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/results/audit/camera_landmark_refit_20261014/landmarks.json",
+      "exists": true,
+      "sha256": "21c7f29bbc831c4a605d7c9a2cc17daaac556a6e595e3265e1651326fd4114a4",
+      "classification": "manual_v1_image_annotations",
+      "interpretation": "Real image joint-horn pixels with15-25px uncertainty; no independently registered camera/task XYZ and not v2 physical acceptance."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/results/audit/geometry_control_20261016/g1_jaw_review/annotations.json",
+      "exists": true,
+      "sha256": "93dfe8f36ef79f09f7ed5e0f8eec5c019443f9a7ef8d922aa9a9c7315f296239",
+      "classification": "manual_v1_jaw_image_annotations",
+      "interpretation": "Explicitly APPROXIMATE_INDEPENDENT_IMAGE_JAW_TIPS_NOT_PHYSICAL_CALIBRATION.10px uncertainty and uncertain fixed/moving jaw identity; not metric gap measurements."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cad_landmarks_20261021/static_landmarks.json",
+      "exists": true,
+      "sha256": "35f49a370a2d36c8af2d1070439d70fe0f893519fe9ef03bcd5ea160e7c10017",
+      "classification": "nominal_cad_landmarks",
+      "interpretation": "Nominal metric CAD anchors; physical_identity_verified=false, image associations unverified."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/configs/so101_root_cause_hold_annotations.csv",
+      "exists": true,
+      "sha256": "d5d75dcfdc3ec8a54857044106cf7e30cadc8e4e1ce9ed67d3b4d587cb39fa13",
+      "classification": "unfilled_hold_annotation_plan",
+      "interpretation": "Frame start/end fields empty; not measured loaded/unloaded hold intervals."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/configs/v2/measurements.template.json",
+      "exists": true,
+      "sha256": "bfbd276c06ffea6c982df8a921c76735b00928cfc2589640be431e507c3f634e",
+      "classification": "unfilled_metrology_template",
+      "interpretation": "Camera intrinsics/transforms, measured jaw openings, loaded trace sessions and hold frames unfilled."
+    },
+    {
+      "path": "/Users/deveshvyas/Downloads/real2sim/configs/v2/geometry_landmarks.template.json",
+      "exists": true,
+      "sha256": "adea0895d52a27dfed7f2402cfdd0b8f49f783a316abf2ac4df8115b6f43c277",
+      "classification": "unfilled_registration_template",
+      "interpretation": "Independent static/joint/wrist measured correspondence slots unfilled."
+    },
+    {
+      "path": "/Users/deveshvyas/data/ros2_ws/src/so101_description/urdf/so101_cameras.xacro",
+      "exists": true,
+      "sha256": "93cccb5bc6a756982f130265f42d3cc76cebaec93fe09466c3a3fb67d4af7918",
+      "classification": "configurable_nominal_camera_frames",
+      "interpretation": "Static xyz0.2,0,0.60 and wrist xyz0,0,-0.02 are configurable defaults; no intrinsics or distortion."
+    },
+    {
+      "path": "/Users/deveshvyas/data/ros2_ws/src/so101_description/urdf/legacy/so101_new_calib.urdf",
+      "exists": true,
+      "sha256": "c9f64f98f93b71800e9e020aa40f33044b5d6da15eae35574e96fa9b8c3cf129",
+      "classification": "generated_onshape_cad",
+      "interpretation": "Generated using onshape-to-robot.5degree offset comment is not an independent measured-pose record."
+    }
+  ],
+  "finding": "Actual scalar operator measurements and motor encoder calibrations were located and retained. Additional independent source-resolution intrinsics/distortion, registered static/joint metric correspondence, measured jaw-gap openings and physical loaded hold/release traces did not surface in the searched locations. This does not establish absence elsewhere.",
+  "physical_calibration_accepted": false
+}

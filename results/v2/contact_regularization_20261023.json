@@ -1,0 +1,397 @@
+{
+  "kind": "EXACT_LOADED_STATE_CONTACT_REGULARIZATION_SENSITIVITY_NOT_LEARNED_POLICY",
+  "physical_calibration_accepted": false,
+  "production_physics_changed": false,
+  "diagnostic_script": "scripts/diag_so101_contact_regularization.py",
+  "official_reference": "https://mujoco.readthedocs.io/en/stable/modeling.html#preventing-slip",
+  "protocol": {
+    "hold_seconds": 30,
+    "same_full_integration_state_for_each_option": true,
+    "original_scene_seeds": [
+      0,
+      4,
+      20
+    ],
+    "image_scene_cases": [
+      "fixed observed placement with conditional10mm rigid support"
+    ],
+    "unchanged": "Geometry, friction, mass, gains, commands, joint limits, collision gates and scoring",
+    "strict_rule": "Both jaws positive force>0.01N, ball>30mm above initial support rest, ball/tool drift<=10mm at every10Hz sample"
+  },
+  "effective_jaw_ball_contact": {
+    "geom": "fixed_jaw_sph_tip1",
+    "dimension": 6,
+    "friction": [
+      1.0,
+      1.0,
+      0.005,
+      0.0005,
+      0.0005
+    ],
+    "solref": [
+      0.01,
+      1.0
+    ],
+    "solimp": [
+      0.9,
+      0.95,
+      0.001,
+      0.5,
+      2.0
+    ],
+    "jaw_priority": 1,
+    "ball_priority": 0
+  },
+  "runs": [
+    {
+      "scene": "original_no_spacer",
+      "seed": 0,
+      "report": "outputs/v2/contact_regularization_original_seed0_20261023/report.json",
+      "report_sha256": "ab25ccaa1db1ff06bbfb0b91b3ceb294dd9f99e97cbf209a11e82e74addd0d89",
+      "all_source_sha256_stable": true,
+      "trials": [
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": false,
+            "first_force_bilateral_loss_s": 4.3,
+            "first_strict_retention_failure_s": 3.2,
+            "max_ball_displacement_tool_m": 0.2642819010210942,
+            "final_ball_displacement_tool_m": 0.2642819010210942,
+            "end_force_bilateral": false,
+            "max_tool_target_error_m": 0.0004900491597754173,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.002419524200119366,
+          "first2s_mean_friction_utilization": 0.6542252745671263,
+          "first2s_max_friction_utilization": 0.9999875534253072,
+          "first2s_force_weighted_friction_utilization": 0.5516422965870773,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.05932244471811049,
+          "first2s_mean_sum_jaw_normal_n": 66.90749144379498,
+          "first2s_ball_tool_displacement_m": 0.005699519405478152
+        },
+        {
+          "impratio": 100.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 0.00941119767212043,
+            "final_ball_displacement_tool_m": 0.00941119767212043,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.0004903028196942113,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.00029976309135435175,
+          "first2s_mean_friction_utilization": 0.6051457428327384,
+          "first2s_max_friction_utilization": 0.9999275568075445,
+          "first2s_force_weighted_friction_utilization": 0.49739232843061015,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.04598188273730727,
+          "first2s_mean_sum_jaw_normal_n": 70.12833130879656,
+          "first2s_ball_tool_displacement_m": 0.0006646350411130812
+        },
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 3,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 0.00016334364810131473,
+            "final_ball_displacement_tool_m": 9.004600719756601e-05,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.0004899275520668683,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 9.140742850372369e-05,
+          "first2s_mean_friction_utilization": 0.5956367019644959,
+          "first2s_max_friction_utilization": 0.9999465123270911,
+          "first2s_force_weighted_friction_utilization": 0.4881594875700549,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.045162123394967675,
+          "first2s_mean_sum_jaw_normal_n": 73.11074457896169,
+          "first2s_ball_tool_displacement_m": 9.349566990575478e-05
+        }
+      ]
+    },
+    {
+      "scene": "original_no_spacer",
+      "seed": 4,
+      "report": "outputs/v2/contact_regularization_original_seed4_20261023/report.json",
+      "report_sha256": "c2a200c41fa514a5c3a7fa89f3ca9af8fbe959be7626d9bddb89aca2068c7dc9",
+      "all_source_sha256_stable": true,
+      "trials": [
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": false,
+            "first_force_bilateral_loss_s": 3.9,
+            "first_strict_retention_failure_s": 3.0,
+            "max_ball_displacement_tool_m": 0.19254515951822979,
+            "final_ball_displacement_tool_m": 0.19254515951822979,
+            "end_force_bilateral": false,
+            "max_tool_target_error_m": 0.00037130957719157774,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.0025671868691725087,
+          "first2s_mean_friction_utilization": 0.686635939109403,
+          "first2s_max_friction_utilization": 0.999995034893125,
+          "first2s_force_weighted_friction_utilization": 0.5849850944943652,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.06802981144962973,
+          "first2s_mean_sum_jaw_normal_n": 65.26622401851094,
+          "first2s_ball_tool_displacement_m": 0.006066044979341868
+        },
+        {
+          "impratio": 100.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": false,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": 29.5,
+            "max_ball_displacement_tool_m": 0.010266238371292313,
+            "final_ball_displacement_tool_m": 0.010266238371292313,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.0003712540131640794,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.0002814341092431923,
+          "first2s_mean_friction_utilization": 0.6100167736734097,
+          "first2s_max_friction_utilization": 0.9998702944197553,
+          "first2s_force_weighted_friction_utilization": 0.5252083122808184,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.024202474158949997,
+          "first2s_mean_sum_jaw_normal_n": 68.68647540852582,
+          "first2s_ball_tool_displacement_m": 0.0006339729554897101
+        },
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 3,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 0.0001060632042031658,
+            "final_ball_displacement_tool_m": 7.301399114829714e-05,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.0003706946369136525,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 6.344540337123243e-05,
+          "first2s_mean_friction_utilization": 0.6073787533131695,
+          "first2s_max_friction_utilization": 0.9998833928002514,
+          "first2s_force_weighted_friction_utilization": 0.5167034278618072,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.06072218376873093,
+          "first2s_mean_sum_jaw_normal_n": 71.45444879804674,
+          "first2s_ball_tool_displacement_m": 7.338442322732022e-05
+        }
+      ]
+    },
+    {
+      "scene": "original_no_spacer",
+      "seed": 20,
+      "report": "outputs/v2/contact_regularization_original_seed20_20261023/report.json",
+      "report_sha256": "5be6ab7391c7776944e45d39a4d370b87fd900fedceae742d6e9d866eac89d6e",
+      "all_source_sha256_stable": true,
+      "trials": [
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": false,
+            "first_force_bilateral_loss_s": 4.9,
+            "first_strict_retention_failure_s": 3.4,
+            "max_ball_displacement_tool_m": 0.19158679347429772,
+            "final_ball_displacement_tool_m": 0.19158679347429772,
+            "end_force_bilateral": false,
+            "max_tool_target_error_m": 0.00040348446252372745,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.0022889472143957823,
+          "first2s_mean_friction_utilization": 0.6178148406702691,
+          "first2s_max_friction_utilization": 0.9999972934440611,
+          "first2s_force_weighted_friction_utilization": 0.5171013270930462,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.03852745350399032,
+          "first2s_mean_sum_jaw_normal_n": 68.57445473394203,
+          "first2s_ball_tool_displacement_m": 0.005349834452843442
+        },
+        {
+          "impratio": 100.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 0.008734153424389645,
+            "final_ball_displacement_tool_m": 0.008734153424389645,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.0004034481988017149,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.00028933461003636645,
+          "first2s_mean_friction_utilization": 0.5867076930650508,
+          "first2s_max_friction_utilization": 0.999980224352617,
+          "first2s_force_weighted_friction_utilization": 0.46340182649377115,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.020324761896341453,
+          "first2s_mean_sum_jaw_normal_n": 71.49244450439775,
+          "first2s_ball_tool_displacement_m": 0.000631993193533393
+        },
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 3,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 0.00010492632404769392,
+            "final_ball_displacement_tool_m": 8.301228538634763e-05,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.00040202732087088347,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 7.442594258377216e-05,
+          "first2s_mean_friction_utilization": 0.5770004824836619,
+          "first2s_max_friction_utilization": 0.9999827067740558,
+          "first2s_force_weighted_friction_utilization": 0.4544493913538251,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.021353015429805337,
+          "first2s_mean_sum_jaw_normal_n": 73.38997087793634,
+          "first2s_ball_tool_displacement_m": 8.320150141287257e-05
+        }
+      ]
+    },
+    {
+      "scene": "coherent_image10mm",
+      "seed": 0,
+      "report": "outputs/v2/contact_regularization_image_checked_20261023/report.json",
+      "report_sha256": "a21fd5b28fb8020082a15d2e64a3d75ca19027d4a5aa3c01932c182cb73c1b18",
+      "all_source_sha256_stable": true,
+      "trials": [
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": false,
+            "first_force_bilateral_loss_s": 12.3,
+            "first_strict_retention_failure_s": 6.7,
+            "max_ball_displacement_tool_m": 1010.5553312529927,
+            "final_ball_displacement_tool_m": 1010.5553312529927,
+            "end_force_bilateral": false,
+            "max_tool_target_error_m": 0.0002947076975520828,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.001050920784326061,
+          "first2s_mean_friction_utilization": 0.31740056268720446,
+          "first2s_max_friction_utilization": 0.9999927879824078,
+          "first2s_force_weighted_friction_utilization": 0.22088678476382484,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.0061326065725324785,
+          "first2s_mean_sum_jaw_normal_n": 81.24543728206999,
+          "first2s_ball_tool_displacement_m": 0.002283856008091182
+        },
+        {
+          "impratio": 100.0,
+          "noslip_iterations": 0,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 0.003627661278575464,
+            "final_ball_displacement_tool_m": 0.003627661278575464,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.00029379488742207175,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 0.00010067788996955318,
+          "first2s_mean_friction_utilization": 0.23668425218676628,
+          "first2s_max_friction_utilization": 0.38280088562604325,
+          "first2s_force_weighted_friction_utilization": 0.20908371421130742,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.0,
+          "first2s_mean_sum_jaw_normal_n": 83.51404463854068,
+          "first2s_ball_tool_displacement_m": 0.00024732423990909524
+        },
+        {
+          "impratio": 10.0,
+          "noslip_iterations": 3,
+          "integration_state_restored_bitwise": true,
+          "hold": {
+            "duration_s": 30.0,
+            "retained_entire_hold": true,
+            "first_force_bilateral_loss_s": null,
+            "first_strict_retention_failure_s": null,
+            "max_ball_displacement_tool_m": 2.3062677648185646e-05,
+            "final_ball_displacement_tool_m": 1.3110421135133754e-05,
+            "end_force_bilateral": true,
+            "max_tool_target_error_m": 0.00030310545635992545,
+            "max_robot_table_penetration_m": 0.0,
+            "max_robot_support_penetration_m": 0.0
+          },
+          "first2s_mean_surface_slip_mps": 4.859816925560797e-06,
+          "first2s_mean_friction_utilization": 0.23266461560037893,
+          "first2s_max_friction_utilization": 0.36961193805020887,
+          "first2s_force_weighted_friction_utilization": 0.2077307941061374,
+          "first2s_normal_force_fraction_on_nearly_saturated_contacts": 0.0,
+          "first2s_mean_sum_jaw_normal_n": 83.53077540762362,
+          "first2s_ball_tool_displacement_m": 1.3503871323443336e-05
+        }
+      ]
+    }
+  ],
+  "result": {
+    "baseline_retained30s": 0,
+    "impratio100_retained30s": 3,
+    "noslip3_retained30s": 4,
+    "loaded_states": 4,
+    "max_arm_target_error_all_options_m": 0.0004903028196942113,
+    "max_robot_table_penetration_m": 0.0,
+    "max_robot_support_penetration_m": 0.0
+  },
+  "interpretation": [
+    "Slow regularized frictional slip is sufficient to cause the baseline retention loss in these loaded states. Timestep and Newton iteration convergence did not rule out this contact-model mechanism.",
+    "Original three placements lose bilateral load at 4.3/3.9/4.9 seconds under baseline; image10mm loses at 12.3 seconds. NoSlip3 retains all four 30-second holds with at most 0.164 mm ball/tool drift.",
+    "impratio100 reduces early slip about 8\u201310 times but misses the strict gate on one original placement: seed4 reaches 10.27 mm drift and fails at 29.5 seconds despite retaining bilateral force.",
+    "The effective jaw/ball sliding friction coefficient is 1.0 from priority1 upstream gripper geoms, overriding ball priority0 nominal0.6. Scene friction sweeps do not change this gripper-ball coefficient.",
+    "Some weak individual contacts approach the sliding bound. The observed image case has weighted sliding utilization0.221 and only0.61% normal load on nearly saturated contacts; reducing friction regularization permits long holds without increasing the coefficient. This is mechanism evidence, not a full grasp-wrench certificate."
+  ],
+  "recommendation": [
+    "Keep existing experiment inputs and default contact physics fixed. An explicit opt-in numerical-contact sensitivity path is useful, labeled as uncalibrated and excluded from historical results.",
+    "Prefer impratio sensitivity within the convex elliptic solver; retain NoSlip as a diagnostic comparator. NoSlip removes friction regularization in a postprocessing pass, makes inverse dynamics ill-defined and can destabilize complex multicontact scenes. A 30-second hold alone does not justify default adoption.",
+    "Set options before reset/acquisition in an independent followup to verify that success is not conditional on a nominal-physics loaded state. Compare to a real stationary loaded hold before claiming physical contact agreement."
+  ],
+  "limitations": [
+    "Privileged GT acquisition and stationary holds, not learned task-completion trials.",
+    "Three original-scene placements plus one fixed image-derived hypothesis, not four independent physical scenes.",
+    "No physical validation of jaw envelopes, stiffness, friction, servo load/current response or support height."
+  ]
+}

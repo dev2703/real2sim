@@ -1,0 +1,780 @@
+{
+  "schema": "matched_object_actions_summary_v1",
+  "report": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/matched_object_actions_20261024/report.json",
+  "report_sha256": "8149a9c821585e6b540de9225870a973e995c27089212297fbe60c620fe5b44f",
+  "summary_script_sha256": "8b346f87f69d53f8b1f42eebe8a70f57585a1e8e85bb785e0b5d81d23a6afa1c",
+  "plan_sha256": "88a9da2b24d09ea6e83ff9ce9a478aa001ca5235403b0e8899cd7681853195c6",
+  "objects_sha256": "90b823048a3249c3d552cc63b75e3f46f545905d3892b5da1d8a5ff8573a53aa",
+  "physical_calibration_accepted": false,
+  "checkpoint_promoted": false,
+  "reserved_episodes_used": [],
+  "selection_support": [
+    {
+      "partition": "train",
+      "object": "ball",
+      "context": "stationary_start",
+      "candidate_tick_pairs": 1947,
+      "episode_pairs_supported": 17,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "train",
+      "object": "ball",
+      "context": "active",
+      "candidate_tick_pairs": 207,
+      "episode_pairs_supported": 18,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "train",
+      "object": "bowl",
+      "context": "stationary_start",
+      "candidate_tick_pairs": 6017,
+      "episode_pairs_supported": 53,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "train",
+      "object": "bowl",
+      "context": "active",
+      "candidate_tick_pairs": 658,
+      "episode_pairs_supported": 57,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "val",
+      "object": "ball",
+      "context": "stationary_start",
+      "candidate_tick_pairs": 132,
+      "episode_pairs_supported": 4,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "val",
+      "object": "ball",
+      "context": "active",
+      "candidate_tick_pairs": 37,
+      "episode_pairs_supported": 4,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "val",
+      "object": "bowl",
+      "context": "stationary_start",
+      "candidate_tick_pairs": 484,
+      "episode_pairs_supported": 4,
+      "selected_pairs": 3
+    },
+    {
+      "partition": "val",
+      "object": "bowl",
+      "context": "active",
+      "candidate_tick_pairs": 63,
+      "episode_pairs_supported": 4,
+      "selected_pairs": 3
+    }
+  ],
+  "selected_pairs": 24,
+  "supported_pairs": 24,
+  "unsupported_pairs": [],
+  "joint_rms_difference_deg_range": [
+    0.34722575545310974,
+    1.796076774597168
+  ],
+  "models": {
+    "disabled_control": [
+      {
+        "partition": "train",
+        "object": "ball",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 1,
+        "target_contrast_prefix_norm_mean_mm": 1.7984818356732528,
+        "original_predicted_step_norm_mean_mm": 0.3245505994657195,
+        "target_step_norm_mean_mm": 0.6329027720385548,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.20120871098091206,
+          "target_contrast_amplitude_ratio_mean": 0.03165253827881461,
+          "target_contrast_cosine_mean": -0.6653756499290466,
+          "target_contrast_error_mm_mean": 1.9811331580082576
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.21972012473270297,
+            "target_contrast_amplitude_ratio_mean": 0.035863293652831446,
+            "target_contrast_cosine_mean": -0.7609100639820099,
+            "target_contrast_error_mm_mean": 2.0032544682423272,
+            "donor_observational_error_change_mm_mean_informative_only": 0.09984646737575531,
+            "positive_target_contrast_cosine_fraction": 0.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.16481305283377878,
+            "target_contrast_amplitude_ratio_mean": 0.03136896927804122,
+            "target_contrast_cosine_mean": 0.5955576598644257,
+            "target_contrast_error_mm_mean": 1.8702895653744538,
+            "donor_observational_error_change_mm_mean_informative_only": -0.08157901465892792,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": 0.0,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 1.798481782277425,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "train",
+        "object": "ball",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 2,
+        "target_contrast_prefix_norm_mean_mm": 1.879235205706209,
+        "original_predicted_step_norm_mean_mm": 1.7392076540773438,
+        "target_step_norm_mean_mm": 3.551140228711281,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.7005381630733609,
+          "target_contrast_amplitude_ratio_mean": 0.27157650011768847,
+          "target_contrast_cosine_mean": -0.5955615416169167,
+          "target_contrast_error_mm_mean": 2.0630897879600525
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.4151759931119159,
+            "target_contrast_amplitude_ratio_mean": 0.1322138592022854,
+            "target_contrast_cosine_mean": -0.5008382238447666,
+            "target_contrast_error_mm_mean": 1.9479943414529164,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0008570253849029541,
+            "positive_target_contrast_cosine_fraction": 0.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.3491378544519345,
+            "target_contrast_amplitude_ratio_mean": 0.13207334537994897,
+            "target_contrast_cosine_mean": -0.13098972663283348,
+            "target_contrast_error_mm_mean": 1.8430372774600983,
+            "donor_observational_error_change_mm_mean_informative_only": -0.09893426299095154,
+            "positive_target_contrast_cosine_fraction": 0.5
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": 0.0,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 1.8792351881663005,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "train",
+        "object": "bowl",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 0,
+        "target_contrast_prefix_norm_mean_mm": 0.0,
+        "original_predicted_step_norm_mean_mm": 0.25083250745150903,
+        "target_step_norm_mean_mm": 0.0,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.16668083359642574,
+          "target_contrast_amplitude_ratio_mean": null,
+          "target_contrast_cosine_mean": null,
+          "target_contrast_error_mm_mean": 0.166680837670962
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.1676545750039319,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.16765457391738892,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.16257318081140207,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.1625731810927391,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.0,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "train",
+        "object": "bowl",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 2,
+        "target_contrast_prefix_norm_mean_mm": 1.3767153626152624,
+        "original_predicted_step_norm_mean_mm": 1.1857058381768135,
+        "target_step_norm_mean_mm": 4.31367506705876,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.498736616767322,
+          "target_contrast_amplitude_ratio_mean": 0.22865009479004028,
+          "target_contrast_cosine_mean": 0.19743585586547852,
+          "target_contrast_error_mm_mean": 1.5106175740559895
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.38472544838441536,
+            "target_contrast_amplitude_ratio_mean": 0.10518985020860802,
+            "target_contrast_cosine_mean": 0.5184661392122507,
+            "target_contrast_error_mm_mean": 1.5465506811936696,
+            "donor_observational_error_change_mm_mean_informative_only": 0.001744091510772705,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.21917022604611702,
+            "target_contrast_amplitude_ratio_mean": 0.11546539965011783,
+            "target_contrast_cosine_mean": 0.09233217127621174,
+            "target_contrast_error_mm_mean": 1.4206195871035259,
+            "donor_observational_error_change_mm_mean_informative_only": 0.04153507947921753,
+            "positive_target_contrast_cosine_fraction": 0.75
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": 0.0,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 1.3767153422037761,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "ball",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 0,
+        "target_contrast_prefix_norm_mean_mm": 0.0,
+        "original_predicted_step_norm_mean_mm": 0.3478145138420609,
+        "target_step_norm_mean_mm": 0.0,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.19799892227941504,
+          "target_contrast_amplitude_ratio_mean": null,
+          "target_contrast_cosine_mean": null,
+          "target_contrast_error_mm_mean": 0.1979989210764567
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.1822522632816496,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.18225226551294327,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.10791431607988973,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.10791431491573651,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.0,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "ball",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 3,
+        "target_contrast_prefix_norm_mean_mm": 3.6604856917013726,
+        "original_predicted_step_norm_mean_mm": 0.8676962150684501,
+        "target_step_norm_mean_mm": 4.251605421767275,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.4611284821294248,
+          "target_contrast_amplitude_ratio_mean": 0.12465581807746068,
+          "target_contrast_cosine_mean": 0.9605811635653178,
+          "target_contrast_error_mm_mean": 3.2247087160746255
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.24514467804692686,
+            "target_contrast_amplitude_ratio_mean": 0.06902120846598267,
+            "target_contrast_cosine_mean": 0.9318937957286835,
+            "target_contrast_error_mm_mean": 3.4332938194274902,
+            "donor_observational_error_change_mm_mean_informative_only": -0.011894255876541138,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.14140843389517008,
+            "target_contrast_amplitude_ratio_mean": 0.03874687054585288,
+            "target_contrast_cosine_mean": -0.23758929898031056,
+            "target_contrast_error_mm_mean": 3.705446481704712,
+            "donor_observational_error_change_mm_mean_informative_only": 0.03347275654474894,
+            "positive_target_contrast_cosine_fraction": 0.5
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": 0.0,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 3.6604857444763184,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "bowl",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 0,
+        "target_contrast_prefix_norm_mean_mm": 0.0,
+        "original_predicted_step_norm_mean_mm": 0.27562654391523017,
+        "target_step_norm_mean_mm": 0.0,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.1674966673211505,
+          "target_contrast_amplitude_ratio_mean": null,
+          "target_contrast_cosine_mean": null,
+          "target_contrast_error_mm_mean": 0.1674966663122177
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.1609872318416213,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.16098723312218985,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.15622717061584504,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.15622717266281447,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.0,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "bowl",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 2,
+        "target_contrast_prefix_norm_mean_mm": 2.642654610099271,
+        "original_predicted_step_norm_mean_mm": 1.0036059042481897,
+        "target_step_norm_mean_mm": 5.229769956907822,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.7407395945241054,
+          "target_contrast_amplitude_ratio_mean": 0.21153405495215893,
+          "target_contrast_cosine_mean": 0.0847986750304699,
+          "target_contrast_error_mm_mean": 2.794334093729655
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.4963875690009445,
+            "target_contrast_amplitude_ratio_mean": 0.11835945538661158,
+            "target_contrast_cosine_mean": 0.07458683382719755,
+            "target_contrast_error_mm_mean": 2.734455486138662,
+            "donor_observational_error_change_mm_mean_informative_only": -0.01781940460205078,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.4035960191686172,
+            "target_contrast_amplitude_ratio_mean": 0.08750739740927782,
+            "target_contrast_cosine_mean": 0.050043751019984484,
+            "target_contrast_error_mm_mean": 2.740828091899554,
+            "donor_observational_error_change_mm_mean_informative_only": -0.09102743864059448,
+            "positive_target_contrast_cosine_fraction": 0.5
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0,
+            "target_contrast_amplitude_ratio_mean": 0.0,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 2.6426545679569244,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      }
+    ],
+    "ball_input": [
+      {
+        "partition": "train",
+        "object": "ball",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 1,
+        "target_contrast_prefix_norm_mean_mm": 1.7984818356732528,
+        "original_predicted_step_norm_mean_mm": 0.3613559490022615,
+        "target_step_norm_mean_mm": 0.6329027720385548,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.16218805103562772,
+          "target_contrast_amplitude_ratio_mean": 0.027481621383299425,
+          "target_contrast_cosine_mean": -0.6392791867256165,
+          "target_contrast_error_mm_mean": 1.9432357996702194
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.18437313701724634,
+            "target_contrast_amplitude_ratio_mean": 0.029639689105918708,
+            "target_contrast_cosine_mean": -0.7564229965209961,
+            "target_contrast_error_mm_mean": 1.9702025800943375,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0770740956068039,
+            "positive_target_contrast_cosine_fraction": 0.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.15526006973232143,
+            "target_contrast_amplitude_ratio_mean": 0.03209777663153336,
+            "target_contrast_cosine_mean": 0.6359143704175949,
+            "target_contrast_error_mm_mean": 1.8588335253298283,
+            "donor_observational_error_change_mm_mean_informative_only": -0.07943792641162872,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.06866542814047231,
+            "target_contrast_amplitude_ratio_mean": 0.011311292258401082,
+            "target_contrast_cosine_mean": 0.2580380290746689,
+            "target_contrast_error_mm_mean": 1.8416788515945275,
+            "donor_observational_error_change_mm_mean_informative_only": -0.006226211786270142,
+            "positive_target_contrast_cosine_fraction": 1.0
+          }
+        }
+      },
+      {
+        "partition": "train",
+        "object": "ball",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 2,
+        "target_contrast_prefix_norm_mean_mm": 1.879235205706209,
+        "original_predicted_step_norm_mean_mm": 1.6077328477300261,
+        "target_step_norm_mean_mm": 3.551140228711281,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.594340196888273,
+          "target_contrast_amplitude_ratio_mean": 0.2114851764839469,
+          "target_contrast_cosine_mean": -0.5933564752340317,
+          "target_contrast_error_mm_mean": 1.9820820887883503
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.3495878530278181,
+            "target_contrast_amplitude_ratio_mean": 0.0880461931320238,
+            "target_contrast_cosine_mean": -0.53864386677742,
+            "target_contrast_error_mm_mean": 1.9044102132320404,
+            "donor_observational_error_change_mm_mean_informative_only": 0.008891671895980835,
+            "positive_target_contrast_cosine_fraction": 0.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.31376290280604735,
+            "target_contrast_amplitude_ratio_mean": 0.10750679533211653,
+            "target_contrast_cosine_mean": -0.12143832631409168,
+            "target_contrast_error_mm_mean": 1.7943434218565624,
+            "donor_observational_error_change_mm_mean_informative_only": -0.08772727847099304,
+            "positive_target_contrast_cosine_fraction": 0.25
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.10591088842678194,
+            "target_contrast_amplitude_ratio_mean": 0.04616368234264939,
+            "target_contrast_cosine_mean": 0.15916810184717178,
+            "target_contrast_error_mm_mean": 1.84329750140508,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0011266767978668213,
+            "positive_target_contrast_cosine_fraction": 0.5
+          }
+        }
+      },
+      {
+        "partition": "train",
+        "object": "bowl",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 0,
+        "target_contrast_prefix_norm_mean_mm": 0.0,
+        "original_predicted_step_norm_mean_mm": 0.3129157304103429,
+        "target_step_norm_mean_mm": 0.0,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.13071271435668072,
+          "target_contrast_amplitude_ratio_mean": null,
+          "target_contrast_cosine_mean": null,
+          "target_contrast_error_mm_mean": 0.1307127152880033
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.12811875058105215,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.1281187484661738,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.15634455485269427,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.15634455407659212,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.01122488083638018,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.01122488104738295,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "train",
+        "object": "bowl",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 2,
+        "target_contrast_prefix_norm_mean_mm": 1.3767153626152624,
+        "original_predicted_step_norm_mean_mm": 1.0899462374868225,
+        "target_step_norm_mean_mm": 4.31367506705876,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.45122180017642677,
+          "target_contrast_amplitude_ratio_mean": 0.20242545165197656,
+          "target_contrast_cosine_mean": 0.11620292067527771,
+          "target_contrast_error_mm_mean": 1.5122654438018799
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.32906018653496477,
+            "target_contrast_amplitude_ratio_mean": 0.08091011327936497,
+            "target_contrast_cosine_mean": 0.3349451906979084,
+            "target_contrast_error_mm_mean": 1.5425292054812114,
+            "donor_observational_error_change_mm_mean_informative_only": -0.00023615360260009766,
+            "positive_target_contrast_cosine_fraction": 0.5
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.3281807136469676,
+            "target_contrast_amplitude_ratio_mean": 0.12069078045452447,
+            "target_contrast_cosine_mean": 0.25763002783060074,
+            "target_contrast_error_mm_mean": 1.4406002064545949,
+            "donor_observational_error_change_mm_mean_informative_only": 0.04223752021789551,
+            "positive_target_contrast_cosine_fraction": 0.75
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.048503300907517165,
+            "target_contrast_amplitude_ratio_mean": 0.014016846067985244,
+            "target_contrast_cosine_mean": -0.7477440536022186,
+            "target_contrast_error_mm_mean": 1.3750488758087158,
+            "donor_observational_error_change_mm_mean_informative_only": 0.001117706298828125,
+            "positive_target_contrast_cosine_fraction": 0.0
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "ball",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 0,
+        "target_contrast_prefix_norm_mean_mm": 0.0,
+        "original_predicted_step_norm_mean_mm": 0.38910408210063135,
+        "target_step_norm_mean_mm": 0.0,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.182591339883705,
+          "target_contrast_amplitude_ratio_mean": null,
+          "target_contrast_cosine_mean": null,
+          "target_contrast_error_mm_mean": 0.18259133895238241
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.16819059965200722,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.16819059600432715,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.1342930772807449,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.13429307813445726,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.0686351553061589,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.06863515389462312,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "ball",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 3,
+        "target_contrast_prefix_norm_mean_mm": 3.6604856917013726,
+        "original_predicted_step_norm_mean_mm": 0.8226346326219424,
+        "target_step_norm_mean_mm": 4.251605421767275,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.40507453377358615,
+          "target_contrast_amplitude_ratio_mean": 0.11013753172268965,
+          "target_contrast_cosine_mean": 0.940623422463735,
+          "target_contrast_error_mm_mean": 3.2856579621632895
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.20582899742294103,
+            "target_contrast_amplitude_ratio_mean": 0.05793270828903155,
+            "target_contrast_cosine_mean": 0.9102040032545725,
+            "target_contrast_error_mm_mean": 3.474318544069926,
+            "donor_observational_error_change_mm_mean_informative_only": -0.021064460277557373,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.15114369186145873,
+            "target_contrast_amplitude_ratio_mean": 0.04196257323990018,
+            "target_contrast_cosine_mean": -0.6301884477337202,
+            "target_contrast_error_mm_mean": 3.755461891492208,
+            "donor_observational_error_change_mm_mean_informative_only": 0.018309374650319416,
+            "positive_target_contrast_cosine_fraction": 0.16666666666666666
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.08186280138033908,
+            "target_contrast_amplitude_ratio_mean": 0.023451215903956657,
+            "target_contrast_cosine_mean": -0.28883483974883956,
+            "target_contrast_error_mm_mean": 3.686732451121012,
+            "donor_observational_error_change_mm_mean_informative_only": 0.0035149852434794107,
+            "positive_target_contrast_cosine_fraction": 0.16666666666666666
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "bowl",
+        "context": "stationary_start",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 0,
+        "target_contrast_prefix_norm_mean_mm": 0.0,
+        "original_predicted_step_norm_mean_mm": 0.3238861417819747,
+        "target_step_norm_mean_mm": 0.0,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.1409244529592494,
+          "target_contrast_amplitude_ratio_mean": null,
+          "target_contrast_cosine_mean": null,
+          "target_contrast_error_mm_mean": 0.14092445373535156
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.13760024012299255,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.13760024309158325,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.15733419058960862,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.15733418862024942,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.018640439823987737,
+            "target_contrast_amplitude_ratio_mean": null,
+            "target_contrast_cosine_mean": null,
+            "target_contrast_error_mm_mean": 0.018640439957380295,
+            "donor_observational_error_change_mm_mean_informative_only": null,
+            "positive_target_contrast_cosine_fraction": null
+          }
+        }
+      },
+      {
+        "partition": "val",
+        "object": "bowl",
+        "context": "active",
+        "independent_pairs": 3,
+        "reciprocal_rows": 6,
+        "informative_pairs": 2,
+        "target_contrast_prefix_norm_mean_mm": 2.642654610099271,
+        "original_predicted_step_norm_mean_mm": 0.907266595220901,
+        "target_step_norm_mean_mm": 5.229769956907822,
+        "natural_prediction_contrast": {
+          "prefix_vector_norm_mm_mean": 0.6782023604804029,
+          "target_contrast_amplitude_ratio_mean": 0.1774824766832785,
+          "target_contrast_cosine_mean": 0.09357074648141861,
+          "target_contrast_error_mm_mean": 2.780718445777893
+        },
+        "interventions": {
+          "paired_full_image_and_features": {
+            "prefix_vector_norm_mm_mean": 0.5170172541208254,
+            "target_contrast_amplitude_ratio_mean": 0.11821500697147169,
+            "target_contrast_cosine_mean": 0.09378054831176996,
+            "target_contrast_error_mm_mean": 2.7304982244968414,
+            "donor_observational_error_change_mm_mean_informative_only": -0.01652693748474121,
+            "positive_target_contrast_cosine_fraction": 1.0
+          },
+          "paired_object_region_and_features": {
+            "prefix_vector_norm_mm_mean": 0.4078940740631272,
+            "target_contrast_amplitude_ratio_mean": 0.08559596583291054,
+            "target_contrast_cosine_mean": 0.10247817169874907,
+            "target_contrast_error_mm_mean": 2.724872335791588,
+            "donor_observational_error_change_mm_mean_informative_only": -0.09860020875930786,
+            "positive_target_contrast_cosine_fraction": 0.5
+          },
+          "features_only": {
+            "prefix_vector_norm_mm_mean": 0.07681060075507655,
+            "target_contrast_amplitude_ratio_mean": 0.01423129308490555,
+            "target_contrast_cosine_mean": 0.3363796900957823,
+            "target_contrast_error_mm_mean": 2.596212444206079,
+            "donor_observational_error_change_mm_mean_informative_only": -0.006617546081542969,
+            "positive_target_contrast_cosine_fraction": 1.0
+          }
+        }
+      }
+    ]
+  },
+  "interpretation": "Natural action contrast and fixed-arm-state input sensitivity are separate. Donor action is an observational comparator only. Full-image swaps also replace unmatched background/arm pixels; object-region swaps retain union-mask background/occlusion confounds. Features are recomputed from the intervened image except the deliberately inconsistent feature-only isolation. Stationary starts are offline observation probes, not simulation rollouts.",
+  "aggregation": "Means are descriptive. Both reciprocal directions retained; their independent pair count is half the row count. Episodes recur across pairs. Direction/amplitude/donor-proxy means use only predeclared >=1 mm target two-step contrast. No confidence interval or generalization claim."
+}

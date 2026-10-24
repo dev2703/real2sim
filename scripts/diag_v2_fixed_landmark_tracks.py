@@ -27,9 +27,10 @@ REGIONS = {
     "base_foot": [[211, 356], [268, 338], [328, 347], [330, 380], [242, 399], [211, 383]],
     "base_holder": [[158, 231], [219, 231], [243, 257], [224, 278], [225, 314], [167, 314]],
     "table_clamp": [[66, 451], [135, 450], [143, 475], [127, 517], [106, 499], [104, 478], [70, 487]],
-    "cabinet_handle": [[572, 84], [661, 84], [661, 108], [572, 108]],
 }
-FIT_REGIONS = ("base_foot", "table_clamp", "cabinet_handle")
+# The cabinet handle is occluded by the wrist in ep0/f200. It cannot provide a
+# static reference; only these two visible fixed regions enter the similarity.
+FIT_REGIONS = ("base_foot", "table_clamp")
 ANCHORS = {"candidate_E_upper_opening": ("base_holder", [199., 249.]),
            "candidate_I_side_hole": ("base_holder", [191., 301.])}
 # Raw contrast corridors chosen on the existing ep0/f200 reference. No model masks.
@@ -95,21 +96,27 @@ def track_landmarks(reference, target, seeds):
                   criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, .01),
                   flags=cv2.OPTFLOW_USE_INITIAL_FLOW, minEigThreshold=1e-5)
         q, forward, _ = cv2.calcOpticalFlowPyrLK(a, b, initial, q0.copy(), **lk)
-        back, backward, _ = cv2.calcOpticalFlowPyrLK(b, a, q, initial.copy(), **lk)
-        cycle = float(np.linalg.norm(back[0, 0] - p))
-        refinement = float(np.linalg.norm(q[0, 0] - q0[0, 0]))
+        finite_forward = q is not None and np.isfinite(q).all()
+        if finite_forward:
+            back, backward, _ = cv2.calcOpticalFlowPyrLK(b, a, q, initial.copy(), **lk)
+        else:
+            back, backward = None, None
+        finite_backward = back is not None and np.isfinite(back).all()
+        cycle = float(np.linalg.norm(back[0, 0] - p)) if finite_backward else None
+        refinement = float(np.linalg.norm(q[0, 0] - q0[0, 0])) if finite_forward else None
         reasons = []
-        if not forward[0, 0] or not backward[0, 0] or not np.isfinite(q).all():
+        if (not finite_forward or not finite_backward or forward is None or backward is None
+                or not forward[0, 0] or not backward[0, 0]):
             reasons.append("flow_failed")
         if best < PARAMETERS["ncc_min"] or patch.std() < 4:
             reasons.append("poor_patch_match")
         if margin < PARAMETERS["ncc_peak_margin_min"]:
             reasons.append("ambiguous_patch")
-        if cycle > PARAMETERS["cycle_max_px"]:
+        if cycle is not None and cycle > PARAMETERS["cycle_max_px"]:
             reasons.append("cycle_failed")
-        if refinement > PARAMETERS["lk_template_disagreement_max_px"]:
+        if refinement is not None and refinement > PARAMETERS["lk_template_disagreement_max_px"]:
             reasons.append("template_flow_disagreement")
-        rows.append({**seed, "target_px": q[0, 0].astype(float).tolist(),
+        rows.append({**seed, "target_px": q[0, 0].astype(float).tolist() if finite_forward else None,
                      "ncc": float(best), "peak_margin": margin, "cycle_px": cycle,
                      "refinement_px": refinement, "accepted": not reasons,
                      "rejection_reasons": reasons})
@@ -185,10 +192,11 @@ def compare_edges(reference_edges, target_edges, matrix):
     return result
 
 
-def make_selection(raw, split, seed):
+def make_selection(raw, split, seed, excluded=()):
     if set(split["train"]) & set(split["val"]) or (set(split["train"]) | set(split["val"])) & set(split["reserved"]):
         raise ValueError("split overlap")
     rng = np.random.default_rng(seed)
+    excluded = set(excluded)
     selections = []
     for partition in ("train", "val"):
         for episode in sorted(split[partition]):
@@ -196,7 +204,10 @@ def make_selection(raw, split, seed):
             # One seeded fresh frame in each third; no outcome-conditioned replacement.
             for low, high in zip(np.linspace(0, length, 4).astype(int)[:-1],
                                  np.linspace(0, length, 4).astype(int)[1:], strict=True):
-                selections.append({"episode": episode, "frame": int(rng.integers(low, high)),
+                available = [f for f in range(low, high) if (episode, f) not in excluded]
+                if not available:
+                    raise ValueError(f"no uninspected frames in episode {episode} stratum {low}:{high}")
+                selections.append({"episode": episode, "frame": int(rng.choice(available)),
                                    "partition": partition, "role": "fresh_tracking_check"})
     return selections
 
@@ -208,7 +219,7 @@ def residual_for(rows, region, matrix):
     return summarize_vectors(transform(p, matrix), q)
 
 
-def run(raw_root, split_path, out, seed):
+def run(raw_root, split_path, out, seed, exclusion_paths=()):
     if out.exists():
         raise FileExistsError(out)
     raw, split = RawDataset(raw_root), json.loads(split_path.read_text())
@@ -216,11 +227,18 @@ def run(raw_root, split_path, out, seed):
     reference = cv2.imread(str(reference_path))
     if reference is None or reference.shape != (720, 1280, 3) or 0 not in split["train"]:
         raise ValueError("existing training reference ep0/f200 is required at source resolution")
-    selections = make_selection(raw, split, seed)
     # Also check every previously model-measured development image, with no re-selection.
     from diag_v2_relative_scene_motion import load_sources
     previous_sources, dependencies = load_sources()
     source_lookup = {(r["episode"], r["frame"]): r for r in previous_sources}
+    excluded = set(source_lookup) | {(0, 200)}
+    for path in exclusion_paths:
+        document = json.loads(path.read_text())
+        records = document.get("selections", document.get("source_frames"))
+        if records is None:
+            raise ValueError(f"exclusion source lacks selections/source_frames: {path}")
+        excluded.update((r["episode"], r.get("frame", r.get("position"))) for r in records)
+    selections = make_selection(raw, split, seed, excluded)
     for source in previous_sources:
         if source["episode"] in split["reserved"]:
             raise ValueError("reserved source")
@@ -228,18 +246,21 @@ def run(raw_root, split_path, out, seed):
     seeds = seed_landmarks(reference)
     out.mkdir(parents=True)
     (out / "frames").mkdir()
-    plan = {"schema": "fixed_landmark_tracks_plan_v1", "seed": seed, "parameters": PARAMETERS,
+    (out / "executed_tracker.py").write_bytes(Path(__file__).read_bytes())
+    plan = {"schema": "fixed_landmark_tracks_plan_v2", "seed": seed, "parameters": PARAMETERS,
             "regions": REGIONS, "fit_regions": FIT_REGIONS, "heldout_region": "base_holder",
             "edge_corridors": EDGES, "reference": str(reference_path),
             "reference_sha256": sha256_file(reference_path), "seeds": seeds,
             "selections": selections, "reserved_episodes_used": [],
+            "excluded_previously_selected_frames": [list(p) for p in sorted(excluded)],
+            "freshness_scope": "New relative to the supplied selection inventories, not a claim about every historical inspection. Previously model-measured frames are scored separately.",
             "source_sha256": {str(p): sha256_file(p) for p in [Path(__file__),
-                Path("scripts/diag_v2_relative_scene_motion.py"), split_path, *dependencies]}}
+                Path("scripts/diag_v2_relative_scene_motion.py"), split_path, *dependencies, *exclusion_paths]}}
     json_write(out / "plan.json", plan)
     identity = np.array([[1., 0., 0.], [0., 1., 0.]])
     reference_edges = {k: fit_edge(cv2.cvtColor(reference, cv2.COLOR_BGR2GRAY), spec, identity)
                        for k, spec in EDGES.items()}
-    report = {"schema": "fixed_landmark_tracks_v1", "plan_sha256": sha256_file(out / "plan.json"),
+    report = {"schema": "fixed_landmark_tracks_v2", "plan_sha256": sha256_file(out / "plan.json"),
               "physical_calibration_accepted": False, "robot_fk_used": False,
               "reserved_episodes_used": [], "reference_edges": reference_edges, "comparisons": [],
               "limitations": ["2-D similarity combines camera pose, stabilization, cropping, zoom and parallax; it is not metric extrinsics.",
@@ -247,6 +268,7 @@ def run(raw_root, split_path, out, seed):
                   "Raw edge movement relative to fixed features supports mat-relative image change but includes parallax and boundary-definition uncertainty.",
                   "Model-edge disagreement is not a pure segmentation error: virtual corners and raw visible boundary have different semantics.",
                   "Sparse temporal samples cannot exclude unobserved transient motion; failed/occluded tracks and edges are retained."]}
+    report["limitations"].append("Both fitting regions are on the left of the image; there is no independently tracked background region. Extrapolating their similarity to the far mat has unmeasured parallax uncertainty.")
     key = "observation.images.iphone"
     for episode in sorted({s["episode"] for s in selections}):
         requested = {s["frame"]: s for s in selections if s["episode"] == episode}
@@ -263,6 +285,12 @@ def run(raw_root, split_path, out, seed):
             target = decoded.to_ndarray(format="bgr24")
             path = out / "frames" / f"ep{episode:03d}_f{frame:04d}.png"
             cv2.imwrite(str(path), target)
+            old = source_lookup.get((episode, frame))
+            if old is not None:
+                if sha256_file(Path(old["path"])) != old["sha256"]:
+                    raise ValueError("prior model source image hash mismatch")
+                if not np.array_equal(cv2.imread(old["path"]), target):
+                    raise ValueError(f"redecoded pixels differ from model source ep{episode}/f{frame}")
             tracks = track_landmarks(reference, target, seeds)
             fit = fit_similarity(tracks, FIT_REGIONS)
             row = {**source, "path": str(path), "sha256": sha256_file(path),
@@ -270,13 +298,19 @@ def run(raw_root, split_path, out, seed):
                    "tracks": tracks, "static_fit": fit}
             if fit["status"] == "fit":
                 matrix = np.asarray(fit["matrix_reference_to_target"])
+                for track in tracks:
+                    if track["target_px"] is not None:
+                        residual = float(np.linalg.norm(transform([track["reference_px"]], matrix)[0]
+                                                        - np.asarray(track["target_px"])))
+                        track["static_similarity_residual_px"] = residual
+                        track["supports_static_fit"] = bool(track["accepted"] and track["region"] in FIT_REGIONS
+                                                           and residual <= 2.)
                 row["static_support"] = "supported" if fit["supported_regions"] >= 2 else "limited"
                 row["heldout_holder_residual"] = residual_for(tracks, "base_holder", matrix)
                 edges = {k: fit_edge(cv2.cvtColor(target, cv2.COLOR_BGR2GRAY), spec, matrix)
                          for k, spec in EDGES.items()}
                 row["raw_mat_edges"] = edges
                 row["mat_relative_to_static"] = compare_edges(reference_edges, edges, matrix)
-                old = source_lookup.get((episode, frame))
                 if old is not None and old["corners"] is not None:
                     # Measure model virtual edge against raw contrast points, without a metric camera.
                     corners = old["corners"]
@@ -292,8 +326,14 @@ def run(raw_root, split_path, out, seed):
                     row["model_edge_vs_raw_boundary"] = mismatch
             canvas = target.copy()
             for track in tracks:
+                if track["target_px"] is None:
+                    continue
                 p = tuple(np.rint(track["target_px"]).astype(int))
-                cv2.circle(canvas, p, 3, (0, 220, 0) if track["accepted"] else (0, 0, 220), 1)
+                color = (0, 220, 0) if track.get("supports_static_fit") else (
+                    (255, 0, 200) if track["accepted"] and track["region"] == "base_holder" else (0, 0, 220))
+                cv2.circle(canvas, p, 3, color, 1)
+            cv2.putText(canvas, "green: static support | magenta: withheld holder | red: rejected", (15, 22),
+                        cv2.FONT_HERSHEY_SIMPLEX, .5, (20, 20, 240), 1)
             for edge in row.get("raw_mat_edges", {}).values():
                 for point in edge.get("points", []):
                     cv2.circle(canvas, tuple(np.rint(point).astype(int)), 2, (255, 180, 0), 1)
@@ -317,7 +357,8 @@ if __name__ == "__main__":
     parser.add_argument("--raw-root", type=Path, default=Path("~/.cache/huggingface/lerobot/local/so101_act_pickplace_v2").expanduser())
     parser.add_argument("--split", type=Path, default=Path("results/v2/split.json"))
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--seed", type=int, default=2026102403)
+    parser.add_argument("--seed", type=int, default=2026102501)
+    parser.add_argument("--exclude-selection", type=Path, action="append", default=[])
     args = parser.parse_args()
-    result = run(args.raw_root, args.split, args.out, args.seed)
+    result = run(args.raw_root, args.split, args.out, args.seed, args.exclude_selection)
     print(json.dumps(result["summary"], indent=2))

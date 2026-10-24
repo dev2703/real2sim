@@ -1,0 +1,125 @@
+{
+  "version": "matched_next_follower_joint_v1",
+  "source_rows": 13878,
+  "allowed_rows": 11694,
+  "shared_valid_rows": 7789,
+  "valid_segments": 38,
+  "valid_segment_length_median": 215.0,
+  "exclusion_counts_overlap": {
+    "no_successor": 35,
+    "source_terminal_extrapolated": 35,
+    "current_native_out_of_range": 3861,
+    "follower_native_out_of_range": 3860,
+    "leader_native_out_of_range": 3552
+  },
+  "reference_clipping": false,
+  "native_limits_rad": [
+    [
+      -1.91986,
+      1.91986
+    ],
+    [
+      -1.7453293,
+      1.7453293
+    ],
+    [
+      -1.69,
+      1.69
+    ],
+    [
+      -1.658063,
+      1.658063
+    ],
+    [
+      -2.7438473,
+      2.8412063
+    ],
+    [
+      -0.174533,
+      1.7453292
+    ]
+  ],
+  "mask_contract": "Both targets share exactly the same current/target native-range mask; excluded rows retain raw values and timestamps. Invalid observations never anchor a sample. Chunks stop at contiguous-valid-run boundaries.",
+  "gripper_contract": "Current recorded leader gripper command in percent for both variants; never next observed gripper aperture.",
+  "collision_scope": "Native bounds only. Collision, workspace and dynamic feasibility are not certified by this data mask; guarded inference validates independently.",
+  "source": "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone",
+  "source_manifest_sha256": "54773d9220e84dff2868390993fa5285173ae91a1a6e7e453462e9719e097b1a",
+  "task_path": "configs/v2/task.exploratory_20261022.yaml",
+  "task_sha256": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+  "physical_calibration_accepted": false,
+  "reserved_episodes_scored": [],
+  "variants": {
+    "follower_next_arm_leader_gripper": {
+      "path": "/Users/deveshvyas/Downloads/real2sim/.cache/v2_follower_joint_20261024/follower_next_arm_leader_gripper",
+      "manifest_sha256": "8b0a92dad05fc23aa7dfc0f8bef0ae70f6a10f3398ede81346d711acb2f992bc"
+    },
+    "leader_command_matched_mask": {
+      "path": "/Users/deveshvyas/Downloads/real2sim/.cache/v2_follower_joint_20261024/leader_command_matched_mask",
+      "manifest_sha256": "61cb6baf11241e7367762e6f43072ab8b4dad1a103b743cd689dc9fef816901b"
+    }
+  },
+  "train": {
+    "source_ticks": 9617,
+    "shared_valid_ticks": 6362,
+    "fraction_retained": 0.6615368618072164,
+    "recorded_leader_raw_target_fk_error_mm_mean": 15.636943187893543,
+    "next_follower_raw_target_fk_error_mm_mean": 0.0,
+    "hold_current_raw_target_fk_error_mm_mean": 5.617529312283165,
+    "retention_by_condition": {
+      "ball_shift": {
+        "source_ticks": 592,
+        "valid_ticks": 382,
+        "retained_fraction": 0.6452702702702703
+      },
+      "baseline": {
+        "source_ticks": 7935,
+        "valid_ticks": 5242,
+        "retained_fraction": 0.6606175173282923
+      },
+      "bowl_shift": {
+        "source_ticks": 1090,
+        "valid_ticks": 738,
+        "retained_fraction": 0.6770642201834862
+      }
+    }
+  },
+  "val": {
+    "source_ticks": 2077,
+    "shared_valid_ticks": 1427,
+    "fraction_retained": 0.687048627828599,
+    "recorded_leader_raw_target_fk_error_mm_mean": 17.62270125388114,
+    "next_follower_raw_target_fk_error_mm_mean": 0.0,
+    "hold_current_raw_target_fk_error_mm_mean": 5.434264081530256,
+    "retention_by_condition": {
+      "ball_shift": {
+        "source_ticks": 301,
+        "valid_ticks": 218,
+        "retained_fraction": 0.7242524916943521
+      },
+      "baseline": {
+        "source_ticks": 1429,
+        "valid_ticks": 974,
+        "retained_fraction": 0.6815955213435969
+      },
+      "bowl_shift": {
+        "source_ticks": 347,
+        "valid_ticks": 235,
+        "retained_fraction": 0.6772334293948127
+      }
+    }
+  },
+  "guarded_inference": {
+    "contract": "joint_target_semantics",
+    "native_ranges": "unchanged exact compiled six-hinge ranges",
+    "workspace": "unchanged configured task workspace",
+    "collision": "unchanged penetration_tolerance_m; original ignored ball/jaw pairs; requested endpoint and17samples on two command-path proxies",
+    "dynamics": "unchanged native servo/rate/physics",
+    "continuous_collision_certification": false,
+    "default_controller_changed": false
+  },
+  "dependencies_sha256": {
+    "src/real2sim/data/follower_joint_targets.py": "1234c61ae5ce112345a0bd0efc1057b327203138156ccd7a1d842213d4a9e025",
+    "scripts/prepare_v2_follower_joint_targets.py": "899e100a7f65ce897413b2b55f578a13f8db53bcbdcc8231ffe2963ebb4667fc",
+    "src/real2sim/policy/follower_joint.py": "74f04cf7110cf914c55217c40c57987e88f2a68cd0e13a90bc897bdafddef55a"
+  }
+}

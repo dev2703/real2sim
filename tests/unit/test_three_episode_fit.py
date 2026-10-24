@@ -1,6 +1,7 @@
 """Capacity-gate checks must require success on all three training conditions."""
 
 import importlib.util
+import json
 from copy import deepcopy
 from pathlib import Path
 
@@ -71,11 +72,64 @@ def test_zero_stationary_error_floor_can_tie_but_nonzero_ties_fail():
     assert not module.gate_from_validation(value)["pass"]
 
 
-def test_nonfinite_error_and_wrong_episode_set_fail():
+def test_nonfinite_error_fails():
     value = report([.2] * 3, [.01] * 3)
     value["scores"]["model"]["per_episode"]["11"]["movement"]["vector_error_mean"] = float("nan")
     assert not module.gate_from_validation(value)["pass"]
+
+
+def test_wrong_episode_set_fails():
     value = report([.2] * 3, [.01] * 3)
     for score in value["scores"].values():
         score["per_episode"]["12"] = score["per_episode"].pop("11")
     assert not module.gate_from_validation(value)["pass"]
+
+
+def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tmp_path, monkeypatch):
+    data, out = tmp_path / "data", tmp_path / "run"
+    data.mkdir()
+    for name in ("manifest.json", "stats.json"):
+        (data / name).write_text("{}\n")
+    calls = []
+
+    def fake_train(cfg, source, destination, resume=None):
+        calls.append({"steps": cfg["train"]["steps"], "resume": resume,
+                      "schedule": cfg["train"]["schedule_steps"]})
+        step = 500 if len(calls) == 1 else cfg["train"]["steps"]
+        checkpoint = destination / "checkpoints" / f"{step:06d}"
+        checkpoint.mkdir(parents=True)
+        (checkpoint / "run_info.json").write_text(json.dumps({"step": step,
+            "diagnostic_episodes": [11, 8, 23], "scheduler_total_steps": 2000, "device": "cpu"}))
+        (checkpoint / "model.safetensors").write_bytes(b"test model")
+        (checkpoint / "training_state.pt").write_bytes(b"test optimizer, RNG and sampler state")
+        last = checkpoint.parent / "last"
+        if last.is_symlink():
+            last.unlink()
+        last.symlink_to(checkpoint.name)
+        if len(calls) == 1:
+            raise RuntimeError("simulated interruption after the saved 500-step checkpoint")
+        return {"steps": step, "device": "cpu"}
+
+    def fake_audit(checkpoint, source, device):
+        values = report([.2] * 3, [.01] * 3)
+        if checkpoint.name == "001000":
+            values["scores"]["model"]["per_episode"]["23"]["gripper_mae"] = .04
+        return values
+
+    monkeypatch.setattr(module, "train", fake_train)
+    monkeypatch.setattr(module, "audit_training_checkpoint", fake_audit)
+    with pytest.raises(RuntimeError, match="simulated interruption"):
+        module.run(data, out, "cpu")
+    original_plan = (out / "plan.yaml").read_bytes()
+    assert (out / "report.json").exists()
+    result = module.run(data, out, "cpu", resume=True)
+    assert (out / "plan.yaml").read_bytes() == original_plan
+    assert [call["steps"] for call in calls] == [1000, 1000, 2000]
+    assert [call["schedule"] for call in calls] == [2000] * 3
+    assert calls[1]["resume"].name == "000500"
+    assert calls[2]["resume"].name == "001000"
+    assert result["interruptions"][0]["resumed_from_step"] == 500
+    assert [stage["examples_seen"] for stage in result["stages"]] == [16000, 32000]
+    assert result["gate_passed"]
+    with pytest.raises(ValueError, match="original plan"):
+        module.run(data, out, "mps", resume=True)

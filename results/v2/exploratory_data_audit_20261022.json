@@ -1,0 +1,62 @@
+{
+  "direct_raw_label_agreement": "bitwise exact for all 13,878 rows across all action modes",
+  "checks": [
+    "all label modes recomputed from raw episode rows",
+    "train-only state/action statistics exact",
+    "fixed split and reserved isolation",
+    "derived non-image SHA-256 integrity",
+    "shared image paths and digests",
+    "real DerivedTickDataset first/last train sample shape and finite-value checks"
+  ],
+  "reserved_ticks": 2184,
+  "datasets": [
+    {
+      "dataset": "canonical_joint_iphone_top",
+      "train_ticks": 9617,
+      "state_dim": 13,
+      "action_dim": 6,
+      "cameras": 2,
+      "manifest_sha256": "565a3a8f5ca88b39008ad177924b834aea414981726d3642bd394f704518e923"
+    },
+    {
+      "dataset": "cartesian_absolute_iphone_top",
+      "train_ticks": 9617,
+      "state_dim": 13,
+      "action_dim": 10,
+      "cameras": 2,
+      "manifest_sha256": "518ef60b74729e9ba856519fb0efd633e8bbd3ed827e1e76ac6e7d5321de395a"
+    },
+    {
+      "dataset": "cartesian_iphone",
+      "train_ticks": 9617,
+      "state_dim": 13,
+      "action_dim": 7,
+      "cameras": 1,
+      "manifest_sha256": "54773d9220e84dff2868390993fa5285173ae91a1a6e7e453462e9719e097b1a"
+    },
+    {
+      "dataset": "cartesian_iphone_top",
+      "train_ticks": 9617,
+      "state_dim": 13,
+      "action_dim": 7,
+      "cameras": 2,
+      "manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf"
+    },
+    {
+      "dataset": "cartesian_tool_iphone_top",
+      "train_ticks": 9617,
+      "state_dim": 13,
+      "action_dim": 7,
+      "cameras": 2,
+      "manifest_sha256": "45386a7a921c9e264879e84e7040f03413b5d0b92e23119db46d987dfd10e6b4"
+    },
+    {
+      "dataset": "cartesian_top",
+      "train_ticks": 9617,
+      "state_dim": 13,
+      "action_dim": 7,
+      "cameras": 1,
+      "manifest_sha256": "c2c32d057f19a916a80a6a1915173fd720abb76a3503e05d58366ae8f2502f44"
+    }
+  ]
+}

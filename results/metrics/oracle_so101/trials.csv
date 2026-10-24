@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,0,,,True,True,True,True,False,False,none,0.01353,78,4,0.45,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,1,,,True,True,True,True,False,False,none,0.01362,78,4,0.42,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,2,,,True,True,True,True,False,False,none,0.0135,79,4,0.38,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,3,,,True,True,True,True,False,False,none,0.01352,74,4,0.37,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,4,,,True,True,True,True,False,False,none,0.01312,72,4,0.36,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,5,,,True,True,True,True,False,False,none,0.0135,73,4,0.35,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,6,,,True,True,True,True,False,False,none,0.01343,76,4,0.35,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,7,,,True,True,True,True,False,False,none,0.01356,75,4,0.38,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,8,,,True,True,True,True,False,False,none,0.01374,78,4,0.39,0.0,,
+E4b_oracle_geometry_diagnostic,ORACLE_GEOMETRY_DIAGNOSTIC,so101,9,,,True,True,True,True,False,False,none,0.01353,75,4,0.35,0.0,,

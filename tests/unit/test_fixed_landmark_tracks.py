@@ -90,3 +90,19 @@ def test_fresh_selection_never_reads_reserved_lengths(diagnostic):
     assert {r["episode"] for r in selected} == {0, 2, 3}
     with pytest.raises(ValueError, match="overlap"):
         diagnostic.make_selection(Raw(), split | {"reserved": [0]}, 4)
+    prior = {(r["episode"], r["frame"]) for r in selected}
+    fresh = diagnostic.make_selection(Raw(), split, 4, prior)
+    assert not prior & {(r["episode"], r["frame"]) for r in fresh}
+
+
+def test_failed_nonfinite_flow_retains_serializable_missing_track(diagnostic, monkeypatch):
+    import json
+    source = np.random.default_rng(8).integers(0, 256, (180, 220, 3), dtype=np.uint8)
+    monkeypatch.setattr(cv2, "calcOpticalFlowPyrLK", lambda *a, **kw: (
+        np.full((1, 1, 2), np.nan, np.float32), np.zeros((1, 1), np.uint8), None))
+    row = diagnostic.track_landmarks(source, source, [
+        {"landmark_id": "bad", "region": "foot", "reference_px": [90., 90.]}])[0]
+    assert not row["accepted"]
+    assert row["target_px"] is None and row["cycle_px"] is None
+    assert "flow_failed" in row["rejection_reasons"]
+    json.dumps(row, allow_nan=False)

@@ -1,0 +1,23 @@
+{
+  "kind": "APPROXIMATE_INDEPENDENT_IMAGE_JAW_TIPS_NOT_PHYSICAL_CALIBRATION",
+  "provenance": "Manual native-1280x720 image review on 2026-10-16. Near/far refers to the camera-facing/front and rear finger, not assumed fixed/moving identity. Tip centre estimates are approximate; occluded rear tips excluded. Projection overlays were viewed to diagnose correspondence but these coordinates refer to visible physical outlines, not rendered points.",
+  "sigma_px": 10,
+  "train_episodes": [5, 12, 20],
+  "historical_validation_episodes": [1, 2, 3],
+  "rows": [
+    {"episode": 5, "frame": 240, "near": [832, 238], "far": [805, 158]},
+    {"episode": 5, "frame": 300, "near": [875, 199], "far": [859, 99]},
+    {"episode": 5, "frame": 360, "near": [887, 281]},
+    {"episode": 5, "frame": 450, "near": [896, 273]},
+    {"episode": 12, "frame": 360, "near": [951, 248], "far": [930, 171]},
+    {"episode": 12, "frame": 420, "near": [949, 307]},
+    {"episode": 12, "frame": 480, "near": [959, 324]},
+    {"episode": 20, "frame": 300, "near": [783, 275], "far": [772, 197]},
+    {"episode": 20, "frame": 450, "near": [878, 288]},
+    {"episode": 20, "frame": 600, "near": [824, 343]},
+    {"episode": 1, "frame": 261, "near": [790, 259], "far": [788, 152]},
+    {"episode": 1, "frame": 435, "near": [813, 288]},
+    {"episode": 2, "frame": 246, "near": [784, 282], "far": [772, 204]},
+    {"episode": 3, "frame": 288, "near": [814, 235]}
+  ]
+}

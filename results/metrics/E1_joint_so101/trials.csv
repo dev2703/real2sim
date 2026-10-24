@@ -1,0 +1,11 @@
+experiment_id,controller_source,robot,seed,checkpoint_sha256,checkpoint_step,success,lifted,delivered,released,rolled_out,ball_escaped_table,phase_failed,min_ee_ball_distance_m,ticks,ik_rejections,mean_latency_ms,max_action_saturation,video_path,abort
+E1_joint_ACT,LEARNED_ACT,so101,0,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.16799,300,0,18.16,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,1,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.16428,300,0,17.43,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,2,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.16286,300,0,17.97,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,3,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.15789,300,0,17.47,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,4,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.13752,300,0,15.27,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,5,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.14479,300,0,14.44,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,6,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.15892,300,0,14.29,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,7,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.15979,300,0,14.57,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,8,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.16422,300,0,14.29,0.3333,,
+E1_joint_ACT,LEARNED_ACT,so101,9,d27ff21f869804545723d354c112863a399c21857e4bd73ba0e525dbc4411274,20000,False,False,False,False,False,False,approach,0.16773,300,0,14.29,0.3333,,

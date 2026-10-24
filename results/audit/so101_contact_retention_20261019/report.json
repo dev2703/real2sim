@@ -1,0 +1,1359 @@
+{
+  "kind": "JAW_CONTACT_RETENTION_DIAGNOSTIC_NOT_CALIBRATION_OR_POLICY",
+  "source_sha256": {
+    ".cache/derived_joint/arrays.npz": "b2f312e3953d2da1e0d1e3fa63735b665564f0d97e544d399ef7adfaa554ff4c",
+    ".cache/derived_cartesian/arrays.npz": "00f538627342874b7f26f34ae77fd8427b192a07b2c3c44d44c77966a1e87200",
+    "configs/so101_root_cause.yaml": "744bc4c81ff08582c008f0ad97f53d62316d54a86151ad239f6c0ec6d9209202",
+    "results/audit/geometry_control_20261016/g2_fitted_xy_local/sim_f0.6_d1.0_b12.0.yaml": "3a3f3443805b4ec96352cadb972e25b897a17a561b66c38eefd21ceccdde0adf",
+    "/Users/deveshvyas/Downloads/real2sim/results/audit/geometry_control_20261016/g2_fitted_xy_local/task_b12.0.yaml": "d3c74500678ac751f9bbbf698c04d0c187c34d9aa696b4ed37880e35ee11db87",
+    "assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "results/audit/geometry_control_20261016/g0_complete/report.json": "edf8899dfab61b2c85cda0b00363bf0ec0496f428e40115692b45903302cdd9b",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/diag_so101_contact_retention.py": "33564a63d82e1a5411c12eace5026a94abfa0ea09a8aa0179805bb8c65e9e180",
+    "src/real2sim/sim/env.py": "3e213d1cba02f09c667f90ae1fcdc916b6f63b5ef13725e41fa5e76ffdcd527b"
+  },
+  "common_ball_offset_mm": [
+    5.0,
+    0.0
+  ],
+  "protocol": {
+    "physics_safety_geometry_unchanged": true,
+    "ball_dynamic": true,
+    "hold_rule": "Freeze last bounded native arm and gripper targets after five consecutive bilateral samples above30mm, for20s.",
+    "sampling": "10Hz after existing env.step mj_forward; no solver mutation or substep event timing claim.",
+    "friction_utilization": "Tangential sliding components only; not a full friction-cone or grasp-wrench certificate.",
+    "limitations": "Outcome-selected exploratory geometry; unverified gripper command provenance; nominal source time; historical validation diagnostic only.",
+    "physical_grasp_gate_passed": false
+  },
+  "raw_report": "outputs/so101_contact_retention_20261019/report.json",
+  "raw_report_sha256": "0ad20c7a7db83d26d7b30d89d00f32faa5e442378e786b179ca1b7347c6e563d",
+  "runs": [
+    {
+      "mode": "recorded_motion",
+      "initial_physical_valid": true,
+      "ticks": 597,
+      "lifted": true,
+      "placement_success": false,
+      "hold_anchor_source_time_s": null,
+      "hold_duration_s": 0.0,
+      "hold_end_bilateral": null,
+      "hold_loss_elapsed_s": [],
+      "hold_max_reference_pose_error_m": null,
+      "loss_of_hold_times_s": [
+        29.199999999994695
+      ],
+      "max_robot_table_penetration_m": 0.00021707203506771133,
+      "limit_clipped_ticks": 167,
+      "rate_limited_ticks": 16,
+      "episode": 1,
+      "existing_replay_max_ball_difference_m": 0.0,
+      "raw_trace": "outputs/so101_contact_retention_20261019/episode1_recorded_motion_trace.json",
+      "raw_trace_sha256": "0384e9ab84ffc09ce4879f30f64a1e9a0b124fa31f213b062eb2b4095e6540b6",
+      "phase_summary": {
+        "approach": {
+          "ticks": 129,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.013250623840142719,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            1.29076087474823,
+            56.997283935546875
+          ],
+          "sim_gripper_observed_pct_range": [
+            0.5154528617858887,
+            57.47412872314453
+          ]
+        },
+        "closure": {
+          "ticks": 25,
+          "bilateral_ticks": 5,
+          "max_reference_pose_error_m": 0.00036900428453026234,
+          "min_jaw_normal_opposition_deg": 152.48056134895265,
+          "max_jaw_normal_opposition_deg": 160.2434130800423,
+          "recorded_gripper_observed_pct_range": [
+            36.14130401611328,
+            54.27989196777344
+          ],
+          "sim_gripper_observed_pct_range": [
+            27.732303619384766,
+            53.2187385559082
+          ]
+        },
+        "lift_transport": {
+          "ticks": 230,
+          "bilateral_ticks": 137,
+          "max_reference_pose_error_m": 0.002019903590328714,
+          "min_jaw_normal_opposition_deg": 90.16430774951418,
+          "max_jaw_normal_opposition_deg": 159.88134888382928,
+          "recorded_gripper_observed_pct_range": [
+            36.073368072509766,
+            36.073368072509766
+          ],
+          "sim_gripper_observed_pct_range": [
+            0.4139454662799835,
+            35.634315490722656
+          ]
+        },
+        "release": {
+          "ticks": 25,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.000586261644880618,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            23.77717399597168,
+            59.6467399597168
+          ],
+          "sim_gripper_observed_pct_range": [
+            0.42564627528190613,
+            61.85573196411133
+          ]
+        },
+        "after_release": {
+          "ticks": 188,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.03527589053168605,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            1.29076087474823,
+            20.10869598388672
+          ],
+          "sim_gripper_observed_pct_range": [
+            0.4777749478816986,
+            0.6013950109481812
+          ]
+        }
+      },
+      "creep_sequence": [
+        {
+          "simulation_time_s": 17.600000000001124,
+          "source_time_s": 17.600000381469727,
+          "fixed_hold": false,
+          "held": true,
+          "bilateral": true,
+          "reference_pose_error_m": 0.0006243410125295338,
+          "requested_gripper_command_pct": 0.2577319443225862,
+          "applied_gripper_target_pct": 0.2577319443225862,
+          "recorded_gripper_observed_pct": 36.073368072509766,
+          "sim_gripper_observed_pct": 27.139307022094727,
+          "scene_predicted_tip_gap_from_recorded_opening_m": 0.07830670898864864,
+          "sim_tip_surface_gap_m": 0.06577966896650067,
+          "ball_tool_m": [
+            0.0007391211660657842,
+            0.004078632286559009,
+            0.01274545142566018
+          ],
+          "ball_from_tip_in_jaw_m": {
+            "fixed": [
+              0.03284545142566019,
+              0.0038606322865589677,
+              0.0021338788339341735
+            ],
+            "moving": [
+              -0.030746486007885813,
+              0.015641884998887388,
+              -0.004260632286559001
+            ]
+          },
+          "gravity_direction_tool": [
+            0.37952381645281447,
+            -0.8865957870022138,
+            0.26440420423097516
+          ],
+          "height_m": 0.057439395692926415,
+          "jaw_normal_opposition_deg": 156.68091058816216,
+          "jaws": {
+            "gripper": {
+              "count": 5,
+              "normal_force_n": 41.522688156557386,
+              "contact_center_tool_m": [
+                0.0011161536532898393,
+                0.0019704582239291075,
+                -0.02003269345552053
+              ],
+              "mean_normal_onto_ball_tool": [
+                -0.011320113012555737,
+                0.06378212978542323,
+                0.9938223812101977
+              ]
+            },
+            "moving_jaw_so101_v1": {
+              "count": 4,
+              "normal_force_n": 41.967781550430026,
+              "contact_center_tool_m": [
+                -0.012224576774822762,
+                0.003575540888102126,
+                0.042493113471635646
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.394248313795603,
+                0.01515868859207296,
+                -0.9051487451919582
+              ]
+            }
+          },
+          "jaw_contact_geoms": [
+            "fixed_jaw_sph_tip1",
+            "fixed_jaw_sph_tip2",
+            "fixed_jaw_sph_tip3",
+            "fixed_jaw_box3",
+            "fixed_jaw_box4",
+            "moving_jaw_sph_tip2",
+            "moving_jaw_sph_tip3",
+            "moving_jaw_box2",
+            "moving_jaw_box3"
+          ],
+          "max_tangential_surface_slip_mps": 0.001455391414875555,
+          "max_sliding_friction_utilization": 0.6291168409205823
+        },
+        {
+          "simulation_time_s": 24.199999999997466,
+          "source_time_s": 24.200000762939453,
+          "fixed_hold": false,
+          "held": true,
+          "bilateral": true,
+          "reference_pose_error_m": 0.0007052577146855728,
+          "requested_gripper_command_pct": 0.42955327033996654,
+          "applied_gripper_target_pct": 0.42955327033996654,
+          "recorded_gripper_observed_pct": 36.073368072509766,
+          "sim_gripper_observed_pct": 23.00592803955078,
+          "scene_predicted_tip_gap_from_recorded_opening_m": 0.07830670898864862,
+          "sim_tip_surface_gap_m": 0.0598075683463431,
+          "ball_tool_m": [
+            0.012221431780964027,
+            0.004009075089303332,
+            0.011503930355728314
+          ],
+          "ball_from_tip_in_jaw_m": {
+            "fixed": [
+              0.03160393035572828,
+              0.0037910750893034246,
+              -0.009348431780963977
+            ],
+            "moving": [
+              -0.032910983901071965,
+              0.0034751768200547394,
+              -0.004191075089303422
+            ]
+          },
+          "gravity_direction_tool": [
+            0.16153088186684395,
+            -0.9457086558053227,
+            0.2820335308756893
+          ],
+          "height_m": 0.09234592865811306,
+          "jaw_normal_opposition_deg": 133.1862204998026,
+          "jaws": {
+            "gripper": {
+              "count": 4,
+              "normal_force_n": 35.374142796551226,
+              "contact_center_tool_m": [
+                0.003913490668531653,
+                0.0021357725038646095,
+                -0.020283676289177256
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.2519923069659097,
+                0.05687487365889295,
+                0.9644278846417974
+              ]
+            },
+            "moving_jaw_so101_v1": {
+              "count": 4,
+              "normal_force_n": 36.02722307753307,
+              "contact_center_tool_m": [
+                -0.005024348557733647,
+                0.002053352358334049,
+                0.03940897157531828
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.5228845438028529,
+                0.059082711636379494,
+                -0.8459598497563234
+              ]
+            }
+          },
+          "jaw_contact_geoms": [
+            "fixed_jaw_sph_tip1",
+            "fixed_jaw_sph_tip2",
+            "fixed_jaw_box3",
+            "fixed_jaw_box4",
+            "moving_jaw_sph_tip1",
+            "moving_jaw_sph_tip2",
+            "moving_jaw_sph_tip3",
+            "moving_jaw_box2"
+          ],
+          "max_tangential_surface_slip_mps": 0.003253289215098321,
+          "max_sliding_friction_utilization": 0.9989340541919767
+        },
+        {
+          "simulation_time_s": 27.199999999995804,
+          "source_time_s": 27.200000762939453,
+          "fixed_hold": false,
+          "held": true,
+          "bilateral": true,
+          "reference_pose_error_m": 0.0004188168656072554,
+          "requested_gripper_command_pct": 0.5154638886451725,
+          "applied_gripper_target_pct": 0.5154638886451725,
+          "recorded_gripper_observed_pct": 36.073368072509766,
+          "sim_gripper_observed_pct": 18.12616539001465,
+          "scene_predicted_tip_gap_from_recorded_opening_m": 0.07830670898864864,
+          "sim_tip_surface_gap_m": 0.05263254354799509,
+          "ball_tool_m": [
+            0.020788177377777394,
+            0.0027102486803935347,
+            0.008183127787886586
+          ],
+          "ball_from_tip_in_jaw_m": {
+            "fixed": [
+              0.028283127787886574,
+              0.0024922486803934923,
+              -0.01791517737777746
+            ],
+            "moving": [
+              -0.03254453399410478,
+              -0.00649221198091499,
+              -0.0028922486803935705
+            ]
+          },
+          "gravity_direction_tool": [
+            0.34241054686027345,
+            -0.9003656619802444,
+            0.2685082719875201
+          ],
+          "height_m": 0.06350919751513037,
+          "jaw_normal_opposition_deg": 114.17447576132717,
+          "jaws": {
+            "gripper": {
+              "count": 4,
+              "normal_force_n": 30.894415666475126,
+              "contact_center_tool_m": [
+                0.004597607260788956,
+                0.0017211024003575908,
+                -0.020521331895545145
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.4905136710379549,
+                0.02987993791761082,
+                0.8697352236004313
+              ]
+            },
+            "moving_jaw_so101_v1": {
+              "count": 4,
+              "normal_force_n": 30.986180946321852,
+              "contact_center_tool_m": [
+                0.001312324067020332,
+                0.0010064421343142472,
+                0.03473134331433076
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.589394540941151,
+                0.05159889847459308,
+                -0.8035385227858267
+              ]
+            }
+          },
+          "jaw_contact_geoms": [
+            "fixed_jaw_sph_tip1",
+            "geom_37",
+            "fixed_jaw_box3",
+            "fixed_jaw_box4",
+            "moving_jaw_sph_tip1",
+            "moving_jaw_sph_tip3",
+            "geom_50",
+            "moving_jaw_box2"
+          ],
+          "max_tangential_surface_slip_mps": 0.003302549597632059,
+          "max_sliding_friction_utilization": 0.9968399722380263
+        },
+        {
+          "simulation_time_s": 28.999999999994806,
+          "source_time_s": 29.0,
+          "fixed_hold": false,
+          "held": true,
+          "bilateral": true,
+          "reference_pose_error_m": 0.0006384052703572032,
+          "requested_gripper_command_pct": 0.5154638886451725,
+          "applied_gripper_target_pct": 0.5154638886451725,
+          "recorded_gripper_observed_pct": 36.073368072509766,
+          "sim_gripper_observed_pct": 12.385093688964844,
+          "scene_predicted_tip_gap_from_recorded_opening_m": 0.0783067089886487,
+          "sim_tip_surface_gap_m": 0.04404173869137554,
+          "ball_tool_m": [
+            0.02781420258664513,
+            0.0005010076757412994,
+            0.00323589354352839
+          ],
+          "ball_from_tip_in_jaw_m": {
+            "fixed": [
+              0.02333589354352838,
+              0.00028300767574126383,
+              -0.02494120258664512
+            ],
+            "moving": [
+              -0.02997408338522301,
+              -0.01568840325673683,
+              -0.0006830076757412069
+            ]
+          },
+          "gravity_direction_tool": [
+            0.11746186704093388,
+            -0.9516609426820685,
+            0.28380303022472075
+          ],
+          "height_m": 0.108544074000778,
+          "jaw_normal_opposition_deg": 92.16118862369824,
+          "jaws": {
+            "gripper": {
+              "count": 4,
+              "normal_force_n": 25.44142287306983,
+              "contact_center_tool_m": [
+                0.005407660450250868,
+                0.0004374915699414326,
+                -0.020979695928712447
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.6788484920985094,
+                0.0019163712808557992,
+                0.7337064780013578
+              ]
+            },
+            "moving_jaw_so101_v1": {
+              "count": 3,
+              "normal_force_n": 25.52192235127921,
+              "contact_center_tool_m": [
+                0.004489763993386245,
+                0.000264170546208132,
+                0.026502521119414365
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.7074954640950856,
+                0.007183573981457398,
+                -0.7059663759799367
+              ]
+            }
+          },
+          "jaw_contact_geoms": [
+            "fixed_jaw_sph_tip1",
+            "geom_37",
+            "fixed_jaw_box3",
+            "fixed_jaw_box4",
+            "moving_jaw_sph_tip1",
+            "geom_50",
+            "moving_jaw_box2"
+          ],
+          "max_tangential_surface_slip_mps": 0.006457626859462718,
+          "max_sliding_friction_utilization": 0.999310523117826
+        },
+        {
+          "simulation_time_s": 29.09999999999475,
+          "source_time_s": 29.100000381469727,
+          "fixed_hold": false,
+          "held": true,
+          "bilateral": true,
+          "reference_pose_error_m": 0.0004973103628358554,
+          "requested_gripper_command_pct": 0.5154638886451725,
+          "applied_gripper_target_pct": 0.5154638886451725,
+          "recorded_gripper_observed_pct": 36.073368072509766,
+          "sim_gripper_observed_pct": 11.830095291137695,
+          "scene_predicted_tip_gap_from_recorded_opening_m": 0.07830670898864861,
+          "sim_tip_surface_gap_m": 0.0432037678256801,
+          "ball_tool_m": [
+            0.028383353807214462,
+            0.00017673208042781938,
+            0.0027502672847685835
+          ],
+          "ball_from_tip_in_jaw_m": {
+            "fixed": [
+              0.02285026728476855,
+              -4.126791957220252e-05,
+              -0.025510353807214493
+            ],
+            "moving": [
+              -0.029611474864829443,
+              -0.016498305849840966,
+              -0.0003587320804278193
+            ]
+          },
+          "gravity_direction_tool": [
+            0.12275951289036754,
+            -0.951046844392362,
+            0.28361946647973263
+          ],
+          "height_m": 0.10732892470069985,
+          "jaw_normal_opposition_deg": 90.16430774951418,
+          "jaws": {
+            "gripper": {
+              "count": 4,
+              "normal_force_n": 24.60033734422708,
+              "contact_center_tool_m": [
+                0.005478994524172533,
+                0.0002499596216281664,
+                -0.02100932767633995
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.6937588433042674,
+                -0.0022156686111492008,
+                0.7196936243050375
+              ]
+            },
+            "moving_jaw_so101_v1": {
+              "count": 3,
+              "normal_force_n": 24.745438160966042,
+              "contact_center_tool_m": [
+                0.004731015487055123,
+                0.00016871326397473736,
+                0.025674305484555335
+              ],
+              "mean_normal_onto_ball_tool": [
+                0.7176536074318273,
+                0.0002293544324405652,
+                -0.6957730528827023
+              ]
+            }
+          },
+          "jaw_contact_geoms": [
+            "fixed_jaw_sph_tip1",
+            "geom_37",
+            "fixed_jaw_box3",
+            "fixed_jaw_box4",
+            "moving_jaw_sph_tip1",
+            "geom_50",
+            "moving_jaw_box2"
+          ],
+          "max_tangential_surface_slip_mps": 0.011901124123886627,
+          "max_sliding_friction_utilization": 0.998866950429013
+        },
+        {
+          "simulation_time_s": 29.199999999994695,
+          "source_time_s": 29.200000762939453,
+          "fixed_hold": false,
+          "held": false,
+          "bilateral": false,
+          "reference_pose_error_m": 0.0002587760111342794,
+          "requested_gripper_command_pct": 0.5154638886451725,
+          "applied_gripper_target_pct": 0.5154638886451725,
+          "recorded_gripper_observed_pct": 36.073368072509766,
+          "sim_gripper_observed_pct": 2.2612364292144775,
+          "scene_predicted_tip_gap_from_recorded_opening_m": 0.07830670898864864,
+          "sim_tip_surface_gap_m": 0.028597511717634912,
+          "ball_tool_m": [
+            0.04728591384296884,
+            -0.02657261370535175,
+            0.007075356197490156
+          ],
+          "ball_from_tip_in_jaw_m": {
+            "fixed": [
+              0.027175356197490123,
+              -0.026790613705351702,
+              -0.044412913842968846
+            ],
+            "moving": [
+              -0.010355677366067309,
+              -0.04195265590072848,
+              0.026390613705351732
+            ]
+          },
+          "gravity_direction_tool": [
+            0.18375575588858561,
+            -0.9419793329550052,
+            0.28090702814891755
+          ],
+          "height_m": 0.06609230302066313,
+          "jaw_normal_opposition_deg": null,
+          "jaws": {
+            "gripper": {
+              "count": 0,
+              "normal_force_n": 0,
+              "contact_center_tool_m": null,
+              "mean_normal_onto_ball_tool": null
+            },
+            "moving_jaw_so101_v1": {
+              "count": 0,
+              "normal_force_n": 0,
+              "contact_center_tool_m": null,
+              "mean_normal_onto_ball_tool": null
+            }
+          },
+          "jaw_contact_geoms": [],
+          "max_tangential_surface_slip_mps": null,
+          "max_sliding_friction_utilization": null
+        }
+      ]
+    },
+    {
+      "mode": "fixed_target_hold",
+      "initial_physical_valid": true,
+      "ticks": 376,
+      "lifted": true,
+      "placement_success": null,
+      "hold_anchor_source_time_s": 17.600000381469727,
+      "hold_duration_s": 20.0,
+      "hold_end_bilateral": false,
+      "hold_loss_elapsed_s": [
+        12.399999999993128
+      ],
+      "hold_max_reference_pose_error_m": 0.0005042003751915259,
+      "loss_of_hold_times_s": [
+        29.99999999999425
+      ],
+      "max_robot_table_penetration_m": 0.0,
+      "limit_clipped_ticks": 44,
+      "rate_limited_ticks": 8,
+      "hold_limit_clipped_ticks": 0,
+      "hold_rate_limited_ticks": 0,
+      "hold_ball_displacement_tool_before_bilateral_loss_m": 0.029164501321242407,
+      "hold_first_nonbilateral_elapsed_s": 12.399999999993128,
+      "episode": 1,
+      "matched_prefix_max_ball_difference_m": 0.0,
+      "raw_trace": "outputs/so101_contact_retention_20261019/episode1_fixed_target_hold_trace.json",
+      "raw_trace_sha256": "0dcd4eabb89c408cadc76c274273adba0d478fa117af134a177c2fabbccc462d",
+      "anchor": {
+        "simulation_time_s": 17.600000000001124,
+        "source_time_s": 17.600000381469727,
+        "fixed_hold": false,
+        "held": true,
+        "bilateral": true,
+        "reference_pose_error_m": 0.0006243410125295338,
+        "requested_gripper_command_pct": 0.2577319443225862,
+        "applied_gripper_target_pct": 0.2577319443225862,
+        "recorded_gripper_observed_pct": 36.073368072509766,
+        "sim_gripper_observed_pct": 27.139307022094727,
+        "scene_predicted_tip_gap_from_recorded_opening_m": 0.07830670898864864,
+        "sim_tip_surface_gap_m": 0.06577966896650067,
+        "ball_tool_m": [
+          0.0007391211660657842,
+          0.004078632286559009,
+          0.01274545142566018
+        ],
+        "ball_from_tip_in_jaw_m": {
+          "fixed": [
+            0.03284545142566019,
+            0.0038606322865589677,
+            0.0021338788339341735
+          ],
+          "moving": [
+            -0.030746486007885813,
+            0.015641884998887388,
+            -0.004260632286559001
+          ]
+        },
+        "gravity_direction_tool": [
+          0.37952381645281447,
+          -0.8865957870022138,
+          0.26440420423097516
+        ],
+        "height_m": 0.057439395692926415,
+        "jaw_normal_opposition_deg": 156.68091058816216,
+        "jaws": {
+          "gripper": {
+            "count": 5,
+            "normal_force_n": 41.522688156557386,
+            "contact_center_tool_m": [
+              0.0011161536532898393,
+              0.0019704582239291075,
+              -0.02003269345552053
+            ],
+            "mean_normal_onto_ball_tool": [
+              -0.011320113012555737,
+              0.06378212978542323,
+              0.9938223812101977
+            ]
+          },
+          "moving_jaw_so101_v1": {
+            "count": 4,
+            "normal_force_n": 41.967781550430026,
+            "contact_center_tool_m": [
+              -0.012224576774822762,
+              0.003575540888102126,
+              0.042493113471635646
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.394248313795603,
+              0.01515868859207296,
+              -0.9051487451919582
+            ]
+          }
+        },
+        "jaw_contact_geoms": [
+          "fixed_jaw_sph_tip1",
+          "fixed_jaw_sph_tip2",
+          "fixed_jaw_sph_tip3",
+          "fixed_jaw_box3",
+          "fixed_jaw_box4",
+          "moving_jaw_sph_tip2",
+          "moving_jaw_sph_tip3",
+          "moving_jaw_box2",
+          "moving_jaw_box3"
+        ],
+        "max_tangential_surface_slip_mps": 0.001455391414875555,
+        "max_sliding_friction_utilization": 0.6291168409205823
+      },
+      "last_bilateral": {
+        "simulation_time_s": 29.899999999994307,
+        "source_time_s": null,
+        "fixed_hold": true,
+        "held": true,
+        "bilateral": true,
+        "reference_pose_error_m": 0.0005042003751915259,
+        "requested_gripper_command_pct": 0.2577319443225862,
+        "applied_gripper_target_pct": 0.2577319443225862,
+        "recorded_gripper_observed_pct": null,
+        "sim_gripper_observed_pct": 12.235267639160156,
+        "scene_predicted_tip_gap_from_recorded_opening_m": null,
+        "sim_tip_surface_gap_m": 0.043815642189961534,
+        "ball_tool_m": [
+          0.027965708008395387,
+          5.071375120584415e-05,
+          0.0030988469190789654
+        ],
+        "ball_from_tip_in_jaw_m": {
+          "fixed": [
+            0.02319884691907895,
+            -0.00016728624879411527,
+            -0.025092708008395342
+          ],
+          "moving": [
+            -0.029882212370877428,
+            -0.015902578919714756,
+            -0.00023271375120586767
+          ]
+        },
+        "gravity_direction_tool": [
+          0.3789314743690314,
+          -0.8868300289268982,
+          0.2644682164760612
+        ],
+        "height_m": 0.04619060359947244,
+        "jaw_normal_opposition_deg": 91.61266425067137,
+        "jaws": {
+          "gripper": {
+            "count": 4,
+            "normal_force_n": 25.217928063288433,
+            "contact_center_tool_m": [
+              0.005422162401914305,
+              0.00017409591074463995,
+              -0.020988707247201036
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.6830105480581451,
+              -0.0037319478524870894,
+              0.7298359486916862
+            ]
+          },
+          "moving_jaw_so101_v1": {
+            "count": 3,
+            "normal_force_n": 25.376719822059307,
+            "contact_center_tool_m": [
+              0.004550539294647992,
+              0.00012173311085419907,
+              0.02627475316254135
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.7102704247123423,
+              -0.002174819488296825,
+              -0.7032370666685784
+            ]
+          }
+        },
+        "jaw_contact_geoms": [
+          "fixed_jaw_sph_tip1",
+          "geom_37",
+          "fixed_jaw_box3",
+          "fixed_jaw_box4",
+          "moving_jaw_sph_tip1",
+          "geom_50",
+          "moving_jaw_box2"
+        ],
+        "max_tangential_surface_slip_mps": 0.00652193900549868,
+        "max_sliding_friction_utilization": 0.9984941500560304
+      }
+    },
+    {
+      "mode": "recorded_motion",
+      "initial_physical_valid": true,
+      "ticks": 344,
+      "lifted": true,
+      "placement_success": true,
+      "hold_anchor_source_time_s": null,
+      "hold_duration_s": 0.0,
+      "hold_end_bilateral": null,
+      "hold_loss_elapsed_s": [],
+      "hold_max_reference_pose_error_m": null,
+      "loss_of_hold_times_s": [
+        22.29999999999852
+      ],
+      "max_robot_table_penetration_m": 0.0,
+      "limit_clipped_ticks": 123,
+      "rate_limited_ticks": 15,
+      "episode": 2,
+      "existing_replay_max_ball_difference_m": 0.0,
+      "raw_trace": "outputs/so101_contact_retention_20261019/episode2_recorded_motion_trace.json",
+      "raw_trace_sha256": "ea3e9b7915001a028ec2884d5aeedc0b4d2b9b5a113428f2316ecd04418b2dd8",
+      "phase_summary": {
+        "approach": {
+          "ticks": 127,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.013215609947997583,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            1.29076087474823,
+            45.380435943603516
+          ],
+          "sim_gripper_observed_pct_range": [
+            0.5145531296730042,
+            45.790306091308594
+          ]
+        },
+        "closure": {
+          "ticks": 17,
+          "bilateral_ticks": 12,
+          "max_reference_pose_error_m": 0.0005576951697189017,
+          "min_jaw_normal_opposition_deg": 149.52225015082038,
+          "max_jaw_normal_opposition_deg": 160.81415105322026,
+          "recorded_gripper_observed_pct_range": [
+            35.326087951660156,
+            45.380435943603516
+          ],
+          "sim_gripper_observed_pct_range": [
+            27.73320198059082,
+            45.61848068237305
+          ]
+        },
+        "lift_transport": {
+          "ticks": 80,
+          "bilateral_ticks": 78,
+          "max_reference_pose_error_m": 0.0012552597596324582,
+          "min_jaw_normal_opposition_deg": 140.37202862421657,
+          "max_jaw_normal_opposition_deg": 159.569347810128,
+          "recorded_gripper_observed_pct_range": [
+            35.326087951660156,
+            36.82065200805664
+          ],
+          "sim_gripper_observed_pct_range": [
+            24.47528648376465,
+            36.5248908996582
+          ]
+        },
+        "release": {
+          "ticks": 15,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.0005179031422482412,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            17.52717399597168,
+            53.260868072509766
+          ],
+          "sim_gripper_observed_pct_range": [
+            5.584239482879639,
+            56.63457489013672
+          ]
+        },
+        "after_release": {
+          "ticks": 105,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.01672666535369573,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            5.91032600402832,
+            13.926630020141602
+          ],
+          "sim_gripper_observed_pct_range": [
+            5.412616729736328,
+            5.670138835906982
+          ]
+        }
+      }
+    },
+    {
+      "mode": "fixed_target_hold",
+      "initial_physical_valid": true,
+      "ticks": 382,
+      "lifted": true,
+      "placement_success": null,
+      "hold_anchor_source_time_s": 18.200000762939453,
+      "hold_duration_s": 20.0,
+      "hold_end_bilateral": false,
+      "hold_loss_elapsed_s": [
+        10.999999999993904
+      ],
+      "hold_max_reference_pose_error_m": 0.0003364490029703174,
+      "loss_of_hold_times_s": [
+        29.199999999994695
+      ],
+      "max_robot_table_penetration_m": 0.0,
+      "limit_clipped_ticks": 44,
+      "rate_limited_ticks": 5,
+      "hold_limit_clipped_ticks": 0,
+      "hold_rate_limited_ticks": 0,
+      "hold_ball_displacement_tool_before_bilateral_loss_m": 0.026927792823937573,
+      "hold_first_nonbilateral_elapsed_s": 10.899999999993959,
+      "episode": 2,
+      "matched_prefix_max_ball_difference_m": 0.0,
+      "raw_trace": "outputs/so101_contact_retention_20261019/episode2_fixed_target_hold_trace.json",
+      "raw_trace_sha256": "ec5496fd37b8a2f6b60624eb32d4a61f332a13401f29aae431d62ae608be9638",
+      "anchor": {
+        "simulation_time_s": 18.20000000000079,
+        "source_time_s": 18.200000762939453,
+        "fixed_hold": false,
+        "held": true,
+        "bilateral": true,
+        "reference_pose_error_m": 0.0003160676778695504,
+        "requested_gripper_command_pct": 0.5154638886451725,
+        "applied_gripper_target_pct": 0.5154638886451725,
+        "recorded_gripper_observed_pct": 35.326087951660156,
+        "sim_gripper_observed_pct": 26.615873336791992,
+        "scene_predicted_tip_gap_from_recorded_opening_m": 0.0772806405941367,
+        "sim_tip_surface_gap_m": 0.0650291327871081,
+        "ball_tool_m": [
+          0.00314183589441958,
+          0.002141848024298903,
+          0.012874902030457417
+        ],
+        "ball_from_tip_in_jaw_m": {
+          "fixed": [
+            0.03297490203045743,
+            0.001923848024298856,
+            -0.00026883589441963995
+          ],
+          "moving": [
+            -0.03145931046615965,
+            0.013218068519436885,
+            -0.0023238480242988033
+          ]
+        },
+        "gravity_direction_tool": [
+          0.23430723825462957,
+          -0.9307598082675387,
+          0.28068896917275205
+        ],
+        "height_m": 0.04890456913368743,
+        "jaw_normal_opposition_deg": 155.04564233941844,
+        "jaws": {
+          "gripper": {
+            "count": 5,
+            "normal_force_n": 39.927962677070255,
+            "contact_center_tool_m": [
+              0.001819398030306372,
+              0.0012775669216243835,
+              -0.01998355999853262
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.040049832465755476,
+              0.02613293844495332,
+              0.9947401319860277
+            ]
+          },
+          "moving_jaw_so101_v1": {
+            "count": 5,
+            "normal_force_n": 40.112376289756384,
+            "contact_center_tool_m": [
+              -0.00937144464988335,
+              0.0014137512323735802,
+              0.04308419683146674
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.3805117127354213,
+              0.02190995290221913,
+              -0.9187497184011583
+            ]
+          }
+        },
+        "jaw_contact_geoms": [
+          "fixed_jaw_sph_tip1",
+          "fixed_jaw_sph_tip2",
+          "fixed_jaw_sph_tip3",
+          "fixed_jaw_box3",
+          "fixed_jaw_box4",
+          "moving_jaw_sph_tip1",
+          "moving_jaw_sph_tip2",
+          "moving_jaw_sph_tip3",
+          "moving_jaw_box2",
+          "moving_jaw_box3"
+        ],
+        "max_tangential_surface_slip_mps": 0.0013529337907684262,
+        "max_sliding_friction_utilization": 0.9984361021185332
+      },
+      "last_bilateral": {
+        "simulation_time_s": 28.999999999994806,
+        "source_time_s": null,
+        "fixed_hold": true,
+        "held": true,
+        "bilateral": true,
+        "reference_pose_error_m": 0.0003364490029703174,
+        "requested_gripper_command_pct": 0.5154638886451725,
+        "applied_gripper_target_pct": 0.5154638886451725,
+        "recorded_gripper_observed_pct": null,
+        "sim_gripper_observed_pct": 12.276436805725098,
+        "scene_predicted_tip_gap_from_recorded_opening_m": null,
+        "sim_tip_surface_gap_m": 0.04387777781712736,
+        "ball_tool_m": [
+          0.02785231007079555,
+          -0.0022865662349266388,
+          0.0031338733632042524
+        ],
+        "ball_from_tip_in_jaw_m": {
+          "fixed": [
+            0.023233873363204243,
+            -0.0025045662349266547,
+            -0.024979310070795575
+          ],
+          "moving": [
+            -0.029883998722761082,
+            -0.015775855872885672,
+            0.002104566234926685
+          ]
+        },
+        "gravity_direction_tool": [
+          0.2341798740936339,
+          -0.9307910462756418,
+          0.28069167202213974
+        ],
+        "height_m": 0.04171063869485367,
+        "jaw_normal_opposition_deg": 91.70346202211553,
+        "jaws": {
+          "gripper": {
+            "count": 4,
+            "normal_force_n": 25.257815942724157,
+            "contact_center_tool_m": [
+              0.005377051070371161,
+              -0.0010303980042836178,
+              -0.02095370793304712
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.6810729858535823,
+              -0.03799844881547863,
+              0.7299599881263452
+            ]
+          },
+          "moving_jaw_so101_v1": {
+            "count": 3,
+            "normal_force_n": 25.43534867343725,
+            "contact_center_tool_m": [
+              0.004518945004357082,
+              -0.0006893680906270397,
+              0.02632143955417471
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.7075832720880019,
+              -0.048538420101021114,
+              -0.7033616217391209
+            ]
+          }
+        },
+        "jaw_contact_geoms": [
+          "fixed_jaw_sph_tip1",
+          "geom_37",
+          "fixed_jaw_box3",
+          "fixed_jaw_box4",
+          "moving_jaw_sph_tip1",
+          "geom_50",
+          "moving_jaw_box2"
+        ],
+        "max_tangential_surface_slip_mps": 0.006246867979724469,
+        "max_sliding_friction_utilization": 0.99830777452487
+      }
+    },
+    {
+      "mode": "recorded_motion",
+      "initial_physical_valid": true,
+      "ticks": 456,
+      "lifted": true,
+      "placement_success": true,
+      "hold_anchor_source_time_s": null,
+      "hold_duration_s": 0.0,
+      "hold_end_bilateral": null,
+      "hold_loss_elapsed_s": [],
+      "hold_max_reference_pose_error_m": null,
+      "loss_of_hold_times_s": [
+        30.999999999993697
+      ],
+      "max_robot_table_penetration_m": 0.0,
+      "limit_clipped_ticks": 135,
+      "rate_limited_ticks": 13,
+      "episode": 3,
+      "existing_replay_max_ball_difference_m": 0.0,
+      "raw_trace": "outputs/so101_contact_retention_20261019/episode3_recorded_motion_trace.json",
+      "raw_trace_sha256": "74649cac2a998cf5e08c36cd1f83dcb29da21aa791773b281a4c0c00c2fff707",
+      "phase_summary": {
+        "approach": {
+          "ticks": 137,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.013141955152363402,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            1.6304347515106201,
+            50.611412048339844
+          ],
+          "sim_gripper_observed_pct_range": [
+            0.6926208138465881,
+            51.116756439208984
+          ]
+        },
+        "closure": {
+          "ticks": 17,
+          "bilateral_ticks": 12,
+          "max_reference_pose_error_m": 0.003928643901638199,
+          "min_jaw_normal_opposition_deg": 160.344606307874,
+          "max_jaw_normal_opposition_deg": 161.61911299693,
+          "recorded_gripper_observed_pct_range": [
+            36.888587951660156,
+            50.611412048339844
+          ],
+          "sim_gripper_observed_pct_range": [
+            28.463674545288086,
+            50.8628044128418
+          ]
+        },
+        "lift_transport": {
+          "ticks": 170,
+          "bilateral_ticks": 155,
+          "max_reference_pose_error_m": 0.003467472440839672,
+          "min_jaw_normal_opposition_deg": 116.50998773445583,
+          "max_jaw_normal_opposition_deg": 160.35078589406905,
+          "recorded_gripper_observed_pct_range": [
+            36.888587951660156,
+            36.888587951660156
+          ],
+          "sim_gripper_observed_pct_range": [
+            19.500732421875,
+            28.461679458618164
+          ]
+        },
+        "release": {
+          "ticks": 25,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.0005099618132875243,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            6.657608509063721,
+            52.71739196777344
+          ],
+          "sim_gripper_observed_pct_range": [
+            6.012792587280273,
+            54.08842468261719
+          ]
+        },
+        "after_release": {
+          "ticks": 107,
+          "bilateral_ticks": 0,
+          "max_reference_pose_error_m": 0.017236104592461547,
+          "min_jaw_normal_opposition_deg": null,
+          "max_jaw_normal_opposition_deg": null,
+          "recorded_gripper_observed_pct_range": [
+            6.4538044929504395,
+            6.4538044929504395
+          ],
+          "sim_gripper_observed_pct_range": [
+            6.099658489227295,
+            6.443342685699463
+          ]
+        }
+      }
+    },
+    {
+      "mode": "fixed_target_hold",
+      "initial_physical_valid": true,
+      "ticks": 372,
+      "lifted": true,
+      "placement_success": null,
+      "hold_anchor_source_time_s": 17.200000762939453,
+      "hold_duration_s": 20.0,
+      "hold_end_bilateral": false,
+      "hold_loss_elapsed_s": [
+        14.699999999991853
+      ],
+      "hold_max_reference_pose_error_m": 0.00030207294976606816,
+      "loss_of_hold_times_s": [
+        31.8999999999932
+      ],
+      "max_robot_table_penetration_m": 0.0,
+      "limit_clipped_ticks": 58,
+      "rate_limited_ticks": 8,
+      "hold_limit_clipped_ticks": 0,
+      "hold_rate_limited_ticks": 0,
+      "hold_ball_displacement_tool_before_bilateral_loss_m": 0.02484143981607438,
+      "hold_first_nonbilateral_elapsed_s": 14.699999999991853,
+      "episode": 3,
+      "matched_prefix_max_ball_difference_m": 0.0,
+      "raw_trace": "outputs/so101_contact_retention_20261019/episode3_fixed_target_hold_trace.json",
+      "raw_trace_sha256": "dc905a93cc679691542f4a43d66ca8120c9a00d9896439992427318e29728900",
+      "anchor": {
+        "simulation_time_s": 17.200000000001346,
+        "source_time_s": 17.200000762939453,
+        "fixed_hold": false,
+        "held": true,
+        "bilateral": true,
+        "reference_pose_error_m": 0.00031673977578314586,
+        "requested_gripper_command_pct": 19.501718521118164,
+        "applied_gripper_target_pct": 19.501718521118164,
+        "recorded_gripper_observed_pct": 36.888587951660156,
+        "sim_gripper_observed_pct": 28.125253677368164,
+        "scene_predicted_tip_gap_from_recorded_opening_m": 0.07942125405563132,
+        "sim_tip_surface_gap_m": 0.06718867680088425,
+        "ball_tool_m": [
+          -0.004115006585052792,
+          0.004312147316139076,
+          0.012334693689061422
+        ],
+        "ball_from_tip_in_jaw_m": {
+          "fixed": [
+            0.03243469368906142,
+            0.004094147316139106,
+            0.00698800658505281
+          ],
+          "moving": [
+            -0.029205404899590233,
+            0.02050857530904512,
+            -0.004494147316139048
+          ]
+        },
+        "gravity_direction_tool": [
+          0.48192477503034176,
+          -0.8680755121020333,
+          0.11913612592638072
+        ],
+        "height_m": 0.03125914888585188,
+        "jaw_normal_opposition_deg": 159.44675710943736,
+        "jaws": {
+          "gripper": {
+            "count": 5,
+            "normal_force_n": 45.185786529666416,
+            "contact_center_tool_m": [
+              -0.0008994151459464165,
+              0.002135969127177995,
+              -0.020139043525665475
+            ],
+            "mean_normal_onto_ball_tool": [
+              -0.09765691397044195,
+              0.06581733254913066,
+              0.9872492264446477
+            ]
+          },
+          "moving_jaw_so101_v1": {
+            "count": 4,
+            "normal_force_n": 45.97948656274062,
+            "contact_center_tool_m": [
+              -0.018106493652914217,
+              0.0042215175496536925,
+              0.04128963740547949
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.42876841724937037,
+              0.0027320466867440957,
+              -0.8856599591352906
+            ]
+          }
+        },
+        "jaw_contact_geoms": [
+          "fixed_jaw_sph_tip1",
+          "fixed_jaw_sph_tip2",
+          "fixed_jaw_sph_tip3",
+          "fixed_jaw_box3",
+          "fixed_jaw_box4",
+          "moving_jaw_sph_tip3",
+          "geom_49",
+          "moving_jaw_box2",
+          "moving_jaw_box3"
+        ],
+        "max_tangential_surface_slip_mps": 0.0013606604404884349,
+        "max_sliding_friction_utilization": 0.9969781144344614
+      },
+      "last_bilateral": {
+        "simulation_time_s": 31.799999999993254,
+        "source_time_s": null,
+        "fixed_hold": true,
+        "held": true,
+        "bilateral": true,
+        "reference_pose_error_m": 0.00030187596299608674,
+        "requested_gripper_command_pct": 19.501718521118164,
+        "applied_gripper_target_pct": 19.501718521118164,
+        "recorded_gripper_observed_pct": null,
+        "sim_gripper_observed_pct": 19.50942611694336,
+        "scene_predicted_tip_gap_from_recorded_opening_m": null,
+        "sim_tip_surface_gap_m": 0.05467919925454359,
+        "ball_tool_m": [
+          0.020522847573331948,
+          0.002817719895667231,
+          0.009534700601435799
+        ],
+        "ball_from_tip_in_jaw_m": {
+          "fixed": [
+            0.02963470060143579,
+            0.002599719895667264,
+            -0.017649847573331965
+          ],
+          "moving": [
+            -0.03350315400662969,
+            -0.00568857666305115,
+            -0.0029997198956672206
+          ]
+        },
+        "gravity_direction_tool": [
+          0.48226398237038987,
+          -0.8678908375100678,
+          0.11910896471015427
+        ],
+        "height_m": 0.018417111579628304,
+        "jaw_normal_opposition_deg": 116.23726816944648,
+        "jaws": {
+          "gripper": {
+            "count": 1,
+            "normal_force_n": 1.4570645952360728,
+            "contact_center_tool_m": [
+              0.005311469027161152,
+              0.002234742685272716,
+              -0.020147515851431475
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.4560031534700956,
+              0.017476354660045244,
+              0.8898065526018136
+            ]
+          },
+          "moving_jaw_so101_v1": {
+            "count": 3,
+            "normal_force_n": 1.5271509798436353,
+            "contact_center_tool_m": [
+              0.0006854922034290261,
+              0.0009158251663220187,
+              0.03632999382909615
+            ],
+            "mean_normal_onto_ball_tool": [
+              0.5930879656045107,
+              0.05686662724878416,
+              -0.8010809640186478
+            ]
+          }
+        },
+        "jaw_contact_geoms": [
+          "fixed_jaw_box3",
+          "moving_jaw_sph_tip1",
+          "geom_50",
+          "moving_jaw_box2"
+        ],
+        "max_tangential_surface_slip_mps": 0.0014632231193923405,
+        "max_sliding_friction_utilization": 0.8316678572281064
+      }
+    }
+  ],
+  "conclusions": [
+    "All three20s fixed native target holds lose the ball despite submillimetre arm reference errors and zero hold-stage clipping/rate limiting. Transport trajectory, accumulated Cartesian error and a change in gripper command are not necessary for this simulated failure.",
+    "Episode1 ball creeps along tool X while opposed jaw normals become increasingly non-opposed; both jaws retain substantial compressive normal force immediately before escape. The episode1 direct trace exactly reproduces the prior root-cause replay.",
+    "This supports unstable retention/contact creep under the candidate scene. It does not uniquely identify jaw surface shape, gripper encoder mapping/zero, actuator stiffness, friction or contact regularization as the physical root cause.",
+    "The candidate scene predicts about12mm larger tip gaps from recorded real opening than from its simulated loaded opening at the matched hold anchors. Tip gap is a geometry proxy, not a measured inner-pad separation.",
+    "The unchanged two historical placements are not evidence of long-duration retention: both also drop when held longer at fixed targets."
+  ],
+  "next_independent_measurements": [
+    "Measure unloaded inner-jaw separation and tip/pad landmarks at several ordinary follower encoder openings including empty closure; fit percent-to-hinge mapping/zero without ball contact, success selection or per-episode offsets.",
+    "Measure actual ball diameter, rigid jaw/pad surface shape and thickness; compare loaded contact depth and pad orientation in calibrated two views after freezing the unloaded mapping.",
+    "Record requested, bounded/sent and measured gripper targets during matched empty/loaded holds; compare actual timing and loaded opening. Existing command provenance is unverified.",
+    "Only after independent geometry measurement, compare held-out recorded grasps and the same fixed-hold protocol; do not raise grip force/friction or relax safety constraints to make these development episodes pass."
+  ]
+}

@@ -1,0 +1,691 @@
+{
+  "kind": "OFFLINE_FOLLOWER_RESPONSE",
+  "model": {
+    "gain": [
+      0.06662482972957115,
+      0.06930689575424469,
+      0.08147949462295194,
+      0.18680903058139542,
+      0.16094929833037178,
+      0.21385627361075255
+    ],
+    "inertia": [
+      0.6367310942564381,
+      0.7368964935240172,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "delay": [
+      0,
+      0,
+      4,
+      2,
+      0,
+      0
+    ],
+    "lower": [
+      -108.3956043956044,
+      -105.58241758241758,
+      -97.18681318681318,
+      -99.2967032967033,
+      -180.0,
+      0.0
+    ],
+    "upper": [
+      108.3956043956044,
+      105.58241758241758,
+      97.18681318681318,
+      99.2967032967033,
+      180.0,
+      100.0
+    ],
+    "hz": 30.0,
+    "error_cap": 5.0,
+    "step_cap": 5.0
+  },
+  "fit_scope": "approach",
+  "fit_episodes": [
+    0,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    19,
+    20,
+    21,
+    22,
+    26,
+    28,
+    29,
+    30,
+    31,
+    32,
+    35,
+    36,
+    37,
+    38,
+    39
+  ],
+  "fit_raw_rows_per_episode": {
+    "0": 598,
+    "5": 244,
+    "6": 334,
+    "7": 304,
+    "8": 292,
+    "9": 328,
+    "10": 304,
+    "12": 349,
+    "13": 358,
+    "14": 403,
+    "15": 364,
+    "16": 331,
+    "17": 331,
+    "19": 301,
+    "20": 352,
+    "21": 433,
+    "22": 358,
+    "26": 235,
+    "28": 343,
+    "29": 292,
+    "30": 415,
+    "31": 442,
+    "32": 340,
+    "35": 415,
+    "36": 385,
+    "37": 346,
+    "38": 355,
+    "39": 289
+  },
+  "inner_fit_episodes": [
+    0,
+    5,
+    6,
+    8,
+    9,
+    10,
+    13,
+    14,
+    15,
+    17,
+    19,
+    20,
+    22,
+    26,
+    28,
+    30,
+    31,
+    32,
+    36,
+    37,
+    38
+  ],
+  "inner_selection_episodes": [
+    7,
+    12,
+    16,
+    21,
+    29,
+    35,
+    39
+  ],
+  "source": {
+    "repo_id": "bottowork/so101_act_pickplace_v1",
+    "revision": "fd65a6600b0cd111a434ece1abfa3d44dc7b4d57",
+    "root": "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v1",
+    "codebase_version": "v3.0",
+    "fps": 30.0
+  },
+  "primary_split": {
+    "seed": 0,
+    "train": [
+      0,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      19,
+      20,
+      21,
+      22,
+      26,
+      28,
+      29,
+      30,
+      31,
+      32,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    "val": [
+      1,
+      2,
+      3,
+      4,
+      11,
+      18,
+      23,
+      24,
+      27
+    ],
+    "excluded": [
+      25,
+      33,
+      34
+    ],
+    "sha256": "948803789de23605f85378917c40680be567764c17df0774979a6f5f50091717"
+  },
+  "search": [
+    {
+      "joint": "shoulder_pan",
+      "candidates": [
+        {
+          "momentum": false,
+          "delay": 0,
+          "gain": 0.13713111908284104,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.3660370477207592
+        },
+        {
+          "momentum": false,
+          "delay": 2,
+          "gain": 0.16117303288796345,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.3944650599840844
+        },
+        {
+          "momentum": false,
+          "delay": 4,
+          "gain": 0.07007821510690095,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.8415730442338824
+        },
+        {
+          "momentum": false,
+          "delay": 6,
+          "gain": 1.0469486046740762e-17,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 5.163871672312114
+        },
+        {
+          "momentum": true,
+          "delay": 0,
+          "gain": 0.06185906950154446,
+          "inertia": 0.6410511821794004,
+          "inner_episode_mean_free_run_mae": 0.35608752206331074
+        },
+        {
+          "momentum": true,
+          "delay": 2,
+          "gain": 0.053283480102917224,
+          "inertia": 0.7238966964674027,
+          "inner_episode_mean_free_run_mae": 0.44195421247862665
+        },
+        {
+          "momentum": true,
+          "delay": 4,
+          "gain": 0.010952179246664641,
+          "inertia": 0.8458790073226073,
+          "inner_episode_mean_free_run_mae": 0.9797477030615466
+        },
+        {
+          "momentum": true,
+          "delay": 6,
+          "gain": 0.015174670843836181,
+          "inertia": 0.8747675527521788,
+          "inner_episode_mean_free_run_mae": 0.8811964217916691
+        }
+      ],
+      "selected": {
+        "momentum": true,
+        "delay": 0,
+        "gain": 0.06185906950154446,
+        "inertia": 0.6410511821794004,
+        "inner_episode_mean_free_run_mae": 0.35608752206331074
+      },
+      "refit_all_train": {
+        "gain": 0.06662482972957115,
+        "inertia": 0.6367310942564381,
+        "delay": 0
+      }
+    },
+    {
+      "joint": "shoulder_lift",
+      "candidates": [
+        {
+          "momentum": false,
+          "delay": 0,
+          "gain": 0.24049130047583125,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.5910215999924338
+        },
+        {
+          "momentum": false,
+          "delay": 2,
+          "gain": 0.24666017580637278,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.8303417495289089
+        },
+        {
+          "momentum": false,
+          "delay": 4,
+          "gain": 0.16779132912189385,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 5.7080932345816136
+        },
+        {
+          "momentum": false,
+          "delay": 6,
+          "gain": 0.01861984814925859,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 26.343675595858166
+        },
+        {
+          "momentum": true,
+          "delay": 0,
+          "gain": 0.0633081284070437,
+          "inertia": 0.7568836578998221,
+          "inner_episode_mean_free_run_mae": 0.4813495012659179
+        },
+        {
+          "momentum": true,
+          "delay": 2,
+          "gain": 0.027805054559430498,
+          "inertia": 0.8978028572047987,
+          "inner_episode_mean_free_run_mae": 1.9546651078158086
+        },
+        {
+          "momentum": true,
+          "delay": 4,
+          "gain": 0.008077683648807578,
+          "inertia": 0.9588396738939754,
+          "inner_episode_mean_free_run_mae": 8.930910624822642
+        },
+        {
+          "momentum": true,
+          "delay": 6,
+          "gain": 0.004441798237911854,
+          "inertia": 0.9700643678045567,
+          "inner_episode_mean_free_run_mae": 14.116224101702816
+        }
+      ],
+      "selected": {
+        "momentum": true,
+        "delay": 0,
+        "gain": 0.0633081284070437,
+        "inertia": 0.7568836578998221,
+        "inner_episode_mean_free_run_mae": 0.4813495012659179
+      },
+      "refit_all_train": {
+        "gain": 0.06930689575424469,
+        "inertia": 0.7368964935240172,
+        "delay": 0
+      }
+    },
+    {
+      "joint": "elbow_flex",
+      "candidates": [
+        {
+          "momentum": false,
+          "delay": 0,
+          "gain": 0.07853248771938723,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 1.0555267821600027
+        },
+        {
+          "momentum": false,
+          "delay": 2,
+          "gain": 0.08064371238841771,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.9572795927846843
+        },
+        {
+          "momentum": false,
+          "delay": 4,
+          "gain": 0.08155116786747904,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.9109109349884269
+        },
+        {
+          "momentum": false,
+          "delay": 6,
+          "gain": 0.08101302769020798,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 1.0201509905842763
+        },
+        {
+          "momentum": true,
+          "delay": 0,
+          "gain": 0.018118582777676393,
+          "inertia": 0.779758496069101,
+          "inner_episode_mean_free_run_mae": 0.9807059231958809
+        },
+        {
+          "momentum": true,
+          "delay": 2,
+          "gain": 0.01676417931316934,
+          "inertia": 0.797664870235826,
+          "inner_episode_mean_free_run_mae": 0.9258766590732634
+        },
+        {
+          "momentum": true,
+          "delay": 4,
+          "gain": 0.013073586033868436,
+          "inertia": 0.8413542553573564,
+          "inner_episode_mean_free_run_mae": 1.118645287622726
+        },
+        {
+          "momentum": true,
+          "delay": 6,
+          "gain": 0.010276161066302154,
+          "inertia": 0.8752844309271085,
+          "inner_episode_mean_free_run_mae": 1.4853808967394972
+        }
+      ],
+      "selected": {
+        "momentum": false,
+        "delay": 4,
+        "gain": 0.08155116786747904,
+        "inertia": 0.0,
+        "inner_episode_mean_free_run_mae": 0.9109109349884269
+      },
+      "refit_all_train": {
+        "gain": 0.08147949462295194,
+        "inertia": 0.0,
+        "delay": 4
+      }
+    },
+    {
+      "joint": "wrist_flex",
+      "candidates": [
+        {
+          "momentum": false,
+          "delay": 0,
+          "gain": 0.16475816672138624,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.9515016997475235
+        },
+        {
+          "momentum": false,
+          "delay": 2,
+          "gain": 0.18671740933349631,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.7957181010834916
+        },
+        {
+          "momentum": false,
+          "delay": 4,
+          "gain": 0.18495147679653046,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 1.2892056964009364
+        },
+        {
+          "momentum": false,
+          "delay": 6,
+          "gain": 0.12591673227870936,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 3.6570755920319695
+        },
+        {
+          "momentum": true,
+          "delay": 0,
+          "gain": 0.05644574599154898,
+          "inertia": 0.6788464857144413,
+          "inner_episode_mean_free_run_mae": 0.9971682186724706
+        },
+        {
+          "momentum": true,
+          "delay": 2,
+          "gain": 0.04139251326644192,
+          "inertia": 0.779968958828788,
+          "inner_episode_mean_free_run_mae": 1.4088092617384267
+        },
+        {
+          "momentum": true,
+          "delay": 4,
+          "gain": 0.009685612127372078,
+          "inertia": 0.9294769724112644,
+          "inner_episode_mean_free_run_mae": 4.935076022813733
+        },
+        {
+          "momentum": true,
+          "delay": 6,
+          "gain": 0.005568015594253088,
+          "inertia": 0.9504469546524985,
+          "inner_episode_mean_free_run_mae": 7.612813154914725
+        }
+      ],
+      "selected": {
+        "momentum": false,
+        "delay": 2,
+        "gain": 0.18671740933349631,
+        "inertia": 0.0,
+        "inner_episode_mean_free_run_mae": 0.7957181010834916
+      },
+      "refit_all_train": {
+        "gain": 0.18680903058139542,
+        "inertia": 0.0,
+        "delay": 2
+      }
+    },
+    {
+      "joint": "wrist_roll",
+      "candidates": [
+        {
+          "momentum": false,
+          "delay": 0,
+          "gain": 0.16466876328660152,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.2962913887403425
+        },
+        {
+          "momentum": false,
+          "delay": 2,
+          "gain": 0.19396117060882453,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.3181925089981273
+        },
+        {
+          "momentum": false,
+          "delay": 4,
+          "gain": 0.06143078039560921,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.4707799766142448
+        },
+        {
+          "momentum": false,
+          "delay": 6,
+          "gain": 7.308011464935288e-21,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 2.4053638771214527
+        },
+        {
+          "momentum": true,
+          "delay": 0,
+          "gain": 0.07319192181616963,
+          "inertia": 0.6415705598354656,
+          "inner_episode_mean_free_run_mae": 0.31748358022077816
+        },
+        {
+          "momentum": true,
+          "delay": 2,
+          "gain": 0.046366464012444666,
+          "inertia": 0.77290794136739,
+          "inner_episode_mean_free_run_mae": 0.40259832414750363
+        },
+        {
+          "momentum": true,
+          "delay": 4,
+          "gain": 1.0480485959149978e-19,
+          "inertia": 0.8917078910363581,
+          "inner_episode_mean_free_run_mae": 2.4053638771214527
+        },
+        {
+          "momentum": true,
+          "delay": 6,
+          "gain": 5.628997938574305e-14,
+          "inertia": 0.8905677050149887,
+          "inner_episode_mean_free_run_mae": 2.4053638770023307
+        }
+      ],
+      "selected": {
+        "momentum": false,
+        "delay": 0,
+        "gain": 0.16466876328660152,
+        "inertia": 0.0,
+        "inner_episode_mean_free_run_mae": 0.2962913887403425
+      },
+      "refit_all_train": {
+        "gain": 0.16094929833037178,
+        "inertia": 0.0,
+        "delay": 0
+      }
+    },
+    {
+      "joint": "gripper",
+      "candidates": [
+        {
+          "momentum": false,
+          "delay": 0,
+          "gain": 0.21294223406630267,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.7518403647128851
+        },
+        {
+          "momentum": false,
+          "delay": 2,
+          "gain": 0.22563226111499052,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 0.8061276011784427
+        },
+        {
+          "momentum": false,
+          "delay": 4,
+          "gain": 0.21732050354931884,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 1.312284303454771
+        },
+        {
+          "momentum": false,
+          "delay": 6,
+          "gain": 0.16980851917932674,
+          "inertia": 0.0,
+          "inner_episode_mean_free_run_mae": 2.8656719104708626
+        },
+        {
+          "momentum": true,
+          "delay": 0,
+          "gain": 0.07800048476035591,
+          "inertia": 0.6517689345243678,
+          "inner_episode_mean_free_run_mae": 0.7962047441311372
+        },
+        {
+          "momentum": true,
+          "delay": 2,
+          "gain": 0.06490051340875531,
+          "inertia": 0.7133032473123271,
+          "inner_episode_mean_free_run_mae": 1.2023343679572687
+        },
+        {
+          "momentum": true,
+          "delay": 4,
+          "gain": 0.014596456192056155,
+          "inertia": 0.9146962244264243,
+          "inner_episode_mean_free_run_mae": 4.321270286831385
+        },
+        {
+          "momentum": true,
+          "delay": 6,
+          "gain": 0.004111694406383046,
+          "inertia": 0.9524493513770481,
+          "inner_episode_mean_free_run_mae": 10.657646339848867
+        }
+      ],
+      "selected": {
+        "momentum": false,
+        "delay": 0,
+        "gain": 0.21294223406630267,
+        "inertia": 0.0,
+        "inner_episode_mean_free_run_mae": 0.7518403647128851
+      },
+      "refit_all_train": {
+        "gain": 0.21385627361075255,
+        "inertia": 0.0,
+        "delay": 0
+      }
+    }
+  ],
+  "first_order_baseline": {
+    "gain": [
+      0.14839543164515542,
+      0.24600124258344552,
+      0.07833132619668556,
+      0.1641398863710151,
+      0.16094929833037178,
+      0.21385627361075255
+    ],
+    "inertia": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "delay": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "lower": [
+      -108.3956043956044,
+      -105.58241758241758,
+      -97.18681318681318,
+      -99.2967032967033,
+      -180.0,
+      0.0
+    ],
+    "upper": [
+      108.3956043956044,
+      105.58241758241758,
+      97.18681318681318,
+      99.2967032967033,
+      180.0,
+      100.0
+    ],
+    "hz": 30.0,
+    "error_cap": 5.0,
+    "step_cap": 5.0
+  },
+  "provenance": {
+    "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+    "results/metrics/geometry_3988577/configs/sim_so101.yaml": "5caeaf290fc280320840c491223425114839a86218205e63f9d2a8cb4edb4ab3",
+    ".cache/derived_joint/manifest.json": "56331c09eac2659a1257706a53588c921b8a90cbd4bbfa32e82685d545429eba"
+  },
+  "bounds_note": "Numeric local calibration endpoints, not verified physical MJCF joint limits.",
+  "caps_note": "5 dataset units from documented recording safety cap; velocity capped at 5 units/raw tick.",
+  "limitations": "No object/contact/force input. Nominal timestamp clock, no wall-clock motor timestamps. Not an ACT adapter; no physical calibration or task-success claim."
+}

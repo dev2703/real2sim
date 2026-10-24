@@ -1,0 +1,2999 @@
+{
+  "kind": "MATCHED_AUXILIARY_IMAGE_KEYPOINT_PILOT",
+  "steps": 256,
+  "batch_size": 16,
+  "examples_per_model": 4096,
+  "training_seed": 0,
+  "validation_distinct_observations": 1037,
+  "cache": ".cache/v2_keypoint_bottleneck_20261024",
+  "cache_manifest_sha256": "9796dc540257c77f43db70099f74fefc822c9ec0082841e8f6bffa2c14574862",
+  "reserved_episodes_used": [],
+  "physical_calibration_accepted": false,
+  "checkpoint_promoted": false,
+  "models": {
+    "action_only": {
+      "step": 256,
+      "auxiliary_weight": 0.0,
+      "seed": 0,
+      "trainable_parameters": 57552,
+      "history": [
+        {
+          "step": 64,
+          "loss": 0.4605041444301605,
+          "action_l1": 0.4605041444301605,
+          "auxiliary": 3.1293413639068604,
+          "visible_pseudo_targets": 14
+        },
+        {
+          "step": 128,
+          "loss": 0.35517817735671997,
+          "action_l1": 0.35517817735671997,
+          "auxiliary": 4.511834144592285,
+          "visible_pseudo_targets": 15
+        },
+        {
+          "step": 192,
+          "loss": 0.39142417907714844,
+          "action_l1": 0.39142417907714844,
+          "auxiliary": 6.377651691436768,
+          "visible_pseudo_targets": 12
+        },
+        {
+          "step": 256,
+          "loss": 0.34000682830810547,
+          "action_l1": 0.34000682830810547,
+          "auxiliary": 4.165372371673584,
+          "visible_pseudo_targets": 16
+        }
+      ],
+      "validation": {
+        "version": "executed_prefix_motion_v1",
+        "action_representation": "cartesian",
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "valid_actions": 2071,
+        "excluded_extrapolated_actions": 6,
+        "excluded_invalid_actions": 0,
+        "excluded_invalid_observation_actions": 0,
+        "inference_calls": 1037,
+        "scores": {
+          "model": {
+            "all": {
+              "n": 2071,
+              "mae_per_dimension": [
+                0.001078557688742876,
+                0.0009755966020748019,
+                0.0014528284082189202,
+                0.003285044804215431,
+                0.010369498282670975,
+                0.0048227435909211636,
+                0.017836881801486015
+              ],
+              "gripper_mae": 0.01783689111471176,
+              "gripper_unit": "fraction of calibrated range",
+              "l1": 0.33873942494392395,
+              "translation_mean_mm": 2.3773162364959717,
+              "translation_p95_mm": 7.34780740737915,
+              "translation_bias_xyz_mm": [
+                -0.0909997820854187,
+                0.15018980205059052,
+                -0.016920186579227448
+              ],
+              "raw_dimension_units": [
+                "m",
+                "m",
+                "m",
+                "rad",
+                "rad",
+                "rad",
+                "fraction"
+              ],
+              "zero_delta_translation_mean_mm": 4.346732139587402,
+              "translation_skill_vs_zero": 0.4530796561295287,
+              "translation_motion": {
+                "label_step_threshold_mm": 0.4,
+                "n": 1585,
+                "translation_mean_mm": 2.9479236602783203,
+                "predicted_step_mean_mm": 4.400391101837158,
+                "label_step_mean_mm": 5.671669006347656,
+                "median_predicted_to_label_step_ratio": 0.8058724999427795,
+                "positive_direction_fraction": 0.9394321766561514
+              },
+              "rotation_mean_rad": 0.01370744469212422,
+              "invalid_rotations": 0
+            },
+            "movement": {
+              "n": 1585,
+              "unit": "mm",
+              "label_step_threshold": 0.4,
+              "vector_error_mean": 2.9479236602783203,
+              "positive_direction_fraction": 0.9394321766561514,
+              "direction_cosine_mean_nonzero_predictions": 0.7830826640129089,
+              "zero_prediction_fraction": 0.0,
+              "predicted_to_label_step_ratio_median": 0.8058724999427795
+            },
+            "stationary_drift": {
+              "n": 471,
+              "contiguous_runs": 80,
+              "unit": "mm",
+              "predicted_step_mean": 0.5032384395599365,
+              "summed_error_per_run_mean": 2.5568859385326506,
+              "summed_error_per_run_max": 7.880466461181641,
+              "interpretation": "teacher-forced displacement/target-error sum proxy; no rollout feedback"
+            },
+            "per_episode": {
+              "9": {
+                "n": 300,
+                "mae_per_dimension": [
+                  0.0012852783547714353,
+                  0.0010745467152446508,
+                  0.0016458785394206643,
+                  0.0042556575499475,
+                  0.013719016686081886,
+                  0.005431738682091236,
+                  0.021188342943787575
+                ],
+                "gripper_mae": 0.021188346669077873,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.4096844792366028,
+                "translation_mean_mm": 2.6822118759155273,
+                "translation_p95_mm": 7.9022064208984375,
+                "translation_bias_xyz_mm": [
+                  -0.15306472778320312,
+                  0.24605658650398254,
+                  -0.03617066517472267
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.650945663452148,
+                "translation_skill_vs_zero": 0.4232975248468792,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 238,
+                  "translation_mean_mm": 3.2040133476257324,
+                  "predicted_step_mean_mm": 4.367574691772461,
+                  "label_step_mean_mm": 5.853989601135254,
+                  "median_predicted_to_label_step_ratio": 0.8247510194778442,
+                  "positive_direction_fraction": 0.9201680672268907
+                },
+                "rotation_mean_rad": 0.01747647471792953,
+                "invalid_rotations": 0,
+                "summed_motion_error": 87.60872650146484,
+                "summed_motion_error_unit": "mm"
+              },
+              "13": {
+                "n": 392,
+                "mae_per_dimension": [
+                  0.0011395129840821028,
+                  0.0009299417724832892,
+                  0.0014953867066651583,
+                  0.002765093231573701,
+                  0.011322773061692715,
+                  0.004799270071089268,
+                  0.020419230684638023
+                ],
+                "gripper_mae": 0.02041923813521862,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.3378210961818695,
+                "translation_mean_mm": 2.4552958011627197,
+                "translation_p95_mm": 7.453183650970459,
+                "translation_bias_xyz_mm": [
+                  -0.01787685975432396,
+                  0.23053792119026184,
+                  0.054825831204652786
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.4371795654296875,
+                "translation_skill_vs_zero": 0.44665394650870893,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 314,
+                  "translation_mean_mm": 2.9529476165771484,
+                  "predicted_step_mean_mm": 4.14555025100708,
+                  "label_step_mean_mm": 5.532742023468018,
+                  "median_predicted_to_label_step_ratio": 0.7727751731872559,
+                  "positive_direction_fraction": 0.945859872611465
+                },
+                "rotation_mean_rad": 0.014280576336624835,
+                "invalid_rotations": 0,
+                "summed_motion_error": 93.15525817871094,
+                "summed_motion_error_unit": "mm"
+              },
+              "22": {
+                "n": 346,
+                "mae_per_dimension": [
+                  0.0011909608729183674,
+                  0.0012094838311895728,
+                  0.0018144447822123766,
+                  0.0048647308722138405,
+                  0.0105113685131073,
+                  0.005545694846659899,
+                  0.017477234825491905
+                ],
+                "gripper_mae": 0.017477232962846756,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.4080873429775238,
+                "translation_mean_mm": 2.8113176822662354,
+                "translation_p95_mm": 7.539276123046875,
+                "translation_bias_xyz_mm": [
+                  -0.08189480006694794,
+                  -0.03506167232990265,
+                  -0.12915343046188354
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 5.042026519775391,
+                "translation_skill_vs_zero": 0.4424230671457332,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 267,
+                  "translation_mean_mm": 3.4789204597473145,
+                  "predicted_step_mean_mm": 5.283114433288574,
+                  "label_step_mean_mm": 6.523586750030518,
+                  "median_predicted_to_label_step_ratio": 0.8027530908584595,
+                  "positive_direction_fraction": 0.9288389513108615
+                },
+                "rotation_mean_rad": 0.01502138635322917,
+                "invalid_rotations": 0,
+                "summed_motion_error": 54.28636169433594,
+                "summed_motion_error_unit": "mm"
+              },
+              "31": {
+                "n": 305,
+                "mae_per_dimension": [
+                  0.0009714654297567904,
+                  0.0009582572383806109,
+                  0.0014357214095070958,
+                  0.0034782805014401674,
+                  0.010425735265016556,
+                  0.005019073840230703,
+                  0.015438529662787914
+                ],
+                "gripper_mae": 0.015438525006175041,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.3377211093902588,
+                "translation_mean_mm": 2.295339345932007,
+                "translation_p95_mm": 7.53606653213501,
+                "translation_bias_xyz_mm": [
+                  -0.228470578789711,
+                  0.09231164306402206,
+                  -0.0167922992259264
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.615513324737549,
+                "translation_skill_vs_zero": 0.5026903435356183,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 231,
+                  "translation_mean_mm": 2.8652021884918213,
+                  "predicted_step_mean_mm": 4.771024703979492,
+                  "label_step_mean_mm": 6.086979389190674,
+                  "median_predicted_to_label_step_ratio": 0.822160542011261,
+                  "positive_direction_fraction": 0.9696969696969697
+                },
+                "rotation_mean_rad": 0.013856449346523367,
+                "invalid_rotations": 0,
+                "summed_motion_error": 75.33088684082031,
+                "summed_motion_error_unit": "mm"
+              },
+              "36": {
+                "n": 359,
+                "mae_per_dimension": [
+                  0.0009507090435363352,
+                  0.0008587035117670894,
+                  0.001164135173894465,
+                  0.0020829213317483664,
+                  0.007900440134108067,
+                  0.003991404082626104,
+                  0.014811116270720959
+                ],
+                "gripper_mae": 0.014811120927333832,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.2655463218688965,
+                "translation_mean_mm": 2.0069940090179443,
+                "translation_p95_mm": 5.679966926574707,
+                "translation_bias_xyz_mm": [
+                  -0.043844979256391525,
+                  0.1734357476234436,
+                  0.03564370796084404
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.6121482849121094,
+                "translation_skill_vs_zero": 0.44437662833468683,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 264,
+                  "translation_mean_mm": 2.529064178466797,
+                  "predicted_step_mean_mm": 3.760603904724121,
+                  "label_step_mean_mm": 4.903895378112793,
+                  "median_predicted_to_label_step_ratio": 0.7979499697685242,
+                  "positive_direction_fraction": 0.9431818181818182
+                },
+                "rotation_mean_rad": 0.010475914483997522,
+                "invalid_rotations": 0,
+                "summed_motion_error": 65.48461151123047,
+                "summed_motion_error_unit": "mm"
+              },
+              "37": {
+                "n": 369,
+                "mae_per_dimension": [
+                  0.0009532502735964954,
+                  0.000852397526614368,
+                  0.0012066024355590343,
+                  0.002576930448412895,
+                  0.008856348693370819,
+                  0.0043212780728936195,
+                  0.01763222925364971
+                ],
+                "gripper_mae": 0.017632227391004562,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.28906193375587463,
+                "translation_mean_mm": 2.067688226699829,
+                "translation_p95_mm": 6.479403495788574,
+                "translation_bias_xyz_mm": [
+                  -0.05900826305150986,
+                  0.18582038581371307,
+                  -0.023495003581047058
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.8438727855682373,
+                "translation_skill_vs_zero": 0.46208203495627287,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 271,
+                  "translation_mean_mm": 2.672591209411621,
+                  "predicted_step_mean_mm": 4.162128448486328,
+                  "label_step_mean_mm": 5.227108955383301,
+                  "median_predicted_to_label_step_ratio": 0.8106821775436401,
+                  "positive_direction_fraction": 0.9298892988929889
+                },
+                "rotation_mean_rad": 0.011823088318133964,
+                "invalid_rotations": 0,
+                "summed_motion_error": 72.46243286132812,
+                "summed_motion_error_unit": "mm"
+              }
+            }
+          },
+          "hold": {
+            "all": {
+              "n": 2071,
+              "mae_per_dimension": [
+                0.002098839497193694,
+                0.0019465888617560267,
+                0.0022571985609829426,
+                0.003361684735864401,
+                0.013735942542552948,
+                0.007224962580949068,
+                0.021571680903434753
+              ],
+              "gripper_mae": 0.02157183550298214,
+              "gripper_unit": "fraction of calibrated range",
+              "l1": 0.5019423961639404,
+              "translation_mean_mm": 4.346731662750244,
+              "translation_p95_mm": 12.269176483154297,
+              "translation_bias_xyz_mm": [
+                -0.004845717456191778,
+                0.008765839971601963,
+                -0.0031735124066472054
+              ],
+              "raw_dimension_units": [
+                "m",
+                "m",
+                "m",
+                "rad",
+                "rad",
+                "rad",
+                "fraction"
+              ],
+              "zero_delta_translation_mean_mm": 4.346732139587402,
+              "translation_skill_vs_zero": 1.0970014785449678e-07,
+              "translation_motion": {
+                "label_step_threshold_mm": 0.4,
+                "n": 1585,
+                "translation_mean_mm": 5.671669006347656,
+                "predicted_step_mean_mm": 0.0,
+                "label_step_mean_mm": 5.671669006347656,
+                "median_predicted_to_label_step_ratio": 0.0,
+                "positive_direction_fraction": 0.0
+              },
+              "rotation_mean_rad": 0.01864308028291755,
+              "invalid_rotations": 0
+            },
+            "movement": {
+              "n": 1585,
+              "unit": "mm",
+              "label_step_threshold": 0.4,
+              "vector_error_mean": 5.671669006347656,
+              "positive_direction_fraction": 0.0,
+              "direction_cosine_mean_nonzero_predictions": null,
+              "zero_prediction_fraction": 1.0,
+              "predicted_to_label_step_ratio_median": 0.0
+            },
+            "stationary_drift": {
+              "n": 471,
+              "contiguous_runs": 80,
+              "unit": "mm",
+              "predicted_step_mean": 0.0,
+              "summed_error_per_run_mean": 0.09691463185008616,
+              "summed_error_per_run_max": 0.3980739712715149,
+              "interpretation": "teacher-forced displacement/target-error sum proxy; no rollout feedback"
+            },
+            "per_episode": {
+              "9": {
+                "n": 300,
+                "mae_per_dimension": [
+                  0.002387318527325988,
+                  0.0018316260538995266,
+                  0.0025794892571866512,
+                  0.004359136801213026,
+                  0.01762380078434944,
+                  0.00687171146273613,
+                  0.021005572751164436
+                ],
+                "gripper_mae": 0.021005595102906227,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.5642606616020203,
+                "translation_mean_mm": 4.650946140289307,
+                "translation_p95_mm": 12.863138198852539,
+                "translation_bias_xyz_mm": [
+                  0.0017983386060222983,
+                  0.003715057857334614,
+                  0.001980499131605029
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.650945663452148,
+                "translation_skill_vs_zero": -1.0252477511407676e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 238,
+                  "translation_mean_mm": 5.853989601135254,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 5.853989601135254,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.022245566593639944,
+                "invalid_rotations": 0,
+                "summed_motion_error": 1.373376488685608,
+                "summed_motion_error_unit": "mm"
+              },
+              "13": {
+                "n": 392,
+                "mae_per_dimension": [
+                  0.0022239082027226686,
+                  0.0016961023211479187,
+                  0.0024298597127199173,
+                  0.002804727992042899,
+                  0.015301699750125408,
+                  0.00615312485024333,
+                  0.016972890123724937
+                ],
+                "gripper_mae": 0.01697290502488613,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.488023579120636,
+                "translation_mean_mm": 4.437180042266846,
+                "translation_p95_mm": 12.385624885559082,
+                "translation_bias_xyz_mm": [
+                  -0.008263624273240566,
+                  0.030716605484485626,
+                  -0.0038680469151586294
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.4371795654296875,
+                "translation_skill_vs_zero": -1.0746402101524666e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 314,
+                  "translation_mean_mm": 5.532742023468018,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 5.532742023468018,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.01881164291373677,
+                "invalid_rotations": 0,
+                "summed_motion_error": 12.560879707336426,
+                "summed_motion_error_unit": "mm"
+              },
+              "22": {
+                "n": 346,
+                "mae_per_dimension": [
+                  0.00221217586658895,
+                  0.002358995145186782,
+                  0.002905991394072771,
+                  0.0050452942959964275,
+                  0.015815317630767822,
+                  0.008833532221615314,
+                  0.026305871084332466
+                ],
+                "gripper_mae": 0.026305824518203735,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.6164877414703369,
+                "translation_mean_mm": 5.042026996612549,
+                "translation_p95_mm": 13.218042373657227,
+                "translation_bias_xyz_mm": [
+                  -0.015091110952198505,
+                  0.01616845279932022,
+                  -0.011600027792155743
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 5.042026519775391,
+                "translation_skill_vs_zero": -9.457252092559543e-08,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 267,
+                  "translation_mean_mm": 6.523586750030518,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 6.523586750030518,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.022074765664732387,
+                "invalid_rotations": 0,
+                "summed_motion_error": 8.641088485717773,
+                "summed_motion_error_unit": "mm"
+              },
+              "31": {
+                "n": 305,
+                "mae_per_dimension": [
+                  0.002134655835106969,
+                  0.0021934157703071833,
+                  0.0023919357918202877,
+                  0.0035307856742292643,
+                  0.014463563449680805,
+                  0.008133633062243462,
+                  0.024095715954899788
+                ],
+                "gripper_mae": 0.024095673114061356,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.537665069103241,
+                "translation_mean_mm": 4.615512847900391,
+                "translation_p95_mm": 13.06387996673584,
+                "translation_bias_xyz_mm": [
+                  0.00911280419677496,
+                  0.020741071552038193,
+                  0.004478800110518932
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.615513324737549,
+                "translation_skill_vs_zero": 1.0331183653011777e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 231,
+                  "translation_mean_mm": 6.086979389190674,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 6.086979389190674,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.020071941225663425,
+                "invalid_rotations": 0,
+                "summed_motion_error": 7.043403148651123,
+                "summed_motion_error_unit": "mm"
+              },
+              "36": {
+                "n": 359,
+                "mae_per_dimension": [
+                  0.001788163441233337,
+                  0.001823857775889337,
+                  0.0015715660993009806,
+                  0.0020667382050305605,
+                  0.009230190888047218,
+                  0.006577683612704277,
+                  0.020329304039478302
+                ],
+                "gripper_mae": 0.020329302176833153,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.39373746514320374,
+                "translation_mean_mm": 3.6121482849121094,
+                "translation_p95_mm": 9.809510231018066,
+                "translation_bias_xyz_mm": [
+                  -0.0003870991349685937,
+                  -0.015483461320400238,
+                  -0.00035351142287254333
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.6121482849121094,
+                "translation_skill_vs_zero": 0.0,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 264,
+                  "translation_mean_mm": 4.903895378112793,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 4.903895378112793,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.013828040102227114,
+                "invalid_rotations": 0,
+                "summed_motion_error": 5.561681270599365,
+                "summed_motion_error_unit": "mm"
+              },
+              "37": {
+                "n": 369,
+                "mae_per_dimension": [
+                  0.001897816895507276,
+                  0.0018348414450883865,
+                  0.0017590903444215655,
+                  0.0026838197372853756,
+                  0.010744216851890087,
+                  0.00702112028375268,
+                  0.021601585671305656
+                ],
+                "gripper_mae": 0.021601619198918343,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.4344034790992737,
+                "translation_mean_mm": 3.843872308731079,
+                "translation_p95_mm": 10.336200714111328,
+                "translation_bias_xyz_mm": [
+                  -0.012884925119578838,
+                  -0.003694201121106744,
+                  -0.007793209981173277
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.8438727855682373,
+                "translation_skill_vs_zero": 1.2405123295256004e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 271,
+                  "translation_mean_mm": 5.227108955383301,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 5.227108955383301,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.015820888550463857,
+                "invalid_rotations": 0,
+                "summed_motion_error": 5.7213544845581055,
+                "summed_motion_error_unit": "mm"
+              }
+            }
+          },
+          "persistence": {
+            "all": {
+              "n": 2071,
+              "mae_per_dimension": [
+                0.0011178646236658096,
+                0.0009644700330682099,
+                0.0015110989334061742,
+                0.0029425329994410276,
+                0.008554724045097828,
+                0.004874528851360083,
+                0.021571680903434753
+              ],
+              "gripper_mae": 0.02157183550298214,
+              "gripper_unit": "fraction of calibrated range",
+              "l1": 0.3263169527053833,
+              "translation_mean_mm": 2.4664695262908936,
+              "translation_p95_mm": 7.760502815246582,
+              "translation_bias_xyz_mm": [
+                -0.006315039005130529,
+                0.0015233107842504978,
+                -0.0006335635553114116
+              ],
+              "raw_dimension_units": [
+                "m",
+                "m",
+                "m",
+                "rad",
+                "rad",
+                "rad",
+                "fraction"
+              ],
+              "zero_delta_translation_mean_mm": 4.346732139587402,
+              "translation_skill_vs_zero": 0.4325692388937925,
+              "translation_motion": {
+                "label_step_threshold_mm": 0.4,
+                "n": 1585,
+                "translation_mean_mm": 3.082648277282715,
+                "predicted_step_mean_mm": 5.520448207855225,
+                "label_step_mean_mm": 5.671669006347656,
+                "median_predicted_to_label_step_ratio": 0.9899877905845642,
+                "positive_direction_fraction": 0.8996845425867508
+              },
+              "rotation_mean_rad": 0.012198152830656462,
+              "invalid_rotations": 0
+            },
+            "movement": {
+              "n": 1585,
+              "unit": "mm",
+              "label_step_threshold": 0.4,
+              "vector_error_mean": 3.082648277282715,
+              "positive_direction_fraction": 0.8996845425867508,
+              "direction_cosine_mean_nonzero_predictions": 0.8118570446968079,
+              "zero_prediction_fraction": 0.04794952681388013,
+              "predicted_to_label_step_ratio_median": 0.9899879097938538
+            },
+            "stationary_drift": {
+              "n": 471,
+              "contiguous_runs": 80,
+              "unit": "mm",
+              "predicted_step_mean": 0.4307153820991516,
+              "summed_error_per_run_mean": 2.4735875872895123,
+              "summed_error_per_run_max": 15.381364822387695,
+              "interpretation": "teacher-forced displacement/target-error sum proxy; no rollout feedback"
+            },
+            "per_episode": {
+              "9": {
+                "n": 300,
+                "mae_per_dimension": [
+                  0.0013664275174960494,
+                  0.001028074650093913,
+                  0.0016451184637844563,
+                  0.00399373471736908,
+                  0.010077416896820068,
+                  0.00572645990177989,
+                  0.021005572751164436
+                ],
+                "gripper_mae": 0.021005595102906227,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.3854299783706665,
+                "translation_mean_mm": 2.759439706802368,
+                "translation_p95_mm": 8.649998664855957,
+                "translation_bias_xyz_mm": [
+                  -0.03755171597003937,
+                  -0.02979649230837822,
+                  -0.048666492104530334
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.650945663452148,
+                "translation_skill_vs_zero": 0.4066927660569176,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 238,
+                  "translation_mean_mm": 3.3058815002441406,
+                  "predicted_step_mean_mm": 5.723372459411621,
+                  "label_step_mean_mm": 5.853989601135254,
+                  "median_predicted_to_label_step_ratio": 0.9947142601013184,
+                  "positive_direction_fraction": 0.8823529411764706
+                },
+                "rotation_mean_rad": 0.014471158178738276,
+                "invalid_rotations": 0,
+                "summed_motion_error": 20.493289947509766,
+                "summed_motion_error_unit": "mm"
+              },
+              "13": {
+                "n": 392,
+                "mae_per_dimension": [
+                  0.001206982764415443,
+                  0.0008793253800831735,
+                  0.001504151034168899,
+                  0.0024695429019629955,
+                  0.009118598885834217,
+                  0.004733995068818331,
+                  0.016972890123724937
+                ],
+                "gripper_mae": 0.01697290502488613,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.31568044424057007,
+                "translation_mean_mm": 2.471261978149414,
+                "translation_p95_mm": 7.740639686584473,
+                "translation_bias_xyz_mm": [
+                  -0.013660320080816746,
+                  0.004269791301339865,
+                  -0.027385268360376358
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.4371795654296875,
+                "translation_skill_vs_zero": 0.4430556749600234,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 314,
+                  "translation_mean_mm": 2.988903760910034,
+                  "predicted_step_mean_mm": 5.4208784103393555,
+                  "label_step_mean_mm": 5.532742023468018,
+                  "median_predicted_to_label_step_ratio": 0.9806576371192932,
+                  "positive_direction_fraction": 0.9331210191082803
+                },
+                "rotation_mean_rad": 0.012257693226400563,
+                "invalid_rotations": 0,
+                "summed_motion_error": 12.11266040802002,
+                "summed_motion_error_unit": "mm"
+              },
+              "22": {
+                "n": 346,
+                "mae_per_dimension": [
+                  0.0012016822583973408,
+                  0.001252362271770835,
+                  0.0018680347129702568,
+                  0.0038128504529595375,
+                  0.009303325787186623,
+                  0.005161088891327381,
+                  0.026305871084332466
+                ],
+                "gripper_mae": 0.026305824518203735,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.38391825556755066,
+                "translation_mean_mm": 2.890176296234131,
+                "translation_p95_mm": 8.19569206237793,
+                "translation_bias_xyz_mm": [
+                  0.006064193788915873,
+                  0.01597229763865471,
+                  0.025905299931764603
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 5.042026519775391,
+                "translation_skill_vs_zero": 0.4267828055051799,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 267,
+                  "translation_mean_mm": 3.597532272338867,
+                  "predicted_step_mean_mm": 6.376920700073242,
+                  "label_step_mean_mm": 6.523586750030518,
+                  "median_predicted_to_label_step_ratio": 0.9947648048400879,
+                  "positive_direction_fraction": 0.898876404494382
+                },
+                "rotation_mean_rad": 0.013314664276926784,
+                "invalid_rotations": 0,
+                "summed_motion_error": 10.73701000213623,
+                "summed_motion_error_unit": "mm"
+              },
+              "31": {
+                "n": 305,
+                "mae_per_dimension": [
+                  0.0009637034381739795,
+                  0.000987833715043962,
+                  0.0015000436687842011,
+                  0.0029962523840367794,
+                  0.008168764412403107,
+                  0.005126694217324257,
+                  0.024095715954899788
+                ],
+                "gripper_mae": 0.024095673114061356,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.3231234550476074,
+                "translation_mean_mm": 2.394697427749634,
+                "translation_p95_mm": 8.178874015808105,
+                "translation_bias_xyz_mm": [
+                  -0.0033770583104342222,
+                  -0.020362259820103645,
+                  0.0050494857132434845
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.615513324737549,
+                "translation_skill_vs_zero": 0.4811633594653737,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 231,
+                  "translation_mean_mm": 3.0171658992767334,
+                  "predicted_step_mean_mm": 5.906466007232666,
+                  "label_step_mean_mm": 6.086979389190674,
+                  "median_predicted_to_label_step_ratio": 0.9658900499343872,
+                  "positive_direction_fraction": 0.922077922077922
+                },
+                "rotation_mean_rad": 0.011988032737615126,
+                "invalid_rotations": 0,
+                "summed_motion_error": 6.4809675216674805,
+                "summed_motion_error_unit": "mm"
+              },
+              "36": {
+                "n": 359,
+                "mae_per_dimension": [
+                  0.000984931830316782,
+                  0.000800741312559694,
+                  0.001270945998840034,
+                  0.0021476130932569504,
+                  0.007516227196902037,
+                  0.004158719442784786,
+                  0.020329304039478302
+                ],
+                "gripper_mae": 0.020329302176833153,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.27321526408195496,
+                "translation_mean_mm": 2.0999364852905273,
+                "translation_p95_mm": 5.969430446624756,
+                "translation_bias_xyz_mm": [
+                  0.027080431580543518,
+                  0.020816588774323463,
+                  0.059498921036720276
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.6121482849121094,
+                "translation_skill_vs_zero": 0.41864610208226183,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 264,
+                  "translation_mean_mm": 2.6723687648773193,
+                  "predicted_step_mean_mm": 4.655426025390625,
+                  "label_step_mean_mm": 4.903895378112793,
+                  "median_predicted_to_label_step_ratio": 0.9990322589874268,
+                  "positive_direction_fraction": 0.8787878787878788
+                },
+                "rotation_mean_rad": 0.010466404655809381,
+                "invalid_rotations": 0,
+                "summed_motion_error": 24.629596710205078,
+                "summed_motion_error_unit": "mm"
+              },
+              "37": {
+                "n": 369,
+                "mae_per_dimension": [
+                  0.0009992681443691254,
+                  0.0008732472197152674,
+                  0.0013176120119169354,
+                  0.0025032772682607174,
+                  0.007345171179622412,
+                  0.004550442565232515,
+                  0.021601585671305656
+                ],
+                "gripper_mae": 0.021601619198918343,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.2898481786251068,
+                "translation_mean_mm": 2.241818428039551,
+                "translation_p95_mm": 7.017862319946289,
+                "translation_bias_xyz_mm": [
+                  -0.01964271441102028,
+                  0.009839782491326332,
+                  -0.021248210221529007
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.8438727855682373,
+                "translation_skill_vs_zero": 0.4167813158498833,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 271,
+                  "translation_mean_mm": 2.9434332847595215,
+                  "predicted_step_mean_mm": 5.127407073974609,
+                  "label_step_mean_mm": 5.227108955383301,
+                  "median_predicted_to_label_step_ratio": 0.9976357221603394,
+                  "positive_direction_fraction": 0.8782287822878229
+                },
+                "rotation_mean_rad": 0.01109850465499779,
+                "invalid_rotations": 0,
+                "summed_motion_error": 11.278029441833496,
+                "summed_motion_error_unit": "mm"
+              }
+            }
+          }
+        },
+        "thresholds": {
+          "translation_mm_per_tick": 0.4,
+          "rotation_rad_per_tick": 0.01,
+          "joint_vector_deg_per_tick": 0.5
+        },
+        "protocol": "Raw teacher-forced predictions; episode-local nonoverlapping prefixes; each valid action once; training episodes measure fitting only.",
+        "baseline_contract": "Hold uses observed pose/joints and gripper at the inference anchor; persistence repeats the prior achieved delta/recorded target and holds the anchor gripper. Tool deltas are transported between observed tool frames. Neither uses future observations.",
+        "geometry_caution": "Cartesian metrics inherit the prepared FK calibration; joint metrics are degrees, not Cartesian task error.",
+        "physical_grasp_success": "not_evaluated",
+        "offline_selection": {
+          "version": "executed_prefix_motion_v1",
+          "score": 0.5442915851453634,
+          "components": {
+            "executed_prefix_normalized_l1": 0.33873942494392395,
+            "moving_error_vs_hold": 0.5197629933938394,
+            "movement_direction_failure_fraction": 0.06056782334384858,
+            "stationary_step_over_motion_threshold": 1.2580960988998413
+          },
+          "weights": "equal mean of available components; thresholds fixed before training",
+          "scope": "offline shortlist only; same split, targets, normalization and component availability required for comparison",
+          "promotion": "requires bounded common development rollouts, then frozen reserved evaluation; offline score establishes no task success"
+        },
+        "executed_actions_per_call": 2
+      },
+      "localization": {
+        "pseudo_visible_anchors": 962,
+        "anchors": 1037,
+        "center_error_mean_px_against_pseudo": 120.1633733332711,
+        "center_error_p95_px_against_pseudo": 148.93057609073347,
+        "detector_event_classification_accuracy_at_half": 0.9276759884281581,
+        "predicted_visibility_probability_mean": 0.9994469881057739,
+        "center_swap_translation_change_mean_mm": 2.941530510724988e-05,
+        "pseudo_keypoint_intervention_translation_change_mean_mm": 0.33598387241363525,
+        "interpretation": "Pseudo detector agreement and input sensitivity; not annotation accuracy or causal task success. Swapping only predicted centers deliberately breaks image-feature consistency."
+      },
+      "wall_s": 3.1968126670690253,
+      "checkpoint": "outputs/v2/aux_keypoint_pilot_20261024/action_only",
+      "checkpoint_sha256": "6d588d658cca8727c687391198516faa0d3560facf4cfb9849fa74c2f7014b77",
+      "raw_cached_normalized_action_max_abs_difference": 2.384185791015625e-07,
+      "checkpoint_contract_sha256": "d734252faff4b4e56bacd87137b9ad96bb1453362cc535d1478af51de9ded3d1",
+      "checkpoint_stats_sha256": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff"
+    },
+    "auxiliary_ball": {
+      "step": 256,
+      "auxiliary_weight": 1.0,
+      "seed": 0,
+      "trainable_parameters": 57552,
+      "history": [
+        {
+          "step": 64,
+          "loss": 1.373026728630066,
+          "action_l1": 0.4580106735229492,
+          "auxiliary": 0.9150160551071167,
+          "visible_pseudo_targets": 14
+        },
+        {
+          "step": 128,
+          "loss": 1.0686309337615967,
+          "action_l1": 0.35602235794067383,
+          "auxiliary": 0.7126085758209229,
+          "visible_pseudo_targets": 15
+        },
+        {
+          "step": 192,
+          "loss": 1.3451133966445923,
+          "action_l1": 0.3905927240848541,
+          "auxiliary": 0.9545206427574158,
+          "visible_pseudo_targets": 12
+        },
+        {
+          "step": 256,
+          "loss": 0.9384265542030334,
+          "action_l1": 0.34345728158950806,
+          "auxiliary": 0.5949692726135254,
+          "visible_pseudo_targets": 16
+        }
+      ],
+      "validation": {
+        "version": "executed_prefix_motion_v1",
+        "action_representation": "cartesian",
+        "episodes": [
+          9,
+          13,
+          22,
+          31,
+          36,
+          37
+        ],
+        "valid_actions": 2071,
+        "excluded_extrapolated_actions": 6,
+        "excluded_invalid_actions": 0,
+        "excluded_invalid_observation_actions": 0,
+        "inference_calls": 1037,
+        "scores": {
+          "model": {
+            "all": {
+              "n": 2071,
+              "mae_per_dimension": [
+                0.0010825349017977715,
+                0.0009786965092644095,
+                0.001447955146431923,
+                0.003271563211455941,
+                0.010357358492910862,
+                0.004854500759392977,
+                0.018087562173604965
+              ],
+              "gripper_mae": 0.01808757893741131,
+              "gripper_unit": "fraction of calibrated range",
+              "l1": 0.33899012207984924,
+              "translation_mean_mm": 2.3821961879730225,
+              "translation_p95_mm": 7.323663234710693,
+              "translation_bias_xyz_mm": [
+                -0.016787011176347733,
+                0.1575501561164856,
+                0.031399257481098175
+              ],
+              "raw_dimension_units": [
+                "m",
+                "m",
+                "m",
+                "rad",
+                "rad",
+                "rad",
+                "fraction"
+              ],
+              "zero_delta_translation_mean_mm": 4.346732139587402,
+              "translation_skill_vs_zero": 0.4519569848168413,
+              "translation_motion": {
+                "label_step_threshold_mm": 0.4,
+                "n": 1585,
+                "translation_mean_mm": 2.9526679515838623,
+                "predicted_step_mean_mm": 4.378706455230713,
+                "label_step_mean_mm": 5.671669006347656,
+                "median_predicted_to_label_step_ratio": 0.7970705628395081,
+                "positive_direction_fraction": 0.938801261829653
+              },
+              "rotation_mean_rad": 0.013717887406950026,
+              "invalid_rotations": 0
+            },
+            "movement": {
+              "n": 1585,
+              "unit": "mm",
+              "label_step_threshold": 0.4,
+              "vector_error_mean": 2.9526679515838623,
+              "positive_direction_fraction": 0.938801261829653,
+              "direction_cosine_mean_nonzero_predictions": 0.7823545336723328,
+              "zero_prediction_fraction": 0.0,
+              "predicted_to_label_step_ratio_median": 0.7970705628395081
+            },
+            "stationary_drift": {
+              "n": 471,
+              "contiguous_runs": 80,
+              "unit": "mm",
+              "predicted_step_mean": 0.5081501007080078,
+              "summed_error_per_run_mean": 2.6126424884423614,
+              "summed_error_per_run_max": 7.90768575668335,
+              "interpretation": "teacher-forced displacement/target-error sum proxy; no rollout feedback"
+            },
+            "per_episode": {
+              "9": {
+                "n": 300,
+                "mae_per_dimension": [
+                  0.0012897284468635917,
+                  0.001080283778719604,
+                  0.0016453670104965568,
+                  0.004247571807354689,
+                  0.013672245666384697,
+                  0.005497942212969065,
+                  0.02058340609073639
+                ],
+                "gripper_mae": 0.020583396777510643,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.40990617871284485,
+                "translation_mean_mm": 2.6890182495117188,
+                "translation_p95_mm": 7.961878299713135,
+                "translation_bias_xyz_mm": [
+                  -0.08720578253269196,
+                  0.2703400254249573,
+                  0.014922473579645157
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.650945663452148,
+                "translation_skill_vs_zero": 0.42183408620693186,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 238,
+                  "translation_mean_mm": 3.2080318927764893,
+                  "predicted_step_mean_mm": 4.3419413566589355,
+                  "label_step_mean_mm": 5.853989601135254,
+                  "median_predicted_to_label_step_ratio": 0.816606879234314,
+                  "positive_direction_fraction": 0.9243697478991597
+                },
+                "rotation_mean_rad": 0.017474242843004695,
+                "invalid_rotations": 0,
+                "summed_motion_error": 85.33473205566406,
+                "summed_motion_error_unit": "mm"
+              },
+              "13": {
+                "n": 392,
+                "mae_per_dimension": [
+                  0.001143706263974309,
+                  0.0009333148482255638,
+                  0.0014957550447434187,
+                  0.0027637474704533815,
+                  0.011342733167111874,
+                  0.004861357156187296,
+                  0.020901096984744072
+                ],
+                "gripper_mae": 0.02090109884738922,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.33923161029815674,
+                "translation_mean_mm": 2.4622578620910645,
+                "translation_p95_mm": 7.472599983215332,
+                "translation_bias_xyz_mm": [
+                  0.05347561463713646,
+                  0.21269743144512177,
+                  0.11549557000398636
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.4371795654296875,
+                "translation_skill_vs_zero": 0.4450849180694304,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 314,
+                  "translation_mean_mm": 2.960357427597046,
+                  "predicted_step_mean_mm": 4.147015571594238,
+                  "label_step_mean_mm": 5.532742023468018,
+                  "median_predicted_to_label_step_ratio": 0.7796412706375122,
+                  "positive_direction_fraction": 0.9426751592356688
+                },
+                "rotation_mean_rad": 0.01433591701112318,
+                "invalid_rotations": 0,
+                "summed_motion_error": 97.1646957397461,
+                "summed_motion_error_unit": "mm"
+              },
+              "22": {
+                "n": 346,
+                "mae_per_dimension": [
+                  0.0011900780955329537,
+                  0.0012052286183461547,
+                  0.0018118993612006307,
+                  0.0048248497769236565,
+                  0.010533449240028858,
+                  0.00553728174418211,
+                  0.019799713045358658
+                ],
+                "gripper_mae": 0.019799713045358658,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.4085536003112793,
+                "translation_mean_mm": 2.814836025238037,
+                "translation_p95_mm": 7.49312686920166,
+                "translation_bias_xyz_mm": [
+                  0.018735745921730995,
+                  -0.0010994820622727275,
+                  -0.10065386444330215
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 5.042026519775391,
+                "translation_skill_vs_zero": 0.44172526380058963,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 267,
+                  "translation_mean_mm": 3.4854347705841064,
+                  "predicted_step_mean_mm": 5.237311840057373,
+                  "label_step_mean_mm": 6.523586750030518,
+                  "median_predicted_to_label_step_ratio": 0.7921225428581238,
+                  "positive_direction_fraction": 0.9288389513108615
+                },
+                "rotation_mean_rad": 0.015022496741511394,
+                "invalid_rotations": 0,
+                "summed_motion_error": 35.426490783691406,
+                "summed_motion_error_unit": "mm"
+              },
+              "31": {
+                "n": 305,
+                "mae_per_dimension": [
+                  0.0009677345515228808,
+                  0.0009624769445508718,
+                  0.0014266450889408588,
+                  0.003461364423856139,
+                  0.01040714792907238,
+                  0.0050111874006688595,
+                  0.014502442441880703
+                ],
+                "gripper_mae": 0.014502440579235554,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.33618858456611633,
+                "translation_mean_mm": 2.294584035873413,
+                "translation_p95_mm": 7.583385944366455,
+                "translation_bias_xyz_mm": [
+                  -0.15440618991851807,
+                  0.11203447729349136,
+                  0.02955721691250801
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.615513324737549,
+                "translation_skill_vs_zero": 0.5028539894847146,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 231,
+                  "translation_mean_mm": 2.862077474594116,
+                  "predicted_step_mean_mm": 4.751040935516357,
+                  "label_step_mean_mm": 6.086979389190674,
+                  "median_predicted_to_label_step_ratio": 0.8094123005867004,
+                  "positive_direction_fraction": 0.961038961038961
+                },
+                "rotation_mean_rad": 0.013860622780385802,
+                "invalid_rotations": 0,
+                "summed_motion_error": 58.878944396972656,
+                "summed_motion_error_unit": "mm"
+              },
+              "36": {
+                "n": 359,
+                "mae_per_dimension": [
+                  0.0009613913716748357,
+                  0.0008653262630105019,
+                  0.0011584794847294688,
+                  0.002076308708637953,
+                  0.007867851294577122,
+                  0.004027072340250015,
+                  0.014862663112580776
+                ],
+                "gripper_mae": 0.014862658455967903,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.266117125749588,
+                "translation_mean_mm": 2.0178089141845703,
+                "translation_p95_mm": 5.784751892089844,
+                "translation_bias_xyz_mm": [
+                  0.016982551664114,
+                  0.17230258882045746,
+                  0.08495543152093887
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.6121482849121094,
+                "translation_skill_vs_zero": 0.44138259145868164,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 264,
+                  "translation_mean_mm": 2.5414836406707764,
+                  "predicted_step_mean_mm": 3.732123374938965,
+                  "label_step_mean_mm": 4.903895378112793,
+                  "median_predicted_to_label_step_ratio": 0.788591742515564,
+                  "positive_direction_fraction": 0.946969696969697
+                },
+                "rotation_mean_rad": 0.010470259508022998,
+                "invalid_rotations": 0,
+                "summed_motion_error": 69.23587799072266,
+                "summed_motion_error_unit": "mm"
+              },
+              "37": {
+                "n": 369,
+                "mae_per_dimension": [
+                  0.0009610088309273124,
+                  0.0008556132670491934,
+                  0.0011946678860113025,
+                  0.002567034214735031,
+                  0.008831363171339035,
+                  0.004359367303550243,
+                  0.017565002664923668
+                ],
+                "gripper_mae": 0.017565011978149414,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.28906455636024475,
+                "translation_mean_mm": 2.068950891494751,
+                "translation_p95_mm": 6.509313583374023,
+                "translation_bias_xyz_mm": [
+                  0.013409147039055824,
+                  0.17929592728614807,
+                  0.028696922585368156
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.8438727855682373,
+                "translation_skill_vs_zero": 0.4617535472915243,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 271,
+                  "translation_mean_mm": 2.6723685264587402,
+                  "predicted_step_mean_mm": 4.146019458770752,
+                  "label_step_mean_mm": 5.227108955383301,
+                  "median_predicted_to_label_step_ratio": 0.812272310256958,
+                  "positive_direction_fraction": 0.9298892988929889
+                },
+                "rotation_mean_rad": 0.011825733101818262,
+                "invalid_rotations": 0,
+                "summed_motion_error": 67.18470764160156,
+                "summed_motion_error_unit": "mm"
+              }
+            }
+          },
+          "hold": {
+            "all": {
+              "n": 2071,
+              "mae_per_dimension": [
+                0.002098839497193694,
+                0.0019465888617560267,
+                0.0022571985609829426,
+                0.003361684735864401,
+                0.013735942542552948,
+                0.007224962580949068,
+                0.021571680903434753
+              ],
+              "gripper_mae": 0.02157183550298214,
+              "gripper_unit": "fraction of calibrated range",
+              "l1": 0.5019423961639404,
+              "translation_mean_mm": 4.346731662750244,
+              "translation_p95_mm": 12.269176483154297,
+              "translation_bias_xyz_mm": [
+                -0.004845717456191778,
+                0.008765839971601963,
+                -0.0031735124066472054
+              ],
+              "raw_dimension_units": [
+                "m",
+                "m",
+                "m",
+                "rad",
+                "rad",
+                "rad",
+                "fraction"
+              ],
+              "zero_delta_translation_mean_mm": 4.346732139587402,
+              "translation_skill_vs_zero": 1.0970014785449678e-07,
+              "translation_motion": {
+                "label_step_threshold_mm": 0.4,
+                "n": 1585,
+                "translation_mean_mm": 5.671669006347656,
+                "predicted_step_mean_mm": 0.0,
+                "label_step_mean_mm": 5.671669006347656,
+                "median_predicted_to_label_step_ratio": 0.0,
+                "positive_direction_fraction": 0.0
+              },
+              "rotation_mean_rad": 0.01864308028291755,
+              "invalid_rotations": 0
+            },
+            "movement": {
+              "n": 1585,
+              "unit": "mm",
+              "label_step_threshold": 0.4,
+              "vector_error_mean": 5.671669006347656,
+              "positive_direction_fraction": 0.0,
+              "direction_cosine_mean_nonzero_predictions": null,
+              "zero_prediction_fraction": 1.0,
+              "predicted_to_label_step_ratio_median": 0.0
+            },
+            "stationary_drift": {
+              "n": 471,
+              "contiguous_runs": 80,
+              "unit": "mm",
+              "predicted_step_mean": 0.0,
+              "summed_error_per_run_mean": 0.09691463185008616,
+              "summed_error_per_run_max": 0.3980739712715149,
+              "interpretation": "teacher-forced displacement/target-error sum proxy; no rollout feedback"
+            },
+            "per_episode": {
+              "9": {
+                "n": 300,
+                "mae_per_dimension": [
+                  0.002387318527325988,
+                  0.0018316260538995266,
+                  0.0025794892571866512,
+                  0.004359136801213026,
+                  0.01762380078434944,
+                  0.00687171146273613,
+                  0.021005572751164436
+                ],
+                "gripper_mae": 0.021005595102906227,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.5642606616020203,
+                "translation_mean_mm": 4.650946140289307,
+                "translation_p95_mm": 12.863138198852539,
+                "translation_bias_xyz_mm": [
+                  0.0017983386060222983,
+                  0.003715057857334614,
+                  0.001980499131605029
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.650945663452148,
+                "translation_skill_vs_zero": -1.0252477511407676e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 238,
+                  "translation_mean_mm": 5.853989601135254,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 5.853989601135254,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.022245566593639944,
+                "invalid_rotations": 0,
+                "summed_motion_error": 1.373376488685608,
+                "summed_motion_error_unit": "mm"
+              },
+              "13": {
+                "n": 392,
+                "mae_per_dimension": [
+                  0.0022239082027226686,
+                  0.0016961023211479187,
+                  0.0024298597127199173,
+                  0.002804727992042899,
+                  0.015301699750125408,
+                  0.00615312485024333,
+                  0.016972890123724937
+                ],
+                "gripper_mae": 0.01697290502488613,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.488023579120636,
+                "translation_mean_mm": 4.437180042266846,
+                "translation_p95_mm": 12.385624885559082,
+                "translation_bias_xyz_mm": [
+                  -0.008263624273240566,
+                  0.030716605484485626,
+                  -0.0038680469151586294
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.4371795654296875,
+                "translation_skill_vs_zero": -1.0746402101524666e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 314,
+                  "translation_mean_mm": 5.532742023468018,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 5.532742023468018,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.01881164291373677,
+                "invalid_rotations": 0,
+                "summed_motion_error": 12.560879707336426,
+                "summed_motion_error_unit": "mm"
+              },
+              "22": {
+                "n": 346,
+                "mae_per_dimension": [
+                  0.00221217586658895,
+                  0.002358995145186782,
+                  0.002905991394072771,
+                  0.0050452942959964275,
+                  0.015815317630767822,
+                  0.008833532221615314,
+                  0.026305871084332466
+                ],
+                "gripper_mae": 0.026305824518203735,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.6164877414703369,
+                "translation_mean_mm": 5.042026996612549,
+                "translation_p95_mm": 13.218042373657227,
+                "translation_bias_xyz_mm": [
+                  -0.015091110952198505,
+                  0.01616845279932022,
+                  -0.011600027792155743
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 5.042026519775391,
+                "translation_skill_vs_zero": -9.457252092559543e-08,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 267,
+                  "translation_mean_mm": 6.523586750030518,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 6.523586750030518,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.022074765664732387,
+                "invalid_rotations": 0,
+                "summed_motion_error": 8.641088485717773,
+                "summed_motion_error_unit": "mm"
+              },
+              "31": {
+                "n": 305,
+                "mae_per_dimension": [
+                  0.002134655835106969,
+                  0.0021934157703071833,
+                  0.0023919357918202877,
+                  0.0035307856742292643,
+                  0.014463563449680805,
+                  0.008133633062243462,
+                  0.024095715954899788
+                ],
+                "gripper_mae": 0.024095673114061356,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.537665069103241,
+                "translation_mean_mm": 4.615512847900391,
+                "translation_p95_mm": 13.06387996673584,
+                "translation_bias_xyz_mm": [
+                  0.00911280419677496,
+                  0.020741071552038193,
+                  0.004478800110518932
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.615513324737549,
+                "translation_skill_vs_zero": 1.0331183653011777e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 231,
+                  "translation_mean_mm": 6.086979389190674,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 6.086979389190674,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.020071941225663425,
+                "invalid_rotations": 0,
+                "summed_motion_error": 7.043403148651123,
+                "summed_motion_error_unit": "mm"
+              },
+              "36": {
+                "n": 359,
+                "mae_per_dimension": [
+                  0.001788163441233337,
+                  0.001823857775889337,
+                  0.0015715660993009806,
+                  0.0020667382050305605,
+                  0.009230190888047218,
+                  0.006577683612704277,
+                  0.020329304039478302
+                ],
+                "gripper_mae": 0.020329302176833153,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.39373746514320374,
+                "translation_mean_mm": 3.6121482849121094,
+                "translation_p95_mm": 9.809510231018066,
+                "translation_bias_xyz_mm": [
+                  -0.0003870991349685937,
+                  -0.015483461320400238,
+                  -0.00035351142287254333
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.6121482849121094,
+                "translation_skill_vs_zero": 0.0,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 264,
+                  "translation_mean_mm": 4.903895378112793,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 4.903895378112793,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.013828040102227114,
+                "invalid_rotations": 0,
+                "summed_motion_error": 5.561681270599365,
+                "summed_motion_error_unit": "mm"
+              },
+              "37": {
+                "n": 369,
+                "mae_per_dimension": [
+                  0.001897816895507276,
+                  0.0018348414450883865,
+                  0.0017590903444215655,
+                  0.0026838197372853756,
+                  0.010744216851890087,
+                  0.00702112028375268,
+                  0.021601585671305656
+                ],
+                "gripper_mae": 0.021601619198918343,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.4344034790992737,
+                "translation_mean_mm": 3.843872308731079,
+                "translation_p95_mm": 10.336200714111328,
+                "translation_bias_xyz_mm": [
+                  -0.012884925119578838,
+                  -0.003694201121106744,
+                  -0.007793209981173277
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.8438727855682373,
+                "translation_skill_vs_zero": 1.2405123295256004e-07,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 271,
+                  "translation_mean_mm": 5.227108955383301,
+                  "predicted_step_mean_mm": 0.0,
+                  "label_step_mean_mm": 5.227108955383301,
+                  "median_predicted_to_label_step_ratio": 0.0,
+                  "positive_direction_fraction": 0.0
+                },
+                "rotation_mean_rad": 0.015820888550463857,
+                "invalid_rotations": 0,
+                "summed_motion_error": 5.7213544845581055,
+                "summed_motion_error_unit": "mm"
+              }
+            }
+          },
+          "persistence": {
+            "all": {
+              "n": 2071,
+              "mae_per_dimension": [
+                0.0011178646236658096,
+                0.0009644700330682099,
+                0.0015110989334061742,
+                0.0029425329994410276,
+                0.008554724045097828,
+                0.004874528851360083,
+                0.021571680903434753
+              ],
+              "gripper_mae": 0.02157183550298214,
+              "gripper_unit": "fraction of calibrated range",
+              "l1": 0.3263169527053833,
+              "translation_mean_mm": 2.4664695262908936,
+              "translation_p95_mm": 7.760502815246582,
+              "translation_bias_xyz_mm": [
+                -0.006315039005130529,
+                0.0015233107842504978,
+                -0.0006335635553114116
+              ],
+              "raw_dimension_units": [
+                "m",
+                "m",
+                "m",
+                "rad",
+                "rad",
+                "rad",
+                "fraction"
+              ],
+              "zero_delta_translation_mean_mm": 4.346732139587402,
+              "translation_skill_vs_zero": 0.4325692388937925,
+              "translation_motion": {
+                "label_step_threshold_mm": 0.4,
+                "n": 1585,
+                "translation_mean_mm": 3.082648277282715,
+                "predicted_step_mean_mm": 5.520448207855225,
+                "label_step_mean_mm": 5.671669006347656,
+                "median_predicted_to_label_step_ratio": 0.9899877905845642,
+                "positive_direction_fraction": 0.8996845425867508
+              },
+              "rotation_mean_rad": 0.012198152830656462,
+              "invalid_rotations": 0
+            },
+            "movement": {
+              "n": 1585,
+              "unit": "mm",
+              "label_step_threshold": 0.4,
+              "vector_error_mean": 3.082648277282715,
+              "positive_direction_fraction": 0.8996845425867508,
+              "direction_cosine_mean_nonzero_predictions": 0.8118570446968079,
+              "zero_prediction_fraction": 0.04794952681388013,
+              "predicted_to_label_step_ratio_median": 0.9899879097938538
+            },
+            "stationary_drift": {
+              "n": 471,
+              "contiguous_runs": 80,
+              "unit": "mm",
+              "predicted_step_mean": 0.4307153820991516,
+              "summed_error_per_run_mean": 2.4735875872895123,
+              "summed_error_per_run_max": 15.381364822387695,
+              "interpretation": "teacher-forced displacement/target-error sum proxy; no rollout feedback"
+            },
+            "per_episode": {
+              "9": {
+                "n": 300,
+                "mae_per_dimension": [
+                  0.0013664275174960494,
+                  0.001028074650093913,
+                  0.0016451184637844563,
+                  0.00399373471736908,
+                  0.010077416896820068,
+                  0.00572645990177989,
+                  0.021005572751164436
+                ],
+                "gripper_mae": 0.021005595102906227,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.3854299783706665,
+                "translation_mean_mm": 2.759439706802368,
+                "translation_p95_mm": 8.649998664855957,
+                "translation_bias_xyz_mm": [
+                  -0.03755171597003937,
+                  -0.02979649230837822,
+                  -0.048666492104530334
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.650945663452148,
+                "translation_skill_vs_zero": 0.4066927660569176,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 238,
+                  "translation_mean_mm": 3.3058815002441406,
+                  "predicted_step_mean_mm": 5.723372459411621,
+                  "label_step_mean_mm": 5.853989601135254,
+                  "median_predicted_to_label_step_ratio": 0.9947142601013184,
+                  "positive_direction_fraction": 0.8823529411764706
+                },
+                "rotation_mean_rad": 0.014471158178738276,
+                "invalid_rotations": 0,
+                "summed_motion_error": 20.493289947509766,
+                "summed_motion_error_unit": "mm"
+              },
+              "13": {
+                "n": 392,
+                "mae_per_dimension": [
+                  0.001206982764415443,
+                  0.0008793253800831735,
+                  0.001504151034168899,
+                  0.0024695429019629955,
+                  0.009118598885834217,
+                  0.004733995068818331,
+                  0.016972890123724937
+                ],
+                "gripper_mae": 0.01697290502488613,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.31568044424057007,
+                "translation_mean_mm": 2.471261978149414,
+                "translation_p95_mm": 7.740639686584473,
+                "translation_bias_xyz_mm": [
+                  -0.013660320080816746,
+                  0.004269791301339865,
+                  -0.027385268360376358
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.4371795654296875,
+                "translation_skill_vs_zero": 0.4430556749600234,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 314,
+                  "translation_mean_mm": 2.988903760910034,
+                  "predicted_step_mean_mm": 5.4208784103393555,
+                  "label_step_mean_mm": 5.532742023468018,
+                  "median_predicted_to_label_step_ratio": 0.9806576371192932,
+                  "positive_direction_fraction": 0.9331210191082803
+                },
+                "rotation_mean_rad": 0.012257693226400563,
+                "invalid_rotations": 0,
+                "summed_motion_error": 12.11266040802002,
+                "summed_motion_error_unit": "mm"
+              },
+              "22": {
+                "n": 346,
+                "mae_per_dimension": [
+                  0.0012016822583973408,
+                  0.001252362271770835,
+                  0.0018680347129702568,
+                  0.0038128504529595375,
+                  0.009303325787186623,
+                  0.005161088891327381,
+                  0.026305871084332466
+                ],
+                "gripper_mae": 0.026305824518203735,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.38391825556755066,
+                "translation_mean_mm": 2.890176296234131,
+                "translation_p95_mm": 8.19569206237793,
+                "translation_bias_xyz_mm": [
+                  0.006064193788915873,
+                  0.01597229763865471,
+                  0.025905299931764603
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 5.042026519775391,
+                "translation_skill_vs_zero": 0.4267828055051799,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 267,
+                  "translation_mean_mm": 3.597532272338867,
+                  "predicted_step_mean_mm": 6.376920700073242,
+                  "label_step_mean_mm": 6.523586750030518,
+                  "median_predicted_to_label_step_ratio": 0.9947648048400879,
+                  "positive_direction_fraction": 0.898876404494382
+                },
+                "rotation_mean_rad": 0.013314664276926784,
+                "invalid_rotations": 0,
+                "summed_motion_error": 10.73701000213623,
+                "summed_motion_error_unit": "mm"
+              },
+              "31": {
+                "n": 305,
+                "mae_per_dimension": [
+                  0.0009637034381739795,
+                  0.000987833715043962,
+                  0.0015000436687842011,
+                  0.0029962523840367794,
+                  0.008168764412403107,
+                  0.005126694217324257,
+                  0.024095715954899788
+                ],
+                "gripper_mae": 0.024095673114061356,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.3231234550476074,
+                "translation_mean_mm": 2.394697427749634,
+                "translation_p95_mm": 8.178874015808105,
+                "translation_bias_xyz_mm": [
+                  -0.0033770583104342222,
+                  -0.020362259820103645,
+                  0.0050494857132434845
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 4.615513324737549,
+                "translation_skill_vs_zero": 0.4811633594653737,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 231,
+                  "translation_mean_mm": 3.0171658992767334,
+                  "predicted_step_mean_mm": 5.906466007232666,
+                  "label_step_mean_mm": 6.086979389190674,
+                  "median_predicted_to_label_step_ratio": 0.9658900499343872,
+                  "positive_direction_fraction": 0.922077922077922
+                },
+                "rotation_mean_rad": 0.011988032737615126,
+                "invalid_rotations": 0,
+                "summed_motion_error": 6.4809675216674805,
+                "summed_motion_error_unit": "mm"
+              },
+              "36": {
+                "n": 359,
+                "mae_per_dimension": [
+                  0.000984931830316782,
+                  0.000800741312559694,
+                  0.001270945998840034,
+                  0.0021476130932569504,
+                  0.007516227196902037,
+                  0.004158719442784786,
+                  0.020329304039478302
+                ],
+                "gripper_mae": 0.020329302176833153,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.27321526408195496,
+                "translation_mean_mm": 2.0999364852905273,
+                "translation_p95_mm": 5.969430446624756,
+                "translation_bias_xyz_mm": [
+                  0.027080431580543518,
+                  0.020816588774323463,
+                  0.059498921036720276
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.6121482849121094,
+                "translation_skill_vs_zero": 0.41864610208226183,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 264,
+                  "translation_mean_mm": 2.6723687648773193,
+                  "predicted_step_mean_mm": 4.655426025390625,
+                  "label_step_mean_mm": 4.903895378112793,
+                  "median_predicted_to_label_step_ratio": 0.9990322589874268,
+                  "positive_direction_fraction": 0.8787878787878788
+                },
+                "rotation_mean_rad": 0.010466404655809381,
+                "invalid_rotations": 0,
+                "summed_motion_error": 24.629596710205078,
+                "summed_motion_error_unit": "mm"
+              },
+              "37": {
+                "n": 369,
+                "mae_per_dimension": [
+                  0.0009992681443691254,
+                  0.0008732472197152674,
+                  0.0013176120119169354,
+                  0.0025032772682607174,
+                  0.007345171179622412,
+                  0.004550442565232515,
+                  0.021601585671305656
+                ],
+                "gripper_mae": 0.021601619198918343,
+                "gripper_unit": "fraction of calibrated range",
+                "l1": 0.2898481786251068,
+                "translation_mean_mm": 2.241818428039551,
+                "translation_p95_mm": 7.017862319946289,
+                "translation_bias_xyz_mm": [
+                  -0.01964271441102028,
+                  0.009839782491326332,
+                  -0.021248210221529007
+                ],
+                "raw_dimension_units": [
+                  "m",
+                  "m",
+                  "m",
+                  "rad",
+                  "rad",
+                  "rad",
+                  "fraction"
+                ],
+                "zero_delta_translation_mean_mm": 3.8438727855682373,
+                "translation_skill_vs_zero": 0.4167813158498833,
+                "translation_motion": {
+                  "label_step_threshold_mm": 0.4,
+                  "n": 271,
+                  "translation_mean_mm": 2.9434332847595215,
+                  "predicted_step_mean_mm": 5.127407073974609,
+                  "label_step_mean_mm": 5.227108955383301,
+                  "median_predicted_to_label_step_ratio": 0.9976357221603394,
+                  "positive_direction_fraction": 0.8782287822878229
+                },
+                "rotation_mean_rad": 0.01109850465499779,
+                "invalid_rotations": 0,
+                "summed_motion_error": 11.278029441833496,
+                "summed_motion_error_unit": "mm"
+              }
+            }
+          }
+        },
+        "thresholds": {
+          "translation_mm_per_tick": 0.4,
+          "rotation_rad_per_tick": 0.01,
+          "joint_vector_deg_per_tick": 0.5
+        },
+        "protocol": "Raw teacher-forced predictions; episode-local nonoverlapping prefixes; each valid action once; training episodes measure fitting only.",
+        "baseline_contract": "Hold uses observed pose/joints and gripper at the inference anchor; persistence repeats the prior achieved delta/recorded target and holds the anchor gripper. Tool deltas are transported between observed tool frames. Neither uses future observations.",
+        "geometry_caution": "Cartesian metrics inherit the prepared FK calibration; joint metrics are degrees, not Cartesian task error.",
+        "physical_grasp_success": "not_evaluated",
+        "offline_selection": {
+          "version": "executed_prefix_motion_v1",
+          "score": 0.5477908987168002,
+          "components": {
+            "executed_prefix_normalized_l1": 0.33899012207984924,
+            "moving_error_vs_hold": 0.5205994828469849,
+            "movement_direction_failure_fraction": 0.061198738170347045,
+            "stationary_step_over_motion_threshold": 1.2703752517700195
+          },
+          "weights": "equal mean of available components; thresholds fixed before training",
+          "scope": "offline shortlist only; same split, targets, normalization and component availability required for comparison",
+          "promotion": "requires bounded common development rollouts, then frozen reserved evaluation; offline score establishes no task success"
+        },
+        "executed_actions_per_call": 2
+      },
+      "localization": {
+        "pseudo_visible_anchors": 962,
+        "anchors": 1037,
+        "center_error_mean_px_against_pseudo": 3.8981303225036568,
+        "center_error_p95_px_against_pseudo": 9.235162386187579,
+        "detector_event_classification_accuracy_at_half": 0.9276759884281581,
+        "predicted_visibility_probability_mean": 0.9499022960662842,
+        "center_swap_translation_change_mean_mm": 0.0044154017232358456,
+        "pseudo_keypoint_intervention_translation_change_mean_mm": 0.05262663587927818,
+        "interpretation": "Pseudo detector agreement and input sensitivity; not annotation accuracy or causal task success. Swapping only predicted centers deliberately breaks image-feature consistency."
+      },
+      "wall_s": 2.164071833016351,
+      "checkpoint": "outputs/v2/aux_keypoint_pilot_20261024/auxiliary_ball",
+      "checkpoint_sha256": "d734d7765d71c834ee688c0c71e9199c2158aa75aab051b62712835c2ee9f833",
+      "raw_cached_normalized_action_max_abs_difference": 2.384185791015625e-07,
+      "checkpoint_contract_sha256": "d734252faff4b4e56bacd87137b9ad96bb1453362cc535d1478af51de9ded3d1",
+      "checkpoint_stats_sha256": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff"
+    }
+  },
+  "limitations": "One seed, small new bottleneck architecture and fixed pseudo-label detector. Uses unchanged provisional FK targets and bounded training subset. Independent object localization, geometric metrology and task success are not established.",
+  "source_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/run_v2_keypoint_bottleneck.py": "91ad006ca1a0fdae2e3302bc6225d00985fb54be15bf9eb3411a4e5492ee4d80",
+    "src/real2sim/policy/keypoint_bottleneck.py": "b133f500a1516e56fa63d24ca4224f18ace3b562fe2e96f0b34be2b0562d62d5"
+  },
+  "full_report": {
+    "path": "outputs/v2/aux_keypoint_pilot_20261024/report.json",
+    "sha256": "327b8421f8110fb8cccdeabbf21f6d1e5b5361de48cd808f255e75c80bb983f3"
+  },
+  "interventions": {
+    "action_only": {
+      "u_plus_20pct": {
+        "mean_translation_change_mm": 0.035254722433263504,
+        "p95_translation_change_mm": 0.06793183870613573
+      },
+      "u_minus_20pct": {
+        "mean_translation_change_mm": 0.07279476457344604,
+        "p95_translation_change_mm": 0.14015578180551527
+      },
+      "visibility_zero": {
+        "mean_translation_change_mm": 0.766671270114103,
+        "p95_translation_change_mm": 1.6535362124443054
+      }
+    },
+    "auxiliary_ball": {
+      "u_plus_20pct": {
+        "mean_translation_change_mm": 0.08031203185065346,
+        "p95_translation_change_mm": 0.14098346903920173
+      },
+      "u_minus_20pct": {
+        "mean_translation_change_mm": 0.08123247048717887,
+        "p95_translation_change_mm": 0.14118796810507772
+      },
+      "visibility_zero": {
+        "mean_translation_change_mm": 0.543220282129031,
+        "p95_translation_change_mm": 1.0769392907619475
+      }
+    }
+  },
+  "intervention_caution": "Single-input counterfactuals intentionally break image/keypoint consistency and have no measured action labels. They assess dependence, not counterfactual prediction accuracy or task success.",
+  "conclusion": "Auxiliary supervision learns pseudo ball localization but does not improve action error. The action head remains weakly sensitive to image keypoints. This separates a usable image-localization representation from a policy that uses object location correctly.",
+  "bounded_rollouts": {
+    "path": "outputs/v2/aux_keypoint_rollouts_20261024/report.json",
+    "sha256": "db6c88aed9e6bad2588c84b48b8706145852971c9a42fb758bb23fd1368dba0a",
+    "matched_initial_states": true,
+    "source_changed_during_run": [],
+    "candidates": {
+      "action_only": {
+        "checkpoint": {
+          "checkpoint": "outputs/v2/aux_keypoint_pilot_20261024/action_only",
+          "checkpoint_sha256": "6d588d658cca8727c687391198516faa0d3560facf4cfb9849fa74c2f7014b77",
+          "checkpoint_step": 256,
+          "kind": "cartesian",
+          "chunk_size": 2,
+          "n_action_steps": 2,
+          "device": "cpu",
+          "target_reference": "accepted_target",
+          "execution_interface_ablation": false,
+          "kinematic_projection": null,
+          "checkpoint_contract_modified": false
+        },
+        "contract_sha256": "d734252faff4b4e56bacd87137b9ad96bb1453362cc535d1478af51de9ded3d1",
+        "contact_solver": {
+          "impratio": 10.0,
+          "noslip_iterations": 0,
+          "noslip_tolerance": 1e-06,
+          "solver": 2,
+          "cone": 1
+        },
+        "native_limits_rad": [
+          [
+            -1.91986,
+            1.91986
+          ],
+          [
+            -1.7453293,
+            1.7453293
+          ],
+          [
+            -1.69,
+            1.69
+          ],
+          [
+            -1.65806,
+            1.65806
+          ],
+          [
+            -2.7438473,
+            2.8412063
+          ],
+          [
+            -0.17453,
+            1.7453292
+          ]
+        ],
+        "ik_gates": {
+          "solver": "mujoco_damped_least_squares_diagnostic",
+          "position_tolerance_m": 0.003,
+          "orientation_tolerance_rad": 0.35,
+          "orientation_weight_m_per_rad": 0.025,
+          "damping": 0.001,
+          "max_iterations": 150,
+          "max_joint_step_rad": 0.12,
+          "workspace_min": [
+            -0.1,
+            -0.45,
+            -0.012
+          ],
+          "workspace_max": [
+            0.55,
+            0.45,
+            0.6
+          ],
+          "penetration_tolerance_m": 0.002,
+          "position_convergence_m": 1e-05,
+          "orientation_convergence_rad": 0.0001
+        },
+        "trials": [
+          {
+            "experiment_id": "AUXILIARY_KEYPOINT_APPROACH_SCREEN",
+            "controller_source": "LEARNED_KEYPOINT_HEAD",
+            "robot": "so101",
+            "seed": 0,
+            "checkpoint_sha256": "6d588d658cca8727c687391198516faa0d3560facf4cfb9849fa74c2f7014b77",
+            "checkpoint_step": 256,
+            "success": false,
+            "pick_place_success": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "rolled_out": false,
+            "ball_escaped_table": false,
+            "phase_failed": "approach",
+            "pick_place_phase_failed": "approach",
+            "min_ee_ball_distance_m": 0.14608,
+            "ticks": 125,
+            "ik_rejections": 0,
+            "mean_latency_ms": 55.44242610584103,
+            "max_action_saturation": 0.0,
+            "video_path": "",
+            "abort": null,
+            "initial_state": {
+              "native": [
+                -0.04142759712386541,
+                -1.7046687742612723,
+                1.5136415608504334,
+                1.1131748372002752,
+                0.037591708886580574,
+                0.6419791769294739
+              ],
+              "ball": [
+                0.35273098696389027,
+                0.22845816659973406,
+                0.022499999999999964
+              ],
+              "tool": [
+                0.19103546007207578,
+                0.005779604854951829,
+                0.04040224282375393
+              ]
+            },
+            "initial_predicted_ball_uv_fraction": [
+              0.8973397612571716,
+              0.9497137069702148
+            ],
+            "initial_predicted_detector_event_probability": 0.99736088514328,
+            "ik_reasons": {
+              "accepted": 125
+            },
+            "maximum_robot_table_penetration_m": 0.0,
+            "policy_calls": 63,
+            "inference_p95_ms": 79.09230362274684,
+            "trace": "outputs/v2/aux_keypoint_rollouts_20261024/action_only/seed_00/ticks.jsonl"
+          },
+          {
+            "experiment_id": "AUXILIARY_KEYPOINT_APPROACH_SCREEN",
+            "controller_source": "LEARNED_KEYPOINT_HEAD",
+            "robot": "so101",
+            "seed": 1,
+            "checkpoint_sha256": "6d588d658cca8727c687391198516faa0d3560facf4cfb9849fa74c2f7014b77",
+            "checkpoint_step": 256,
+            "success": false,
+            "pick_place_success": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "rolled_out": false,
+            "ball_escaped_table": false,
+            "phase_failed": "approach",
+            "pick_place_phase_failed": "approach",
+            "min_ee_ball_distance_m": 0.12557,
+            "ticks": 125,
+            "ik_rejections": 0,
+            "mean_latency_ms": 54.134895110638034,
+            "max_action_saturation": 0.0,
+            "video_path": "",
+            "abort": null,
+            "initial_state": {
+              "native": [
+                -0.04142759712386541,
+                -1.7046687742612723,
+                1.5136415608504334,
+                1.1131748372002752,
+                0.037591708886580574,
+                0.6419791769294739
+              ],
+              "ball": [
+                0.37613129922371574,
+                0.19812721716004372,
+                0.022499999999999964
+              ],
+              "tool": [
+                0.19103546007207578,
+                0.005779604854951829,
+                0.04040224282375393
+              ]
+            },
+            "initial_predicted_ball_uv_fraction": [
+              0.8974319696426392,
+              0.9446161985397339
+            ],
+            "initial_predicted_detector_event_probability": 0.9968183040618896,
+            "ik_reasons": {
+              "accepted": 125
+            },
+            "maximum_robot_table_penetration_m": 0.0,
+            "policy_calls": 63,
+            "inference_p95_ms": 78.87885205564089,
+            "trace": "outputs/v2/aux_keypoint_rollouts_20261024/action_only/seed_01/ticks.jsonl"
+          },
+          {
+            "experiment_id": "AUXILIARY_KEYPOINT_APPROACH_SCREEN",
+            "controller_source": "LEARNED_KEYPOINT_HEAD",
+            "robot": "so101",
+            "seed": 2,
+            "checkpoint_sha256": "6d588d658cca8727c687391198516faa0d3560facf4cfb9849fa74c2f7014b77",
+            "checkpoint_step": 256,
+            "success": false,
+            "pick_place_success": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "rolled_out": false,
+            "ball_escaped_table": false,
+            "phase_failed": "approach",
+            "pick_place_phase_failed": "approach",
+            "min_ee_ball_distance_m": 0.13708,
+            "ticks": 125,
+            "ik_rejections": 0,
+            "mean_latency_ms": 55.7256800877381,
+            "max_action_saturation": 0.0,
+            "video_path": "",
+            "abort": null,
+            "initial_state": {
+              "native": [
+                -0.04142759712386541,
+                -1.7046687742612723,
+                1.5136415608504334,
+                1.1131748372002752,
+                0.037591708886580574,
+                0.6419791769294739
+              ],
+              "ball": [
+                0.35109687918227855,
+                0.21933769789146654,
+                0.022499999999999964
+              ],
+              "tool": [
+                0.19103546007207578,
+                0.005779604854951829,
+                0.04040224282375393
+              ]
+            },
+            "initial_predicted_ball_uv_fraction": [
+              0.897563636302948,
+              0.9491944909095764
+            ],
+            "initial_predicted_detector_event_probability": 0.9972846508026123,
+            "ik_reasons": {
+              "accepted": 125
+            },
+            "maximum_robot_table_penetration_m": 0.0,
+            "policy_calls": 63,
+            "inference_p95_ms": 86.75699765444732,
+            "trace": "outputs/v2/aux_keypoint_rollouts_20261024/action_only/seed_02/ticks.jsonl"
+          }
+        ],
+        "summary": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 0,
+          "success_rate": 0.0,
+          "pick_place_successes": 0,
+          "pick_place_success_rate": 0.0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 3,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 3,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 55.101000434739056,
+          "max_action_saturation": 0.0
+        }
+      },
+      "auxiliary_ball": {
+        "checkpoint": {
+          "checkpoint": "outputs/v2/aux_keypoint_pilot_20261024/auxiliary_ball",
+          "checkpoint_sha256": "d734d7765d71c834ee688c0c71e9199c2158aa75aab051b62712835c2ee9f833",
+          "checkpoint_step": 256,
+          "kind": "cartesian",
+          "chunk_size": 2,
+          "n_action_steps": 2,
+          "device": "cpu",
+          "target_reference": "accepted_target",
+          "execution_interface_ablation": false,
+          "kinematic_projection": null,
+          "checkpoint_contract_modified": false
+        },
+        "contract_sha256": "d734252faff4b4e56bacd87137b9ad96bb1453362cc535d1478af51de9ded3d1",
+        "contact_solver": {
+          "impratio": 10.0,
+          "noslip_iterations": 0,
+          "noslip_tolerance": 1e-06,
+          "solver": 2,
+          "cone": 1
+        },
+        "native_limits_rad": [
+          [
+            -1.91986,
+            1.91986
+          ],
+          [
+            -1.7453293,
+            1.7453293
+          ],
+          [
+            -1.69,
+            1.69
+          ],
+          [
+            -1.65806,
+            1.65806
+          ],
+          [
+            -2.7438473,
+            2.8412063
+          ],
+          [
+            -0.17453,
+            1.7453292
+          ]
+        ],
+        "ik_gates": {
+          "solver": "mujoco_damped_least_squares_diagnostic",
+          "position_tolerance_m": 0.003,
+          "orientation_tolerance_rad": 0.35,
+          "orientation_weight_m_per_rad": 0.025,
+          "damping": 0.001,
+          "max_iterations": 150,
+          "max_joint_step_rad": 0.12,
+          "workspace_min": [
+            -0.1,
+            -0.45,
+            -0.012
+          ],
+          "workspace_max": [
+            0.55,
+            0.45,
+            0.6
+          ],
+          "penetration_tolerance_m": 0.002,
+          "position_convergence_m": 1e-05,
+          "orientation_convergence_rad": 0.0001
+        },
+        "trials": [
+          {
+            "experiment_id": "AUXILIARY_KEYPOINT_APPROACH_SCREEN",
+            "controller_source": "LEARNED_KEYPOINT_HEAD",
+            "robot": "so101",
+            "seed": 0,
+            "checkpoint_sha256": "d734d7765d71c834ee688c0c71e9199c2158aa75aab051b62712835c2ee9f833",
+            "checkpoint_step": 256,
+            "success": false,
+            "pick_place_success": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "rolled_out": false,
+            "ball_escaped_table": false,
+            "phase_failed": "approach",
+            "pick_place_phase_failed": "approach",
+            "min_ee_ball_distance_m": 0.16632,
+            "ticks": 125,
+            "ik_rejections": 0,
+            "mean_latency_ms": 55.66378762089317,
+            "max_action_saturation": 0.0,
+            "video_path": "",
+            "abort": null,
+            "initial_state": {
+              "native": [
+                -0.04142759712386541,
+                -1.7046687742612723,
+                1.5136415608504334,
+                1.1131748372002752,
+                0.037591708886580574,
+                0.6419791769294739
+              ],
+              "ball": [
+                0.35273098696389027,
+                0.22845816659973406,
+                0.022499999999999964
+              ],
+              "tool": [
+                0.19103546007207578,
+                0.005779604854951829,
+                0.04040224282375393
+              ]
+            },
+            "initial_predicted_ball_uv_fraction": [
+              0.6159574389457703,
+              0.49264898896217346
+            ],
+            "initial_predicted_detector_event_probability": 0.982163667678833,
+            "ik_reasons": {
+              "accepted": 125
+            },
+            "maximum_robot_table_penetration_m": 0.0,
+            "policy_calls": 63,
+            "inference_p95_ms": 76.66216937941499,
+            "trace": "outputs/v2/aux_keypoint_rollouts_20261024/auxiliary_ball/seed_00/ticks.jsonl"
+          },
+          {
+            "experiment_id": "AUXILIARY_KEYPOINT_APPROACH_SCREEN",
+            "controller_source": "LEARNED_KEYPOINT_HEAD",
+            "robot": "so101",
+            "seed": 1,
+            "checkpoint_sha256": "d734d7765d71c834ee688c0c71e9199c2158aa75aab051b62712835c2ee9f833",
+            "checkpoint_step": 256,
+            "success": false,
+            "pick_place_success": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "rolled_out": false,
+            "ball_escaped_table": false,
+            "phase_failed": "approach",
+            "pick_place_phase_failed": "approach",
+            "min_ee_ball_distance_m": 0.14501,
+            "ticks": 125,
+            "ik_rejections": 0,
+            "mean_latency_ms": 54.181582728145465,
+            "max_action_saturation": 0.0,
+            "video_path": "",
+            "abort": null,
+            "initial_state": {
+              "native": [
+                -0.04142759712386541,
+                -1.7046687742612723,
+                1.5136415608504334,
+                1.1131748372002752,
+                0.037591708886580574,
+                0.6419791769294739
+              ],
+              "ball": [
+                0.37613129922371574,
+                0.19812721716004372,
+                0.022499999999999964
+              ],
+              "tool": [
+                0.19103546007207578,
+                0.005779604854951829,
+                0.04040224282375393
+              ]
+            },
+            "initial_predicted_ball_uv_fraction": [
+              0.6338270306587219,
+              0.49097561836242676
+            ],
+            "initial_predicted_detector_event_probability": 0.9831776022911072,
+            "ik_reasons": {
+              "accepted": 125
+            },
+            "maximum_robot_table_penetration_m": 0.0,
+            "policy_calls": 63,
+            "inference_p95_ms": 79.8002517549321,
+            "trace": "outputs/v2/aux_keypoint_rollouts_20261024/auxiliary_ball/seed_01/ticks.jsonl"
+          },
+          {
+            "experiment_id": "AUXILIARY_KEYPOINT_APPROACH_SCREEN",
+            "controller_source": "LEARNED_KEYPOINT_HEAD",
+            "robot": "so101",
+            "seed": 2,
+            "checkpoint_sha256": "d734d7765d71c834ee688c0c71e9199c2158aa75aab051b62712835c2ee9f833",
+            "checkpoint_step": 256,
+            "success": false,
+            "pick_place_success": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "rolled_out": false,
+            "ball_escaped_table": false,
+            "phase_failed": "approach",
+            "pick_place_phase_failed": "approach",
+            "min_ee_ball_distance_m": 0.15692,
+            "ticks": 125,
+            "ik_rejections": 0,
+            "mean_latency_ms": 53.81842604237458,
+            "max_action_saturation": 0.0,
+            "video_path": "",
+            "abort": null,
+            "initial_state": {
+              "native": [
+                -0.04142759712386541,
+                -1.7046687742612723,
+                1.5136415608504334,
+                1.1131748372002752,
+                0.037591708886580574,
+                0.6419791769294739
+              ],
+              "ball": [
+                0.35109687918227855,
+                0.21933769789146654,
+                0.022499999999999964
+              ],
+              "tool": [
+                0.19103546007207578,
+                0.005779604854951829,
+                0.04040224282375393
+              ]
+            },
+            "initial_predicted_ball_uv_fraction": [
+              0.6149858236312866,
+              0.5028228163719177
+            ],
+            "initial_predicted_detector_event_probability": 0.9833177328109741,
+            "ik_reasons": {
+              "accepted": 125
+            },
+            "maximum_robot_table_penetration_m": 0.0,
+            "policy_calls": 63,
+            "inference_p95_ms": 79.2497499845922,
+            "trace": "outputs/v2/aux_keypoint_rollouts_20261024/auxiliary_ball/seed_02/ticks.jsonl"
+          }
+        ],
+        "summary": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 0,
+          "success_rate": 0.0,
+          "pick_place_successes": 0,
+          "pick_place_success_rate": 0.0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 3,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 3,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 54.554598797137736,
+          "max_action_saturation": 0.0
+        }
+      }
+    }
+  },
+  "training_cached_observations": 1024,
+  "training_unique_observations_drawn": 1010,
+  "sampling_contract": "Identical seed0 with-replacement minibatch draws from the fixed1,024-observation training cache; only1,010 distinct observations were drawn.",
+  "majority_detector_event_accuracy_baseline": 0.9276759884281581,
+  "paired_bottleneck_action_error_improvement_demonstrated": false,
+  "random_frame_model_agreement": {
+    "grounded_segmentation_report": "outputs/v2/grounded_geometry_20261024/report.json",
+    "sha256": "750e9d2110f7fb5c778eb12f2c775f3fc34c73ae8ea488195fc5623acef9baad",
+    "rows": [
+      {
+        "episode": 4,
+        "source_frame": 179,
+        "role": "fit",
+        "partition": "train",
+        "source_sha256": "d882fad225b2fc1979c66a1fcaa8d906ccb4ff1c4f3c6f0e4b895ead35181354",
+        "predicted_center_letterboxed_px": [
+          151.99224853515625,
+          69.32543563842773
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          153.9102830022851,
+          70.50233784496396
+        ],
+        "distance_px": 2.2503233147359256
+      },
+      {
+        "episode": 0,
+        "source_frame": 98,
+        "role": "fit",
+        "partition": "train",
+        "source_sha256": "4de41bb77557f074645a5fd3f060cded00001ac9948f4450b427499339918080",
+        "predicted_center_letterboxed_px": [
+          146.72195434570312,
+          75.66370582580566
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          148.1446937821412,
+          71.1225533738507
+        ],
+        "distance_px": 4.758807949044868
+      },
+      {
+        "episode": 5,
+        "source_frame": 405,
+        "role": "verification",
+        "partition": "train",
+        "source_sha256": "22b1bf3808d27623e5cbe6a0c1832ec281e3ae4e8d0a45470e4cb2ada1d0d67a",
+        "predicted_center_letterboxed_px": [
+          168.07569885253906,
+          126.20375061035156
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          172.33314158355432,
+          126.8005229539427
+        ],
+        "distance_px": 4.29906453056359
+      },
+      {
+        "episode": 27,
+        "source_frame": 541,
+        "role": "fit",
+        "partition": "train",
+        "source_sha256": "9b373709a50a355ce28be958c6e529111290b4a378d22bd89fba9a456a946f4d",
+        "predicted_center_letterboxed_px": [
+          163.36766052246094,
+          127.48140335083008
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          165.9307844016136,
+          130.06326012251606
+        ],
+        "distance_px": 3.638074821850613
+      },
+      {
+        "episode": 26,
+        "source_frame": 150,
+        "role": "fit",
+        "partition": "train",
+        "source_sha256": "17adc6f93ddd9c2ae6df940ce382f0349d76dbda856dd32ac5c1b0d4652deb4b",
+        "predicted_center_letterboxed_px": [
+          153.7057342529297,
+          76.70372772216797
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          151.59182646456037,
+          73.05986891499767
+        ],
+        "distance_px": 4.212637314595342
+      },
+      {
+        "episode": 28,
+        "source_frame": 252,
+        "role": "verification",
+        "partition": "train",
+        "source_sha256": "61a397ec431a76bc5a95dc8cd02a12aae874cfa2b04f5df4d02397926eb3aa68",
+        "predicted_center_letterboxed_px": [
+          154.43162536621094,
+          74.84169387817383
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          154.63201539353682,
+          73.10686383046023
+        ],
+        "distance_px": 1.7463652130930807
+      },
+      {
+        "episode": 31,
+        "source_frame": 299,
+        "role": "verification",
+        "partition": "val",
+        "source_sha256": "446a49bb4c567e735a8e32b62cc5f055fb61d376ab7b4dff0e9c9f5cec2d3653",
+        "predicted_center_letterboxed_px": [
+          178.23324584960938,
+          81.29153251647949
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          180.435467785909,
+          75.91155832974601
+        ],
+        "distance_px": 5.81325242068825
+      },
+      {
+        "episode": 13,
+        "source_frame": 696,
+        "role": "verification",
+        "partition": "val",
+        "source_sha256": "c3b197e3ed4baa4a7d2376a6efc8d2a7cad81627db84075d92f594ad74febd57",
+        "predicted_center_letterboxed_px": [
+          164.75926208496094,
+          123.7316665649414
+        ],
+        "SAM_visible_centroid_letterboxed_px": [
+          165.20893176443445,
+          124.15013843225474
+        ],
+        "distance_px": 0.6142650277938008
+      }
+    ],
+    "mean_distance_letterboxed_px": 3.4165988240456837,
+    "caution": "Agreement between learned pseudo-label center and independently pretrained detector-prompted visible-mask centroid on preselected frames, not physical calibration or localization ground truth. Definitions differ under occlusion. Localization head does not use proprioception; zero state used only to call model interface."
+  }
+}

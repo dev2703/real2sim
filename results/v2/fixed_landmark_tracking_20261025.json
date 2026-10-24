@@ -1,0 +1,2133 @@
+{
+  "schema": "fixed_landmark_tracking_summary_v1",
+  "physical_calibration_accepted": false,
+  "selection_seed": 2026102501,
+  "production_inputs_changed": false,
+  "reserved_episodes_used": [],
+  "counts": {
+    "frames": 115,
+    "fresh_relative_to_declared_inventories": 105,
+    "previous_model_frames": 10,
+    "supported_static_frames": 112,
+    "excluded_previously_selected_frames": 189
+  },
+  "limited_static_frames": [
+    {
+      "episode": 9,
+      "frame": 494,
+      "role": "fresh_tracking_check"
+    },
+    {
+      "episode": 25,
+      "frame": 29,
+      "role": "fresh_tracking_check"
+    },
+    {
+      "episode": 27,
+      "frame": 682,
+      "role": "fresh_tracking_check"
+    }
+  ],
+  "image_regimes": {
+    "early_episodes_below_7": {
+      "frames": 22,
+      "similarity_scale": {
+        "n": 22,
+        "min": 0.9993190191416258,
+        "median": 1.0017973562846998,
+        "p95": 1.0029310652908225,
+        "max": 1.0033707194828536
+      },
+      "frame_median_static_displacement_px": {
+        "n": 22,
+        "min": 0.2280856456182951,
+        "median": 0.6445165197464513,
+        "p95": 1.4250759770689791,
+        "max": 1.5014077875104843
+      }
+    },
+    "late_episodes_from_7": {
+      "frames": 90,
+      "similarity_scale": {
+        "n": 90,
+        "min": 0.9667717421235236,
+        "median": 0.9722176614261551,
+        "p95": 0.9756941559806402,
+        "max": 0.9762681444422534
+      },
+      "frame_median_static_displacement_px": {
+        "n": 90,
+        "min": 10.305024587718483,
+        "median": 11.782868217065682,
+        "p95": 12.489064962609833,
+        "max": 16.867652894709007
+      }
+    }
+  },
+  "named_anchor_tracks": {
+    "candidate_E_upper_opening": {
+      "attempted": 115,
+      "accepted": 74,
+      "image_similarity_residual_px": {
+        "n": 74,
+        "min": 0.017402647929350326,
+        "median": 0.4108976060001889,
+        "p95": 0.9842853427313761,
+        "max": 1.2838110696876393
+      }
+    },
+    "candidate_I_side_hole": {
+      "attempted": 115,
+      "accepted": 95,
+      "image_similarity_residual_px": {
+        "n": 95,
+        "min": 0.009516688150581811,
+        "median": 0.26804707241955006,
+        "p95": 0.6747993336801992,
+        "max": 1.0105460158957973
+      }
+    }
+  },
+  "withheld_holder_supported_frames": 112,
+  "withheld_holder_per_frame_p95_px": {
+    "n": 112,
+    "min": 0.03470134512667849,
+    "median": 0.903464275960044,
+    "p95": 1.4897950430253402,
+    "max": 2.0855873617585883
+  },
+  "edge_summary": {
+    "left": {
+      "reference_status": "measured",
+      "target_measured_frames": 115,
+      "relative_measured_frames": 115,
+      "range_limited_target_frames": 43,
+      "supported_uncensored_relative_frames": 70,
+      "supported_uncensored_frame_median_signed_normal_px": {
+        "n": 70,
+        "min": -26.851967389480393,
+        "median": 0.044617552358559465,
+        "p95": 7.751899554197008,
+        "max": 8.53894856571776
+      }
+    },
+    "right": {
+      "reference_status": "measured",
+      "target_measured_frames": 30,
+      "relative_measured_frames": 30,
+      "range_limited_target_frames": 0,
+      "supported_uncensored_relative_frames": 29,
+      "supported_uncensored_frame_median_signed_normal_px": {
+        "n": 29,
+        "min": -26.766026646133582,
+        "median": -8.681641576309858,
+        "p95": 5.791738530483823,
+        "max": 9.436880453614947
+      }
+    },
+    "top": {
+      "reference_status": "measured",
+      "target_measured_frames": 69,
+      "relative_measured_frames": 69,
+      "range_limited_target_frames": 0,
+      "supported_uncensored_relative_frames": 69,
+      "supported_uncensored_frame_median_signed_normal_px": {
+        "n": 69,
+        "min": -3.1729809268122864,
+        "median": 2.0525240750521334,
+        "p95": 9.252065816727741,
+        "max": 10.079580888000933
+      }
+    },
+    "bottom": {
+      "reference_status": "insufficient_line_consensus",
+      "target_measured_frames": 32,
+      "relative_measured_frames": 0,
+      "range_limited_target_frames": 3,
+      "supported_uncensored_relative_frames": 0,
+      "supported_uncensored_frame_median_signed_normal_px": {
+        "n": 0
+      }
+    }
+  },
+  "edge_range_audit": [
+    {
+      "episode": 25,
+      "frame": 397,
+      "static_support": "supported",
+      "edges": {
+        "bottom": {
+          "status": "measured",
+          "retained_rays": 19,
+          "near_search_boundary_ray_indices": [
+            1,
+            4
+          ],
+          "near_search_boundary_offsets_px": [
+            30.0,
+            30.0
+          ],
+          "offset_min_max_px": [
+            16.0,
+            30.0
+          ],
+          "near_search_boundary_rays": 2,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 25,
+      "frame": 670,
+      "static_support": "supported",
+      "edges": {
+        "bottom": {
+          "status": "measured",
+          "retained_rays": 20,
+          "near_search_boundary_ray_indices": [
+            0,
+            1,
+            2,
+            4
+          ],
+          "near_search_boundary_offsets_px": [
+            31.0,
+            31.0,
+            31.0,
+            31.0
+          ],
+          "offset_min_max_px": [
+            17.0,
+            31.0
+          ],
+          "near_search_boundary_rays": 4,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 26,
+      "frame": 150,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 31,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 26,
+      "frame": 170,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 31,
+          "near_search_boundary_ray_indices": [
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 26,
+      "frame": 399,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 26,
+      "frame": 488,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 27,
+      "frame": 27,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 27,
+      "frame": 315,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 31,
+          "near_search_boundary_ray_indices": [
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 27,
+      "frame": 541,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            24,
+            25,
+            26,
+            27,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 6,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 27,
+      "frame": 682,
+      "static_support": "limited",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 28,
+      "frame": 53,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 28,
+      "frame": 252,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 28,
+      "frame": 307,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 28,
+      "frame": 601,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 29,
+      "frame": 59,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 29,
+      "frame": 348,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 7,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 29,
+      "frame": 606,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 30,
+      "frame": 200,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 30,
+      "frame": 407,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 30,
+      "frame": 600,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 31,
+      "frame": 194,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 31,
+      "frame": 251,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 31,
+      "frame": 299,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 7,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 31,
+      "frame": 578,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 32,
+      "frame": 112,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -32.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -24.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 32,
+      "frame": 365,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 29,
+          "near_search_boundary_ray_indices": [
+            22,
+            23,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 7,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 32,
+      "frame": 606,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 34,
+      "frame": 143,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 34,
+      "frame": 364,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 34,
+      "frame": 446,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 35,
+      "frame": 150,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 29,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 35,
+      "frame": 449,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            22,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 8,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 35,
+      "frame": 581,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            19,
+            20,
+            21,
+            22,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -31.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 36,
+      "frame": 91,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 36,
+      "frame": 290,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 36,
+      "frame": 506,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 9,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 37,
+      "frame": 178,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 12,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 37,
+      "frame": 479,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 31,
+          "near_search_boundary_ray_indices": [
+            15,
+            20,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 37,
+      "frame": 684,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 38,
+      "frame": 188,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -30.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 38,
+      "frame": 307,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -31.0,
+            -30.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -31.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 38,
+      "frame": 441,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -31.0,
+            -32.0,
+            -30.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 39,
+      "frame": 230,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 29,
+          "near_search_boundary_ray_indices": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -25.0
+          ],
+          "near_search_boundary_rays": 10,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 39,
+      "frame": 426,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 30,
+          "near_search_boundary_ray_indices": [
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -30.0,
+            -30.0,
+            -30.0,
+            -31.0,
+            -32.0,
+            -30.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 12,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 39,
+      "frame": 665,
+      "static_support": "supported",
+      "edges": {
+        "left": {
+          "status": "measured",
+          "retained_rays": 31,
+          "near_search_boundary_ray_indices": [
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30
+          ],
+          "near_search_boundary_offsets_px": [
+            -31.0,
+            -31.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0,
+            -31.0,
+            -32.0,
+            -32.0
+          ],
+          "offset_min_max_px": [
+            -32.0,
+            -26.0
+          ],
+          "near_search_boundary_rays": 11,
+          "range_limited": true
+        },
+        "bottom": {
+          "status": "measured",
+          "retained_rays": 19,
+          "near_search_boundary_ray_indices": [
+            1,
+            3,
+            4
+          ],
+          "near_search_boundary_offsets_px": [
+            30.0,
+            30.0,
+            30.0
+          ],
+          "offset_min_max_px": [
+            18.0,
+            30.0
+          ],
+          "near_search_boundary_rays": 3,
+          "range_limited": true
+        }
+      }
+    }
+  ],
+  "model_edge_comparisons": [
+    {
+      "episode": 0,
+      "frame": 98,
+      "static_support": "supported",
+      "edges": {
+        "right": {
+          "median_abs_px": 1.202935197219432,
+          "p95_abs_px": 2.0259087810734195,
+          "range_limited": false
+        },
+        "bottom": {
+          "median_abs_px": 1.1401932664476009,
+          "p95_abs_px": 2.190476962552558,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.5372453186460042,
+          "p95_abs_px": 1.4839068322833295,
+          "range_limited": false
+        }
+      }
+    },
+    {
+      "episode": 2,
+      "frame": 82,
+      "static_support": "supported",
+      "edges": {
+        "right": {
+          "median_abs_px": 1.4821794382077869,
+          "p95_abs_px": 2.104933689412244,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.49907099643356645,
+          "p95_abs_px": 1.4527417430067453,
+          "range_limited": false
+        }
+      }
+    },
+    {
+      "episode": 4,
+      "frame": 179,
+      "static_support": "supported",
+      "edges": {
+        "top": {
+          "median_abs_px": 1.6843845060542444,
+          "p95_abs_px": 2.5084867635788286,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.44325094867803827,
+          "p95_abs_px": 1.1150348867069688,
+          "range_limited": false
+        }
+      }
+    },
+    {
+      "episode": 5,
+      "frame": 405,
+      "static_support": "supported",
+      "edges": {
+        "top": {
+          "median_abs_px": 1.7385349669986578,
+          "p95_abs_px": 2.429963814581885,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.4234172070053255,
+          "p95_abs_px": 1.1013820710737423,
+          "range_limited": false
+        }
+      }
+    },
+    {
+      "episode": 13,
+      "frame": 696,
+      "static_support": "supported",
+      "edges": {
+        "bottom": {
+          "median_abs_px": 0.8978997292241573,
+          "p95_abs_px": 2.207501991647142,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.3856888691785816,
+          "p95_abs_px": 1.2026281609207499,
+          "range_limited": false
+        }
+      }
+    },
+    {
+      "episode": 15,
+      "frame": 19,
+      "static_support": "supported",
+      "edges": {
+        "bottom": {
+          "median_abs_px": 1.0027737529367684,
+          "p95_abs_px": 2.113031421345475,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.4435663998707451,
+          "p95_abs_px": 1.3129616730052118,
+          "range_limited": false
+        }
+      }
+    },
+    {
+      "episode": 26,
+      "frame": 150,
+      "static_support": "supported",
+      "edges": {
+        "bottom": {
+          "median_abs_px": 8.080860265019815,
+          "p95_abs_px": 10.431094935152537,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.39033094282027747,
+          "p95_abs_px": 1.0184815474123674,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 27,
+      "frame": 541,
+      "static_support": "supported",
+      "edges": {
+        "top": {
+          "median_abs_px": 1.5870996933474295,
+          "p95_abs_px": 1.9534963851476221,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.5440113938557491,
+          "p95_abs_px": 1.2257656962715786,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 28,
+      "frame": 252,
+      "static_support": "supported",
+      "edges": {
+        "top": {
+          "median_abs_px": 1.1176298970230456,
+          "p95_abs_px": 2.6156829156094714,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.5420820412399436,
+          "p95_abs_px": 1.4175518055257474,
+          "range_limited": true
+        }
+      }
+    },
+    {
+      "episode": 31,
+      "frame": 299,
+      "static_support": "supported",
+      "edges": {
+        "top": {
+          "median_abs_px": 1.7086514461509867,
+          "p95_abs_px": 2.6692458405920982,
+          "range_limited": false
+        },
+        "left": {
+          "median_abs_px": 0.5389543608546798,
+          "p95_abs_px": 1.5792361809773814,
+          "range_limited": true
+        }
+      }
+    }
+  ],
+  "audit_definition": {
+    "boundary_margin_px": 2.0,
+    "search_radius_px": 32,
+    "range_limited_rule": "Any retained ray within the stated margin of either frozen search boundary; this flags possible truncation, not proof that the true edge is beyond the range.",
+    "no_refitting_or_reselection": true,
+    "compact_range_audit": "Only flagged edges are listed; their near-boundary ray indices/offsets and complete retained-offset range are retained. Every offset is reconstructed to compute these flags; original points remain in the frozen report.",
+    "uncensored_summary_rule": "Existing measured reference and target edge, two supported static regions, and no retained target ray near a search boundary. This descriptive filter is not a calibration acceptance gate.",
+    "distributions": "Unweighted distributions of per-frame statistics; frames within episodes are correlated. No confidence interval is asserted."
+  },
+  "limitations": [
+    "2-D similarity combines camera pose, stabilization, cropping, zoom and parallax; it is not metric extrinsics.",
+    "Candidate E/I names are unverified CAD identities; image tracking cannot establish physical dimensions.",
+    "Raw edge movement relative to fixed features supports mat-relative image change but includes parallax and boundary-definition uncertainty.",
+    "Model-edge disagreement is not a pure segmentation error: virtual corners and raw visible boundary have different semantics.",
+    "Sparse temporal samples cannot exclude unobserved transient motion; failed/occluded tracks and edges are retained.",
+    "Both fitting regions are on the left of the image; there is no independently tracked background region. Extrapolating their similarity to the far mat has unmeasured parallax uncertainty.",
+    "The audit observes retained rays only; rejected rays and stronger unseen edges outside the corridor cannot be reconstructed.",
+    "A failed reference bottom line prevents every relative bottom measurement, regardless of target bottom visibility.",
+    "The cabinet-handle ROI in the earlier run covered the moving wrist; corrected fitting uses only foot and table clamp.",
+    "Similarity support is the original RANSAC mask. Overlay support additionally thresholds the final residual; these need not identify identical tracks."
+  ],
+  "registration_gate": "Not passed: zero verified multi-height CAD identities and no independent intrinsics/base registration. No joint-zero/gripper correction, FK relabeling or corrected-policy retraining is justified by these pixels.",
+  "provenance_sha256": {
+    "outputs/v2/fixed_landmark_tracks_20261025/report.json": "e6b75126caab623ef0d88e1273e34c2094be9551ff6dc9bfdae6c450deca395b",
+    "outputs/v2/fixed_landmark_tracks_20261025/plan.json": "f6bc3a625d2be168d91181bcebbef396276b8872faacdd395ee1b8ff0f584e54",
+    "outputs/v2/fixed_landmark_tracks_20261025/executed_tracker.py": "30169b8774a35a14d0a145c20abda54d8574be36cd92d15686765a7bc842577b",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/summarize_v2_fixed_landmark_tracks.py": "e2fdb6c328c5e4d7d6c8d58a30f2beb8f7473910e753cd4576b340d868d5c949"
+  }
+}

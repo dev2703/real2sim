@@ -1,0 +1,330 @@
+{
+  "kind": "TEACHER_FORCED_PROVISIONAL_ACTION_MANIFOLD_DIAGNOSTIC",
+  "learned_task_success": null,
+  "physical_calibration_accepted": false,
+  "checkpoint_sha256": "41e47452b2a12f9de8f8b2e82fa7d1d51006195785f31cf750c88c94de6b2c9a",
+  "model_sha256": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+  "script_sha256": "ad5f0f5c47783d26b38690fc5365ba53f6063586c74f09d865501d5a834056f4",
+  "manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+  "sim_config_sha256": "a1d7449b30561d9c777cbf4dc04f08b152c56aae1d2a525625a70c79d29f67ae",
+  "task_config_sha256": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+  "dependency_sha256": {
+    ".cache/v2_exploratory_20261022/cartesian_iphone_top/arrays.npz": "01c1e8b1026415ee3ffa7b9136755b51a9326fd8b5bd4523a4da1f782c3cd08f",
+    "outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone_top/attempt-001/checkpoints/best/config.json": "6cba44a13719c8230911583413f0af38c1bebbbbde4ff0ff0bbf39fe265fd2cc",
+    "outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone_top/attempt-001/checkpoints/best/stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+    "outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone_top/attempt-001/checkpoints/best/real2sim_contract.json": "48d8a8162dae620f1f5604b52dfee2bb5ed72c7fc57311f55b772ce869712fce",
+    "src/real2sim/policy/kinematic_actions.py": "b7e3bdb1e03c4c44cb3bf15e23b845ee86416cfbb2da4b1df4b7691e606d6fe5"
+  },
+  "episodes": [
+    9,
+    13,
+    22,
+    31,
+    36,
+    37
+  ],
+  "per_episode_anchors": 16,
+  "rotation_weight_m_per_rad": 0.025,
+  "joint_step_cap_rad": [
+    0.08,
+    0.08,
+    0.08,
+    0.08,
+    0.08
+  ],
+  "excluded_out_of_limit_ticks": [
+    2789,
+    2790,
+    2807,
+    2808,
+    2827,
+    2828,
+    3067,
+    3068,
+    3087,
+    3088,
+    4049,
+    4050,
+    4075,
+    4076,
+    4101,
+    4102,
+    4413,
+    4414,
+    4439,
+    4440,
+    7410,
+    7411,
+    7432,
+    7433,
+    7454,
+    7455,
+    7478,
+    7479,
+    7730,
+    7731,
+    7754,
+    7755,
+    10494,
+    10495,
+    10514,
+    10515,
+    10534,
+    10535,
+    10554,
+    10555,
+    10776,
+    10777,
+    10798,
+    12127,
+    12128,
+    12149,
+    12150,
+    12173,
+    12174,
+    12197,
+    12437,
+    12438,
+    12461,
+    12462,
+    12485,
+    12487,
+    12488,
+    12511,
+    12512,
+    12535,
+    12536,
+    12559,
+    12560,
+    12829,
+    12830,
+    12855
+  ],
+  "summary": {
+    "actions": 123,
+    "label_normal_residual_mm_equivalent": {
+      "mean": 0.000849306137034947,
+      "p95": 0.004040654116570256
+    },
+    "prediction_normal_residual_mm_equivalent": {
+      "mean": 0.02161982178963187,
+      "p95": 0.07421412134184067
+    },
+    "prediction_translation_error_mm": {
+      "mean": 2.7587960068045594,
+      "p95": 7.641470050811766
+    },
+    "projected_translation_error_mm": {
+      "mean": 2.7584232415540355,
+      "p95": 7.620569421689569
+    },
+    "prediction_rotation_error_rad": {
+      "mean": 0.012655629162690554,
+      "p95": 0.031130696395613888
+    },
+    "projected_rotation_error_rad": {
+      "mean": 0.01264195178478475,
+      "p95": 0.033995927962225565
+    },
+    "projection_translation_change_mm": {
+      "mean": 0.06625446190376229,
+      "p95": 0.2177793805064188
+    },
+    "projection_improved_translation_fraction": 0.44715447154471544
+  },
+  "per_episode": {
+    "9": {
+      "actions": 22,
+      "label_normal_residual_mm_equivalent": {
+        "mean": 0.0016174403661087515,
+        "p95": 0.007807957732363662
+      },
+      "prediction_normal_residual_mm_equivalent": {
+        "mean": 0.01591700016102559,
+        "p95": 0.04140842417254855
+      },
+      "prediction_translation_error_mm": {
+        "mean": 3.2717156383124264,
+        "p95": 7.436768245697021
+      },
+      "projected_translation_error_mm": {
+        "mean": 3.2771893208360883,
+        "p95": 7.436367452483074
+      },
+      "prediction_rotation_error_rad": {
+        "mean": 0.017498767839185088,
+        "p95": 0.03877055285875952
+      },
+      "projected_rotation_error_rad": {
+        "mean": 0.017387654519365532,
+        "p95": 0.03859412460030588
+      },
+      "projection_translation_change_mm": {
+        "mean": 0.05567737689117688,
+        "p95": 0.19311191969194783
+      },
+      "projection_improved_translation_fraction": 0.36363636363636365
+    },
+    "13": {
+      "actions": 22,
+      "label_normal_residual_mm_equivalent": {
+        "mean": 0.0005764466867848294,
+        "p95": 0.002568611365914092
+      },
+      "prediction_normal_residual_mm_equivalent": {
+        "mean": 0.015717276891767322,
+        "p95": 0.04001377250567883
+      },
+      "prediction_translation_error_mm": {
+        "mean": 3.3021651072935625,
+        "p95": 8.672478413581846
+      },
+      "projected_translation_error_mm": {
+        "mean": 3.294792888838718,
+        "p95": 8.697027819185813
+      },
+      "prediction_rotation_error_rad": {
+        "mean": 0.012689873261963653,
+        "p95": 0.02703483097356593
+      },
+      "projected_rotation_error_rad": {
+        "mean": 0.013013507583517735,
+        "p95": 0.027125632654872868
+      },
+      "projection_translation_change_mm": {
+        "mean": 0.0790184431816668,
+        "p95": 0.36446460451105517
+      },
+      "projection_improved_translation_fraction": 0.6363636363636364
+    },
+    "22": {
+      "actions": 20,
+      "label_normal_residual_mm_equivalent": {
+        "mean": 0.0005826457149499901,
+        "p95": 0.002249422088113014
+      },
+      "prediction_normal_residual_mm_equivalent": {
+        "mean": 0.03519929586005589,
+        "p95": 0.12364824577892143
+      },
+      "prediction_translation_error_mm": {
+        "mean": 3.1617199912667275,
+        "p95": 7.730220174789429
+      },
+      "projected_translation_error_mm": {
+        "mean": 3.1719702392134153,
+        "p95": 7.68825241690263
+      },
+      "prediction_rotation_error_rad": {
+        "mean": 0.014161667223886901,
+        "p95": 0.02726649102268516
+      },
+      "projected_rotation_error_rad": {
+        "mean": 0.014081907566998503,
+        "p95": 0.02698364960623867
+      },
+      "projection_translation_change_mm": {
+        "mean": 0.06251862214801904,
+        "p95": 0.14082038997075433
+      },
+      "projection_improved_translation_fraction": 0.4
+    },
+    "31": {
+      "actions": 20,
+      "label_normal_residual_mm_equivalent": {
+        "mean": 0.0015383442605660259,
+        "p95": 0.009129686099242763
+      },
+      "prediction_normal_residual_mm_equivalent": {
+        "mean": 0.02528559292905879,
+        "p95": 0.07823615343474902
+      },
+      "prediction_translation_error_mm": {
+        "mean": 2.337412844598293,
+        "p95": 5.075684905052185
+      },
+      "projected_translation_error_mm": {
+        "mean": 2.329597106655471,
+        "p95": 5.080947025375313
+      },
+      "prediction_rotation_error_rad": {
+        "mean": 0.007604767679201117,
+        "p95": 0.018392770523053475
+      },
+      "projected_rotation_error_rad": {
+        "mean": 0.007654402481671286,
+        "p95": 0.01852708669584132
+      },
+      "projection_translation_change_mm": {
+        "mean": 0.08168272178737679,
+        "p95": 0.21956699840678467
+      },
+      "projection_improved_translation_fraction": 0.35
+    },
+    "36": {
+      "actions": 19,
+      "label_normal_residual_mm_equivalent": {
+        "mean": 0.00025965851938622057,
+        "p95": 0.0011092952867574214
+      },
+      "prediction_normal_residual_mm_equivalent": {
+        "mean": 0.017938793670617063,
+        "p95": 0.0432772806900957
+      },
+      "prediction_translation_error_mm": {
+        "mean": 1.9262514749639912,
+        "p95": 4.663029861450192
+      },
+      "projected_translation_error_mm": {
+        "mean": 1.9272503152673355,
+        "p95": 4.664709198090957
+      },
+      "prediction_rotation_error_rad": {
+        "mean": 0.011686854221920557,
+        "p95": 0.024563161981249308
+      },
+      "projected_rotation_error_rad": {
+        "mean": 0.011477544487251712,
+        "p95": 0.024431590508699058
+      },
+      "projection_translation_change_mm": {
+        "mean": 0.0710792839550007,
+        "p95": 0.2245743563108089
+      },
+      "projection_improved_translation_fraction": 0.47368421052631576
+    },
+    "37": {
+      "actions": 20,
+      "label_normal_residual_mm_equivalent": {
+        "mean": 0.0004422914156490587,
+        "p95": 0.0018438711056404948
+      },
+      "prediction_normal_residual_mm_equivalent": {
+        "mean": 0.020637456471962898,
+        "p95": 0.06943677212605842
+      },
+      "prediction_translation_error_mm": {
+        "mean": 2.4062548846006395,
+        "p95": 7.798479318618776
+      },
+      "projected_translation_error_mm": {
+        "mean": 2.4026673595421757,
+        "p95": 7.760925072245054
+      },
+      "prediction_rotation_error_rad": {
+        "mean": 0.01175566772537075,
+        "p95": 0.04432952901264578
+      },
+      "projected_rotation_error_rad": {
+        "mean": 0.011666747851695684,
+        "p95": 0.04423379745974445
+      },
+      "projection_translation_change_mm": {
+        "mean": 0.04757287493536359,
+        "p95": 0.15653735736748975
+      },
+      "projection_improved_translation_fraction": 0.45
+    }
+  },
+  "limitations": "Five-joint local tangent and bounded FK projection under the frozen provisional mapping. Second prefix action is tested at its recorded successor state, not a rolled-out state. Projection can alter intended motion; this test does not check collisions, contacts, camera geometry, closed-loop stability or placement. No geometry, model or controller changes are adopted."
+}

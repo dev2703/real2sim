@@ -1,0 +1,1003 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-21",
+  "scope": "Read-only local source/calibration and all v2 parquet rows. No hardware or simulator configuration changed.",
+  "dataset": {
+    "root": "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v2",
+    "info_sha256": "d0f8ee2efc2ce84ab168b21757c3d1abe60a1f8fa306f1907f7e5ea6d2f17a4d",
+    "rows": 27736,
+    "episodes": 41,
+    "parquet_hashes": {
+      "data/chunk-000/file-000.parquet": "d2605c0cc1e5f3a5f3665a44c56d171982aaa27916a84d24b937f232efa2d1c7",
+      "data/chunk-000/file-001.parquet": "e8fcaa40f44f506d64d3f2cd9d474705adfc5d5e976dafa9235f3570b436383c",
+      "data/chunk-000/file-002.parquet": "cb19adac2a14d1faf869fa3d973abd55f80c5c220127ad29a2644eec4d177e98",
+      "data/chunk-000/file-003.parquet": "322576b56491b4dd046bd386b1e503182939a9c8c079928b58546260b7952c75",
+      "data/chunk-000/file-004.parquet": "bf7891d3e7d9b4da726d94b4a39b7dc0badfcb0012377c49cdac8283622c9928",
+      "data/chunk-000/file-005.parquet": "a48a48c5515331067441e02ea798742e1028fbc6edd0f58a239038b5c47bfdcd",
+      "data/chunk-000/file-006.parquet": "751ced26a16236f310a0831c6a673ece66ed834e69f09c38ac6b2dc6ed52e8f0",
+      "data/chunk-000/file-007.parquet": "ae38419e4ccc6854cdb3b7d0af00054ab6a1465eb92648efc4fa3516165f028a"
+    },
+    "metadata_omissions": [
+      "recording collector commit",
+      "recording robot use_degrees value",
+      "recording-time calibration hash",
+      "physical joint zero reference",
+      "per-tick host acquisition/send traces"
+    ],
+    "matching_trace_log_config_calibration_sidecars": []
+  },
+  "source_hashes": {
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/motors/motors_bus.py": "6ce6109e32590ac2830f6995d13bb478b1a984695cc9ca59c0763ff091666393",
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/motors/feetech/feetech.py": "0460413cd6a641cede015ac19ac53d2cfe9c343af1bd18ed74e1951229f64ff2",
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/robots/so_follower/so_follower.py": "b542340fe13b6f3987caa0fb6366842dd34a9fb8be0264e77d057cb7d4cfff52",
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/robots/so_follower/config_so_follower.py": "65eecfc4eed9239abf65015e6b89cf0a1cb7d3bc34e5971eb83a034ac166d4f4",
+    "/Users/deveshvyas/Downloads/lerobot/src/lerobot/scripts/lerobot_record.py": "8c457ffaa675477747f3a0fb8085f75a200f7391b250689e9e5c91393e2d8135",
+    "/Users/deveshvyas/Downloads/real2sim/.venv/lib/python3.12/site-packages/lerobot/motors/motors_bus.py": "6ce6109e32590ac2830f6995d13bb478b1a984695cc9ca59c0763ff091666393",
+    "/Users/deveshvyas/Downloads/real2sim/.venv/lib/python3.12/site-packages/lerobot/robots/so_follower/config_so_follower.py": "65eecfc4eed9239abf65015e6b89cf0a1cb7d3bc34e5971eb83a034ac166d4f4",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so101_fk.py": "09c36dde0f2f6e2c61ec02f018637e0f75ef548f9d6f741cee2432475c4b8211",
+    "/Users/deveshvyas/Downloads/real2sim/configs/task.yaml": "420c379424f7c142fedb6dec86c07ea3420b534519fa127e9a5b416ae8386b9e",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/README.md": "e2344e7c14290bed85c7907247aecb8bf6cb4392e3de0d7c45680efe9bb9b5a9"
+  },
+  "equations": {
+    "arm_degrees": "d = (reported_encoder_tick - (range_min + range_max)/2) * 360 / 4095",
+    "arm_inverse": "reported_encoder_tick = d * 4095 / 360 + (range_min + range_max)/2",
+    "feetech_homing": "reported_encoder_tick = physical_encoder_tick - homing_offset; homing pose is set to int(4095/2)=2047",
+    "gripper_percent_drive_mode_0": "p = 100 * (clip(reported_encoder_tick,range_min,range_max) - range_min)/(range_max-range_min)",
+    "sim_arm_current": "q_sim_rad = deg2rad(d); signs=+1, offsets=0, provisional",
+    "sim_arm_identified_form": "q_sim_rad = sign * deg2rad(d) + physical_offset_rad; requires independent poses or registration",
+    "physical_joint_from_encoder": "q_phys_rad = sign * (reported_encoder_tick + homing_offset - physical_encoder_zero_tick) * 2*pi/4095; physical_encoder_zero_tick is not stored in calibration",
+    "sim_gripper_current": "q_sim_rad = -0.1745 + (p/100)*1.9199"
+  },
+  "calibration_comparisons": [
+    {
+      "label": "current_follower",
+      "path": "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/robots/so_follower/aligned_follower.json",
+      "sha256": "f20e3a4990d13f2e6e0670df6625a5ca199d2823380be353b70bfff729e419d3",
+      "joints": [
+        {
+          "joint": "shoulder_pan",
+          "calibration": {
+            "id": 1,
+            "drive_mode": 0,
+            "homing_offset": -1457,
+            "range_min": 789,
+            "range_max": 3255
+          },
+          "range_midpoint_tick": 2022.0,
+          "midpoint_minus_homing_pose_2047_degrees": -2.197802197802198,
+          "stored_degree_at_homing_pose_2047": 2.197802197802198,
+          "observation.state": {
+            "observed_min": -26.19780158996582,
+            "observed_max": 52.57143020629883,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 9.298324584960938e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47384592771504686,
+            "fraction_integer_within_0_001_tick": 1.0,
+            "degree_or_percent_calibrated_bounds": [
+              -108.3956043956044,
+              108.3956043956044
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          },
+          "action": {
+            "observed_min": -26.593406677246094,
+            "observed_max": 53.05494689941406,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999999403953552,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4804402065274189,
+            "fraction_integer_within_0_001_tick": 0.0,
+            "degree_or_percent_calibrated_bounds": [
+              -108.3956043956044,
+              108.3956043956044
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          }
+        },
+        {
+          "joint": "shoulder_lift",
+          "calibration": {
+            "id": 2,
+            "drive_mode": 0,
+            "homing_offset": -1764,
+            "range_min": 770,
+            "range_max": 3172
+          },
+          "range_midpoint_tick": 1971.0,
+          "midpoint_minus_homing_pose_2047_degrees": -6.681318681318682,
+          "stored_degree_at_homing_pose_2047": 6.681318681318682,
+          "observation.state": {
+            "observed_min": -105.14286041259766,
+            "observed_max": 59.340660095214844,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.291534423828125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.48663871765131717,
+            "fraction_integer_within_0_001_tick": 1.0,
+            "degree_or_percent_calibrated_bounds": [
+              -105.58241758241758,
+              105.58241758241758
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 8115
+          },
+          "action": {
+            "observed_min": -105.31867980957031,
+            "observed_max": 58.19780349731445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12501001358032227,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.48663871765131717,
+            "fraction_integer_within_0_001_tick": 0.7359388520334583,
+            "degree_or_percent_calibrated_bounds": [
+              -105.58241758241758,
+              105.58241758241758
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 8102
+          }
+        },
+        {
+          "joint": "elbow_flex",
+          "calibration": {
+            "id": 3,
+            "drive_mode": 0,
+            "homing_offset": 1990,
+            "range_min": 957,
+            "range_max": 3168
+          },
+          "range_midpoint_tick": 2062.5,
+          "midpoint_minus_homing_pose_2047_degrees": 1.3626373626373627,
+          "stored_degree_at_homing_pose_2047": -1.3626373626373627,
+          "observation.state": {
+            "observed_min": -94.72527313232422,
+            "observed_max": 96.92308044433594,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.528594970703125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4642846317592557,
+            "fraction_integer_within_0_001_tick": 1.0,
+            "degree_or_percent_calibrated_bounds": [
+              -97.18681318681318,
+              97.18681318681318
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          },
+          "action": {
+            "observed_min": -96.21977996826172,
+            "observed_max": 96.83516693115234,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500953674316406,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4663641262054625,
+            "fraction_integer_within_0_001_tick": 0.7743726564753389,
+            "degree_or_percent_calibrated_bounds": [
+              -97.18681318681318,
+              97.18681318681318
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          }
+        },
+        {
+          "joint": "wrist_flex",
+          "calibration": {
+            "id": 4,
+            "drive_mode": 0,
+            "homing_offset": 2044,
+            "range_min": 874,
+            "range_max": 3133
+          },
+          "range_midpoint_tick": 2003.5,
+          "midpoint_minus_homing_pose_2047_degrees": -3.8241758241758244,
+          "stored_degree_at_homing_pose_2047": 3.8241758241758244,
+          "observation.state": {
+            "observed_min": -86.46154022216797,
+            "observed_max": 98.24176025390625,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.24249267578125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46592317581144016,
+            "fraction_integer_within_0_001_tick": 1.0,
+            "degree_or_percent_calibrated_bounds": [
+              -99.2967032967033,
+              99.2967032967033
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          },
+          "action": {
+            "observed_min": -88.38461303710938,
+            "observed_max": 103.16483306884766,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500381469726562,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.466960029601978,
+            "fraction_integer_within_0_001_tick": 0.834042399769253,
+            "degree_or_percent_calibrated_bounds": [
+              -99.2967032967033,
+              99.2967032967033
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 73,
+            "outside_alternative_range_m100_100_bounds_count": 72
+          }
+        },
+        {
+          "joint": "wrist_roll",
+          "calibration": {
+            "id": 5,
+            "drive_mode": 0,
+            "homing_offset": 1329,
+            "range_min": 0,
+            "range_max": 4095
+          },
+          "range_midpoint_tick": 2047.5,
+          "midpoint_minus_homing_pose_2047_degrees": 0.04395604395604396,
+          "stored_degree_at_homing_pose_2047": -0.04395604395604396,
+          "observation.state": {
+            "observed_min": -20.615385055541992,
+            "observed_max": 27.824174880981445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.649162292480469e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 1.0,
+            "degree_or_percent_calibrated_bounds": [
+              -180.0,
+              180.0
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          },
+          "action": {
+            "observed_min": -20.96703338623047,
+            "observed_max": 28.351648330688477,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.5299530029296875e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 0.9977646380155755,
+            "degree_or_percent_calibrated_bounds": [
+              -180.0,
+              180.0
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          }
+        },
+        {
+          "joint": "gripper",
+          "calibration": {
+            "id": 6,
+            "drive_mode": 0,
+            "homing_offset": 1650,
+            "range_min": 2026,
+            "range_max": 3498
+          },
+          "range_midpoint_tick": 2762.0,
+          "midpoint_minus_homing_pose_2047_degrees": 62.857142857142854,
+          "stored_degree_at_homing_pose_2047": -62.857142857142854,
+          "observation.state": {
+            "observed_min": 0.0,
+            "observed_max": 66.3043441772461,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 2.6855468604480848e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 2.6855468604480848e-05,
+            "fraction_integer_within_0_001_tick": 1.0,
+            "degree_or_percent_calibrated_bounds": [
+              0,
+              100
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          },
+          "action": {
+            "observed_min": 0.25773194432258606,
+            "observed_max": 66.58075714111328,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.41237155914313917,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.41237155914313917,
+            "fraction_integer_within_0_001_tick": 0.0027040669166426305,
+            "degree_or_percent_calibrated_bounds": [
+              0,
+              100
+            ],
+            "outside_degree_or_percent_calibrated_bounds_count": 0,
+            "outside_alternative_range_m100_100_bounds_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "current_leader",
+      "path": "/Users/deveshvyas/.cache/huggingface/lerobot/calibration/teleoperators/so_leader/aligned_leader.json",
+      "sha256": "2032a3d2d5227f30c582b9ba446c944ef667a7c996d594090973145b5ed7cc94",
+      "joints": [
+        {
+          "joint": "shoulder_pan",
+          "calibration": {
+            "id": 1,
+            "drive_mode": 0,
+            "homing_offset": -1573,
+            "range_min": 653,
+            "range_max": 3378
+          },
+          "range_midpoint_tick": 2015.5,
+          "midpoint_minus_homing_pose_2047_degrees": -2.769230769230769,
+          "stored_degree_at_homing_pose_2047": 2.769230769230769,
+          "observation.state": {
+            "observed_min": -26.19780158996582,
+            "observed_max": 52.57143020629883,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999999552965164,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4670383930206299,
+            "fraction_integer_within_0_001_tick": 0.0
+          },
+          "action": {
+            "observed_min": -26.593406677246094,
+            "observed_max": 53.05494689941406,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 1.0013580322265625e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4725298285484314,
+            "fraction_integer_within_0_001_tick": 0.9971877704066917
+          }
+        },
+        {
+          "joint": "shoulder_lift",
+          "calibration": {
+            "id": 2,
+            "drive_mode": 0,
+            "homing_offset": -1601,
+            "range_min": 884,
+            "range_max": 3278
+          },
+          "range_midpoint_tick": 2081.0,
+          "midpoint_minus_homing_pose_2047_degrees": 2.989010989010989,
+          "stored_degree_at_homing_pose_2047": -2.989010989010989,
+          "observation.state": {
+            "observed_min": -105.14286041259766,
+            "observed_max": 59.340660095214844,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.291534423828125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4707662200926279,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -105.31867980957031,
+            "observed_max": 58.19780349731445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12501001358032227,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46768992424040334,
+            "fraction_integer_within_0_001_tick": 0.7359388520334583
+          }
+        },
+        {
+          "joint": "elbow_flex",
+          "calibration": {
+            "id": 3,
+            "drive_mode": 0,
+            "homing_offset": 1058,
+            "range_min": 859,
+            "range_max": 3058
+          },
+          "range_midpoint_tick": 1958.5,
+          "midpoint_minus_homing_pose_2047_degrees": -7.78021978021978,
+          "stored_degree_at_homing_pose_2047": 7.78021978021978,
+          "observation.state": {
+            "observed_min": -94.72527313232422,
+            "observed_max": 96.92308044433594,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.528594970703125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46987167358383886,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -96.21977996826172,
+            "observed_max": 96.83516693115234,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500953674316406,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4690128326415106,
+            "fraction_integer_within_0_001_tick": 0.7743726564753389
+          }
+        },
+        {
+          "joint": "wrist_flex",
+          "calibration": {
+            "id": 4,
+            "drive_mode": 0,
+            "homing_offset": -1658,
+            "range_min": 839,
+            "range_max": 3128
+          },
+          "range_midpoint_tick": 1983.5,
+          "midpoint_minus_homing_pose_2047_degrees": -5.582417582417582,
+          "stored_degree_at_homing_pose_2047": 5.582417582417582,
+          "observation.state": {
+            "observed_min": -86.46154022216797,
+            "observed_max": 98.24176025390625,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.24249267578125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47693986892704743,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -88.38461303710938,
+            "observed_max": 103.16483306884766,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500381469726562,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47077594757047336,
+            "fraction_integer_within_0_001_tick": 0.834042399769253
+          }
+        },
+        {
+          "joint": "wrist_roll",
+          "calibration": {
+            "id": 5,
+            "drive_mode": 0,
+            "homing_offset": 1932,
+            "range_min": 0,
+            "range_max": 4095
+          },
+          "range_midpoint_tick": 2047.5,
+          "midpoint_minus_homing_pose_2047_degrees": 0.04395604395604396,
+          "stored_degree_at_homing_pose_2047": -0.04395604395604396,
+          "observation.state": {
+            "observed_min": -20.615385055541992,
+            "observed_max": 27.824174880981445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.649162292480469e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -20.96703338623047,
+            "observed_max": 28.351648330688477,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.5299530029296875e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 0.9977646380155755
+          }
+        },
+        {
+          "joint": "gripper",
+          "calibration": {
+            "id": 6,
+            "drive_mode": 0,
+            "homing_offset": 311,
+            "range_min": 2040,
+            "range_max": 3204
+          },
+          "range_midpoint_tick": 2622.0,
+          "midpoint_minus_homing_pose_2047_degrees": 50.54945054945055,
+          "stored_degree_at_homing_pose_2047": -50.54945054945055,
+          "observation.state": {
+            "observed_min": 0.0,
+            "observed_max": 66.3043441772461,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4619468688965753,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4619468688965753,
+            "fraction_integer_within_0_001_tick": 0.00046870493221805597
+          },
+          "action": {
+            "observed_min": 0.25773194432258606,
+            "observed_max": 66.58075714111328,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.3896681213377633,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.3896681213377633,
+            "fraction_integer_within_0_001_tick": 0.6933588116527257
+          }
+        }
+      ]
+    },
+    {
+      "label": "backup_follower_None",
+      "path": "/Users/deveshvyas/Downloads/lerobot/so101-calibration-backup/follower/None.json",
+      "sha256": "e7896764ce9c48e2b45e127e55a629e8581bfa0c14be1d0f2c462577fdb78b76",
+      "joints": [
+        {
+          "joint": "shoulder_pan",
+          "calibration": {
+            "id": 1,
+            "drive_mode": 0,
+            "homing_offset": -1528,
+            "range_min": 856,
+            "range_max": 3542
+          },
+          "range_midpoint_tick": 2199.0,
+          "midpoint_minus_homing_pose_2047_degrees": 13.362637362637363,
+          "stored_degree_at_homing_pose_2047": -13.362637362637363,
+          "observation.state": {
+            "observed_min": -26.19780158996582,
+            "observed_max": 52.57143020629883,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 9.298324584960938e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47076861500772793,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -26.593406677246094,
+            "observed_max": 53.05494689941406,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999999403953552,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.475600595474134,
+            "fraction_integer_within_0_001_tick": 0.0
+          }
+        },
+        {
+          "joint": "shoulder_lift",
+          "calibration": {
+            "id": 2,
+            "drive_mode": 0,
+            "homing_offset": 1824,
+            "range_min": 1278,
+            "range_max": 3677
+          },
+          "range_midpoint_tick": 2477.5,
+          "midpoint_minus_homing_pose_2047_degrees": 37.84615384615385,
+          "stored_degree_at_homing_pose_2047": -37.84615384615385,
+          "observation.state": {
+            "observed_min": -105.14286041259766,
+            "observed_max": 59.340660095214844,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999995529651642,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4749571228028344,
+            "fraction_integer_within_0_001_tick": 0.0
+          },
+          "action": {
+            "observed_min": -105.31867980957031,
+            "observed_max": 58.19780349731445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999992847442627,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4749571228028344,
+            "fraction_integer_within_0_001_tick": 0.0
+          }
+        },
+        {
+          "joint": "elbow_flex",
+          "calibration": {
+            "id": 3,
+            "drive_mode": 0,
+            "homing_offset": 2000,
+            "range_min": 948,
+            "range_max": 3167
+          },
+          "range_midpoint_tick": 2057.5,
+          "midpoint_minus_homing_pose_2047_degrees": 0.9230769230769231,
+          "stored_degree_at_homing_pose_2047": -0.9230769230769231,
+          "observation.state": {
+            "observed_min": -94.72527313232422,
+            "observed_max": 96.92308044433594,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.528594970703125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46153747320204275,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -96.21977996826172,
+            "observed_max": 96.83516693115234,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500953674316406,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46575853347803786,
+            "fraction_integer_within_0_001_tick": 0.7743726564753389
+          }
+        },
+        {
+          "joint": "wrist_flex",
+          "calibration": {
+            "id": 4,
+            "drive_mode": 0,
+            "homing_offset": -1918,
+            "range_min": 747,
+            "range_max": 3048
+          },
+          "range_midpoint_tick": 1897.5,
+          "midpoint_minus_homing_pose_2047_degrees": -13.142857142857142,
+          "stored_degree_at_homing_pose_2047": 13.142857142857142,
+          "observation.state": {
+            "observed_min": -86.46154022216797,
+            "observed_max": 98.24176025390625,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.24249267578125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46856515884383043,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -88.38461303710938,
+            "observed_max": 103.16483306884766,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500381469726562,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46928310692305786,
+            "fraction_integer_within_0_001_tick": 0.834042399769253
+          }
+        },
+        {
+          "joint": "wrist_roll",
+          "calibration": {
+            "id": 5,
+            "drive_mode": 0,
+            "homing_offset": 1458,
+            "range_min": 0,
+            "range_max": 4095
+          },
+          "range_midpoint_tick": 2047.5,
+          "midpoint_minus_homing_pose_2047_degrees": 0.04395604395604396,
+          "stored_degree_at_homing_pose_2047": -0.04395604395604396,
+          "observation.state": {
+            "observed_min": -20.615385055541992,
+            "observed_max": 27.824174880981445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.649162292480469e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -20.96703338623047,
+            "observed_max": 28.351648330688477,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.5299530029296875e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 0.9977646380155755
+          }
+        },
+        {
+          "joint": "gripper",
+          "calibration": {
+            "id": 6,
+            "drive_mode": 0,
+            "homing_offset": -1875,
+            "range_min": 1456,
+            "range_max": 2930
+          },
+          "range_midpoint_tick": 2193.0,
+          "midpoint_minus_homing_pose_2047_degrees": 12.835164835164836,
+          "stored_degree_at_homing_pose_2047": -12.835164835164836,
+          "observation.state": {
+            "observed_min": 0.0,
+            "observed_max": 66.3043441772461,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.366857604980396,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.366857604980396,
+            "fraction_integer_within_0_001_tick": 0.00021632535333141045
+          },
+          "action": {
+            "observed_min": 0.25773194432258606,
+            "observed_max": 66.58075714111328,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4518689727783567,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4518689727783567,
+            "fraction_integer_within_0_001_tick": 0.0023435246610902798
+          }
+        }
+      ]
+    },
+    {
+      "label": "backup_follower_aligned_follower",
+      "path": "/Users/deveshvyas/Downloads/lerobot/so101-calibration-backup/follower/aligned_follower.json",
+      "sha256": "67a9b4441581c9fe66885e301b72268ee463b29a19f4fce439139028a61f17f9",
+      "joints": [
+        {
+          "joint": "shoulder_pan",
+          "calibration": {
+            "id": 1,
+            "drive_mode": 0,
+            "homing_offset": -1512,
+            "range_min": 851,
+            "range_max": 3287
+          },
+          "range_midpoint_tick": 2069.0,
+          "midpoint_minus_homing_pose_2047_degrees": 1.934065934065934,
+          "stored_degree_at_homing_pose_2047": -1.934065934065934,
+          "observation.state": {
+            "observed_min": -26.19780158996582,
+            "observed_max": 52.57143020629883,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 9.298324584960938e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4799991703032447,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -26.593406677246094,
+            "observed_max": 53.05494689941406,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999999403953552,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47384562730803736,
+            "fraction_integer_within_0_001_tick": 0.0
+          }
+        },
+        {
+          "joint": "shoulder_lift",
+          "calibration": {
+            "id": 2,
+            "drive_mode": 0,
+            "homing_offset": 1658,
+            "range_min": 1451,
+            "range_max": 3773
+          },
+          "range_midpoint_tick": 2612.0,
+          "midpoint_minus_homing_pose_2047_degrees": 49.67032967032967,
+          "stored_degree_at_homing_pose_2047": -49.67032967032967,
+          "observation.state": {
+            "observed_min": -105.14286041259766,
+            "observed_max": 59.340660095214844,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.291534423828125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.48135177612311963,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -105.31867980957031,
+            "observed_max": 58.19780349731445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12501001358032227,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47077008247379126,
+            "fraction_integer_within_0_001_tick": 0.7359388520334583
+          }
+        },
+        {
+          "joint": "elbow_flex",
+          "calibration": {
+            "id": 3,
+            "drive_mode": 0,
+            "homing_offset": 2024,
+            "range_min": 923,
+            "range_max": 3132
+          },
+          "range_midpoint_tick": 2027.5,
+          "midpoint_minus_homing_pose_2047_degrees": -1.7142857142857142,
+          "stored_degree_at_homing_pose_2047": 1.7142857142857142,
+          "observation.state": {
+            "observed_min": -94.72527313232422,
+            "observed_max": 96.92308044433594,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.528594970703125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46329694926748743,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -96.21977996826172,
+            "observed_max": 96.83516693115234,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500953674316406,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4671672439571921,
+            "fraction_integer_within_0_001_tick": 0.7743726564753389
+          }
+        },
+        {
+          "joint": "wrist_flex",
+          "calibration": {
+            "id": 4,
+            "drive_mode": 0,
+            "homing_offset": -1230,
+            "range_min": 103,
+            "range_max": 2277
+          },
+          "range_midpoint_tick": 1190.0,
+          "midpoint_minus_homing_pose_2047_degrees": -75.34065934065934,
+          "stored_degree_at_homing_pose_2047": 75.34065934065934,
+          "observation.state": {
+            "observed_min": -86.46154022216797,
+            "observed_max": 98.24176025390625,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.49999968707561493,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.46814052581794385,
+            "fraction_integer_within_0_001_tick": 0.0
+          },
+          "action": {
+            "observed_min": -88.38461303710938,
+            "observed_max": 103.16483306884766,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.49999968707561493,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4734090995789302,
+            "fraction_integer_within_0_001_tick": 0.0
+          }
+        },
+        {
+          "joint": "wrist_roll",
+          "calibration": {
+            "id": 5,
+            "drive_mode": 0,
+            "homing_offset": 617,
+            "range_min": 0,
+            "range_max": 4095
+          },
+          "range_midpoint_tick": 2047.5,
+          "midpoint_minus_homing_pose_2047_degrees": 0.04395604395604396,
+          "stored_degree_at_homing_pose_2047": -0.04395604395604396,
+          "observation.state": {
+            "observed_min": -20.615385055541992,
+            "observed_max": 27.824174880981445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.649162292480469e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -20.96703338623047,
+            "observed_max": 28.351648330688477,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.5299530029296875e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 0.9977646380155755
+          }
+        },
+        {
+          "joint": "gripper",
+          "calibration": {
+            "id": 6,
+            "drive_mode": 0,
+            "homing_offset": 1942,
+            "range_min": 1731,
+            "range_max": 3193
+          },
+          "range_midpoint_tick": 2462.0,
+          "midpoint_minus_homing_pose_2047_degrees": 36.48351648351648,
+          "stored_degree_at_homing_pose_2047": -36.48351648351648,
+          "observation.state": {
+            "observed_min": 0.0,
+            "observed_max": 66.3043441772461,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.47827056884761987,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47827056884761987,
+            "fraction_integer_within_0_001_tick": 0.00021632535333141045
+          },
+          "action": {
+            "observed_min": 0.25773194432258606,
+            "observed_max": 66.58075714111328,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4742337036132085,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4742337036132085,
+            "fraction_integer_within_0_001_tick": 0.0025959042399769255
+          }
+        }
+      ]
+    },
+    {
+      "label": "backup_follower_my_follower_arm",
+      "path": "/Users/deveshvyas/Downloads/lerobot/so101-calibration-backup/follower/my_follower_arm.json",
+      "sha256": "2f5c8260328053c68e19e5f3708c5e89ee77340e2fbb56edae82784058cb5480",
+      "joints": [
+        {
+          "joint": "shoulder_pan",
+          "calibration": {
+            "id": 1,
+            "drive_mode": 0,
+            "homing_offset": -1418,
+            "range_min": 733,
+            "range_max": 3191
+          },
+          "range_midpoint_tick": 1962.0,
+          "midpoint_minus_homing_pose_2047_degrees": -7.472527472527473,
+          "stored_degree_at_homing_pose_2047": 7.472527472527473,
+          "observation.state": {
+            "observed_min": -26.19780158996582,
+            "observed_max": 52.57143020629883,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 9.298324584960938e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47164811015136365,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -26.593406677246094,
+            "observed_max": 53.05494689941406,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.4999999403953552,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47428069114675964,
+            "fraction_integer_within_0_001_tick": 0.0
+          }
+        },
+        {
+          "joint": "shoulder_lift",
+          "calibration": {
+            "id": 2,
+            "drive_mode": 0,
+            "homing_offset": 1684,
+            "range_min": 1418,
+            "range_max": 3394
+          },
+          "range_midpoint_tick": 2406.0,
+          "midpoint_minus_homing_pose_2047_degrees": 31.560439560439562,
+          "stored_degree_at_homing_pose_2047": -31.560439560439562,
+          "observation.state": {
+            "observed_min": -105.14286041259766,
+            "observed_max": 59.340660095214844,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.291534423828125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4686087036131994,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -105.31867980957031,
+            "observed_max": 58.19780349731445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12501001358032227,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4686087036131994,
+            "fraction_integer_within_0_001_tick": 0.7359388520334583
+          }
+        },
+        {
+          "joint": "elbow_flex",
+          "calibration": {
+            "id": 3,
+            "drive_mode": 0,
+            "homing_offset": -2046,
+            "range_min": 905,
+            "range_max": 3116
+          },
+          "range_midpoint_tick": 2010.5,
+          "midpoint_minus_homing_pose_2047_degrees": -3.208791208791209,
+          "stored_degree_at_homing_pose_2047": 3.208791208791209,
+          "observation.state": {
+            "observed_min": -94.72527313232422,
+            "observed_max": 96.92308044433594,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 3.528594970703125e-05,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4642846317590852,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -96.21977996826172,
+            "observed_max": 96.83516693115234,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.12500953674316406,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4663641262054625,
+            "fraction_integer_within_0_001_tick": 0.7743726564753389
+          }
+        },
+        {
+          "joint": "wrist_flex",
+          "calibration": {
+            "id": 4,
+            "drive_mode": 0,
+            "homing_offset": -1842,
+            "range_min": 662,
+            "range_max": 2904
+          },
+          "range_midpoint_tick": 1783.0,
+          "midpoint_minus_homing_pose_2047_degrees": -23.208791208791208,
+          "stored_degree_at_homing_pose_2047": 23.208791208791208,
+          "observation.state": {
+            "observed_min": -86.46154022216797,
+            "observed_max": 98.24176025390625,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.49999968707561493,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47164459228497435,
+            "fraction_integer_within_0_001_tick": 0.0
+          },
+          "action": {
+            "observed_min": -88.38461303710938,
+            "observed_max": 103.16483306884766,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.49999968707561493,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.4685347747799824,
+            "fraction_integer_within_0_001_tick": 0.0
+          }
+        },
+        {
+          "joint": "wrist_roll",
+          "calibration": {
+            "id": 5,
+            "drive_mode": 0,
+            "homing_offset": 1345,
+            "range_min": 0,
+            "range_max": 4095
+          },
+          "range_midpoint_tick": 2047.5,
+          "midpoint_minus_homing_pose_2047_degrees": 0.04395604395604396,
+          "stored_degree_at_homing_pose_2047": -0.04395604395604396,
+          "observation.state": {
+            "observed_min": -20.615385055541992,
+            "observed_max": 27.824174880981445,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.649162292480469e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 1.0
+          },
+          "action": {
+            "observed_min": -20.96703338623047,
+            "observed_max": 28.351648330688477,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 4.5299530029296875e-06,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.40000214576730286,
+            "fraction_integer_within_0_001_tick": 0.9977646380155755
+          }
+        },
+        {
+          "joint": "gripper",
+          "calibration": {
+            "id": 6,
+            "drive_mode": 0,
+            "homing_offset": 2016,
+            "range_min": 1663,
+            "range_max": 3103
+          },
+          "range_midpoint_tick": 2383.0,
+          "midpoint_minus_homing_pose_2047_degrees": 29.53846153846154,
+          "stored_degree_at_homing_pose_2047": -29.53846153846154,
+          "observation.state": {
+            "observed_min": 0.0,
+            "observed_max": 66.3043441772461,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.47827758789071595,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47827758789071595,
+            "fraction_integer_within_0_001_tick": 0.006886357081049899
+          },
+          "action": {
+            "observed_min": 0.25773194432258606,
+            "observed_max": 66.58075714111328,
+            "degree_or_gripper_percent_integer_tick_residual_p95": 0.47825012207022155,
+            "alternative_range_m100_100_integer_tick_residual_p95": 0.47825012207022155,
+            "fraction_integer_within_0_001_tick": 0.005985001442169022
+          }
+        }
+      ]
+    }
+  ],
+  "gripper_scale_evidence": {
+    "current_follower_encoder_span_ticks": 1472,
+    "implied_servo_rotation_degrees_per_100_percent": 129.4065934065934,
+    "configured_sim_rotation_degrees_per_100_percent": 110.00216708716675,
+    "configured_fraction_of_encoder_scale": 0.8500507137340502,
+    "configured_scale_compression_percent": 14.994928626594984,
+    "difference_at_30_percent_if_same_closed_zero_degrees": 5.821327895827994,
+    "difference_at_40_percent_if_same_closed_zero_degrees": 7.7617705277706595,
+    "requires_verification": [
+      "recording calibration identity",
+      "direct motor-to-jaw angle ratio and sign",
+      "jaw closed angle and jaw separation across five openings",
+      "held-out jaw opening measurement"
+    ],
+    "promoted_to_configuration": false
+  },
+  "conclusions": [
+    "Degree units of measured v2 arm states are numerically strongly supported; treating them as normalized +/-100 would introduce a new error.",
+    "Integer lattice alone does not identify the exact recording calibration: adding any integer to range midpoint leaves the residual unchanged.",
+    "Current follower gripper span matches observed percentages substantially better than available historical backups. This supports, but does not prove, recording-time identity.",
+    "Homing offsets are already applied by the servo before reported position normalization; adding them directly to recorded degrees is double correction.",
+    "Calibration range midpoint is not an independently established physical MJCF zero. No offset can be promoted from this audit alone.",
+    "Current gripper percent-to-radian map compresses the calibrated motor angular span by approximately 15%; verify this high-priority measured-scale candidate before changing contact parameters.",
+    "Current source records returned sent target, but its present content cannot retrospectively prove old command provenance. Action values need not lie on follower readback integer lattice because limiter and leader mapping act before follower integer write."
+  ],
+  "command_semantics_source_only": {
+    "so_follower_send_action": "Receives normalized motor values. max_relative_target may clip each requested goal relative to current normalized position. Returns these floating normalized goals after calling sync_write; does not return a hardware readback.",
+    "gripper_drive_mode": 0,
+    "gripper_percent_direction": "Increasing percent increases reported encoder ticks; physical opening direction still requires jaw observation.",
+    "bus_write": "RANGE_0_100 unnormalization clamps to 0..100 then integer-converts ticks=int(p/100*(range_max-range_min)+range_min). SOFollower returns goal_pos before this quantization/clipping, not the encoded packet value.",
+    "historical_provenance_confirmed": false
+  }
+}
