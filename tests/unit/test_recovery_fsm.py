@@ -227,6 +227,26 @@ def test_handoff_check_falls_back_when_a_condition_breaks(cfg, bad):
     assert all(x.state is GateState.HANDOFF_CHECK for x in outs[:-1])
 
 
+@pytest.mark.parametrize(
+    "bad",
+    [
+        dict(conf=float("nan")),
+        dict(conf=float("inf")),
+        dict(conf=1.1),  # a confidence outside [0, 1] violates the tracker contract
+        dict(ball_rel=(float("nan"), 0.04, -0.08)),
+        dict(ball_rel=(float("inf"), 0.04, -0.08)),
+        dict(vel=(float("nan"), 0.0, 0.0)),
+        dict(vel=(float("inf"), 0.0, 0.0)),
+        dict(ee=(float("nan"), 0.0, 0.10)),
+    ],
+)
+def test_handoff_rejects_invalid_tracker_or_proprioception(cfg, bad):
+    gate = RecoveryGate(cfg)
+    gate.step(0, DEV, feats())
+    gate.step(1, DEV, feats())
+    assert gate.step(2, NOMINAL, feats(**bad)).state is GateState.SPECIALIST
+
+
 def test_handoff_blocked_while_detector_still_flags_deviation(cfg):
     gate = RecoveryGate(cfg)
     gate.step(0, DEV, feats())
