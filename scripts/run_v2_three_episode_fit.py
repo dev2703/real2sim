@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 from pathlib import Path
 
 import torch
@@ -16,17 +17,72 @@ import yaml
 
 from real2sim.config import load_yaml
 from real2sim.data.raw import sha256_file
+from real2sim.policy.act import load_checkpoint
+from real2sim.policy.dataset import DerivedTickDataset
 from real2sim.policy.train import train
+from real2sim.policy.validation import evaluate_executed_prefix, executed_prefix_report
+
+EPISODES = (11, 8, 23)
+GATE_VERSION = "three_episode_movement_and_drift_v2"
 
 
 def gate_from_validation(validation: dict) -> dict:
-    per_episode = validation["scores"]["model"]["per_episode"]
-    rows = {episode: {"translation_mean_mm": score["translation_mean_mm"],
-                      "gripper_mae_fraction": score["gripper_mae"],
-                      "pass": score["translation_mean_mm"] < 1. and score["gripper_mae"] < .03}
-            for episode, score in per_episode.items()}
-    return {"pass": len(rows) == 3 and all(row["pass"] for row in rows.values()),
-            "per_episode": rows, "thresholds": {"translation_mean_mm_below": 1., "gripper_mae_fraction_below": .03}}
+    """Require every condition to fit and improve both causal baselines.
+
+    Compare stationary *error* to the recorded label, not predicted step size:
+    hold's predicted step is zero, so requiring a smaller step is impossible.
+    Exact equality is allowed only at the zero-error floor.
+    """
+    rows = {}
+    expected = {str(e) for e in EPISODES}
+    scores = validation["scores"]
+    valid_episodes = all(set(scores.get(name, {}).get("per_episode", {})) == expected
+                         for name in ("model", "hold", "persistence"))
+    for episode, score in scores["model"]["per_episode"].items():
+        checks = {"translation_fit": math.isfinite(score["translation_mean_mm"]) and score["translation_mean_mm"] < 1.,
+                  "gripper_fit": math.isfinite(score["gripper_mae"]) and score["gripper_mae"] < .03}
+        comparisons = {}
+        for baseline in ("hold", "persistence"):
+            reference = scores.get(baseline, {}).get("per_episode", {}).get(episode, {})
+            comparisons[baseline] = {}
+            for group, metrics in (("movement", ("vector_error_mean",)),
+                                   ("stationary_drift", ("summed_error_per_run_mean", "summed_error_per_run_max"))):
+                actual, target = score.get(group, {}), reference.get(group, {})
+                coverage = actual.get("n", 0) > 0 and actual.get("n") == target.get("n")
+                for metric in metrics:
+                    value, other = actual.get(metric), target.get(metric)
+                    valid = (coverage and value is not None and other is not None
+                             and math.isfinite(value) and math.isfinite(other) and value >= 0 and other >= 0)
+                    passed = bool(valid and (value < other or value == other == 0.))
+                    checks[f"{group}_{metric}_vs_{baseline}"] = passed
+                    comparisons[baseline][metric] = {"model": value, "baseline": other, "pass": passed}
+        rows[episode] = {"translation_mean_mm": score["translation_mean_mm"],
+                         "gripper_mae_fraction": score["gripper_mae"],
+                         "pass": all(checks.values()), "checks": checks, "comparisons": comparisons}
+    return {"version": GATE_VERSION,
+            "pass": valid_episodes and all(row["pass"] for row in rows.values()),
+            "expected_training_episodes": list(EPISODES), "episode_coverage_pass": valid_episodes,
+            "per_episode": rows, "thresholds": {"translation_mean_mm_below": 1., "gripper_mae_fraction_below": .03},
+            "baseline_rule": "Each episode must improve both hold and persistence on moving-vector error and mean/max stationary-run summed error. Exact zero-error ties pass; missing movement or stationary strata fail. Stationary predicted step is descriptive, since hold is identically zero."}
+
+
+def audit_training_checkpoint(checkpoint: Path, data: Path, device: str) -> dict:
+    """One inference pass supplies aggregate and condition-specific motion checks."""
+    policy, norm, contract = load_checkpoint(checkpoint, device)
+    dataset = DerivedTickDataset(data, list(EPISODES), policy.config.chunk_size, norm)
+    if contract["derived_files_sha256"] != dataset.manifest["files_sha256"]:
+        raise ValueError("training audit data differs from checkpoint")
+    report, prediction = evaluate_executed_prefix(policy, dataset, device, batch_size=8)
+    for episode in EPISODES:
+        mask = dataset.arrays["episode_index"][prediction["tick"]] == episode
+        single = executed_prefix_report(prediction["model"][mask], prediction["tick"][mask],
+            prediction["anchor_tick"][mask], dataset.arrays, dataset.manifest,
+            norm.action_std, [episode], n_action_steps=int(policy.config.n_action_steps))
+        for name in ("model", "hold", "persistence"):
+            entry = report["scores"][name]["per_episode"][str(episode)]
+            for metric in ("movement", "stationary_drift"):
+                entry[metric] = single["scores"][name][metric]
+    return report
 
 
 def run(data: Path, out: Path, device: str):
@@ -37,14 +93,14 @@ def run(data: Path, out: Path, device: str):
     cfg.update(name="three_episode_deterministic_capacity", data=str(data.resolve()))
     cfg["model"].update(use_vae=False, kl_weight=0., dropout=0., optimizer_weight_decay=0., optimizer_lr=3e-4)
     cfg["scheduler"].update(warmup_steps=50)
-    cfg["train"].update(diagnostic_episodes=[11, 8, 23], steps=1000, schedule_steps=2000,
+    cfg["train"].update(diagnostic_episodes=list(EPISODES), steps=1000, schedule_steps=2000,
                          batch_size=8, grad_accum=2, log_every=100, val_every=250,
                          save_every=250, val_max_batches=None, device=device,
                          num_workers=0, exact_resume=True, keep_only_best_and_last=True)
-    cfg["experiment"] = {"kind": "three_episode_capacity_gate_v1", "maximum_examples": 32000,
+    cfg["experiment"] = {"kind": GATE_VERSION, "maximum_examples": 32000,
                           "conditions": {"11": "baseline", "8": "ball_shift", "23": "bowl_shift"},
                           "scope": "training-fit only; original provisional FK and current labels; no geometry or task-success claim",
-                          "stopping": "check the final checkpoint at16000examples; continue identical optimizer/RNG to32000onlyif per-episode fitting gate fails"}
+                          "stopping": "Check the final checkpoint at 16,000 examples; continue identical optimizer/RNG to 32,000 only if per-episode fit/movement/drift gate fails"}
     torch.set_num_threads(2)
     out.mkdir(parents=True)
     (out / "plan.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
@@ -54,18 +110,21 @@ def run(data: Path, out: Path, device: str):
                     Path("src/real2sim/policy/validation.py"), data / "manifest.json", data / "stats.json"]
     report = {"kind": "THREE_TRAINING_EPISODE_CAPACITY_GATE", "physical_calibration_accepted": False,
               "checkpoint_promoted": False, "reserved_episodes_used": [], "validation_episodes_used": [],
-              "training_episodes": [11, 8, 23], "source_sha256": {str(p): sha256_file(p) for p in dependencies},
+              "training_episodes": list(EPISODES), "gate_version": GATE_VERSION,
+              "source_sha256": {str(p): sha256_file(p) for p in dependencies},
               "stages": [], "limitations": "Training-fit diagnostic under provisional FK. Includes recorded references outside native bounds; their presence is not simulator feasibility or physical calibration. No validation or reserved performance is established."}
     for steps in (1000, 2000):
         cfg["train"]["steps"] = steps
         resume = None if steps == 1000 else (out / "training/checkpoints/001000")
         result = train(cfg, data, out / "training", resume=resume)
-        ck = out / "training/checkpoints/last"
-        info = json.loads((ck / "run_info.json").read_text())
-        gate = gate_from_validation(info["last_val"]["executed_prefix"])
+        ck = (out / "training/checkpoints/last").resolve()
+        audited = audit_training_checkpoint(ck, data, result["device"])
+        audit_path = out / f"training_motion_{steps:06d}.json"
+        audit_path.write_text(json.dumps(audited, indent=2, allow_nan=False) + "\n")
+        gate = gate_from_validation(audited)
         report["stages"].append({"examples_seen": steps * 16, "result": result,
                                   "checkpoint": str(ck.resolve()), "checkpoint_sha256": sha256_file(ck / "model.safetensors"),
-                                  "gate": gate})
+                                  "training_motion_audit": str(audit_path.resolve()), "gate": gate})
         report.update(gate_passed=gate["pass"], total_examples_seen=steps * 16)
         (out / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
         print(json.dumps({"steps": steps, "gate": gate}), flush=True)
