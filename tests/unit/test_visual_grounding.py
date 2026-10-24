@@ -5,8 +5,10 @@ import json
 import cv2
 import numpy as np
 import pytest
+import torch
 
 from real2sim.data.labels import ACTION_NAMES
+from real2sim.evaluation.vision_ablation import ImageCondition
 from real2sim.policy.adapters import ContractError, ObservationAdapter, contract_kind
 from real2sim.policy.dataset import DerivedTickDataset, Normalizer
 from real2sim.policy.visual_grounding import (
@@ -97,3 +99,32 @@ def test_paired_replacement_cannot_leave_stale_real_image_features():
 
     with pytest.raises(ValueError, match="recomputing visual grounding"):
         PairedViewDataset(Base(), "/unused")
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_image_ablation_recomputes_grounding_without_changing_proprioception(tmp_path, enabled):
+    spec = BallImageFeatures(enabled=enabled)
+    normalization = stats()
+    normalization["observation.state"] = {"mean": [.2] * 17, "std": [.5] * 17}
+    norm = Normalizer(normalization)
+    state = np.stack([np.arange(13) / 100, np.arange(13) / 10]).astype(np.float32)
+    images = np.stack([image(), np.roll(image(), 30, axis=1)])
+    manifest = {**contract(), "visual_grounding": spec.to_dict(),
+                "image_files": {spec.camera_key: "images.npy"},
+                "split": {"train": [0], "val": [1]}, "image_shape_hwc": [192, 256, 3]}
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    np.savez(tmp_path / "arrays.npz", state=state, action=np.ones((2, 7)),
+             episode_index=[0, 1], ep_start=[0, 1], ep_len=[1, 1])
+    np.save(tmp_path / "images.npy", images)
+    ds = DerivedTickDataset(tmp_path, [0, 1], 1, norm)
+    clean = ds[0]
+    for condition, replacement in (("blank", np.full_like(images[0], 114)),
+                                   ("shuffled", images[1])):
+        changed = ImageCondition(ds, np.array([0, 1]), condition, np.array([1, 0]))[0]
+        expected = norm.state(append_ball_features(state[0], replacement, spec))
+        np.testing.assert_allclose(changed["observation.state"].numpy(), expected)
+        torch.testing.assert_close(changed["observation.state"][:13], clean["observation.state"][:13])
+        for key in ("action", "action_is_pad"):
+            torch.testing.assert_close(changed[key], clean[key])
+        assert changed["tick"] == clean["tick"]
+        np.testing.assert_allclose(changed[spec.camera_key].numpy(), norm.image(replacement))

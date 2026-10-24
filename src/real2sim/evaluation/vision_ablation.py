@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader, Dataset
 from real2sim.evaluation.run import sha256_file
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
+from real2sim.policy.visual_grounding import append_ball_features
 
 
 def stratified_indices(ds, per_episode: int) -> np.ndarray:
@@ -48,17 +49,26 @@ class ImageCondition(Dataset):
 
     def __getitem__(self, i):
         item = self.ds[int(self.indices[i])]
+        grounding = self.ds.visual_grounding
         if self.condition == "blank":
             for key in self.ds.camera_keys:
                 blank = (np.full_like(self.ds.normalizer.img_mean, 114 / 255)
                          - self.ds.normalizer.img_mean) / self.ds.normalizer.img_std
                 item[key] = torch.as_tensor(blank).expand_as(item[key]).clone()
+            if grounding is not None:
+                grounding_image = np.full((grounding.height, grounding.width, 3), 114, np.uint8)
         elif self.condition == "shuffled":
             donor = self.ds[int(self.indices[self.donors[i]])]
             for key in self.ds.camera_keys:
                 item[key] = donor[key]
+            if grounding is not None:
+                grounding_image = self.ds.images[grounding.camera_key][donor["tick"]]
         elif self.condition != "clean":
             raise ValueError(f"unknown image condition: {self.condition}")
+        if grounding is not None and self.condition != "clean":
+            state = append_ball_features(self.ds.arrays["state"][item["tick"]],
+                                         grounding_image, grounding)
+            item["observation.state"] = torch.from_numpy(self.ds.normalizer.state(state).astype(np.float32))
         return item
 
 
@@ -121,7 +131,7 @@ def run(checkpoint: Path, data: Path, out: Path, *, device="cpu", per_episode=32
               "device": device, "seed": seed, "samples_per_episode": per_episode,
               "action_names": contract["action_names"], "results": results,
               "sampling": provenance, "sampling_sha256": hashlib.sha256(json.dumps(provenance, sort_keys=True).encode()).hexdigest(),
-              "note": "All conditions use eval mode, zero VAE latent, identical state/labels/masks. Blank is RGB 114. Shuffled donors come from another held-out episode. Inference-mode train error is the fair comparison. Image sensitivity does not prove ball localisation; blank images are out of distribution. Diagnostic, not task success."}
+              "note": "All conditions use eval mode, zero VAE latent, identical canonical proprioception/labels/masks. Image-derived ball features are recomputed from the replacement image. Blank is RGB 114. Shuffled donors come from another held-out episode. Inference-mode train error is the fair comparison. Image sensitivity does not prove ball localisation; blank images are out of distribution. Diagnostic, not task success."}
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n")
     return report
