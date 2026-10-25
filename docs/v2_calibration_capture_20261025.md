@@ -2,16 +2,21 @@
 
 The next physical session should resolve camera/base registration and provide a
 measured gripper hold/release reference. The existing footage supplies useful image
-tracks but no accepted metric registration. Target type and dimensions remain
-unconfirmed; this sheet works with a rigid checkerboard/ChArUco board or a rigid
-target whose named landmark coordinates are independently measured.
+tracks but no accepted metric registration. The operator reports **no calibration
+target yet**. The proposed next target is the printable checkerboard below, mounted
+on a flat rigid backing. Its physical dimensions remain unmeasured.
+
+The [printed-board session plan](../configs/v2/calibration_capture_20261025.printed_board_plan.json)
+records that availability and the proposed design separately from actual measurements.
+Print the board, mount it flat, then measure its pitch before recording. This sheet
+also supports another rigid target if one becomes available.
 
 Copy the [blank session log](../configs/v2/calibration_capture_20261025.template.json)
 and fill actual observations. Its nulls are missing measurements. It deliberately
 contains no assumed optical transform, verified CAD identity, jaw clearance or load.
 
-If no target is available, a [print-ready A4 checkerboard design](../assets/calibration/checkerboard_a4_25mm_design.svg)
-is included: 9×7 squares, 8×6 inner corners, 25 mm **design** pitch. Print A4
+The [print-ready A4 checkerboard design](../assets/calibration/checkerboard_a4_25mm_design.svg)
+has 9×7 squares, 8×6 inner corners, 25 mm **design** pitch. Print A4
 landscape at 100% with fit/shrink disabled, mount it flat on a rigid surface, and
 measure the printed pitch in both directions and the 100 mm reference bar. Record
 the measured values and uncertainty. The design dimensions do not populate any

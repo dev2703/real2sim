@@ -1,0 +1,39 @@
+{
+  "schema": "checkerboard_capture_input_v1",
+  "capture_session_file": null,
+  "camera_key": "observation.images.iphone",
+  "verification_working_scale_px": 3.0,
+  "captures": [
+    {
+      "capture_group": "optics_fit_01",
+      "role": "fit",
+      "source_frame_reference": null,
+      "source_pixels_unresized": null,
+      "source_image_file": null,
+      "source_image_sha256": null,
+      "source_video_file": null,
+      "source_video_sha256": null,
+      "source_frame_index": null
+    },
+    {
+      "capture_group": "optics_verify_01",
+      "role": "verification",
+      "source_frame_reference": null,
+      "source_pixels_unresized": null,
+      "source_image_file": null,
+      "source_image_sha256": null,
+      "source_video_file": null,
+      "source_video_sha256": null,
+      "source_frame_index": null
+    }
+  ],
+  "instructions": [
+    "Paths are relative to this input document, or absolute. Duplicate this file and the session log; retain originals.",
+    "Set capture_session_file to the completed measured session log. This tool supports checkerboards only; ChArUco requires a different detector.",
+    "Record actual measured x/y square pitch in session.target.square_pitch_measured_xy_m, dimensional method/uncertainty, and native camera source size/settings.",
+    "For each capture, supply exactly one native source_image_file+SHA256, or source_video_file+SHA256+zero-based source_frame_index. Video frame index is presentation/decode order from the start of the source file.",
+    "Declare at least six fit views from three whole capture groups and two independent verification capture groups before running detection. Every group's role must match the camera session split.",
+    "No frame is silently replaced on detection or quality failure. Original source frames and all detections/errors remain in a fresh output directory.",
+    "Optics output is a candidate only. Camera/base, joint-zero and gripper/contact acceptance require the separate measured registration workflow."
+  ]
+}
