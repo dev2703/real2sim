@@ -1,5 +1,10 @@
 # Project documentation
 
+The [26 October capture-status audit](v2_calibration_status_20261026.md) records
+unavailable new capture inputs, the completed local checks and the combined session
+log for geometry, timing, loaded response and version lineage. Physical calibration
+and calibrated retraining remain pending.
+
 The latest [fixed-base tracking](v2_fixed_landmark_tracking_20261025.md) separates local
 capture-coordinate changes from raw mat-boundary changes across 115 frames. Two fixed
 regions support 112 frames; late mat-edge measurements include explicit search-range
