@@ -19,6 +19,7 @@ from real2sim.config import load_yaml
 from real2sim.data.raw import sha256_file
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
+from real2sim.policy.losses import ReconstructionLoss
 from real2sim.policy.train import train
 from real2sim.policy.validation import evaluate_executed_prefix, executed_prefix_report
 
@@ -72,6 +73,11 @@ def audit_training_checkpoint(checkpoint: Path, data: Path, device: str) -> dict
     dataset = DerivedTickDataset(data, list(EPISODES), policy.config.chunk_size, norm)
     if contract["derived_files_sha256"] != dataset.manifest["files_sha256"]:
         raise ValueError("training audit data differs from checkpoint")
+    for name, digest in dataset.manifest["files_sha256"].items():
+        if Path(name).name != name or sha256_file(data / name) != digest:
+            raise ValueError(f"training audit payload changed: {name}")
+    if norm.stats != json.loads((data / "stats.json").read_text()):
+        raise ValueError("training audit normalization differs from checkpoint")
     report, prediction = evaluate_executed_prefix(policy, dataset, device, batch_size=8)
     for episode in EPISODES:
         mask = dataset.arrays["episode_index"][prediction["tick"]] == episode
@@ -85,7 +91,8 @@ def audit_training_checkpoint(checkpoint: Path, data: Path, device: str) -> dict
     return report
 
 
-def run(data: Path, out: Path, device: str, *, resume: bool = False):
+def run(data: Path, out: Path, device: str, *, resume: bool = False,
+        supervised_prefix_steps: int | None = None):
     if out.exists() and not resume:
         raise FileExistsError(out)
     if resume and not out.is_dir():
@@ -103,6 +110,18 @@ def run(data: Path, out: Path, device: str, *, resume: bool = False):
                           "conditions": {"11": "baseline", "8": "ball_shift", "23": "bowl_shift"},
                           "scope": "training-fit only; original provisional FK and current labels; no geometry or task-success claim",
                           "stopping": "Check the final checkpoint at 16,000 examples; continue identical optimizer/RNG to 32,000 only if per-episode fit/movement/drift gate fails"}
+    if supervised_prefix_steps is not None:
+        loss = ReconstructionLoss(**(cfg.get("reconstruction_loss", {})
+                                    | {"supervised_prefix_steps": supervised_prefix_steps}))
+        if loss.supervised_prefix_steps != cfg["model"]["n_action_steps"]:
+            raise ValueError("prefix supervision must match the saved executed action count")
+        if loss.supervised_prefix_steps > cfg["model"]["chunk_size"]:
+            raise ValueError("prefix supervision exceeds the output chunk")
+        cfg["name"] += f"_prefix{supervised_prefix_steps}"
+        cfg["reconstruction_loss"] = {**cfg.get("reconstruction_loss", {}),
+                                      "supervised_prefix_steps": supervised_prefix_steps}
+        cfg["experiment"]["supervised_prefix_steps"] = supervised_prefix_steps
+        cfg["experiment"]["comparison"] = "Same backbone, initialization seed, labels, statistics, sampler and optimizer schedule; reconstruction supervises only the executed prefix. No target filtering or relabeling."
     torch.set_num_threads(2)
     if resume:
         if load_yaml(out / "plan.yaml") != cfg:
@@ -113,10 +132,12 @@ def run(data: Path, out: Path, device: str, *, resume: bool = False):
         (out / "executed_runner.py").write_bytes(Path(__file__).read_bytes())
     dependencies = [Path(__file__), Path("src/real2sim/policy/train.py"),
                     Path("src/real2sim/policy/act.py"), Path("src/real2sim/policy/dataset.py"),
-                    Path("src/real2sim/policy/validation.py"), data / "manifest.json", data / "stats.json"]
+                    Path("src/real2sim/policy/validation.py"), Path("src/real2sim/policy/losses.py"),
+                    data / "manifest.json", data / "stats.json"]
     report = {"kind": "THREE_TRAINING_EPISODE_CAPACITY_GATE", "physical_calibration_accepted": False,
               "checkpoint_promoted": False, "reserved_episodes_used": [], "validation_episodes_used": [],
               "training_episodes": list(EPISODES), "gate_version": GATE_VERSION,
+              "supervised_prefix_steps": supervised_prefix_steps,
               "source_sha256": {str(p): sha256_file(p) for p in dependencies},
               "stages": [], "limitations": "Training-fit diagnostic under provisional FK. Includes recorded references outside native bounds; their presence is not simulator feasibility or physical calibration. No validation or reserved performance is established."}
     resume_checkpoint = None
@@ -182,6 +203,9 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", default="auto")
     parser.add_argument("--resume", action="store_true", help="Resume the same saved plan from its last exact checkpoint")
+    parser.add_argument("--supervised-prefix-steps", type=int,
+                        help="Supervise only this many output actions; must equal n_action_steps")
     args = parser.parse_args()
-    result = run(args.data, args.out, args.device, resume=args.resume)
+    result = run(args.data, args.out, args.device, resume=args.resume,
+                 supervised_prefix_steps=args.supervised_prefix_steps)
     print(json.dumps({"gate_passed": result["gate_passed"], "total_examples_seen": result["total_examples_seen"]}))

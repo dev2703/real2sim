@@ -1,0 +1,895 @@
+{
+  "schema": "three_episode_onset_audit_summary_v1",
+  "plan": {
+    "schema": "three_episode_onset_plan_v1",
+    "episodes": [
+      11,
+      8,
+      23
+    ],
+    "rules": {
+      "translation_motion_mm": 0.4,
+      "stationary_rotation_rad": 0.01,
+      "causal_history_ticks": 4,
+      "causal_history_speed_m_s": 0.005,
+      "causal_history_arm_span_deg": 0.5,
+      "near_arm_max_difference_deg": 0.25,
+      "near_gripper_difference_percentage_points": 0.5,
+      "near_velocity_difference_m_s": 0.005,
+      "similar_image_mae_uint8": 1.0,
+      "executed_prefix_steps": 2,
+      "full_chunk_steps": 25
+    },
+    "reserved_episodes_used": [],
+    "policy_inference": false,
+    "selection": "All valid ticks in the three declared training episodes. Thresholds are inherited motion scales or explicit descriptive bounds. No label/image/policy outcome removes examples.",
+    "source_sha256": {
+      "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone/manifest.json": "54773d9220e84dff2868390993fa5285173ae91a1a6e7e453462e9719e097b1a",
+      "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone_top/arrays.npz": "01c1e8b1026415ee3ffa7b9136755b51a9326fd8b5bd4523a4da1f782c3cd08f",
+      "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone_top/images_iphone.npy": "f72f21f37cc6fec41c577c91521fd9ff34ef84f7c299299f3ac653324501b7aa",
+      "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone_top/stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+      "/Users/deveshvyas/Downloads/real2sim/scripts/audit_v2_motion_onsets.py": "68f8d2c9f20ab7d135a6429d0643a39b20a858ab92faed49c206700128bd68db"
+    }
+  },
+  "report": {
+    "schema": "three_episode_onset_audit_v1",
+    "plan_sha256": "58bec72e5dfcb6319d96046a0f135939f5827250b6964f58cab97970920425a8",
+    "data": "/Users/deveshvyas/Downloads/real2sim/.cache/v2_exploratory_20261022/cartesian_iphone",
+    "episodes": [
+      {
+        "episode": 11,
+        "valid_ticks": 351,
+        "unique_proprioceptive_states": 315,
+        "repeated_state_groups": 3,
+        "repeated_state_groups_with_first_action_conflict": 2,
+        "two_step_prefixes_with_two_real_labels": 350,
+        "stationary_two_step_prefixes_with_motion_in_chunk_tail": 40,
+        "causal_low_motion_history_ticks": 36,
+        "causal_low_motion_history_followed_by_moving_label": 3,
+        "onsets": [
+          {
+            "tick": 3387,
+            "frame": 42,
+            "next_translation_mm": 0.48998573422431946,
+            "causal_history_ticks": [
+              3384,
+              3385,
+              3386,
+              3387
+            ]
+          },
+          {
+            "tick": 3395,
+            "frame": 58,
+            "next_translation_mm": 4.654842853546143,
+            "causal_history_ticks": [
+              3392,
+              3393,
+              3394,
+              3395
+            ]
+          },
+          {
+            "tick": 3419,
+            "frame": 106,
+            "next_translation_mm": 2.5802159309387207,
+            "causal_history_ticks": [
+              3416,
+              3417,
+              3418,
+              3419
+            ]
+          }
+        ],
+        "exact_state_conflict_pairs": [
+          {
+            "ticks": [
+              3386,
+              3387
+            ],
+            "frames": [
+              40,
+              42
+            ],
+            "first_action_translation_difference_mm": 0.48998573422431946,
+            "prefix_mean_translation_difference_mm": 1.7157331705093384,
+            "chunk_mean_translation_difference_mm": 1.5733702182769775,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.2724202573299408,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              3394,
+              3395
+            ],
+            "frames": [
+              56,
+              58
+            ],
+            "first_action_translation_difference_mm": 4.654842853546143,
+            "prefix_mean_translation_difference_mm": 2.8242530822753906,
+            "chunk_mean_translation_difference_mm": 1.4241693019866943,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3650444746017456,
+            "exact_proprioception": true
+          }
+        ],
+        "adjacent_near_state_conflict_pairs": [
+          {
+            "ticks": [
+              3386,
+              3387
+            ],
+            "frames": [
+              40,
+              42
+            ],
+            "first_action_translation_difference_mm": 0.48998573422431946,
+            "prefix_mean_translation_difference_mm": 1.7157331705093384,
+            "chunk_mean_translation_difference_mm": 1.5733702182769775,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.2724202573299408,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3394,
+              3395
+            ],
+            "frames": [
+              56,
+              58
+            ],
+            "first_action_translation_difference_mm": 4.654842853546143,
+            "prefix_mean_translation_difference_mm": 2.8242530822753906,
+            "chunk_mean_translation_difference_mm": 1.4241693019866943,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3650444746017456,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3403,
+              3404
+            ],
+            "frames": [
+              74,
+              76
+            ],
+            "first_action_translation_difference_mm": 3.184957981109619,
+            "prefix_mean_translation_difference_mm": 3.9215140342712402,
+            "chunk_mean_translation_difference_mm": 1.8228559494018555,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.45306396484375,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.08790969848632812,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 4.700636054622009e-06,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3409,
+              3410
+            ],
+            "frames": [
+              86,
+              88
+            ],
+            "first_action_translation_difference_mm": 0.7333502769470215,
+            "prefix_mean_translation_difference_mm": 0.6116732954978943,
+            "chunk_mean_translation_difference_mm": 1.517982840538025,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3962741494178772,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.0879058837890625,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.003064366988837719,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3430,
+              3431
+            ],
+            "frames": [
+              128,
+              130
+            ],
+            "first_action_translation_difference_mm": 3.499755382537842,
+            "prefix_mean_translation_difference_mm": 2.516371726989746,
+            "chunk_mean_translation_difference_mm": 2.2482991218566895,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4481879472732544,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.17582321166992188,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0028459462337195873,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3511,
+              3512
+            ],
+            "frames": [
+              290,
+              292
+            ],
+            "first_action_translation_difference_mm": 0.4210427403450012,
+            "prefix_mean_translation_difference_mm": 2.230008125305176,
+            "chunk_mean_translation_difference_mm": 1.8246588706970215,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.5159980058670044,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.08791351318359375,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 8.076134690782055e-06,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3522,
+              3523
+            ],
+            "frames": [
+              312,
+              314
+            ],
+            "first_action_translation_difference_mm": 0.8469692468643188,
+            "prefix_mean_translation_difference_mm": 1.6480600833892822,
+            "chunk_mean_translation_difference_mm": 1.842948317527771,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4496527910232544,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.08791351318359375,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 8.310161319968756e-06,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              3591,
+              3592
+            ],
+            "frames": [
+              450,
+              452
+            ],
+            "first_action_translation_difference_mm": 0.5330538153648376,
+            "prefix_mean_translation_difference_mm": 0.5330523252487183,
+            "chunk_mean_translation_difference_mm": 3.413956880569458,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4709065854549408,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.08791160583496094,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 1.0223351637250744e-05,
+            "similar_current_image": true
+          }
+        ],
+        "adjacent_near_state_and_image_conflict_pairs": 8
+      },
+      {
+        "episode": 8,
+        "valid_ticks": 289,
+        "unique_proprioceptive_states": 251,
+        "repeated_state_groups": 6,
+        "repeated_state_groups_with_first_action_conflict": 4,
+        "two_step_prefixes_with_two_real_labels": 288,
+        "stationary_two_step_prefixes_with_motion_in_chunk_tail": 41,
+        "causal_low_motion_history_ticks": 36,
+        "causal_low_motion_history_followed_by_moving_label": 4,
+        "onsets": [
+          {
+            "tick": 2529,
+            "frame": 60,
+            "next_translation_mm": 3.9541125297546387,
+            "causal_history_ticks": [
+              2526,
+              2527,
+              2528,
+              2529
+            ]
+          },
+          {
+            "tick": 2549,
+            "frame": 100,
+            "next_translation_mm": 5.154225826263428,
+            "causal_history_ticks": [
+              2546,
+              2547,
+              2548,
+              2549
+            ]
+          },
+          {
+            "tick": 2688,
+            "frame": 378,
+            "next_translation_mm": 1.2809538841247559,
+            "causal_history_ticks": [
+              2685,
+              2686,
+              2687,
+              2688
+            ]
+          },
+          {
+            "tick": 2772,
+            "frame": 546,
+            "next_translation_mm": 0.9798717498779297,
+            "causal_history_ticks": [
+              2769,
+              2770,
+              2771,
+              2772
+            ]
+          }
+        ],
+        "exact_state_conflict_pairs": [
+          {
+            "ticks": [
+              2528,
+              2529
+            ],
+            "frames": [
+              58,
+              60
+            ],
+            "first_action_translation_difference_mm": 3.9541125297546387,
+            "prefix_mean_translation_difference_mm": 3.314159870147705,
+            "chunk_mean_translation_difference_mm": 1.4808681011199951,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3069729208946228,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              2781,
+              2782
+            ],
+            "frames": [
+              564,
+              566
+            ],
+            "first_action_translation_difference_mm": 0.9798699617385864,
+            "prefix_mean_translation_difference_mm": 0.8573845624923706,
+            "chunk_mean_translation_difference_mm": 1.0140317678451538,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 6,
+            "current_image_mae_uint8": 0.4930894672870636,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              2611,
+              2612
+            ],
+            "frames": [
+              224,
+              226
+            ],
+            "first_action_translation_difference_mm": 0.44599834084510803,
+            "prefix_mean_translation_difference_mm": 4.68927001953125,
+            "chunk_mean_translation_difference_mm": 2.2639706134796143,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4425862729549408,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              2691,
+              2692
+            ],
+            "frames": [
+              384,
+              386
+            ],
+            "first_action_translation_difference_mm": 4.359882831573486,
+            "prefix_mean_translation_difference_mm": 4.633028984069824,
+            "chunk_mean_translation_difference_mm": 3.2947769165039062,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 1.3264974355697632,
+            "exact_proprioception": true
+          }
+        ],
+        "adjacent_near_state_conflict_pairs": [
+          {
+            "ticks": [
+              2528,
+              2529
+            ],
+            "frames": [
+              58,
+              60
+            ],
+            "first_action_translation_difference_mm": 3.9541125297546387,
+            "prefix_mean_translation_difference_mm": 3.314159870147705,
+            "chunk_mean_translation_difference_mm": 1.4808681011199951,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3069729208946228,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              2611,
+              2612
+            ],
+            "frames": [
+              224,
+              226
+            ],
+            "first_action_translation_difference_mm": 0.44599834084510803,
+            "prefix_mean_translation_difference_mm": 4.68927001953125,
+            "chunk_mean_translation_difference_mm": 2.2639706134796143,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4425862729549408,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              2637,
+              2638
+            ],
+            "frames": [
+              276,
+              278
+            ],
+            "first_action_translation_difference_mm": 0.45132574439048767,
+            "prefix_mean_translation_difference_mm": 2.0122716426849365,
+            "chunk_mean_translation_difference_mm": 2.6163339614868164,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3628336489200592,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.08791255950927734,
+            "gripper_difference_percentage_points": 0.06793594360351562,
+            "velocity_difference_m_s": 0.0016113324090838432,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              2691,
+              2692
+            ],
+            "frames": [
+              384,
+              386
+            ],
+            "first_action_translation_difference_mm": 4.359882831573486,
+            "prefix_mean_translation_difference_mm": 4.633028984069824,
+            "chunk_mean_translation_difference_mm": 3.2947769165039062,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 1.3264974355697632,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": false
+          },
+          {
+            "ticks": [
+              2771,
+              2772
+            ],
+            "frames": [
+              544,
+              546
+            ],
+            "first_action_translation_difference_mm": 0.9798718094825745,
+            "prefix_mean_translation_difference_mm": 0.7349509596824646,
+            "chunk_mean_translation_difference_mm": 1.0490847826004028,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 16,
+            "current_image_mae_uint8": 0.3873697817325592,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0030621702317148447,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              2781,
+              2782
+            ],
+            "frames": [
+              564,
+              566
+            ],
+            "first_action_translation_difference_mm": 0.9798699617385864,
+            "prefix_mean_translation_difference_mm": 0.8573845624923706,
+            "chunk_mean_translation_difference_mm": 1.0140317678451538,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 6,
+            "current_image_mae_uint8": 0.4930894672870636,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              2786,
+              2787
+            ],
+            "frames": [
+              574,
+              576
+            ],
+            "first_action_translation_difference_mm": 0.9398364424705505,
+            "prefix_mean_translation_difference_mm": 0.9398364424705505,
+            "chunk_mean_translation_difference_mm": 0.9398364424705505,
+            "prefix_valid_offsets": 1,
+            "chunk_valid_offsets": 1,
+            "current_image_mae_uint8": 0.6003146767616272,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.08791351318359375,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0030619134195148945,
+            "similar_current_image": true
+          }
+        ],
+        "adjacent_near_state_and_image_conflict_pairs": 6
+      },
+      {
+        "episode": 23,
+        "valid_ticks": 343,
+        "unique_proprioceptive_states": 289,
+        "repeated_state_groups": 7,
+        "repeated_state_groups_with_first_action_conflict": 6,
+        "two_step_prefixes_with_two_real_labels": 342,
+        "stationary_two_step_prefixes_with_motion_in_chunk_tail": 41,
+        "causal_low_motion_history_ticks": 45,
+        "causal_low_motion_history_followed_by_moving_label": 4,
+        "onsets": [
+          {
+            "tick": 7791,
+            "frame": 68,
+            "next_translation_mm": 3.919957160949707,
+            "causal_history_ticks": [
+              7788,
+              7789,
+              7790,
+              7791
+            ]
+          },
+          {
+            "tick": 8004,
+            "frame": 494,
+            "next_translation_mm": 0.5016716718673706,
+            "causal_history_ticks": [
+              8001,
+              8002,
+              8003,
+              8004
+            ]
+          },
+          {
+            "tick": 8012,
+            "frame": 510,
+            "next_translation_mm": 4.473077297210693,
+            "causal_history_ticks": [
+              8009,
+              8010,
+              8011,
+              8012
+            ]
+          },
+          {
+            "tick": 8031,
+            "frame": 548,
+            "next_translation_mm": 2.4044463634490967,
+            "causal_history_ticks": [
+              8028,
+              8029,
+              8030,
+              8031
+            ]
+          }
+        ],
+        "exact_state_conflict_pairs": [
+          {
+            "ticks": [
+              7790,
+              7791
+            ],
+            "frames": [
+              66,
+              68
+            ],
+            "first_action_translation_difference_mm": 3.919957160949707,
+            "prefix_mean_translation_difference_mm": 3.1874752044677734,
+            "chunk_mean_translation_difference_mm": 1.7211248874664307,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3107164204120636,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              8087,
+              8088
+            ],
+            "frames": [
+              660,
+              662
+            ],
+            "first_action_translation_difference_mm": 2.940009832382202,
+            "prefix_mean_translation_difference_mm": 1.8380764722824097,
+            "chunk_mean_translation_difference_mm": 0.49009692668914795,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 12,
+            "current_image_mae_uint8": 0.4098781943321228,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              8030,
+              8031
+            ],
+            "frames": [
+              546,
+              548
+            ],
+            "first_action_translation_difference_mm": 2.4044463634490967,
+            "prefix_mean_translation_difference_mm": 2.748229503631592,
+            "chunk_mean_translation_difference_mm": 4.431817531585693,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3881767988204956,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              8003,
+              8004
+            ],
+            "frames": [
+              492,
+              494
+            ],
+            "first_action_translation_difference_mm": 0.5016716718673706,
+            "prefix_mean_translation_difference_mm": 1.3891935348510742,
+            "chunk_mean_translation_difference_mm": 1.5999045372009277,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4495035707950592,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              8011,
+              8012
+            ],
+            "frames": [
+              508,
+              510
+            ],
+            "first_action_translation_difference_mm": 4.473077297210693,
+            "prefix_mean_translation_difference_mm": 2.7176411151885986,
+            "chunk_mean_translation_difference_mm": 2.6801300048828125,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.6335991621017456,
+            "exact_proprioception": true
+          },
+          {
+            "ticks": [
+              7872,
+              7873
+            ],
+            "frames": [
+              230,
+              232
+            ],
+            "first_action_translation_difference_mm": 2.56792950630188,
+            "prefix_mean_translation_difference_mm": 5.201834678649902,
+            "chunk_mean_translation_difference_mm": 2.729524612426758,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4684855043888092,
+            "exact_proprioception": true
+          }
+        ],
+        "adjacent_near_state_conflict_pairs": [
+          {
+            "ticks": [
+              7790,
+              7791
+            ],
+            "frames": [
+              66,
+              68
+            ],
+            "first_action_translation_difference_mm": 3.919957160949707,
+            "prefix_mean_translation_difference_mm": 3.1874752044677734,
+            "chunk_mean_translation_difference_mm": 1.7211248874664307,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3107164204120636,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              7802,
+              7803
+            ],
+            "frames": [
+              90,
+              92
+            ],
+            "first_action_translation_difference_mm": 3.429985284805298,
+            "prefix_mean_translation_difference_mm": 3.064101219177246,
+            "chunk_mean_translation_difference_mm": 2.206681251525879,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.40667724609375,
+            "exact_proprioception": false,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0030624601058661938,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              7872,
+              7873
+            ],
+            "frames": [
+              230,
+              232
+            ],
+            "first_action_translation_difference_mm": 2.56792950630188,
+            "prefix_mean_translation_difference_mm": 5.201834678649902,
+            "chunk_mean_translation_difference_mm": 2.729524612426758,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4684855043888092,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              8003,
+              8004
+            ],
+            "frames": [
+              492,
+              494
+            ],
+            "first_action_translation_difference_mm": 0.5016716718673706,
+            "prefix_mean_translation_difference_mm": 1.3891935348510742,
+            "chunk_mean_translation_difference_mm": 1.5999045372009277,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.4495035707950592,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              8011,
+              8012
+            ],
+            "frames": [
+              508,
+              510
+            ],
+            "first_action_translation_difference_mm": 4.473077297210693,
+            "prefix_mean_translation_difference_mm": 2.7176411151885986,
+            "chunk_mean_translation_difference_mm": 2.6801300048828125,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.6335991621017456,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              8030,
+              8031
+            ],
+            "frames": [
+              546,
+              548
+            ],
+            "first_action_translation_difference_mm": 2.4044463634490967,
+            "prefix_mean_translation_difference_mm": 2.748229503631592,
+            "chunk_mean_translation_difference_mm": 4.431817531585693,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 25,
+            "current_image_mae_uint8": 0.3881767988204956,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          },
+          {
+            "ticks": [
+              8087,
+              8088
+            ],
+            "frames": [
+              660,
+              662
+            ],
+            "first_action_translation_difference_mm": 2.940009832382202,
+            "prefix_mean_translation_difference_mm": 1.8380764722824097,
+            "chunk_mean_translation_difference_mm": 0.49009692668914795,
+            "prefix_valid_offsets": 2,
+            "chunk_valid_offsets": 12,
+            "current_image_mae_uint8": 0.4098781943321228,
+            "exact_proprioception": true,
+            "arm_max_difference_deg": 0.0,
+            "gripper_difference_percentage_points": 0.0,
+            "velocity_difference_m_s": 0.0,
+            "similar_current_image": true
+          }
+        ],
+        "adjacent_near_state_and_image_conflict_pairs": 7
+      }
+    ],
+    "reserved_episodes_used": [],
+    "labels_changed": false,
+    "normalization_changed": false,
+    "causal_inputs_changed": false,
+    "policy_inference": false,
+    "interpretation": [
+      "Current state/history are causal descriptors; next labels and future chunk tails are inspected only as supervision outcomes and never inserted into policy inputs.",
+      "A stationary executed prefix with a moving future tail is a valid demonstration, not automatically a corrupt label. It shows the longer training objective includes future onset timing beyond immediate execution.",
+      "Exact proprioception plus similar images does not mean identical complete visual observations or prove an irreducible error bound.",
+      "No episodes/ticks are filtered, reweighted, relabeled or dropped by this audit. All measurements depend on provisional FK and original sampling/timestamp contracts.",
+      "Counts/pairs within each episode are correlated. Near-state/image thresholds are descriptive, not calibrated observation equivalence."
+    ]
+  },
+  "full_report_path": "outputs/v2/motion_onset_audit_20261025/report.json"
+}

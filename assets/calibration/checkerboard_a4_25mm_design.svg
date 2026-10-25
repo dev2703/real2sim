@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="297mm" height="210mm" viewBox="0 0 297 210">
+<rect width="297" height="210" fill="white"/>
+<g fill="black" font-family="sans-serif">
+<text x="36" y="7" font-size="3.4">9 × 7 squares · 25 mm DESIGN pitch · 8 × 6 inner corners</text>
+<text x="36" y="12" font-size="3.1">A4 landscape · print 100% · disable fit/shrink · measure pitch before calibration</text>
+</g>
+<rect x="36" y="17.5" width="25" height="25" fill="black"/>
+<rect x="61" y="17.5" width="25" height="25" fill="white"/>
+<rect x="86" y="17.5" width="25" height="25" fill="black"/>
+<rect x="111" y="17.5" width="25" height="25" fill="white"/>
+<rect x="136" y="17.5" width="25" height="25" fill="black"/>
+<rect x="161" y="17.5" width="25" height="25" fill="white"/>
+<rect x="186" y="17.5" width="25" height="25" fill="black"/>
+<rect x="211" y="17.5" width="25" height="25" fill="white"/>
+<rect x="236" y="17.5" width="25" height="25" fill="black"/>
+<rect x="36" y="42.5" width="25" height="25" fill="white"/>
+<rect x="61" y="42.5" width="25" height="25" fill="black"/>
+<rect x="86" y="42.5" width="25" height="25" fill="white"/>
+<rect x="111" y="42.5" width="25" height="25" fill="black"/>
+<rect x="136" y="42.5" width="25" height="25" fill="white"/>
+<rect x="161" y="42.5" width="25" height="25" fill="black"/>
+<rect x="186" y="42.5" width="25" height="25" fill="white"/>
+<rect x="211" y="42.5" width="25" height="25" fill="black"/>
+<rect x="236" y="42.5" width="25" height="25" fill="white"/>
+<rect x="36" y="67.5" width="25" height="25" fill="black"/>
+<rect x="61" y="67.5" width="25" height="25" fill="white"/>
+<rect x="86" y="67.5" width="25" height="25" fill="black"/>
+<rect x="111" y="67.5" width="25" height="25" fill="white"/>
+<rect x="136" y="67.5" width="25" height="25" fill="black"/>
+<rect x="161" y="67.5" width="25" height="25" fill="white"/>
+<rect x="186" y="67.5" width="25" height="25" fill="black"/>
+<rect x="211" y="67.5" width="25" height="25" fill="white"/>
+<rect x="236" y="67.5" width="25" height="25" fill="black"/>
+<rect x="36" y="92.5" width="25" height="25" fill="white"/>
+<rect x="61" y="92.5" width="25" height="25" fill="black"/>
+<rect x="86" y="92.5" width="25" height="25" fill="white"/>
+<rect x="111" y="92.5" width="25" height="25" fill="black"/>
+<rect x="136" y="92.5" width="25" height="25" fill="white"/>
+<rect x="161" y="92.5" width="25" height="25" fill="black"/>
+<rect x="186" y="92.5" width="25" height="25" fill="white"/>
+<rect x="211" y="92.5" width="25" height="25" fill="black"/>
+<rect x="236" y="92.5" width="25" height="25" fill="white"/>
+<rect x="36" y="117.5" width="25" height="25" fill="black"/>
+<rect x="61" y="117.5" width="25" height="25" fill="white"/>
+<rect x="86" y="117.5" width="25" height="25" fill="black"/>
+<rect x="111" y="117.5" width="25" height="25" fill="white"/>
+<rect x="136" y="117.5" width="25" height="25" fill="black"/>
+<rect x="161" y="117.5" width="25" height="25" fill="white"/>
+<rect x="186" y="117.5" width="25" height="25" fill="black"/>
+<rect x="211" y="117.5" width="25" height="25" fill="white"/>
+<rect x="236" y="117.5" width="25" height="25" fill="black"/>
+<rect x="36" y="142.5" width="25" height="25" fill="white"/>
+<rect x="61" y="142.5" width="25" height="25" fill="black"/>
+<rect x="86" y="142.5" width="25" height="25" fill="white"/>
+<rect x="111" y="142.5" width="25" height="25" fill="black"/>
+<rect x="136" y="142.5" width="25" height="25" fill="white"/>
+<rect x="161" y="142.5" width="25" height="25" fill="black"/>
+<rect x="186" y="142.5" width="25" height="25" fill="white"/>
+<rect x="211" y="142.5" width="25" height="25" fill="black"/>
+<rect x="236" y="142.5" width="25" height="25" fill="white"/>
+<rect x="36" y="167.5" width="25" height="25" fill="black"/>
+<rect x="61" y="167.5" width="25" height="25" fill="white"/>
+<rect x="86" y="167.5" width="25" height="25" fill="black"/>
+<rect x="111" y="167.5" width="25" height="25" fill="white"/>
+<rect x="136" y="167.5" width="25" height="25" fill="black"/>
+<rect x="161" y="167.5" width="25" height="25" fill="white"/>
+<rect x="186" y="167.5" width="25" height="25" fill="black"/>
+<rect x="211" y="167.5" width="25" height="25" fill="white"/>
+<rect x="236" y="167.5" width="25" height="25" fill="black"/>
+<path d="M36 200v4 M36 202h100 M136 200v4" fill="none" stroke="black" stroke-width="0.3"/>
+<text x="145" y="203" font-family="sans-serif" font-size="3.1">100 mm DESIGN check — verify with a ruler</text>
+</svg>

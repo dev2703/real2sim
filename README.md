@@ -42,6 +42,12 @@ localized image swaps. They expose weak action dependence separately from locali
 The [three-episode capacity test](docs/v2_three_episode_motion_20261025.md) checks each
 training condition against hold/persistence on movement and stationary-run error before
 common development rollouts.
+The [executed-prefix comparison](docs/v2_prefix_capacity_20261025.md) tests two-action
+supervision with the same model and data. Training errors improve, but the capacity
+gate still fails and [matched object probes](docs/v2_prefix_object_actions_20261025.md)
+show mixed action dependence. Its [motion-onset audit](docs/v2_motion_onset_audit_20261025.md)
+keeps ambiguous examples visible. The [calibration capture sheet](docs/v2_calibration_capture_20261025.md)
+includes a blank measurement log and printable board for the independent physical checks.
 
 ## Install
 

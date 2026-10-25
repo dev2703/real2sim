@@ -85,7 +85,8 @@ def test_wrong_episode_set_fails():
     assert not module.gate_from_validation(value)["pass"]
 
 
-def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tmp_path, monkeypatch):
+@pytest.mark.parametrize("prefix", [None, 2])
+def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tmp_path, monkeypatch, prefix):
     data, out = tmp_path / "data", tmp_path / "run"
     data.mkdir()
     for name in ("manifest.json", "stats.json"):
@@ -99,12 +100,13 @@ def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tm
         # Keep real loading for the saved temporary plan so resume checks still
         # exercise YAML serialization and the original-plan comparison.
         if path == source_config:
-            return {"model": {}, "scheduler": {}, "train": {}}
+            return {"model": {"chunk_size": 25, "n_action_steps": 2}, "scheduler": {}, "train": {}}
         return real_load_yaml(path)
 
     def fake_train(cfg, source, destination, resume=None):
         calls.append({"steps": cfg["train"]["steps"], "resume": resume,
-                      "schedule": cfg["train"]["schedule_steps"]})
+                      "schedule": cfg["train"]["schedule_steps"],
+                      "supervised_prefix_steps": cfg.get("reconstruction_loss", {}).get("supervised_prefix_steps")})
         step = 500 if len(calls) == 1 else cfg["train"]["steps"]
         checkpoint = destination / "checkpoints" / f"{step:06d}"
         checkpoint.mkdir(parents=True)
@@ -130,17 +132,20 @@ def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tm
     monkeypatch.setattr(module, "audit_training_checkpoint", fake_audit)
     monkeypatch.setattr(module, "load_yaml", load_test_config)
     with pytest.raises(RuntimeError, match="simulated interruption"):
-        module.run(data, out, "cpu")
+        module.run(data, out, "cpu", supervised_prefix_steps=prefix)
     original_plan = (out / "plan.yaml").read_bytes()
     assert (out / "report.json").exists()
-    result = module.run(data, out, "cpu", resume=True)
+    result = module.run(data, out, "cpu", resume=True, supervised_prefix_steps=prefix)
     assert (out / "plan.yaml").read_bytes() == original_plan
     assert [call["steps"] for call in calls] == [1000, 1000, 2000]
     assert [call["schedule"] for call in calls] == [2000] * 3
+    assert [call["supervised_prefix_steps"] for call in calls] == [prefix] * 3
     assert calls[1]["resume"].name == "000500"
     assert calls[2]["resume"].name == "001000"
     assert result["interruptions"][0]["resumed_from_step"] == 500
     assert [stage["examples_seen"] for stage in result["stages"]] == [16000, 32000]
     assert result["gate_passed"]
     with pytest.raises(ValueError, match="original plan"):
-        module.run(data, out, "mps", resume=True)
+        module.run(data, out, "mps", resume=True, supervised_prefix_steps=prefix)
+    with pytest.raises(ValueError, match="original plan"):
+        module.run(data, out, "cpu", resume=True, supervised_prefix_steps=2 if prefix is None else None)

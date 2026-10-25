@@ -17,6 +17,7 @@ class ReconstructionLoss:
     trajectory_weight: float = 0.0
     translation_scale_m: float = .024
     rotation_scale_rad: float = .24
+    supervised_prefix_steps: int | None = None
 
     def __post_init__(self):
         if self.kind not in {"l1", "l2", "huber"}:
@@ -27,9 +28,27 @@ class ReconstructionLoss:
             raise ValueError("trajectory_weight must be finite and nonnegative")
         if any(not math.isfinite(x) or x <= 0 for x in (self.translation_scale_m, self.rotation_scale_rad)):
             raise ValueError("trajectory scales must be finite and positive")
+        if self.supervised_prefix_steps is not None and (
+                isinstance(self.supervised_prefix_steps, bool)
+                or not isinstance(self.supervised_prefix_steps, int)
+                or self.supervised_prefix_steps < 1):
+            raise ValueError("supervised_prefix_steps must be a positive integer or None")
+
+
+def _supervision_slice(pred, target, action_is_pad, config):
+    """Keep the executed action offsets, without changing the predicted chunk."""
+    steps = config.supervised_prefix_steps
+    if steps is None:
+        return pred, target, action_is_pad
+    if pred.ndim != 3 or pred.shape != target.shape or action_is_pad.shape != pred.shape[:2]:
+        raise ValueError("prefix supervision requires aligned batch/action chunks and padding")
+    if steps > pred.shape[1]:
+        raise ValueError("supervised_prefix_steps exceeds the predicted action chunk")
+    return pred[:, :steps], target[:, :steps], action_is_pad[:, :steps]
 
 
 def masked_reconstruction(pred, target, action_is_pad, config: ReconstructionLoss):
+    pred, target, action_is_pad = _supervision_slice(pred, target, action_is_pad, config)
     valid = (~action_is_pad).unsqueeze(-1)
     denominator = (valid.sum() * pred.shape[-1]).clamp_min(1)
     absolute = (pred - target).abs()
@@ -114,7 +133,7 @@ def integrated_tool_loss(pred, target, pad, *, tool_frame, translation_scale, ro
 def act_training_loss(policy, batch: dict, config: ReconstructionLoss, *,
                       action_mean=None, action_std=None, action_representation=None):
     # Preserve the exact installed LeRobot path for every existing/default L1 run.
-    if config.kind == "l1" and not config.trajectory_weight:
+    if config.kind == "l1" and not config.trajectory_weight and config.supervised_prefix_steps is None:
         loss, metrics = policy.forward(batch)
         return loss, {**metrics, "reconstruction_loss": metrics["l1_loss"]}
     model_batch = dict(batch)
@@ -133,8 +152,11 @@ def act_training_loss(policy, batch: dict, config: ReconstructionLoss, *,
         with torch.autocast(device_type=predicted.device.type, enabled=False):
             mean = torch.as_tensor(action_mean, device=predicted.device, dtype=dtype)
             std = torch.as_tensor(action_std, device=predicted.device, dtype=dtype)
+            trajectory_pred, trajectory_target, trajectory_pad = _supervision_slice(
+                predicted, batch[ACTION], batch["action_is_pad"], config,
+            )
             trajectory = integrated_tool_loss(
-                predicted.to(dtype) * std + mean, batch[ACTION].to(dtype) * std + mean, batch["action_is_pad"],
+                trajectory_pred.to(dtype) * std + mean, trajectory_target.to(dtype) * std + mean, trajectory_pad,
                 tool_frame=action_representation == "cartesian_tool",
                 translation_scale=config.translation_scale_m, rotation_scale=config.rotation_scale_rad,
             )

@@ -9,6 +9,13 @@ fixed during ball/bowl image interventions and quantify weak action dependence.
 The [three-episode capacity test](v2_three_episode_motion_20261025.md) applies movement
 and stationary-run error gates against both hold and persistence before development
 rollouts.
+The [executed-prefix comparison](v2_prefix_capacity_20261025.md) tests supervision on
+the two executed actions with the same backbone, seed and three training episodes.
+Training errors improve, but the capacity gate still fails and the
+[matched object probes](v2_prefix_object_actions_20261025.md) show mixed action dependence.
+The [motion-onset audit](v2_motion_onset_audit_20261025.md) describes conflicting
+near-identical observations; the [capture sheet](v2_calibration_capture_20261025.md)
+prepares independent camera/base and loaded hold/release evidence.
 
 The earlier [vision alignment and bottleneck experiments](v2_vision_alignment_and_bottlenecks_20261024.md)
 use local Grounding DINO/SAM2 on random source frames, fresh frozen-method confirmation,
@@ -31,6 +38,10 @@ are not a substitute for the runner status.
 
 | Topic | Reference |
 |---|---|
+| Two executed actions versus full-chunk supervision | [Prefix capacity comparison](v2_prefix_capacity_20261025.md) |
+| Fixed object swaps after prefix supervision | [Prefix object/action probes](v2_prefix_object_actions_20261025.md) |
+| Causal hold-to-motion label patterns | [Motion-onset audit](v2_motion_onset_audit_20261025.md) |
+| Calibration sequence, session log and printable board | [Capture sheet](v2_calibration_capture_20261025.md) |
 | Fixed-base tracks, raw mat edges and range limits | [25 October tracking](v2_fixed_landmark_tracking_20261025.md) |
 | Matched arm states and ball/bowl action interventions | [Matched-object probes](v2_matched_object_actions_20261025.md) |
 | Three training episodes versus hold/persistence | [Capacity and motion gate](v2_three_episode_motion_20261025.md) |

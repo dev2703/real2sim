@@ -34,7 +34,9 @@ def test_huber_delta_is_in_normalised_units_and_empty_mask_is_zero():
     assert masked.item() == 0 and pred.grad.item() == 0
 
 
-@pytest.mark.parametrize("cfg", [{"kind": "mystery"}, {"huber_delta": 0}, {"huber_delta": float("nan")}])
+@pytest.mark.parametrize("cfg", [{"kind": "mystery"}, {"huber_delta": 0}, {"huber_delta": float("nan")},
+                                 {"supervised_prefix_steps": 0}, {"supervised_prefix_steps": -1},
+                                 {"supervised_prefix_steps": 1.5}, {"supervised_prefix_steps": True}])
 def test_invalid_loss_configuration(cfg):
     with pytest.raises(ValueError):
         ReconstructionLoss(**cfg)
@@ -77,6 +79,81 @@ def test_adapter_preserves_kl_and_does_not_mutate_batch(kind):
         loss.backward()
         torch.testing.assert_close(policy.mu.grad, 10 * policy.mu.detach())
         assert torch.isfinite(policy.pred.grad).all()
+
+
+@pytest.mark.parametrize("kind", ["l1", "l2", "huber"])
+def test_prefix_reconstruction_uses_actual_valid_prefix_components_and_zero_tail_gradient(kind):
+    # One terminally padded prefix action, with much larger unexecuted tail values.
+    pred = torch.tensor([[[1., -3.], [2., 4.], [100., -100.]],
+                         [[3., 5.], [900., 900.], [800., 800.]]], requires_grad=True)
+    target = torch.zeros_like(pred)
+    pad = torch.tensor([[False, False, False], [False, True, True]])
+    config = ReconstructionLoss(kind=kind, supervised_prefix_steps=2)
+    loss, l1 = masked_reconstruction(pred, target, pad, config)
+    reference, reference_l1 = masked_reconstruction(pred[:, :2], target[:, :2], pad[:, :2],
+                                                    ReconstructionLoss(kind=kind))
+    torch.testing.assert_close(loss, reference)
+    torch.testing.assert_close(l1, reference_l1)
+    assert l1.item() == pytest.approx(3.)  # six real prefix components
+    loss.backward()
+    assert torch.count_nonzero(pred.grad[:, 2:]) == 0
+    assert torch.count_nonzero(pred.grad[1, 1:]) == 0
+    assert torch.count_nonzero(pred.grad[0, :2]) == 4
+
+
+def test_prefix_rejects_overlong_or_misaligned_chunks_and_all_pad_is_finite():
+    pred = torch.ones((2, 3, 2), requires_grad=True)
+    target = torch.zeros_like(pred)
+    config = ReconstructionLoss(supervised_prefix_steps=2)
+    loss, l1 = masked_reconstruction(pred, target, torch.ones((2, 3), dtype=torch.bool), config)
+    loss.backward()
+    assert loss.item() == l1.item() == 0.
+    assert torch.isfinite(pred.grad).all() and torch.count_nonzero(pred.grad) == 0
+    with pytest.raises(ValueError, match="exceeds"):
+        masked_reconstruction(pred, target, torch.zeros((2, 3), dtype=torch.bool),
+                              ReconstructionLoss(supervised_prefix_steps=4))
+    with pytest.raises(ValueError, match="aligned"):
+        masked_reconstruction(pred, target, torch.zeros((2, 2), dtype=torch.bool), config)
+
+
+def test_prefix_adapter_keeps_kl_and_full_prediction_shape():
+    policy = TinyACT()
+    batch = {"action": torch.zeros_like(policy.pred), "action_is_pad": torch.zeros((1, 2), dtype=torch.bool),
+             "observation.images.iphone": torch.zeros(1, 3, 8, 8)}
+    loss, metrics = act_training_loss(policy, batch, ReconstructionLoss(supervised_prefix_steps=1))
+    assert policy.pred.shape == (1, 2, 2)
+    assert metrics["reconstruction_loss"] == metrics["l1_loss"] == 1.25
+    assert metrics["kld_loss"] == .625
+    assert loss.item() == pytest.approx(1.25 + 10 * .625)
+    loss.backward()
+    torch.testing.assert_close(policy.mu.grad, 10 * policy.mu.detach())
+    assert torch.count_nonzero(policy.pred.grad[:, 1:]) == 0
+    assert "observation.images" not in batch
+
+
+def test_prefix_trajectory_loss_also_ignores_unexecuted_tail():
+    class TrajectoryACT(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.config = SimpleNamespace(image_features={}, use_vae=False)
+            self.pred = torch.nn.Parameter(torch.zeros((1, 4, 7)))
+            with torch.no_grad():
+                self.pred[0, 0, 0] = .01
+                self.pred[0, 2:, :6] = 100.
+
+        def model(self, batch):
+            return self.pred, (None, None)
+
+    policy = TrajectoryACT()
+    batch = {"action": torch.zeros_like(policy.pred), "action_is_pad": torch.zeros((1, 4), dtype=torch.bool)}
+    config = ReconstructionLoss(trajectory_weight=.5, supervised_prefix_steps=2)
+    loss, metrics = act_training_loss(policy, batch, config, action_mean=torch.zeros(7),
+                                     action_std=torch.ones(7), action_representation="cartesian")
+    assert metrics["trajectory_loss"] == pytest.approx((.01 / config.translation_scale_m)**2)
+    loss.backward()
+    assert torch.isfinite(policy.pred.grad).all()
+    assert torch.count_nonzero(policy.pred.grad[:, 2:]) == 0
+    assert policy.pred.grad[0, 0, 0] > 0
 
 
 def test_metrics_ignore_padding_and_report_per_dimension_units():

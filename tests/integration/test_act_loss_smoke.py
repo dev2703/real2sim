@@ -15,10 +15,11 @@ from real2sim.policy.train import train
 
 @pytest.mark.integration
 @pytest.mark.skipif(not Path(".cache/derived_joint/manifest.json").exists(), reason="real data required")
-@pytest.mark.parametrize("kind", ["l2", "huber"])
-def test_real_loss_train_and_reload(tmp_path, kind):
+@pytest.mark.parametrize("kind,prefix_steps", [("l2", None), ("huber", None), ("l1", 2)])
+def test_real_loss_train_and_reload(tmp_path, kind, prefix_steps):
     cfg = load_yaml("configs/act_joint_augmented.yaml")
-    cfg["reconstruction_loss"] = {"kind": kind, "huber_delta": 1.0}
+    cfg["reconstruction_loss"] = {"kind": kind, "huber_delta": 1.0,
+                                   "supervised_prefix_steps": prefix_steps}
     cfg["train"].update(device="mps" if torch.backends.mps.is_available() else "cpu",
                         num_workers=0, keep_only_best_and_last=True)
     out = tmp_path / kind
@@ -26,9 +27,11 @@ def test_real_loss_train_and_reload(tmp_path, kind):
     assert result["steps"] == 2 and np.isfinite(result["best_val_l1"])
     best = out / "checkpoints/best"
     assert json.loads((best / "run_info.json").read_text())["reconstruction_loss"]["kind"] == kind
+    assert json.loads((best / "run_info.json").read_text())["reconstruction_loss"]["supervised_prefix_steps"] == prefix_steps
     metrics = check(best, Path(".cache/derived_joint"), "cpu", max_batches=1)
     assert metrics["all_finite"] and metrics["contract_ok"]
     assert metrics["reconstruction_loss"]["kind"] == kind
+    assert metrics["reconstruction_loss"]["supervised_prefix_steps"] == prefix_steps
     assert metrics["val_open_loop_rmse_normalised"] >= metrics["val_open_loop_l1_normalised"]
     assert np.isfinite(metrics["val_open_loop_p95_abs_normalised"])
     with (out / "training_history.csv").open() as f:
