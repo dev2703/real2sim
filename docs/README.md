@@ -1,6 +1,16 @@
 # Project documentation
 
-The latest [vision alignment and bottleneck experiments](v2_vision_alignment_and_bottlenecks_20261024.md)
+The latest [fixed-base tracking](v2_fixed_landmark_tracking_20261025.md) separates local
+capture-coordinate changes from raw mat-boundary changes across 115 frames. Two fixed
+regions support 112 frames; late mat-edge measurements include explicit search-range
+limits. Physical camera/base registration remains unresolved.
+The [matched-object action probes](v2_matched_object_actions_20261025.md) hold arm inputs
+fixed during ball/bowl image interventions and quantify weak action dependence.
+The [three-episode capacity test](v2_three_episode_motion_20261025.md) applies movement
+and stationary-run error gates against both hold and persistence before development
+rollouts.
+
+The earlier [vision alignment and bottleneck experiments](v2_vision_alignment_and_bottlenecks_20261024.md)
 use local Grounding DINO/SAM2 on random source frames, fresh frozen-method confirmation,
 an auxiliary keypoint bottleneck and matched next-follower joint targets. Camera
 candidates fail confirmation and all new policy approach screens fail; no physical
@@ -21,6 +31,10 @@ are not a substitute for the runner status.
 
 | Topic | Reference |
 |---|---|
+| Fixed-base tracks, raw mat edges and range limits | [25 October tracking](v2_fixed_landmark_tracking_20261025.md) |
+| Matched arm states and ball/bowl action interventions | [Matched-object probes](v2_matched_object_actions_20261025.md) |
+| Three training episodes versus hold/persistence | [Capacity and motion gate](v2_three_episode_motion_20261025.md) |
+| Multi-height CAD identity evidence and capture plan | [Fixed-base landmark review](v2_fixed_base_landmark_review_20261024.md) |
 | Random-frame vision measurements and new learning experiments | [Vision alignment and bottlenecks](v2_vision_alignment_and_bottlenecks_20261024.md) |
 | Model camera estimates and base-contour ambiguity | [Model camera geometry](v2_model_camera_geometry_20261024.md) |
 | Auxiliary localization versus action dependence | [Keypoint bottleneck](v2_aux_keypoint_bottleneck_20261024.md) |

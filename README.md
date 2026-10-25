@@ -20,10 +20,11 @@ The local dataset has **41 episodes**. Reviewed conditions are 32 baseline, four
 See the [v2 runbook](docs/v2_implementation_20261020.md) for the 12.5 Hz two-camera pipeline,
 CLIP/DINO/flow/kinematics experiments and remaining calibration gates. These experiments are
 implemented; v2 learned task success and frozen Panda transfer have not yet been demonstrated.
-Current priority is [real/simulation geometry alignment](docs/v2_geometry_alignment_20261021.md),
-starting with joint-zero and camera correspondence using the measurements already saved in
-`configs/task.yaml`. At the operator's request, the [offline learning queue](docs/v2_learning_screen_20261022.md)
-is running with provisional geometry while physical registration remains unresolved.
+Current priority is [fixed-base landmark tracking](docs/v2_fixed_landmark_tracking_20261025.md),
+followed by independent camera/base registration, joint-zero and gripper verification.
+The measured scalars in `configs/task.yaml` remain in use; image tracking does not verify
+metric registration. The completed [offline learning screen](docs/v2_learning_screen_20261022.md)
+used provisional geometry; physical registration remains unresolved.
 The commands below document the retained legacy 10 Hz workflow.
 
 See [documentation index](docs/README.md) for the current contracts and runbooks.
@@ -35,6 +36,12 @@ add explicit ball-image features and motion-sensitive validation, verify the exi
 nominal wrist camera binding, and compare feasible control targets. Independent
 physical registration is still required before corrected-label retraining or
 reserved checkpoint promotion.
+The [matched-object action probes](docs/v2_matched_object_actions_20261025.md) now compare
+similar arm states across different ball/bowl layouts, including stationary starts and
+localized image swaps. They expose weak action dependence separately from localization.
+The [three-episode capacity test](docs/v2_three_episode_motion_20261025.md) checks each
+training condition against hold/persistence on movement and stationary-run error before
+common development rollouts.
 
 ## Install
 
