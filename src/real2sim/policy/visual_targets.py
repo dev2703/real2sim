@@ -164,7 +164,10 @@ def locate_objects(
     _in_workspace(np.zeros(3), workspace_xy)
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
     # Hue range is fixed for yellow/green tennis-ball material, not its location.
-    ball_mask = ((hsv[:, :, 0] >= 20) & (hsv[:, :, 0] <= 50)
+    # The warm wood background is hue 20--24 in the supplied scene. Including
+    # it joins an otherwise visible ball to the image border, invalidating its
+    # silhouette. The tennis-ball material and the synthetic tests are >=25.
+    ball_mask = ((hsv[:, :, 0] >= 25) & (hsv[:, :, 0] <= 50)
                  & (hsv[:, :, 1] >= 75) & (hsv[:, :, 2] >= 30))
     bowl_mask = (hsv[:, :, 1] <= 46) & (hsv[:, :, 2] >= 80)
     found: dict[str, list[VisualTarget]] = {"ball": [], "bowl": []}
@@ -176,7 +179,7 @@ def locate_objects(
         except ValueError:
             continue
 
-        def tangent_residual(xy):
+        def tangent_residual(xy, rays=rays):
             center = np.r_[xy, ball_center_height_m] - pose[:3, 3]
             return np.linalg.norm(np.cross(rays, center), axis=1) - ball_radius_m
 
@@ -211,7 +214,10 @@ def locate_objects(
         center = np.r_[fit["center_plane_xy_m"], bowl_rim_height_m]
         ratio = fit["radius_m"] / bowl_outer_radius_m
         error = fit["circle_rms_m"]
-        max_error = max(.002, .06 * bowl_outer_radius_m)
+        # A shallow bowl's external silhouette includes a small visible sidewall
+        # below the rim plane. Retain a metric residual gate without requiring
+        # its full outline to be an exact planar circle.
+        max_error = max(.002, .08 * bowl_outer_radius_m)
         if (not .85 <= ratio <= 1.15 or error > max_error
                 or fit["second_moment_axis_ratio"] < .75
                 or not _in_workspace(center, workspace_xy)):

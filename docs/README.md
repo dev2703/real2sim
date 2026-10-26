@@ -1,9 +1,12 @@
 # Project documentation
 
-The [26 October capture-status audit](v2_calibration_status_20261026.md) records
-unavailable new capture inputs, the completed local checks and the combined session
-log for geometry, timing, loaded response and version lineage. Physical calibration
-and calibrated retraining remain pending.
+The [26 October status](v2_calibration_status_20261026.md) supersedes the earlier
+missing-measurement conclusion. The [operator measurements](v2_measurements_20261026.md)
+are ingested, and the [RGB waypoint controller](v2_waypoint_results_20261026.md)
+completes 4/5 placements on each arm with measured ball size and sparse IK.
+These are geometric-control results; ACT success and frozen-policy transfer remain
+separate outcomes. [External primary sources](v2_external_research_20261026.md)
+inform the execution, timing and grasp-frame corrections.
 
 The latest [fixed-base tracking](v2_fixed_landmark_tracking_20261025.md) separates local
 capture-coordinate changes from raw mat-boundary changes across 115 frames. Two fixed
@@ -12,8 +15,9 @@ limits. Physical camera/base registration remains unresolved.
 The [matched-object action probes](v2_matched_object_actions_20261025.md) hold arm inputs
 fixed during ball/bowl image interventions and quantify weak action dependence.
 The [three-episode capacity test](v2_three_episode_motion_20261025.md) applies movement
-and stationary-run error gates against both hold and persistence before development
-rollouts.
+and stationary-run error gates against both hold and persistence. Labelled development
+rollouts can still diagnose failures when that offline gate fails; it does not
+certify or prohibit an actual grasp test.
 The [executed-prefix comparison](v2_prefix_capacity_20261025.md) tests supervision on
 the two executed actions with the same backbone, seed and three training episodes.
 Training errors improve, but the capacity gate still fails and the

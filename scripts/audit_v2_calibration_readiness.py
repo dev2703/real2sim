@@ -92,6 +92,12 @@ def audit(root: Path, split_path: Path, geometry_path: Path, measurements_path: 
                             "independent_signs_and_zeros_established": False},
         "independent_evidence_inventory": {
             "selected_geometry_document": str(geometry_path),
+            "selected_measurements_document": str(measurements_path),
+            "measurement_source": measurements.get("source"),
+            "measured_ball_diameter_m": measurements.get("ball_diameter_m"),
+            "measured_ball_diameter_interval_m": measurements.get("ball_diameter_interval_m"),
+            "reported_bowl_diameter_unspecified_reference_m": measurements.get("bowl", {}).get("reported_unspecified_diameter_m"),
+            "operator_frame": measurements.get("operator_frame"),
             "geometry_document_evidence_kind": geometry.get("evidence_kind"),
             "fixed_camera_intrinsics_present": geometry.get("camera", {}).get("K_source_pixels") is not None,
             "fixed_camera_distortion_present": geometry.get("camera", {}).get("distortion_coefficients") is not None,

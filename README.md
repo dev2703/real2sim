@@ -27,11 +27,28 @@ Note: there could be +- 5% measurments error.
 
 The local dataset has **41 episodes**. Reviewed conditions are 32 baseline, four ball shifts
 (6, 8, 9, 10), and five bowl shifts (21–25), with a seeded 29/6/6 episode split.
+On 26 October, the repaired **RGB waypoint controller completed 4/5 pick-and-place
+trials on SO-101 and 4/5 on Panda**, using the measured ball size, sparse IK and
+bounded joint execution. These are geometric-controller results; learned ACT success
+and frozen ACT transfer remain unproved. See the [rollouts, failures and videos](docs/v2_waypoint_results_20261026.md).
+The [new physical measurements](docs/v2_measurements_20261026.md) are ingested with
+their ±5% bounds. They expose scene-spacing and joint-neutral discrepancies; the
+full camera/base/jaw registration remains provisional.
+
+Run the working geometric baseline from the configured start, without a settling reset:
+
+```sh
+.venv/bin/python scripts/run_visual_waypoint.py --robot so101 --seeds 0 1 2 3 4 \
+  --out outputs/v2/waypoint_so101_NEXT --video
+.venv/bin/python scripts/run_visual_waypoint.py --robot panda --seeds 0 1 2 3 4 \
+  --out outputs/v2/waypoint_panda_NEXT --video
+```
+
 See the [v2 runbook](docs/v2_implementation_20261020.md) for the 12.5 Hz two-camera pipeline,
 CLIP/DINO/flow/kinematics experiments and remaining calibration gates. These experiments are
 implemented; v2 learned task success and frozen Panda transfer have not yet been demonstrated.
-Current priority is [fixed-base landmark tracking](docs/v2_fixed_landmark_tracking_20261025.md),
-followed by independent camera/base registration, joint-zero and gripper verification.
+The [26 October status](docs/v2_calibration_status_20261026.md) links current execution
+fixes, temporal-context training, measurements and external implementation references.
 The measured scalars in `configs/task.yaml` remain in use; image tracking does not verify
 metric registration. The completed [offline learning screen](docs/v2_learning_screen_20261022.md)
 used provisional geometry; physical registration remains unresolved.

@@ -1,0 +1,322 @@
+{
+  "version": "v2_operator_measurements_clarified_20261026",
+  "status": "operator_scalars_available_registration_and_loaded_response_unverified",
+  "units": "metres and radians; source-image pixels",
+  "collector_version": null,
+  "calibration_version": null,
+  "task_frame_definition": null,
+  "base_table_transform": null,
+  "ball_diameter_m": 0.06468056887254627,
+  "bowl": {
+    "inner_diameter_m": null,
+    "outer_diameter_m": null,
+    "depth_m": null,
+    "wall_height_m": null,
+    "reported_unspecified_diameter_m": 0.1143,
+    "reported_unspecified_diameter_interval_m": [
+      0.10858499999999999,
+      0.12001500000000001
+    ]
+  },
+  "jaw_measurements": [
+    {
+      "command_percent": null,
+      "measured_joint": null,
+      "gap_m": null,
+      "verification_only": false,
+      "suggested_command_percent": 0,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
+    },
+    {
+      "command_percent": null,
+      "measured_joint": null,
+      "gap_m": null,
+      "verification_only": true,
+      "suggested_command_percent": 15,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
+    },
+    {
+      "command_percent": null,
+      "measured_joint": null,
+      "gap_m": null,
+      "verification_only": false,
+      "suggested_command_percent": 30,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
+    },
+    {
+      "command_percent": null,
+      "measured_joint": null,
+      "gap_m": null,
+      "verification_only": true,
+      "suggested_command_percent": 45,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
+    },
+    {
+      "command_percent": null,
+      "measured_joint": null,
+      "gap_m": null,
+      "verification_only": false,
+      "suggested_command_percent": 60,
+      "sent_percent": null,
+      "measured_joint_unit": "percent",
+      "repeat_readings": []
+    }
+  ],
+  "cameras": {
+    "observation.images.iphone": {
+      "intrinsics": null,
+      "distortion": null,
+      "image_size_px": [
+        1280,
+        720
+      ],
+      "parent_frame": null,
+      "T_parent_optical": null,
+      "held_out_landmarks": [],
+      "height_above_table_m": 0.4064,
+      "height_above_table_interval_m": [
+        0.38608,
+        0.42672
+      ],
+      "camera_identity_is_assumption": true
+    },
+    "observation.images.top": {
+      "intrinsics": null,
+      "distortion": null,
+      "image_size_px": [
+        1280,
+        720
+      ],
+      "parent_frame": null,
+      "T_parent_optical": null,
+      "held_out_landmarks": []
+    }
+  },
+  "recordings": [
+    {
+      "role": "unloaded_1",
+      "trace_session": null,
+      "episode_index": null,
+      "hold_source_frames": [],
+      "camera_frame_timestamp_provenance": null
+    },
+    {
+      "role": "unloaded_2",
+      "trace_session": null,
+      "episode_index": null,
+      "hold_source_frames": [],
+      "camera_frame_timestamp_provenance": null
+    },
+    {
+      "role": "loaded_1",
+      "trace_session": null,
+      "episode_index": null,
+      "hold_source_frames": [],
+      "camera_frame_timestamp_provenance": null
+    },
+    {
+      "role": "loaded_2",
+      "trace_session": null,
+      "episode_index": null,
+      "hold_source_frames": [],
+      "camera_frame_timestamp_provenance": null
+    },
+    {
+      "role": "normal_task",
+      "trace_session": null,
+      "episode_index": null,
+      "hold_source_frames": [],
+      "camera_frame_timestamp_provenance": null
+    }
+  ],
+  "note": "Keep verification poses/openings separate from fitting. These new traces do not establish timing/provenance for the original 41 episodes.",
+  "setup_provenance_file": "configs/v2/setup_provenance_20261021.json",
+  "jaw_gap_definition": null,
+  "jaw_measurement_uncertainty_m": null,
+  "source": {
+    "path": "physical_measurements.md",
+    "sha256": "8a31d789968eef7543df6ab177ff9f60f820300b1a25ef766bf3894fc116273b",
+    "reported_unit": "inches",
+    "relative_uncertainty": 0.05,
+    "uncertainty_kind": "operator_estimated_bound"
+  },
+  "ball_diameter_interval_m": [
+    0.06144654042891895,
+    0.06791459731617358
+  ],
+  "reported_setup": {
+    "camera from ball": {
+      "source_text": "camera from ball: (30.5, 4.5, 16)",
+      "source_inches": [
+        30.5,
+        4.5,
+        16.0
+      ],
+      "value_m": [
+        0.7746999999999999,
+        0.1143,
+        0.4064
+      ],
+      "interval_m": [
+        [
+          0.7359649999999999,
+          0.813435
+        ],
+        [
+          0.10858499999999999,
+          0.12001500000000001
+        ],
+        [
+          0.38608,
+          0.42672
+        ]
+      ]
+    },
+    "ball & bowl": {
+      "source_text": "ball & bowl: 12 inches",
+      "source_inches": [
+        12.0
+      ],
+      "value_m": [
+        0.30479999999999996
+      ],
+      "interval_m": [
+        [
+          0.28955999999999993,
+          0.32004
+        ]
+      ]
+    },
+    "ball from robot base": {
+      "source_text": "Ball from robot base: (2,13)",
+      "source_inches": [
+        2.0,
+        13.0
+      ],
+      "value_m": [
+        0.0508,
+        0.3302
+      ],
+      "interval_m": [
+        [
+          0.04826,
+          0.05334
+        ],
+        [
+          0.31368999999999997,
+          0.34671
+        ]
+      ]
+    },
+    "mat": {
+      "source_text": "mat: (16,12)",
+      "source_inches": [
+        16.0,
+        12.0
+      ],
+      "value_m": [
+        0.4064,
+        0.30479999999999996
+      ],
+      "interval_m": [
+        [
+          0.38608,
+          0.42672
+        ],
+        [
+          0.28955999999999993,
+          0.32004
+        ]
+      ]
+    },
+    "bowl": {
+      "source_text": "Bowl: 4.5 diameter",
+      "source_inches": [
+        4.5
+      ],
+      "value_m": [
+        0.1143
+      ],
+      "interval_m": [
+        [
+          0.10858499999999999,
+          0.12001500000000001
+        ]
+      ]
+    },
+    "ball": {
+      "source_text": "Ball: 8 circumference",
+      "source_inches": [
+        8.0
+      ],
+      "value_m": [
+        0.2032
+      ],
+      "interval_m": [
+        [
+          0.19304,
+          0.21336
+        ]
+      ]
+    }
+  },
+  "operator_frame": {
+    "axes": "x lengthwise, y widthwise, z heightwise",
+    "signed_directions_established": false,
+    "T_task_operator": null,
+    "recording_applicability_established": false
+  },
+  "unresolved_definitions": [
+    "Which camera and lens/reference point does 'camera from ball' describe?",
+    "Base reference point, signed axis directions, and relation to the simulator's task frame.",
+    "Whether the bowl diameter is the inner opening or outer rim; bowl height/depth.",
+    "Whether ball/bowl spacing is centre-to-centre and which recorded setup it describes.",
+    "Support height, jaw gap/TCP and loaded timing/retention/release response."
+  ],
+  "parent_measurements": {
+    "path": "configs/v2/measurements.operator_20261026.json",
+    "sha256": "bb6401bfff000137d6d8384b6d9b8d9e75967347a542326f799ef5c0b02e288b"
+  },
+  "operator_clarification": {
+    "schema": "operator_setup_clarification_v1",
+    "date": "2026-10-26",
+    "source": {
+      "kind": "operator_message_in_this_conversation",
+      "verbatim": "+x towards the ball +y from robot base towards ball yeah 16 inches above the tabletop"
+    },
+    "interpretation": {
+      "camera_height_reference": "tabletop rather than ball centre",
+      "camera_height_above_table_m": 0.4064,
+      "camera_height_interval_m": [
+        0.38608,
+        0.42672
+      ],
+      "height_uncertainty_provenance": "Estimated +-5% from physical_measurements.md; clarification does not supply a new uncertainty estimate.",
+      "camera_identity_applied_to_candidate": "observation.images.iphone",
+      "camera_identity_is_assumption": true,
+      "camera_identity_assumption_reason": "The existing camera-from-ball measurement is interpreted as the global iPhone camera; the message does not explicitly identify the camera.",
+      "ball_from_base_components_operator_m": [
+        0.0508,
+        0.3302
+      ],
+      "ball_from_base_component_signs": [
+        1,
+        1
+      ],
+      "axes_note": "Both reported horizontal components point towards the ball. The message does not fully establish two orthogonal positive directions relative to simulator task axes.",
+      "T_task_operator": null,
+      "camera_horizontal_offset_signs_established": false,
+      "camera_orientation_established": false,
+      "base_reference_point_established": false
+    },
+    "physical_calibration_accepted": false
+  }
+}

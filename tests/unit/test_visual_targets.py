@@ -61,6 +61,14 @@ def test_missing_ball_has_no_position_fallback():
     assert locate(np.zeros((480, 640, 3), dtype=np.uint8)) == {"ball": None, "bowl": None}
 
 
+def test_warm_wood_background_does_not_merge_ball_with_image_border():
+    image = scene()
+    image[np.all(image == 40, axis=2)] = [110, 83, 29]
+    result = locate(image)
+    assert result["ball"] is not None
+    np.testing.assert_allclose(result["ball"].center_task[:2], [.18, .10], atol=.001)
+
+
 def test_camera_frame_conversion_preserves_projection_axes():
     pose = camera_pose_task([.1, -.3, .9], np.eye(3), [.01, .02, .7])
     np.testing.assert_allclose(pose[:3, 3], [.09, -.32, .2])

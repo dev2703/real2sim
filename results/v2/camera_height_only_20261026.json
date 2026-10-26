@@ -1,0 +1,508 @@
+{
+  "schema": "camera_height_only_detection_diagnostic_v1",
+  "physical_calibration_accepted": false,
+  "no_actions_or_task_success_evaluated": true,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "camera_identity_is_assumption": true,
+  "camera_orientation_retained_provisionally": true,
+  "source_sha256": {
+    "scripts/diag_v2_camera_height.py": "5819ed82bb5121876c8fc7c20e99a2c644140828623ff0a5029a4dc9ef6e63c5",
+    "configs/v2/task.scalar_measured_20261026.yaml": "ca4c222acfaceca7f23eb71b565e79281d4cf67809f3c6e65f8f848c87887bd1",
+    "configs/v2/task.camera_height_20261026.yaml": "70725978222c4b38a05d89c08ff1f9321dec5f0e1f5a6c6c9cc23c6b15086558",
+    "configs/v2/measurements.clarification_20261026.json": "1fa259537f673f851bc1f77270649ba69d8e6d9436fae93d43d195742d0a7dd7",
+    "configs/v2/measurements.operator_clarified_20261026.json": "3bc88520ea71676e4305e404ec9c6480015f85fcc0267a2b60d8222733867577",
+    "src/real2sim/policy/visual_targets.py": "87640a688fa4f963b10320080edb28fcc7d454b44957fa851f8fac5fcb1f2ade"
+  },
+  "cases": {
+    "previous_height": [
+      {
+        "seed": 0,
+        "camera_height_above_table_m": 0.5334,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.35273098696389027,
+              0.22845816659973406,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              410.4583748905848,
+              103.98478264292201
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              419.93595883463917,
+              237.49049937299833
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": {
+            "center_task": [
+              0.3528056520746623,
+              0.23139997212665292,
+              0.020340284436273122
+            ],
+            "pixel_center": [
+              410.11948040082274,
+              102.79678651460938
+            ],
+            "area_px": 2198.5,
+            "fit_error_m": 0.0005187571666680739,
+            "confidence": 0.6972735231583012,
+            "scored_xy_error_m": 0.00294275290110756
+          },
+          "bowl": {
+            "center_task": [
+              0.31559866128595687,
+              -0.04022583569243074,
+              0.017999999999999988
+            ],
+            "pixel_center": [
+              418.4519256997629,
+              240.6789450873291
+            ],
+            "area_px": 5780.0,
+            "fit_error_m": 0.0033520434892729645,
+            "confidence": 0.4280118991064999,
+            "scored_xy_error_m": 0.005751155214723852
+          }
+        }
+      },
+      {
+        "seed": 1,
+        "camera_height_above_table_m": 0.5334,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.37613129922371574,
+              0.19812721716004372,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              433.80255655646545,
+              118.31656741498848
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              419.93595883463917,
+              237.49049937299833
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": {
+            "center_task": [
+              0.37630374113471365,
+              0.2008983200347065,
+              0.020340284436273122
+            ],
+            "pixel_center": [
+              433.50950120909846,
+              117.15125762817954
+            ],
+            "area_px": 2294.5,
+            "fit_error_m": 0.0005203999718664019,
+            "confidence": 0.698243355257574,
+            "scored_xy_error_m": 0.0027764631016156073
+          },
+          "bowl": {
+            "center_task": [
+              0.31559866128595687,
+              -0.04022583569243074,
+              0.017999999999999988
+            ],
+            "pixel_center": [
+              418.4519256997629,
+              240.6789450873291
+            ],
+            "area_px": 5780.0,
+            "fit_error_m": 0.0033520434892729645,
+            "confidence": 0.4280118991064999,
+            "scored_xy_error_m": 0.005751155214723852
+          }
+        }
+      },
+      {
+        "seed": 2,
+        "camera_height_above_table_m": 0.5334,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.35109687918227855,
+              0.21933769789146654,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              410.386322375925,
+              107.59932919892658
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              419.93595883463917,
+              237.49049937299833
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": {
+            "center_task": [
+              0.35118403402284587,
+              0.22220348786263297,
+              0.020340284436273122
+            ],
+            "pixel_center": [
+              410.06556594538694,
+              106.4267271710519
+            ],
+            "area_px": 2232.5,
+            "fit_error_m": 0.0005112132268313589,
+            "confidence": 0.7014083497093374,
+            "scored_xy_error_m": 0.0028671149480047737
+          },
+          "bowl": {
+            "center_task": [
+              0.31559866128595687,
+              -0.04022583569243074,
+              0.017999999999999988
+            ],
+            "pixel_center": [
+              418.4519256997629,
+              240.6789450873291
+            ],
+            "area_px": 5780.0,
+            "fit_error_m": 0.0033520434892729645,
+            "confidence": 0.4280118991064999,
+            "scored_xy_error_m": 0.005751155214723852
+          }
+        }
+      },
+      {
+        "seed": 3,
+        "camera_height_above_table_m": 0.5334,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.3564267643075633,
+              0.21344963222487173,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              415.514966205972,
+              110.42837503043691
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              419.93595883463917,
+              237.49049937299833
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": {
+            "center_task": [
+              0.35652509840532,
+              0.21614639362799318,
+              0.020340284436273122
+            ],
+            "pixel_center": [
+              415.2144616945508,
+              109.3159253648146
+            ],
+            "area_px": 2248.5,
+            "fit_error_m": 0.0005129295388582327,
+            "confidence": 0.7001452254247555,
+            "scored_xy_error_m": 0.002698553623730157
+          },
+          "bowl": {
+            "center_task": [
+              0.31559866128595687,
+              -0.04022583569243074,
+              0.017999999999999988
+            ],
+            "pixel_center": [
+              418.4519256997629,
+              240.6789450873291
+            ],
+            "area_px": 5780.0,
+            "fit_error_m": 0.0033520434892729645,
+            "confidence": 0.4280118991064999,
+            "scored_xy_error_m": 0.005751155214723852
+          }
+        }
+      },
+      {
+        "seed": 4,
+        "camera_height_above_table_m": 0.5334,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.3266404351525032,
+              0.20262824087084028,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              392.6333393780101,
+              112.7799659296341
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              419.93595883463917,
+              237.49049937299833
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": {
+            "center_task": [
+              0.3265895125569964,
+              0.20530581449424457,
+              0.020340284436273122
+            ],
+            "pixel_center": [
+              392.25708516726894,
+              111.64559878935165
+            ],
+            "area_px": 2298.5,
+            "fit_error_m": 0.0005360267197278169,
+            "confidence": 0.6872860545744018,
+            "scored_xy_error_m": 0.002678057807345375
+          },
+          "bowl": {
+            "center_task": [
+              0.31559866128595687,
+              -0.04022583569243074,
+              0.017999999999999988
+            ],
+            "pixel_center": [
+              418.4519256997629,
+              240.6789450873291
+            ],
+            "area_px": 5780.0,
+            "fit_error_m": 0.0033520434892729645,
+            "confidence": 0.4280118991064999,
+            "scored_xy_error_m": 0.005751155214723852
+          }
+        }
+      }
+    ],
+    "clarified_height_only": [
+      {
+        "seed": 0,
+        "camera_height_above_table_m": 0.4064,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.35273098696389027,
+              0.22845816659973406,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              433.098349998314,
+              6.446461348471905
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              449.72646290053723,
+              124.49122902749347
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": null,
+          "bowl": null
+        }
+      },
+      {
+        "seed": 1,
+        "camera_height_above_table_m": 0.4064,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.37613129922371574,
+              0.19812721716004372,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              458.5747677677835,
+              19.67122434659221
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              449.72646290053723,
+              124.49122902749347
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": null,
+          "bowl": null
+        }
+      },
+      {
+        "seed": 2,
+        "camera_height_above_table_m": 0.4064,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.35109687918227855,
+              0.21933769789146654,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              433.19603643576613,
+              9.558878103236353
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              449.72646290053723,
+              124.49122902749347
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": null,
+          "bowl": null
+        }
+      },
+      {
+        "seed": 3,
+        "camera_height_above_table_m": 0.4064,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.3564267643075633,
+              0.21344963222487173,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              438.77419571257843,
+              12.18777788097724
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              449.72646290053723,
+              124.49122902749347
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": null,
+          "bowl": null
+        }
+      },
+      {
+        "seed": 4,
+        "camera_height_above_table_m": 0.4064,
+        "scoring_only": {
+          "ball": {
+            "reference_task_m": [
+              0.3266404351525032,
+              0.20262824087084028,
+              0.020340284436273122
+            ],
+            "projected_pixel_xy": [
+              414.59235827465375,
+              13.376375123027616
+            ],
+            "center_within_image": true
+          },
+          "bowl": {
+            "reference_task_m": [
+              0.318,
+              -0.035,
+              0.017999999999999988
+            ],
+            "projected_pixel_xy": [
+              449.72646290053723,
+              124.49122902749347
+            ],
+            "center_within_image": true
+          }
+        },
+        "detections": {
+          "ball": null,
+          "bowl": null
+        }
+      }
+    ]
+  }
+}

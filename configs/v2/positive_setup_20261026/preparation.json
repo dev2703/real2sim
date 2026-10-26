@@ -1,0 +1,42 @@
+{
+  "schema": "positive_setup_candidate_v1",
+  "physical_calibration_accepted": false,
+  "source_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/prepare_v2_positive_setup.py": "e06bb53b93b35ab58b259891afa4023ab04f66cdd7c61ec183b44558e0082ab7",
+    "configs/v2/task.scalar_measured_20261026.yaml": "ca4c222acfaceca7f23eb71b565e79281d4cf67809f3c6e65f8f848c87887bd1",
+    "configs/v2/measurements.operator_20261026.json": "bb6401bfff000137d6d8384b6d9b8d9e75967347a542326f799ef5c0b02e288b"
+  },
+  "files_sha256": {
+    "task.yaml": "3435cece8c1f67ecf27f354f382c57275690604bc1a1a55b71367c2b72d77361",
+    "sim_panda.yaml": "8e5b3c98dd2244f697e88ae905c69ebf3056cec1eeb6ef9a419aeaf54cbd0f32",
+    "positive_convention.json": "dc642f591d457a4e47b38e1fd032acd483d7c798a25009f9dda648a3f01e3449",
+    "sim_so101.yaml": "e8bd192f56d7d28a3ee13fa4d4263e5c86d579f9a46ef222f93fa29615a390c3"
+  },
+  "ball_xy_task_m": [
+    0.0508,
+    0.3302
+  ],
+  "bowl_xy_task_m": [
+    0.35559999999999997,
+    0.3302
+  ],
+  "camera_position_task_m": [
+    0.8254999999999999,
+    0.4445,
+    0.3944
+  ],
+  "working_assumptions": {
+    "camera_minus_ball_xy_signs": [
+      1,
+      1
+    ],
+    "operator_axes_assumed_parallel_to_task_axes": true,
+    "base_reference_assumed_task_origin_xy": true,
+    "camera_identity": "global observation.images.iphone",
+    "bowl_bearing": "+task_x from ball; source declares single-number x-axis measurements",
+    "mat_center": "nominal ball/bowl midpoint; mat placement not measured",
+    "camera_rotation": "roll-free look-at nominal ball/bowl midpoint; not measured",
+    "intrinsics": "previous provisional focal length/principal point retained",
+    "independently_verified_registration": false
+  }
+}

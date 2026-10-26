@@ -1,0 +1,473 @@
+{
+  "schema": "history4_execution_20261026_v1",
+  "status": "complete",
+  "controller_source": "LEARNED_ACT",
+  "scope": "One common development seed0, full30s; not reserved evaluation",
+  "checkpoint": "outputs/v2/three_episode_history4_20261026/training/checkpoints/002000",
+  "checkpoint_step": 2000,
+  "scene": "outputs/v2/inference_sim_smoke_20261023/sim.yaml",
+  "task_sha256": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+  "physical_calibration_accepted": false,
+  "new_measured_radius_scene": false,
+  "reset_protocol": "Original configured native joints, common seeded objects, no settling/replacement",
+  "changes_to_physics_scoring_limits": false,
+  "torch_threads": 2,
+  "source_sha256_before": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/diag_v2_history_execution.py": "ff763d94ec836cb0e5894710f6ee776ad2a1b519e31146f5dc353c642ba314f0",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/inference_sim_smoke_20261023/sim.yaml": "971040ecb90172defc1a3ad1538d247fee9333f9399b3ac21d3359e0c9756f6d",
+    "/Users/deveshvyas/Downloads/real2sim/configs/v2/task.exploratory_20261022.yaml": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/inference_sim_smoke_20261023/data.yaml": "eaedc7647d9fcd3fd930dd541c0ffb333bfc1f530ff9eb99937df61ecd34b3e0",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/model.safetensors": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/config.json": "2bad682fce59c36029ca62c2afec60ee3aadc09e383f4c18af15f2843a2c0aa0",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/stats.json": "1883796df43fb1a4fe79bafb3d1cf4b3b6baa04bc89012994a28499c687d67dc",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/real2sim_contract.json": "10fd1b1c7aa198fe31e489c7c5560d759adca439c675d6c4f76b50c04f29167c",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/run_info.json": "84ef836af179c125f8cc14abbdf1db9fee92c1f0633b4bf6f349e7607ddc1f49",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/manifest.json": "7432b4e1f304fcc375bbfe323d9e71cdfe69ae238880287b926bfba74f345983",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/config.py": "8b113777aa547df82052a77b86ed11aaf82b175ecf55492414d7a32d6705d6e5",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/evaluation/run.py": "6ae94dde72bf97a948616ee34eaba0cc37cf8fa8adef180842af293045a4b491",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/evaluation/metrics.py": "44a2a3971f87e3690b18d9e63b1ac1da33aba58dd0eedcfd7968dc131a4ae710",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/act.py": "1f90df20ff4e253003ce2ccaa9faf1a7ac1606df5adc4bdfaee3bc066e1e08dc",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/adapters.py": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/temporal_ensemble.py": "8a401b7767d9d47cce631d476dd4a434ed3365ffbe66a79adb77d93cd400e9f7",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/observation_variants.py": "fea1dff7df8d0fbb2bc121ddf620a3f554aa640bee54d119c1df4af75b8a0ec8",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/env.py": "8ac3c7f7ba06de4fe26402c79aec60675580a2fb3a4f5d5bcb06359abd412a62",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/model.py": "a8edd403e52dec8bcfb02d76473d43b160d1e4d566374a506032399766dc6fb7",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/cameras.py": "0c0ea3f954ac8fa8d20f305d93c4553f70362525925d96f924e57aa2ce507bb4",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/contact_solver.py": "3375b0f6c6aa3aae30eba82c77a725a9b5dbbe7dc6358b638f8d8d1d2debef06",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/data/transforms.py": "73a0371f7ed9b9f5959ee6ff1e24c1752045d3704a62781b58353dce25c403c6",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so101_fk.py": "0a918095d5794309e4a68e60b3b485fa3aeda029201eff5ee861e7f541051395",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so3.py": "bd39987bdc6c85bdd39c102896543e254c69ed57b446435d4fff841f2e9dd758",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/kinematics.py": "3b211879ea4127f67913036eb333a1928f13bebe58f4788067f466a963f4d106"
+  },
+  "identical_initial_readbacks_poses_and_images": true,
+  "source_sha256_after": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/diag_v2_history_execution.py": "ff763d94ec836cb0e5894710f6ee776ad2a1b519e31146f5dc353c642ba314f0",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/inference_sim_smoke_20261023/sim.yaml": "971040ecb90172defc1a3ad1538d247fee9333f9399b3ac21d3359e0c9756f6d",
+    "/Users/deveshvyas/Downloads/real2sim/configs/v2/task.exploratory_20261022.yaml": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/inference_sim_smoke_20261023/data.yaml": "eaedc7647d9fcd3fd930dd541c0ffb333bfc1f530ff9eb99937df61ecd34b3e0",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/model.safetensors": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/config.json": "2bad682fce59c36029ca62c2afec60ee3aadc09e383f4c18af15f2843a2c0aa0",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/stats.json": "1883796df43fb1a4fe79bafb3d1cf4b3b6baa04bc89012994a28499c687d67dc",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/real2sim_contract.json": "10fd1b1c7aa198fe31e489c7c5560d759adca439c675d6c4f76b50c04f29167c",
+    "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/run_info.json": "84ef836af179c125f8cc14abbdf1db9fee92c1f0633b4bf6f349e7607ddc1f49",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/manifest.json": "7432b4e1f304fcc375bbfe323d9e71cdfe69ae238880287b926bfba74f345983",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/config.py": "8b113777aa547df82052a77b86ed11aaf82b175ecf55492414d7a32d6705d6e5",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/evaluation/run.py": "6ae94dde72bf97a948616ee34eaba0cc37cf8fa8adef180842af293045a4b491",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/evaluation/metrics.py": "44a2a3971f87e3690b18d9e63b1ac1da33aba58dd0eedcfd7968dc131a4ae710",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/act.py": "1f90df20ff4e253003ce2ccaa9faf1a7ac1606df5adc4bdfaee3bc066e1e08dc",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/adapters.py": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/temporal_ensemble.py": "8a401b7767d9d47cce631d476dd4a434ed3365ffbe66a79adb77d93cd400e9f7",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/observation_variants.py": "fea1dff7df8d0fbb2bc121ddf620a3f554aa640bee54d119c1df4af75b8a0ec8",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/env.py": "8ac3c7f7ba06de4fe26402c79aec60675580a2fb3a4f5d5bcb06359abd412a62",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/model.py": "a8edd403e52dec8bcfb02d76473d43b160d1e4d566374a506032399766dc6fb7",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/cameras.py": "0c0ea3f954ac8fa8d20f305d93c4553f70362525925d96f924e57aa2ce507bb4",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/contact_solver.py": "3375b0f6c6aa3aae30eba82c77a725a9b5dbbe7dc6358b638f8d8d1d2debef06",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/data/transforms.py": "73a0371f7ed9b9f5959ee6ff1e24c1752045d3704a62781b58353dce25c403c6",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so101_fk.py": "0a918095d5794309e4a68e60b3b485fa3aeda029201eff5ee861e7f541051395",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so3.py": "bd39987bdc6c85bdd39c102896543e254c69ed57b446435d4fff841f2e9dd758",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/kinematics.py": "3b211879ea4127f67913036eb333a1928f13bebe58f4788067f466a963f4d106"
+  },
+  "runtime_source_changes": [],
+  "full_report": "outputs/v2/history4_execution_20261026/report.json",
+  "full_report_sha256": "fd6e648b9523725f6db21e61265f0559f1bc89e7404177a7b1b3d516553c1554",
+  "modes": {
+    "queue2": {
+      "summary": {
+        "n": 1,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 326,
+        "mean_latency_ms": 16.27,
+        "max_action_saturation": 0.0
+      },
+      "execution_interface": {
+        "target_reference": "accepted_target",
+        "n_action_steps": 2,
+        "temporal_ensemble_coeff": null,
+        "supervised_action_steps": 2,
+        "ablation": false,
+        "checkpoint_contract_modified": false,
+        "note": "Default execution interface."
+      },
+      "initial": {
+        "native_readback": [
+          -0.04142759712386541,
+          -1.7046687742612723,
+          1.5136415608504334,
+          1.1131748372002752,
+          0.037591708886580574,
+          0.6419791769294739
+        ],
+        "ee_pose": [
+          [
+            0.6035917813018005,
+            -0.0325850823518821,
+            0.7966273745943209,
+            0.19103546007207578
+          ],
+          [
+            0.025019672083397268,
+            0.9994465206392215,
+            0.02192415086139935,
+            0.005779604854951829
+          ],
+          [
+            -0.7969008580455657,
+            0.006698118413046153,
+            0.604072973783769,
+            0.04040224282375393
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "image_sha256": {
+          "observation.images.iphone": "ca067a53687f0ae2c5e2dd67c9e8db107d5b42a50bfd2bfc05a400dd920c3318"
+        }
+      },
+      "trace": "outputs/v2/history4_execution_20261026/queue2/ticks.jsonl",
+      "trace_sha256": "93993efd85585747db519d38d7f396a401863a01e0bee415c014aa15f7b89a8e",
+      "summary_path": "outputs/v2/history4_execution_20261026/queue2/summary.json",
+      "max_robot_table_penetration_m": 0.0006634784623911206,
+      "trial": {
+        "experiment_id": "DEVELOPMENT_HISTORY4_QUEUE2",
+        "controller_source": "LEARNED_ACT",
+        "robot": "so101",
+        "seed": 0,
+        "checkpoint_sha256": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+        "checkpoint_step": 2000,
+        "success": false,
+        "pick_place_success": false,
+        "lifted": false,
+        "delivered": false,
+        "released": false,
+        "rolled_out": false,
+        "ball_escaped_table": false,
+        "phase_failed": "approach",
+        "pick_place_phase_failed": "approach",
+        "min_ee_ball_distance_m": 0.25039,
+        "ticks": 375,
+        "ik_rejections": 326,
+        "mean_latency_ms": 16.27,
+        "max_action_saturation": 0.0,
+        "video_path": "outputs/v2/history4_execution_20261026/queue2/trial_seed0000_LEARNED_ACT.mp4",
+        "abort": null,
+        "wall_s": 8.37,
+        "warmup_latency_ms": 21.0,
+        "policy_calls": 188,
+        "max_latency_ms": 21.0,
+        "control_step_wall_ms": {
+          "mean": 20.974352568387985,
+          "p95": 31.317729130387306,
+          "max": 58.97858401294798,
+          "scope": "host simulation step including next rendered observation; physical camera/motor timestamps unavailable"
+        },
+        "adapter_stats": null
+      },
+      "ik_reasons": {
+        "accepted": 49,
+        "collision": 326
+      },
+      "first_rejection_tick": 50,
+      "minimum_tool_ball_distance_mm": 250.39108365150432,
+      "trace_control_step_ms": {
+        "mean": 20.97652008384466,
+        "p95": 31.321812432724983,
+        "max": 58.9829160599038
+      }
+    },
+    "queue1": {
+      "summary": {
+        "n": 1,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 319,
+        "mean_latency_ms": 16.17,
+        "max_action_saturation": 0.0
+      },
+      "execution_interface": {
+        "target_reference": "accepted_target",
+        "n_action_steps": 1,
+        "temporal_ensemble_coeff": null,
+        "supervised_action_steps": 2,
+        "ablation": true,
+        "checkpoint_contract_modified": false,
+        "note": "Execution configuration ablation; frozen checkpoint, labels and policy observations unchanged. This is not a trained contract change."
+      },
+      "initial": {
+        "native_readback": [
+          -0.04142759712386541,
+          -1.7046687742612723,
+          1.5136415608504334,
+          1.1131748372002752,
+          0.037591708886580574,
+          0.6419791769294739
+        ],
+        "ee_pose": [
+          [
+            0.6035917813018005,
+            -0.0325850823518821,
+            0.7966273745943209,
+            0.19103546007207578
+          ],
+          [
+            0.025019672083397268,
+            0.9994465206392215,
+            0.02192415086139935,
+            0.005779604854951829
+          ],
+          [
+            -0.7969008580455657,
+            0.006698118413046153,
+            0.604072973783769,
+            0.04040224282375393
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "image_sha256": {
+          "observation.images.iphone": "ca067a53687f0ae2c5e2dd67c9e8db107d5b42a50bfd2bfc05a400dd920c3318"
+        }
+      },
+      "trace": "outputs/v2/history4_execution_20261026/queue1/ticks.jsonl",
+      "trace_sha256": "650d4fd615acfd26c2994aae3bb9ea9626894dea8308dd902934dafbea91cbec",
+      "summary_path": "outputs/v2/history4_execution_20261026/queue1/summary.json",
+      "max_robot_table_penetration_m": 0.0006020009060820898,
+      "trial": {
+        "experiment_id": "DEVELOPMENT_HISTORY4_QUEUE1",
+        "controller_source": "LEARNED_ACT",
+        "robot": "so101",
+        "seed": 0,
+        "checkpoint_sha256": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+        "checkpoint_step": 2000,
+        "success": false,
+        "pick_place_success": false,
+        "lifted": false,
+        "delivered": false,
+        "released": false,
+        "rolled_out": false,
+        "ball_escaped_table": false,
+        "phase_failed": "approach",
+        "pick_place_phase_failed": "approach",
+        "min_ee_ball_distance_m": 0.23899,
+        "ticks": 375,
+        "ik_rejections": 319,
+        "mean_latency_ms": 16.17,
+        "max_action_saturation": 0.0,
+        "video_path": "outputs/v2/history4_execution_20261026/queue1/trial_seed0000_LEARNED_ACT.mp4",
+        "abort": null,
+        "wall_s": 11.35,
+        "warmup_latency_ms": 18.4,
+        "policy_calls": 375,
+        "max_latency_ms": 23.86,
+        "control_step_wall_ms": {
+          "mean": 29.26784287299961,
+          "p95": 31.322553649079055,
+          "max": 51.41008296050131,
+          "scope": "host simulation step including next rendered observation; physical camera/motor timestamps unavailable"
+        },
+        "adapter_stats": null
+      },
+      "ik_reasons": {
+        "accepted": 56,
+        "collision": 319
+      },
+      "first_rejection_tick": 56,
+      "minimum_tool_ball_distance_mm": 238.9908543551362,
+      "trace_control_step_ms": {
+        "mean": 29.270049900747836,
+        "p95": 31.324632954783738,
+        "max": 51.41362501308322
+      }
+    },
+    "ensemble_0p01": {
+      "summary": {
+        "n": 1,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 329,
+        "mean_latency_ms": 15.92,
+        "max_action_saturation": 0.0
+      },
+      "execution_interface": {
+        "target_reference": "accepted_target",
+        "n_action_steps": 1,
+        "temporal_ensemble_coeff": 0.01,
+        "supervised_action_steps": 2,
+        "ablation": true,
+        "checkpoint_contract_modified": false,
+        "note": "Execution configuration ablation; frozen checkpoint, labels and policy observations unchanged. This is not a trained contract change."
+      },
+      "initial": {
+        "native_readback": [
+          -0.04142759712386541,
+          -1.7046687742612723,
+          1.5136415608504334,
+          1.1131748372002752,
+          0.037591708886580574,
+          0.6419791769294739
+        ],
+        "ee_pose": [
+          [
+            0.6035917813018005,
+            -0.0325850823518821,
+            0.7966273745943209,
+            0.19103546007207578
+          ],
+          [
+            0.025019672083397268,
+            0.9994465206392215,
+            0.02192415086139935,
+            0.005779604854951829
+          ],
+          [
+            -0.7969008580455657,
+            0.006698118413046153,
+            0.604072973783769,
+            0.04040224282375393
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "image_sha256": {
+          "observation.images.iphone": "ca067a53687f0ae2c5e2dd67c9e8db107d5b42a50bfd2bfc05a400dd920c3318"
+        }
+      },
+      "trace": "outputs/v2/history4_execution_20261026/ensemble_0p01/ticks.jsonl",
+      "trace_sha256": "b6aab30f90d483285e9994b6ca22fb86c72b9c5b39f4c28a8f1e4ed305d50b11",
+      "summary_path": "outputs/v2/history4_execution_20261026/ensemble_0p01/summary.json",
+      "max_robot_table_penetration_m": 0.0006267894074015734,
+      "trial": {
+        "experiment_id": "DEVELOPMENT_HISTORY4_ENSEMBLE_0P01",
+        "controller_source": "LEARNED_ACT",
+        "robot": "so101",
+        "seed": 0,
+        "checkpoint_sha256": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+        "checkpoint_step": 2000,
+        "success": false,
+        "pick_place_success": false,
+        "lifted": false,
+        "delivered": false,
+        "released": false,
+        "rolled_out": false,
+        "ball_escaped_table": false,
+        "phase_failed": "approach",
+        "pick_place_phase_failed": "approach",
+        "min_ee_ball_distance_m": 0.24103,
+        "ticks": 375,
+        "ik_rejections": 329,
+        "mean_latency_ms": 15.92,
+        "max_action_saturation": 0.0,
+        "video_path": "outputs/v2/history4_execution_20261026/ensemble_0p01/trial_seed0000_LEARNED_ACT.mp4",
+        "abort": null,
+        "wall_s": 11.22,
+        "warmup_latency_ms": 16.83,
+        "policy_calls": 375,
+        "max_latency_ms": 18.17,
+        "control_step_wall_ms": {
+          "mean": 28.942852553601067,
+          "p95": 31.05458334321156,
+          "max": 50.98783294670284,
+          "scope": "host simulation step including next rendered observation; physical camera/motor timestamps unavailable"
+        },
+        "adapter_stats": null
+      },
+      "ik_reasons": {
+        "accepted": 46,
+        "collision": 329
+      },
+      "first_rejection_tick": 47,
+      "minimum_tool_ball_distance_mm": 241.03441619932502,
+      "trace_control_step_ms": {
+        "mean": 28.945506469967466,
+        "p95": 31.057195598259568,
+        "max": 50.99329096265137
+      }
+    }
+  }
+}
