@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import hashlib
 import json
 import sys
 import time
@@ -28,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 
-from real2sim.config import load_yaml, validate_camera_keys
+from real2sim.config import load_yaml, sha256_file, validate_camera_keys
 from real2sim.data.labels import (
     ABSOLUTE_ACTION_NAMES,
     ACTION_NAMES,
@@ -46,11 +45,7 @@ PREPARE_VERSION = "v2"
 
 
 def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for b in iter(lambda: f.read(1 << 22), b""):
-            h.update(b)
-    return h.hexdigest()
+    return sha256_file(path)
 
 
 def compute_stats(x: np.ndarray) -> dict:

@@ -26,7 +26,6 @@ orange arm): this is a real domain gap for the frozen policy and is reported as 
 
 from __future__ import annotations
 
-import hashlib
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -35,7 +34,7 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from real2sim.config import REPO_ROOT, load_yaml, project_path
+from real2sim.config import REPO_ROOT, load_yaml, project_path, sha256_file
 from real2sim.sim.model import camera_xyaxes as so101_camera_xyaxes
 from real2sim.sim.model import task_frame_offset as so101_task_frame_offset
 
@@ -55,7 +54,7 @@ MIN_WALL_BOXES = 12
 
 
 def sha256_of(path: str | Path) -> str:
-    return hashlib.sha256(project_path(path).read_bytes()).hexdigest()
+    return sha256_file(project_path(path))
 
 
 def verify_panda_assets(manifest_path: str | Path, model_path: str | Path) -> dict:
@@ -70,10 +69,9 @@ def verify_panda_assets(manifest_path: str | Path, model_path: str | Path) -> di
     for row in rows:
         asset = manifest_file.parent / row["path"]
         payload = asset.read_bytes()
-        if len(payload) != row["bytes"] or hashlib.sha256(payload).hexdigest() != row["sha256"]:
+        if len(payload) != row["bytes"] or sha256_file(asset) != row["sha256"]:
             raise ValueError(f"asset hash mismatch: {asset}")
     return next(r for r in rows if r["path"] == relative)
-
 
 def _numbers(values) -> str:
     return " ".join(f"{float(v):.12g}" for v in values)
