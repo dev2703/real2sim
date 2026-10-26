@@ -2,7 +2,8 @@
 robot: so101
 model: assets/menagerie/robotstudio_so101/so101.xml
 manifest: assets/menagerie/manifest.json
-task_config: configs/v2/task.calibrated.yaml
+# Canonical v2 task until a measured calibrated task file is accepted.
+task_config: configs/v2/task.exploratory_20261022.yaml
 data_config: configs/v2/data.yaml
 physics_hz: 500
 control_hz: 12.5

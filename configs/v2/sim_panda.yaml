@@ -3,7 +3,8 @@ robot: panda
 model: assets/menagerie/franka_emika_panda/panda.xml
 model_sha256: 96ad67da03710f17f798c9478fd9e9efdf24a3bf8359f05e456dd9fb158ea273
 manifest: assets/menagerie/manifest.json
-task_config: configs/v2/task.calibrated.yaml
+# Canonical v2 task until a measured calibrated task file is accepted.
+task_config: configs/v2/task.exploratory_20261022.yaml
 data_config: configs/v2/data.yaml
 physics_hz: 500
 control_hz: 12.5
