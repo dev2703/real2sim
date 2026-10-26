@@ -7,13 +7,13 @@ import json
 from pathlib import Path
 
 import numpy as np
+import run_v2_semantic_act_20261027 as experiment
 import torch
 from lerobot.policies.act.modeling_act import ACTPolicy
 
-import run_v2_semantic_act_20261027 as experiment
 
-
-def run(source, out, seeds, *, margin=.01, parked_perception=True):
+def run(source, out, seeds, *, margin=.01, parked_perception=True, position_offset=0,
+        robots=("so101", "panda"), selected_so_orientation=False):
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
@@ -21,6 +21,8 @@ def run(source, out, seeds, *, margin=.01, parked_perception=True):
     (out / "checkpoint").symlink_to(checkpoint, target_is_directory=True)
     torch.set_num_threads(2)
     policy = ACTPolicy.from_pretrained(checkpoint, strict=True, local_files_only=True).eval()
+    if position_offset < 0 or position_offset >= policy.config.chunk_size:
+        raise ValueError("position preview must lie within the fully supervised chunk")
     stats = json.loads((source / "normalization.json").read_text())
     points = np.load(source / "semantic_data.npz")["state"]
     experiment.SEEDS = seeds
@@ -33,12 +35,15 @@ def run(source, out, seeds, *, margin=.01, parked_perception=True):
         "checkpoint_sha256": experiment.digest(checkpoint / "model.safetensors"),
         "training_robot": "so101", "panda_training_examples": 0, "no_retraining": True,
         "joint_margin_rad": margin, "panda_parked_RGB_then_mapped_start": parked_perception,
+        "position_forecast_offset": position_offset, "intent_forecast_offset": 0,
+        "robots": list(robots), "selected_so_orientation": selected_so_orientation,
         "physical_calibration_accepted": False, "source_sha256_before": before}
     experiment.save(out / "report.json", report)
-    report["so101"] = experiment.evaluate(policy, stats, out, "so101", points[0, :3], joint_margin=margin)
-    experiment.save(out / "report.json", report)
-    report["panda"] = experiment.evaluate(policy, stats, out, "panda", points[0, :3],
-        joint_margin=margin, parked_perception=parked_perception)
+    for robot in robots:
+        report[robot] = experiment.evaluate(policy, stats, out, robot, points[0, :3],
+            joint_margin=margin, parked_perception=parked_perception, position_offset=position_offset,
+            selected_so_orientation=selected_so_orientation)
+        experiment.save(out / "report.json", report)
     after = {str(p): experiment.digest(p) for p in dependencies}
     report.update(status="complete", source_sha256_after=after,
         runtime_source_changes=[p for p in before if before[p] != after[p]],
@@ -54,6 +59,10 @@ if __name__ == "__main__":
     parser.add_argument("--seeds", type=int, nargs="+", default=[300, 301, 302, 303, 304])
     parser.add_argument("--joint-margin", type=float, default=.01)
     parser.add_argument("--mapped-perception", action="store_true")
+    parser.add_argument("--position-offset", type=int, default=0)
+    parser.add_argument("--robots", nargs="+", choices=("so101", "panda"), default=["so101", "panda"])
+    parser.add_argument("--selected-so-orientation", action="store_true")
     args = parser.parse_args()
     run(args.source, args.out, args.seeds, margin=args.joint_margin,
-        parked_perception=not args.mapped_perception)
+        parked_perception=not args.mapped_perception, position_offset=args.position_offset,
+        robots=args.robots, selected_so_orientation=args.selected_so_orientation)

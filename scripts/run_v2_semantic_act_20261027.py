@@ -214,10 +214,11 @@ def train_model(out, payload):
 
 
 class PointAdapter:
-    def __init__(self, env, robot, objects, *, joint_margin=0.):
+    def __init__(self, env, robot, objects, *, joint_margin=0., orientation_reference=None):
         self.env, self.robot, self.objects = env, robot, objects
         self.offset = SO_OFFSET if robot == "so101" else PANDA_OFFSET
         self.joint_margin = float(joint_margin)
+        self.orientation_reference = orientation_reference
         config = load_yaml(SO_SCENE) if robot == "so101" else env.config
         self.ik = NativeKinematics(env.model, config) if robot == "so101" else PandaIK(env.model, config, task_origin=env.offset)
         self.calls = 0
@@ -239,7 +240,8 @@ class PointAdapter:
         else:
             q = env.sim_state()
             grip = float(np.clip(env.mapping.gripper_real_to_sim_rad(90. if opened else 0.), *env.limits[5]))
-            reference = grasp_orientation(self.objects[:2], 15.)
+            reference = (grasp_orientation(self.objects[:2], 15.) if self.orientation_reference is None
+                         else self.orientation_reference)
 
             def residual(arm):
                 T = self.ik.forward(np.r_[arm, grip])
@@ -262,7 +264,26 @@ class PointAdapter:
         return obs, truncated, info, accepted, reason, requested
 
 
-def evaluate(policy, stats, out, robot, start_point, *, joint_margin=0., parked_perception=False):
+def select_so_orientation(env, objects):
+    """Query feasible jaw orientation once; no geometric action is executed."""
+    from real2sim.policy.visual_waypoint import VisualWaypointController
+
+    query = VisualWaypointController(env, robot="so101")
+    table = env.table_top - env.offset[2]
+    query.ball = np.r_[objects[:2], table + env.task["ball"]["radius"]]
+    query.bowl = np.r_[objects[2:], table + env.bowl["height"]]
+    accepted = query._plan_grasp()
+    record = {"accepted": accepted, "ik_setup_queries": query.ik_calls,
+        "geometric_actions_executed": 0, "purpose": "jaw orientation prior only; all XYZ and intent remain ACT outputs",
+        "failure": query.failure}
+    if not accepted:
+        return None, record
+    record["rotation"] = query.grasp_rotation.tolist()
+    return query.grasp_rotation.copy(), record
+
+
+def evaluate(policy, stats, out, robot, start_point, *, joint_margin=0., parked_perception=False,
+             position_offset=0, selected_so_orientation=False):
     directory = out / robot
     directory.mkdir()
     config = load_yaml(SO_SCENE if robot == "so101" else PANDA_SCENE)
@@ -302,17 +323,24 @@ def evaluate(policy, stats, out, robot, start_point, *, joint_margin=0., parked_
                 objects = acquire(env)
             tracker = TrialTracker(success_hold_ticks=math.ceil(12.5), approach_distance_m=.03,
                 table_top_z=env.table_top, ball_radius_m=env.task["ball"]["radius"])
+            orientation, orientation_setup = None, None
+            if robot == "so101" and objects is not None and selected_so_orientation:
+                orientation, orientation_setup = select_so_orientation(env, objects)
             trial = directory / f"seed_{seed}"
             trial.mkdir()
             writer = CaptionedVideo(trial / "rollout.mp4", 12.5, (360, 640))
             last_point, last_intent, age = None, 1., 0.
             reasons, abort = {}, None
-            adapter = PointAdapter(env, robot, objects, joint_margin=joint_margin) if objects is not None else None
+            adapter = PointAdapter(env, robot, objects, joint_margin=joint_margin,
+                orientation_reference=orientation) if objects is not None else None
             with (trial / "ticks.jsonl").open("w") as stream:
                 try:
                     for tick in range(env.max_episode_steps):
                         if objects is None:
                             abort = "Initial RGB ball/bowl detection unavailable"
+                            break
+                        if orientation_setup is not None and not orientation_setup["accepted"]:
+                            abort = "Robot jaw-orientation setup found no feasible branch"
                             break
                         p = point(env.ee_pose(), adapter.offset)
                         velocity = np.zeros(3) if last_point is None else (p - last_point) * 12.5
@@ -320,15 +348,19 @@ def evaluate(policy, stats, out, robot, start_point, *, joint_margin=0., parked_
                         batch = {"observation.state": torch.tensor(normalized(state, stats["state"]), dtype=torch.float32)[None],
                             "observation.environment_state": torch.tensor(normalized(objects, stats["objects"]), dtype=torch.float32)[None]}
                         with torch.inference_mode():
-                            raw = policy.predict_action_chunk(batch)[0, 0].numpy()
+                            chunk = policy.predict_action_chunk(batch)[0].numpy()
+                        raw = chunk[position_offset].copy()
+                        raw[3] = chunk[0, 3]
                         action = raw * np.asarray(stats["action"]["std"]) + np.asarray(stats["action"]["mean"])
                         intent = float(action[3] >= .5)
                         obs, truncated, info, accepted, reason, requested = adapter.apply(action[:3], bool(intent))
                         reasons[reason] = reasons.get(reason, 0) + 1
                         pm = info["privileged_metrics"]
-                        done = tracker.update(pm, ik_rejected=not accepted)
+                        done = tracker.update(pm, ik_rejected=not accepted,
+                            saturation=float(np.mean(info["control"]["limit_clipped"])))
                         stream.write(json.dumps({"tick": tick, "state": state, "rgb_objects": objects,
                             "action": action, "bounded_point": requested, "intent": intent,
+                            "position_forecast_offset": position_offset, "intent_forecast_offset": 0,
                             "accepted": accepted, "reason": reason, "control": info["control"],
                             "scoring_only": pm}, default=serial, allow_nan=False) + "\n")
                         rgb = env.render("iphone")
@@ -346,7 +378,9 @@ def evaluate(policy, stats, out, robot, start_point, *, joint_margin=0., parked_
                 robot=robot, seed=seed, checkpoint_sha256=digest(out / "checkpoint/model.safetensors"),
                 checkpoint_step=2000, mean_latency_ms=None, video_path=str(trial / "rollout.mp4"), abort=abort)
             rows.append({**row, "adapter_reasons": reasons, "rgb_objects": objects,
-                         "perception_setup": setup, "joint_command_interior_margin_rad": joint_margin})
+                         "perception_setup": setup, "joint_command_interior_margin_rad": joint_margin,
+                         "position_forecast_offset": position_offset, "intent_forecast_offset": 0,
+                         "orientation_setup": orientation_setup})
             save(directory / "report.json", {"summary": summarize(rows), "trials": rows,
                 "panda_base_dx_m": -.15 if robot == "panda" else None,
                 "mapped_panda_initial_grasp_point": start_point if robot == "panda" else None})
