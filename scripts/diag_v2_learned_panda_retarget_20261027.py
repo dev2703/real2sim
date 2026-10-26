@@ -59,10 +59,31 @@ def write_json(path, value):
     path.write_text(json.dumps(value, default=json_default, indent=2, allow_nan=False) + "\n")
 
 
+def validate_learned_trace(trace_path, checkpoint_sha256):
+    """Pin a trace to a matching frozen, unassisted learned-source evaluation."""
+    report_path = trace_path.parent.parent / "report.json"
+    report = json.loads(report_path.read_text())
+    if (report.get("checkpoint_sha256") != checkpoint_sha256
+            or report.get("teacher_or_ik_corrections") is not False):
+        raise ValueError("source trace must be from the same frozen ACT without teacher corrections")
+    matches = [trial for trial in report["trials"]
+               if Path(trial["trace"]).resolve() == trace_path.resolve()]
+    if len(matches) != 1 or matches[0].get("teacher_goals_or_ik_corrections") is not False:
+        raise ValueError("source trace is not uniquely identified as an unassisted ACT trial")
+    trace = [json.loads(line) for line in trace_path.read_text().splitlines()]
+    if not trace or len(trace) != matches[0]["ticks"]:
+        raise ValueError("source trace row count differs from its scored trial")
+    return trace, {"trace": str(trace_path), "trace_sha256": digest(trace_path),
+        "evaluation_report": str(report_path), "evaluation_report_sha256": digest(report_path),
+        "source_seed": matches[0]["seed"],
+        "source_pick_place_success": matches[0]["pick_place_success"],
+        "checkpoint_sha256": checkpoint_sha256}
+
+
 class VirtualSource:
     """Robot-only pose/opening projection; no object goals or task phase input."""
 
-    def __init__(self, scene):
+    def __init__(self, scene, *, panda_offset=PANDA_OFFSET):
         self.source = So101PickPlaceEnv(scene, render_images=False)
         self.source.reset(seed=0)
         self.mapping = self.source.mapping
@@ -70,6 +91,7 @@ class VirtualSource:
         self.limits = self.source.limits.copy()
         self.q = self.source.initial_qpos.copy()
         self.last_target = self.q.copy()
+        self.panda_offset = np.asarray(panda_offset, float).copy()
         self.percent = np.linspace(0., 100., 1001)
         fixed = self.source.model.geom("fixed_jaw_sph_tip1").id
         moving = self.source.model.geom("moving_jaw_sph_tip1").id
@@ -95,7 +117,7 @@ class VirtualSource:
 
     def source_state(self, panda):
         pose = panda.ee_pose()
-        equivalent_point = pose[:3, 3] + pose[:3, :3] @ PANDA_OFFSET
+        equivalent_point = pose[:3, 3] + pose[:3, :3] @ self.panda_offset
         previous = self.q[:5].copy()
 
         def residual(q):
@@ -128,7 +150,7 @@ class VirtualSource:
 def target_from_source(source, q):
     target = np.eye(4)
     target[:3, :3] = POINTING_DOWN
-    target[:3, 3] = source.ball_point(q) - POINTING_DOWN @ PANDA_OFFSET
+    target[:3, 3] = source.ball_point(q) - POINTING_DOWN @ source.panda_offset
     return target
 
 
@@ -144,10 +166,11 @@ def panda_opening_from_percent(percent, maximum):
     return float(np.clip(percent / 90., 0., 1.) * maximum)
 
 
-def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None):
+def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None, *, seat_mm=8.):
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
+    (out / "executed_script.py").write_bytes(Path(__file__).read_bytes())
     torch.set_num_threads(2)
     policy, norm, contract = load_checkpoint(checkpoint, "cpu")
     if contract["state_names"] != contract["action_names"] or len(contract["state_names"]) != 6:
@@ -158,23 +181,30 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
     config["action_limits"].update(max_translation_m=.024, max_rotation_rad=.24)
     config_path = out / "sim_panda.yaml"
     config_path.write_text(yaml.safe_dump(config, sort_keys=False))
-    source = VirtualSource(source_scene)
+    if not np.isfinite(seat_mm) or not 0 <= seat_mm <= 30:
+        raise ValueError("Panda seating offset must be in0..30mm")
+    panda_offset = np.array([-seat_mm / 1000., 0., 0.])
+    source = VirtualSource(source_scene, panda_offset=panda_offset)
     rows = []
     sources = [Path(__file__), source_scene, panda_scene, checkpoint / "model.safetensors",
         checkpoint / "real2sim_contract.json", project_path(config["task_config"])]
+    trace, provenance = None, None
+    if mode == "trajectory":
+        if trace_path is None:
+            raise ValueError("Trajectory mode needs a learned-source trace")
+        trace, provenance = validate_learned_trace(trace_path, digest(checkpoint / "model.safetensors"))
+        sources.extend([trace_path, trace_path.parent.parent / "report.json"])
     hashes = {str(p): digest(p) for p in sources}
-    trace = None if trace_path is None else [json.loads(line) for line in trace_path.read_text().splitlines()]
-    if mode == "trajectory" and trace is None:
-        raise ValueError("Trajectory mode needs a learned-source trace")
     report = {"schema": "learned_panda_retarget_20261027_v1", "status": "running", "mode": mode,
         "controller_source": "FROZEN_ACT_PANDA_RGB_VIRTUAL_JOINTS" if mode == "live" else "FROZEN_ACT_TRAJECTORY_RETARGET",
         "policy_images_from_panda": mode == "live", "waypoint_or_teacher_actions": False,
         "panda_orientation_adapter": "Fixed top-down Panda grasp; SO-101 rotational motion is not copied",
-        "grasp_point_offsets_m": {"so101": SOURCE_OFFSET, "panda": PANDA_OFFSET},
+        "grasp_point_offsets_m": {"so101": SOURCE_OFFSET, "panda": panda_offset},
         "source_joint_projection": "Position-only virtual SO-101 IK plus CAD jaw-gap/readback mapping",
         "panda_gripper_command_mapping": "Source 0percent closed,90percent open maps linearly to Panda0..maximum opening; metric jaw-gap clipping is not used for commands",
         "checkpoint": str(checkpoint), "checkpoint_sha256": hashes[str(checkpoint / "model.safetensors")],
         "physical_calibration_accepted": False, "source_sha256_before": hashes, "trials": []}
+    report["learned_source_trajectory_provenance"] = provenance
     write_json(out / "report.json", report)
     try:
         with closing(PandaPickPlaceEnv(config_path)) as env:
@@ -300,6 +330,8 @@ if __name__ == "__main__":
     parser.add_argument("--mode", choices=("live", "trajectory"), required=True)
     parser.add_argument("--trace", type=Path)
     parser.add_argument("--seeds", type=int, nargs="+", default=[100, 300])
+    parser.add_argument("--panda-seat-mm", type=float, default=8.)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    run(args.checkpoint, args.source_scene, args.panda_scene, args.out, args.mode, args.seeds, args.trace)
+    run(args.checkpoint, args.source_scene, args.panda_scene, args.out, args.mode, args.seeds,
+        args.trace, seat_mm=args.panda_seat_mm)
