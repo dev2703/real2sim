@@ -166,9 +166,13 @@ def panda_opening_from_percent(percent, maximum):
     return float(np.clip(percent / 90., 0., 1.) * maximum)
 
 
-def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None, *, seat_mm=8.):
+def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None, *,
+        seat_mm=8., trajectory_time_scale=1.):
     if out.exists():
         raise FileExistsError(out)
+    if (not np.isfinite(trajectory_time_scale) or trajectory_time_scale < 1
+            or (mode == "live" and trajectory_time_scale != 1)):
+        raise ValueError("trajectory time scale must be >=1 and only applies to recorded trajectory mode")
     out.mkdir(parents=True)
     (out / "executed_script.py").write_bytes(Path(__file__).read_bytes())
     torch.set_num_threads(2)
@@ -187,7 +191,11 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
     source = VirtualSource(source_scene, panda_offset=panda_offset)
     rows = []
     sources = [Path(__file__), source_scene, panda_scene, checkpoint / "model.safetensors",
-        checkpoint / "real2sim_contract.json", project_path(config["task_config"])]
+        checkpoint / "real2sim_contract.json", checkpoint / "config.json", checkpoint / "stats.json",
+        project_path(config["task_config"]), project_path(config["data_config"]),
+        project_path(config["model"]), project_path(source.source.config["model"]),
+        Path("src/real2sim/panda/adapter.py"), Path("src/real2sim/panda/env.py"),
+        Path("src/real2sim/geometry/so101_fk.py"), Path("src/real2sim/policy/bounded_joint.py")]
     trace, provenance = None, None
     if mode == "trajectory":
         if trace_path is None:
@@ -202,6 +210,8 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
         "grasp_point_offsets_m": {"so101": SOURCE_OFFSET, "panda": panda_offset},
         "source_joint_projection": "Position-only virtual SO-101 IK plus CAD jaw-gap/readback mapping",
         "panda_gripper_command_mapping": "Source 0percent closed,90percent open maps linearly to Panda0..maximum opening; metric jaw-gap clipping is not used for commands",
+        "trajectory_time_scale": trajectory_time_scale,
+        "trajectory_retiming": "Linear interpolation of frozen source accepted native commands; no object/phase-dependent timing",
         "checkpoint": str(checkpoint), "checkpoint_sha256": hashes[str(checkpoint / "model.safetensors")],
         "physical_calibration_accepted": False, "source_sha256_before": hashes, "trials": []}
     report["learned_source_trajectory_provenance"] = provenance
@@ -254,8 +264,12 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
                                     predicted = norm.unaction(policy.predict_action_chunk(batch))[0, 0].numpy()
                                 raw_source, bounded_source = source.source_action(predicted)
                             else:
-                                entry = trace[min(tick, len(trace) - 1)]
-                                raw_source = np.asarray(entry["control"]["applied_radians"], float)
+                                source_tick = min(tick / trajectory_time_scale, len(trace) - 1)
+                                left = int(math.floor(source_tick))
+                                right = min(left + 1, len(trace) - 1)
+                                fraction = source_tick - left
+                                raw_source = ((1 - fraction) * np.asarray(trace[left]["control"]["applied_radians"], float)
+                                    + fraction * np.asarray(trace[right]["control"]["applied_radians"], float))
                                 bounded_source = np.clip(raw_source, *source.limits.T)
                                 source.last_target = bounded_source.copy()
                                 virtual, projection_error = None, None
@@ -331,7 +345,8 @@ if __name__ == "__main__":
     parser.add_argument("--trace", type=Path)
     parser.add_argument("--seeds", type=int, nargs="+", default=[100, 300])
     parser.add_argument("--panda-seat-mm", type=float, default=8.)
+    parser.add_argument("--trajectory-time-scale", type=float, default=1.)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     run(args.checkpoint, args.source_scene, args.panda_scene, args.out, args.mode, args.seeds,
-        args.trace, seat_mm=args.panda_seat_mm)
+        args.trace, seat_mm=args.panda_seat_mm, trajectory_time_scale=args.trajectory_time_scale)
