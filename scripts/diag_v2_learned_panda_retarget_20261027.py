@@ -31,6 +31,7 @@ from real2sim.geometry.so101_fk import So101FK
 from real2sim.panda.adapter import PandaIK
 from real2sim.panda.env import PandaPickPlaceEnv
 from real2sim.panda.model import POINTING_DOWN
+from real2sim.panda.retarget import classify_contacts
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.adapters import normalize_image_chw
 from real2sim.policy.bounded_joint import bound_gripper_command
@@ -104,7 +105,7 @@ class VirtualSource:
             bounds=tuple(self.limits[:5].T), max_nfev=60,
             ftol=1e-8, xtol=1e-8, gtol=1e-8)
         error = float(np.linalg.norm(self.ball_point(fitted.x) - equivalent_point))
-        if not fitted.success or error > .003:
+        if not np.isfinite(fitted.x).all() or error > .003:
             raise RuntimeError(f"Panda pose has no virtual SO-101 representation within3mm: {error:.6f}m")
         opening = panda.gripper_opening()
         # Panda cannot open as far as the SO-101. At the fully-open stop the
@@ -129,6 +130,18 @@ def target_from_source(source, q):
     target[:3, :3] = POINTING_DOWN
     target[:3, 3] = source.ball_point(q) - POINTING_DOWN @ PANDA_OFFSET
     return target
+
+
+def panda_opening_from_percent(percent, maximum):
+    """Map the source teacher's 0=closed/90=open commands to Panda endpoints.
+
+    Source jaw CAD width can exceed Panda's maximum opening. Clipping that metric
+    width delays closure; command intent therefore maps endpoint-to-endpoint,
+    while measured readbacks remain a separately declared geometric projection.
+    """
+    if not np.isfinite([percent, maximum]).all() or maximum <= 0:
+        raise ValueError("finite source percentage and positive Panda opening required")
+    return float(np.clip(percent / 90., 0., 1.) * maximum)
 
 
 def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None):
@@ -159,6 +172,7 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
         "panda_orientation_adapter": "Fixed top-down Panda grasp; SO-101 rotational motion is not copied",
         "grasp_point_offsets_m": {"so101": SOURCE_OFFSET, "panda": PANDA_OFFSET},
         "source_joint_projection": "Position-only virtual SO-101 IK plus CAD jaw-gap/readback mapping",
+        "panda_gripper_command_mapping": "Source 0percent closed,90percent open maps linearly to Panda0..maximum opening; metric jaw-gap clipping is not used for commands",
         "checkpoint": str(checkpoint), "checkpoint_sha256": hashes[str(checkpoint / "model.safetensors")],
         "physical_calibration_accepted": False, "source_sha256_before": hashes, "trials": []}
     write_json(out / "report.json", report)
@@ -221,7 +235,7 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
                             if np.linalg.norm(delta) > .024:
                                 desired[:3, 3] = observed[:3, 3] + delta * (.024 / np.linalg.norm(delta))
                             source_pct = float(source.mapping.gripper_sim_to_real_percent(bounded_source[5]))
-                            width = float(min(env.max_opening, np.interp(source_pct, source.percent, source.gaps)))
+                            width = panda_opening_from_percent(source_pct, env.max_opening)
                             solved = ik.solve(desired, env.arm_qpos(), finger_opening=max(width, env.gripper_opening()))
                             reason = solved.reason
                             command = np.r_[solved.qpos if solved.accepted else env.arm_qpos(), width]
@@ -229,7 +243,8 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
                             durations.append((time.perf_counter() - started) * 1000)
                             reasons[reason] = reasons.get(reason, 0) + 1
                             pm = info["privileged_metrics"]
-                            max_penetration = max(max_penetration, pm["robot_table_penetration_m"])
+                            max_penetration = max(max_penetration,
+                                classify_contacts(pm["contacts"])["robot_table_penetration_m"])
                             if projection_error is not None:
                                 error_max = max(error_max, projection_error)
                             done = tracker.update(pm, saturation=float(np.mean(info["control"]["limit_clipped"])),

@@ -1,0 +1,488 @@
+{
+  "schema": "hf_act_h256_review_20261027_v1",
+  "repo_url": "https://huggingface.co/bottowork/so101-act-h256-b16",
+  "revision": "e696c8a078935432e3501e2c28c1fb2598fbff7e",
+  "state_action_semantics": "5armdegrees+gripperpercent;absolutejointcommands",
+  "source_dataset_fps": 25.0,
+  "saved_image_order": [
+    "observation.images.top",
+    "observation.images.iphone"
+  ],
+  "saved_image_shape_chw": [
+    3,
+    360,
+    640
+  ],
+  "chunk_size": 50,
+  "n_action_steps": 10,
+  "experiment_requested_steps": 40000,
+  "latest_saved_training_state_step": 30000,
+  "latest_saved_best_val": 0.18633821955882013,
+  "physical_calibration_accepted": false,
+  "saved_processors_used_exactly_once": true,
+  "all_arm_guards_unchanged": true,
+  "gripper_only_physical_saturation": true,
+  "realdata_long_ACT_placements_demonstrated": false,
+  "cases": {
+    "root": {
+      "report": "outputs/v2/hf_act_h256_20261027/report.json",
+      "report_sha256": "3159a9904eee8610229b0e173f527689b922dc0adec49dd761174f6873fde374",
+      "weights_sha256": "c3b65a5d97e1d78866062503b63b7c63fec60ec7c623fa264c82ea96a1c16877",
+      "summary": {
+        "n": 3,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_latency_ms": 117.93578036853836,
+        "max_action_saturation": 0.0
+      },
+      "trials": [
+        {
+          "experiment_id": "HF_ACT_H256_B16_20261027",
+          "controller_source": "FROZEN_NATIVE_HF_ACT",
+          "robot": "so101",
+          "seed": 0,
+          "checkpoint_sha256": "c3b65a5d97e1d78866062503b63b7c63fec60ec7c623fa264c82ea96a1c16877",
+          "checkpoint_step": null,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.23956,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "mean_latency_ms": 114.53516721259803,
+          "max_action_saturation": 0.0,
+          "video_path": "outputs/v2/hf_act_h256_20261027/seed_000/rollout.mp4",
+          "abort": null,
+          "guard_reasons": {
+            "accepted": 750
+          },
+          "gripper_saturations": 0,
+          "policy_calls": 75,
+          "policy_call_p95_ms": 118.41647129040211,
+          "trace": "outputs/v2/hf_act_h256_20261027/seed_000/ticks.jsonl",
+          "mean_abs_applied_to_achieved_native_rad": [
+            0.00020411875256413784,
+            0.00072197597319898,
+            0.000964463291740674,
+            0.0004960730030509203,
+            0.000261495363755969,
+            0.00028021246718608973
+          ],
+          "first_tool_xyz_task_m": [
+            0.19595144328590305,
+            0.012383430297994769,
+            0.04942410398962038
+          ],
+          "final_tool_xyz_task_m": [
+            0.2814248170127852,
+            0.007448889977158749,
+            0.09995385558594239
+          ]
+        },
+        {
+          "experiment_id": "HF_ACT_H256_B16_20261027",
+          "controller_source": "FROZEN_NATIVE_HF_ACT",
+          "robot": "so101",
+          "seed": 1,
+          "checkpoint_sha256": "c3b65a5d97e1d78866062503b63b7c63fec60ec7c623fa264c82ea96a1c16877",
+          "checkpoint_step": null,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.19843,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "mean_latency_ms": 112.57867776788771,
+          "max_action_saturation": 0.0,
+          "video_path": "outputs/v2/hf_act_h256_20261027/seed_001/rollout.mp4",
+          "abort": null,
+          "guard_reasons": {
+            "accepted": 750
+          },
+          "gripper_saturations": 0,
+          "policy_calls": 75,
+          "policy_call_p95_ms": 119.17154175462201,
+          "trace": "outputs/v2/hf_act_h256_20261027/seed_001/ticks.jsonl",
+          "mean_abs_applied_to_achieved_native_rad": [
+            0.0002591269405334196,
+            0.0007305439639212193,
+            0.0008831247653161761,
+            0.0004919974392221385,
+            0.0002713825727858287,
+            0.0002903791372098873
+          ],
+          "first_tool_xyz_task_m": [
+            0.19595540466066078,
+            0.012332244626289977,
+            0.049424163660267584
+          ],
+          "final_tool_xyz_task_m": [
+            0.29977290559805525,
+            0.0037255859173487027,
+            0.11043608696865104
+          ]
+        },
+        {
+          "experiment_id": "HF_ACT_H256_B16_20261027",
+          "controller_source": "FROZEN_NATIVE_HF_ACT",
+          "robot": "so101",
+          "seed": 2,
+          "checkpoint_sha256": "c3b65a5d97e1d78866062503b63b7c63fec60ec7c623fa264c82ea96a1c16877",
+          "checkpoint_step": null,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.22597,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "mean_latency_ms": 126.69349612512936,
+          "max_action_saturation": 0.0,
+          "video_path": "outputs/v2/hf_act_h256_20261027/seed_002/rollout.mp4",
+          "abort": null,
+          "guard_reasons": {
+            "accepted": 750
+          },
+          "gripper_saturations": 0,
+          "policy_calls": 75,
+          "policy_call_p95_ms": 170.94017881900072,
+          "trace": "outputs/v2/hf_act_h256_20261027/seed_002/ticks.jsonl",
+          "mean_abs_applied_to_achieved_native_rad": [
+            0.0002099538823862422,
+            0.0007384422182688991,
+            0.0012333172086748199,
+            0.0004934170369657601,
+            0.0002651385766598186,
+            0.00027320326593832005
+          ],
+          "first_tool_xyz_task_m": [
+            0.1959507294007652,
+            0.012392476084302825,
+            0.04942408446033808
+          ],
+          "final_tool_xyz_task_m": [
+            0.29181012073351953,
+            0.0061151646098149106,
+            0.1009727274822163
+          ]
+        }
+      ],
+      "runtime_source_changes": []
+    },
+    "latest": {
+      "report": "outputs/v2/hf_act_h256_latest_20261027/report.json",
+      "report_sha256": "2c120bcd5d71197152a84cd1568fd1e6d5715b7fefc2aa50c37868fcf990a147",
+      "weights_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "summary": {
+        "n": 3,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 3,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_latency_ms": 124.13556557562617,
+        "max_action_saturation": 0.0
+      },
+      "trials": [
+        {
+          "experiment_id": "HF_ACT_H256_B16_20261027",
+          "controller_source": "FROZEN_NATIVE_HF_ACT",
+          "robot": "so101",
+          "seed": 0,
+          "checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+          "checkpoint_step": null,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.18334,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "mean_latency_ms": 121.50406948445986,
+          "max_action_saturation": 0.0,
+          "video_path": "outputs/v2/hf_act_h256_latest_20261027/seed_000/rollout.mp4",
+          "abort": null,
+          "guard_reasons": {
+            "accepted": 750
+          },
+          "gripper_saturations": 0,
+          "policy_calls": 75,
+          "policy_call_p95_ms": 128.89074191916734,
+          "trace": "outputs/v2/hf_act_h256_latest_20261027/seed_000/ticks.jsonl",
+          "mean_abs_applied_to_achieved_native_rad": [
+            0.0002210059549355412,
+            0.0007450290237967246,
+            0.0007052659627863071,
+            0.00046062631797778126,
+            0.0002954907472597177,
+            0.0007606031768145359
+          ],
+          "first_tool_xyz_task_m": [
+            0.1961024437289768,
+            0.010303309106534419,
+            0.04942420866139974
+          ],
+          "final_tool_xyz_task_m": [
+            0.2777212743733397,
+            0.041126506235331275,
+            0.038240923097252244
+          ]
+        },
+        {
+          "experiment_id": "HF_ACT_H256_B16_20261027",
+          "controller_source": "FROZEN_NATIVE_HF_ACT",
+          "robot": "so101",
+          "seed": 1,
+          "checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+          "checkpoint_step": null,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.19282,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "mean_latency_ms": 123.5838572261855,
+          "max_action_saturation": 0.0,
+          "video_path": "outputs/v2/hf_act_h256_latest_20261027/seed_001/rollout.mp4",
+          "abort": null,
+          "guard_reasons": {
+            "accepted": 750
+          },
+          "gripper_saturations": 0,
+          "policy_calls": 75,
+          "policy_call_p95_ms": 148.8337044371292,
+          "trace": "outputs/v2/hf_act_h256_latest_20261027/seed_001/ticks.jsonl",
+          "mean_abs_applied_to_achieved_native_rad": [
+            0.00031334592285550027,
+            0.0007986012088873341,
+            0.0008001615990336318,
+            0.0003952642982584753,
+            0.00031702774932970245,
+            0.0008192211953699402
+          ],
+          "first_tool_xyz_task_m": [
+            0.19594641393256718,
+            0.012450571274867785,
+            0.049423661802373564
+          ],
+          "final_tool_xyz_task_m": [
+            0.2869093363265116,
+            0.025762272632958185,
+            0.11588272317625081
+          ]
+        },
+        {
+          "experiment_id": "HF_ACT_H256_B16_20261027",
+          "controller_source": "FROZEN_NATIVE_HF_ACT",
+          "robot": "so101",
+          "seed": 2,
+          "checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+          "checkpoint_step": null,
+          "success": false,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "rolled_out": false,
+          "ball_escaped_table": false,
+          "phase_failed": "approach",
+          "pick_place_phase_failed": "approach",
+          "min_ee_ball_distance_m": 0.21435,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "mean_latency_ms": 127.31877001623313,
+          "max_action_saturation": 0.0,
+          "video_path": "outputs/v2/hf_act_h256_latest_20261027/seed_002/rollout.mp4",
+          "abort": null,
+          "guard_reasons": {
+            "accepted": 750
+          },
+          "gripper_saturations": 0,
+          "policy_calls": 75,
+          "policy_call_p95_ms": 166.89920811913902,
+          "trace": "outputs/v2/hf_act_h256_latest_20261027/seed_002/ticks.jsonl",
+          "mean_abs_applied_to_achieved_native_rad": [
+            0.0002879028128968061,
+            0.0007194812764807393,
+            0.0007461255843266246,
+            0.0003671100851409983,
+            0.0003444293232676648,
+            0.0007172878213306558
+          ],
+          "first_tool_xyz_task_m": [
+            0.1960948860480852,
+            0.010417690792367677,
+            0.049424205167655555
+          ],
+          "final_tool_xyz_task_m": [
+            0.27087215630410444,
+            0.0205865194373164,
+            0.0719252210892779
+          ]
+        }
+      ],
+      "runtime_source_changes": []
+    }
+  },
+  "validation_initial_native_registration": [
+    {
+      "episode": 4,
+      "recorded_initial_degree_percent": [
+        -3.692307710647583,
+        -104.43955993652344,
+        96.83516693115234,
+        75.64835357666016,
+        1.4505494832992554,
+        1.2228261232376099
+      ],
+      "initial_native_valid": false,
+      "first_native_valid_frame": 110,
+      "first_native_valid_time_s": 4.4
+    },
+    {
+      "episode": 7,
+      "recorded_initial_degree_percent": [
+        -3.604395627975464,
+        -104.70330047607422,
+        96.83516693115234,
+        75.73626708984375,
+        0.3956044018268585,
+        1.2228261232376099
+      ],
+      "initial_native_valid": false,
+      "first_native_valid_frame": 127,
+      "first_native_valid_time_s": 5.08
+    },
+    {
+      "episode": 18,
+      "recorded_initial_degree_percent": [
+        1.9340659379959106,
+        -104.61538696289062,
+        96.83516693115234,
+        75.73626708984375,
+        5.5824174880981445,
+        1.2228261232376099
+      ],
+      "initial_native_valid": false,
+      "first_native_valid_frame": 145,
+      "first_native_valid_time_s": 5.8
+    },
+    {
+      "episode": 32,
+      "recorded_initial_degree_percent": [
+        2.98901104927063,
+        -104.70330047607422,
+        96.74725341796875,
+        75.64835357666016,
+        1.274725317955017,
+        1.35869562625885
+      ],
+      "initial_native_valid": false,
+      "first_native_valid_frame": 110,
+      "first_native_valid_time_s": 4.4
+    },
+    {
+      "episode": 38,
+      "recorded_initial_degree_percent": [
+        0.35164836049079895,
+        -104.79120635986328,
+        96.65933990478516,
+        75.64835357666016,
+        -0.21978022158145905,
+        1.2228261232376099
+      ],
+      "initial_native_valid": false,
+      "first_native_valid_frame": 137,
+      "first_native_valid_time_s": 5.48
+    },
+    {
+      "episode": 40,
+      "recorded_initial_degree_percent": [
+        3.4285714626312256,
+        -104.70330047607422,
+        96.74725341796875,
+        75.73626708984375,
+        1.6263736486434937,
+        1.35869562625885
+      ],
+      "initial_native_valid": false,
+      "first_native_valid_frame": 142,
+      "first_native_valid_time_s": 5.68
+    }
+  ]
+}

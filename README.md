@@ -111,10 +111,10 @@ uv run python scripts/aggregate_trials.py
 
 ## Models and physics assumptions
 
-- ACT (LeRobot 0.6.1): ResNet-18, `dim_model` 512, chunk 20 at 10 Hz, 2 actions executed per inference, batch 16. Joint baseline learns the recorded leader targets; the Cartesian policy
+- ACT (LeRobot 0.6.1): ResNet-18, `dim_model` 256, chunk 20 at 10 Hz, 2 actions executed per inference or chunking 2s of actions before recalculating, batch 16. Joint baseline learns the recorded leader targets; the Cartesian policy
   learns achieved end-effector motion from forward kinematics.
-- Simulation: MuJoCo Menagerie `robotstudio_so101` and `franka_emika_panda`. Ball and bowl are compound primitives. Physical values are
-  provisional standards not precise measurement 
+- Simulation: MuJoCo Menagerie `robotstudio_so101` and `franka_emika_panda`. Ball and bowl are compound primitives.
+- The trained model has been published [Hugging Face](https://huggingface.co/bottowork/so101-act-h256-b16)
 
 ## Experiments
 - Replaced ACT VAE with flow matching head
