@@ -11,7 +11,17 @@ The main aim is to train an ACT policy with a recovery MLP head in Mujoco and us
 ## Data collection
 
 Teleoperation with an SO-101 leader/follower pair through LeRobot (dataset format v3.0,
-25 Hz, follower PID P=16 I=0 D=4). Two cameras were recorded; observation.images.top (wrist camera), observation.images.iphone (global top view camera) - both recorded at 1280 * 720, couldn't get iphone to work with 640 * 480 but could be resized easily with pytorch tensor ops 
+25 Hz, follower PID P=16 I=0 D=4). Two cameras were recorded; observation.images.top (wrist camera), observation.images.iphone (global top view camera) - both recorded at 1280 * 720, couldn't get iphone to work with 640 * 480 but could be resized easily with pytorch tensor ops
+
+Note every measurement is in inches first number is x axis(length wise) second number y axis (width wise) third z axis (height wise), if single number thats x axis
+camera from ball: (30.5, 4.5, 16)
+ball & bowl: 12 inches
+Ball from robot base: (2,13)
+mat: (16,12)
+Bowl: 4.5 diameter
+Ball: 8 circumference 
+
+Note: there could be +- 5% measurments error.
 
 ## Current v2 workflow
 
