@@ -65,3 +65,16 @@ def test_delta_action_roundtrip_units_and_frame():
     T2 = apply_delta(T0, np.array([0.03, 0, 0, 0, 0, 0]))
     np.testing.assert_allclose(T2[:3, 3] - T0[:3, 3], [0.03, 0, 0], atol=1e-12)
     np.testing.assert_allclose(T2[:3, :3], T0[:3, :3], atol=1e-12)
+
+
+def test_clamp_delta6_scales_parts_independently():
+    from real2sim.geometry.so3 import clamp_delta6
+
+    delta, t_clamped, r_clamped = clamp_delta6(
+        np.array([0.06, 0.0, 0.0, 0.0, 0.0, 0.6]), 0.03, 0.3)
+    np.testing.assert_allclose(delta[:3], [0.03, 0.0, 0.0])
+    np.testing.assert_allclose(delta[3:], [0.0, 0.0, 0.3])
+    assert t_clamped and r_clamped
+    untouched, t2, r2 = clamp_delta6(np.array([0.01, 0, 0, 0, 0, 0.1]), 0.03, 0.3)
+    np.testing.assert_allclose(untouched, [0.01, 0, 0, 0, 0, 0.1])
+    assert not t2 and not r2
