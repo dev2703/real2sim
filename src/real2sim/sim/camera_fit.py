@@ -52,14 +52,15 @@ import numpy as np
 from real2sim.config import REPO_ROOT, load_yaml
 from real2sim.data.raw import RawDataset, VideoSegment, resolve_dataset_root
 from real2sim.geometry.so101_fk import JointMapping, So101FK
+from real2sim.perception.ball_hsv import BALL_HSV
 
 ROOT = REPO_ROOT
 DEFAULT_TASK = ROOT / "configs" / "task.yaml"
 DEFAULT_DATA = ROOT / "configs" / "data.yaml"
 OUT_DIR = ROOT / "results" / "audit" / "camera_fit"
 
-HSV_LO = (22, 70, 90)  # same tennis-ball yellow window as real2sim.data.quality.ball_area_px
-HSV_HI = (50, 255, 255)
+HSV_LO = BALL_HSV["audit"].lower  # shared with real2sim.data.quality.ball_area_px
+HSV_HI = BALL_HSV["audit"].upper
 MIN_BALL_AREA_PX = 1500  # at 1280x720 a free ball is ~17 000 px; a half-occluded held ball ~5 000
 IMAGE_LAG_FRAMES = 2  # the iphone image trails the joint state by ~2 frames (docs/data_contract.md)
 HOLD_LEADER_MAX_PCT = 8.0

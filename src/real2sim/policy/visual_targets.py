@@ -162,10 +162,13 @@ def locate_objects(
         raise ValueError("finite heights and positive object radii required")
     # Validate bounds even when neither object is visible.
     _in_workspace(np.zeros(3), workspace_xy)
+    from real2sim.perception.ball_hsv import BALL_HSV
+
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
-    # Hue range is fixed for yellow/green tennis-ball material, not its location.
-    ball_mask = ((hsv[:, :, 0] >= 20) & (hsv[:, :, 0] <= 50)
-                 & (hsv[:, :, 1] >= 75) & (hsv[:, :, 2] >= 30))
+    # Named metric_targets preset: yellow/green tennis-ball material, not its location.
+    window = BALL_HSV["metric_targets"]
+    ball_mask = ((hsv[:, :, 0] >= window.hue_min) & (hsv[:, :, 0] <= window.hue_max)
+                 & (hsv[:, :, 1] >= window.saturation_min) & (hsv[:, :, 2] >= window.value_min))
     bowl_mask = (hsv[:, :, 1] <= 46) & (hsv[:, :, 2] >= 80)
     found: dict[str, list[VisualTarget]] = {"ball": [], "bowl": []}
 
@@ -176,7 +179,7 @@ def locate_objects(
         except ValueError:
             continue
 
-        def tangent_residual(xy):
+        def tangent_residual(xy, rays=rays):
             center = np.r_[xy, ball_center_height_m] - pose[:3, 3]
             return np.linalg.norm(np.cross(rays, center), axis=1) - ball_radius_m
 
