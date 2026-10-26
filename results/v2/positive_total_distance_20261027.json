@@ -1,0 +1,252 @@
+{
+  "schema": "positive_camera_total_distance_rollouts_20261027_v1",
+  "work_date": "2026-10-27",
+  "learned_act": false,
+  "frozen_act_transfer_demonstrated": false,
+  "physical_calibration_accepted": false,
+  "user_clarification_verbatim": "12 inches is total distance, not an x-only offset",
+  "assigned_camera_xy_signs": [
+    1,
+    1
+  ],
+  "preparation": "configs/v2/positive_total_distance_20261027/preparation.json",
+  "preparation_sha256": "9bb02b883aba93c8a83b755e087d59022c7491a48ff0bb6d95817db6e12645de",
+  "ball_xy_task_m": [
+    0.0508,
+    0.3302
+  ],
+  "bowl_xy_task_m": [
+    0.2563108824761005,
+    0.1051037601737995
+  ],
+  "camera_position_task_m": [
+    0.8254999999999999,
+    0.4445,
+    0.3944
+  ],
+  "ball_bowl_distance_m": 0.30479999999999996,
+  "working_assumptions": {
+    "camera_minus_ball_xy_signs": [
+      1,
+      1
+    ],
+    "ball_bowl_measurement_kind": "total planar centre-to-centre distance assumed; not x-only",
+    "bowl_direction_method": "prior image-derived relative layout rotated by new-minus-old base/ball bearing",
+    "inferred_layout_yaw_rad": 0.8959483352277918,
+    "bowl_unit_direction_xy": [
+      0.6742483020869441,
+      -0.7385047238392406
+    ],
+    "source_old_ball_xy": [
+      0.3557,
+      0.2047
+    ],
+    "source_old_bowl_xy": [
+      0.318,
+      -0.035
+    ],
+    "operator_axes_assumed_task_axes": true,
+    "base_reference_assumed_task_origin_xy": true,
+    "camera_identity": "global observation.images.iphone",
+    "camera_rotation": "roll-free look-at nominal ball/bowl midpoint; not measured",
+    "mat_center": "nominal ball/bowl midpoint; not measured",
+    "intrinsics": "previous provisional focal length/principal point retained",
+    "independently_verified_registration": false
+  },
+  "robots": {
+    "so101": {
+      "full_report": "outputs/v2/rgb_so101_positive_total_distance_20261027/report.json",
+      "full_report_sha256": "69c0042eef1fd301d2a2522f8e221361c41eaa6ead203742edaadd102c6bfca7",
+      "summary": {
+        "n": 5,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 5,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 5,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_latency_ms": 15.90704940066983,
+        "max_action_saturation": 0.0
+      },
+      "rgb_ball_acquired": 5,
+      "rgb_bowl_acquired": 0,
+      "runtime_source_changes": [],
+      "maximum_robot_table_penetration_m": 0.0,
+      "trials": [
+        {
+          "seed": 0,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_000/rollout.mp4",
+          "trace": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_000/ticks.jsonl"
+        },
+        {
+          "seed": 1,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_001/rollout.mp4",
+          "trace": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_001/ticks.jsonl"
+        },
+        {
+          "seed": 2,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_002/rollout.mp4",
+          "trace": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_002/ticks.jsonl"
+        },
+        {
+          "seed": 3,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_003/rollout.mp4",
+          "trace": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_003/ticks.jsonl"
+        },
+        {
+          "seed": 4,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_004/rollout.mp4",
+          "trace": "outputs/v2/rgb_so101_positive_total_distance_20261027/seed_004/ticks.jsonl"
+        }
+      ]
+    },
+    "panda": {
+      "full_report": "outputs/v2/rgb_panda_positive_total_distance_20261027/report.json",
+      "full_report_sha256": "beb2e7c4d33dd0ca3956629807f89e24ad30fe6b217839ea1c28a8043e1a4a20",
+      "summary": {
+        "n": 5,
+        "aborted": 0,
+        "successes": 0,
+        "success_rate": 0.0,
+        "pick_place_successes": 0,
+        "pick_place_success_rate": 0.0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "rolled_out": 0,
+        "ball_escaped_table": 0,
+        "phase_failed_counts": {
+          "approach": 5,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 5,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_latency_ms": 15.70255379122682,
+        "max_action_saturation": 0.0
+      },
+      "rgb_ball_acquired": 2,
+      "rgb_bowl_acquired": 0,
+      "runtime_source_changes": [],
+      "maximum_robot_table_penetration_m": 0.0,
+      "trials": [
+        {
+          "seed": 0,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_000/rollout.mp4",
+          "trace": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_000/ticks.jsonl"
+        },
+        {
+          "seed": 1,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_001/rollout.mp4",
+          "trace": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_001/ticks.jsonl"
+        },
+        {
+          "seed": 2,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_002/rollout.mp4",
+          "trace": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_002/ticks.jsonl"
+        },
+        {
+          "seed": 3,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_003/rollout.mp4",
+          "trace": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_003/ticks.jsonl"
+        },
+        {
+          "seed": 4,
+          "pick_place_success": false,
+          "held_ever": false,
+          "lifted": false,
+          "controller_failure": "RGB ball/bowl detection unavailable",
+          "final_phase": "FAILED",
+          "video_path": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_004/rollout.mp4",
+          "trace": "outputs/v2/rgb_panda_positive_total_distance_20261027/seed_004/ticks.jsonl"
+        }
+      ]
+    }
+  },
+  "scoring_only_detector_diagnostic": "results/v2/positive_total_distance_projection_20261027.json",
+  "failure_hold_audit": {
+    "scope": "Historical discarded +x-only bowl hypothesis; not the clarified layout",
+    "protocol": "outputs/v2/rgb_waypoint_so101_20261026_positive_failure_hold/failure_hold_protocol.json",
+    "protocol_sha256": "762d96264cd3cc8518cd4328dd311a840bb8c30475d5afeaddd9f8d4082c2845",
+    "trials": 5,
+    "held_at_final_tick": 0,
+    "pick_place_successes": 0,
+    "retention_validated": false
+  }
+}

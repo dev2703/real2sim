@@ -1,5 +1,11 @@
 # Positive setup convention: actual rollouts — 26 October 2026
 
+**Superseded bowl-direction hypothesis:** the operator subsequently clarified
+that 12 inches is the total ball/bowl distance, not an x-only offset. The +x-only
+layout below remains historical diagnostic evidence. Use the
+[27 October total-distance candidate](v2_positive_total_distance_20261027.md)
+for the revised geometry; these reach failures do not establish real bowl reach.
+
 The controller was rerun unchanged on the newly assigned positive setup candidate,
 with seeds 0–4 on both arms. **SO-101 picks up and lifts the ball in all five
 trials, but places it in zero; Panda places it in two of five.** These results
