@@ -13,9 +13,11 @@ import cv2
 import numpy as np
 
 from real2sim.data.labels import PROPRIO_NAMES
+from real2sim.perception.ball_hsv import BALL_HSV
 
 BALL_FEATURE_NAMES = ["ball_image_u_fraction", "ball_image_v_fraction",
                       "ball_image_radius_fraction", "ball_image_visible"]
+_GROUNDING = BALL_HSV["grounding_v1"]
 
 
 @dataclass(frozen=True)
@@ -25,10 +27,10 @@ class BallImageFeatures:
     camera_key: str = "observation.images.iphone"
     height: int = 192
     width: int = 256
-    hue_min: int = 24
-    hue_max: int = 44
-    saturation_min: int = 90
-    value_min: int = 85
+    hue_min: int = _GROUNDING.hue_min
+    hue_max: int = _GROUNDING.hue_max
+    saturation_min: int = _GROUNDING.saturation_min
+    value_min: int = _GROUNDING.value_min
     min_area_px: int = 18
     max_area_fraction: float = 0.08
     min_circularity: float = 0.35

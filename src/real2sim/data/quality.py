@@ -35,8 +35,11 @@ ANALYSIS_SIZE = (320, 180)  # (width, height) used for all per-frame metrics
 
 def ball_area_px(rgb_small: np.ndarray) -> int:
     """Largest tennis-ball-yellow connected component area (pixels) in a small RGB frame."""
+    from real2sim.perception.ball_hsv import BALL_HSV
+
     hsv = cv2.cvtColor(rgb_small, cv2.COLOR_RGB2HSV)
-    mask = cv2.inRange(hsv, (22, 70, 90), (50, 255, 255))
+    window = BALL_HSV["audit"]
+    mask = cv2.inRange(hsv, window.lower, window.upper)
     n, _, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
     if n <= 1:
         return 0
