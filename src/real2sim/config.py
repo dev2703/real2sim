@@ -17,10 +17,12 @@ def project_path(path: str | Path) -> Path:
 
 
 def load_yaml(path: str | Path) -> dict[str, Any]:
-    with Path(path).open() as f:
+    """Load a YAML mapping; repo-relative paths resolve via :func:`project_path`."""
+    resolved = project_path(path)
+    with resolved.open() as f:
         data = yaml.safe_load(f)
     if not isinstance(data, dict):
-        raise ValueError(f"{path} must contain a mapping at top level")
+        raise ValueError(f"{resolved} must contain a mapping at top level")
     return data
 
 
