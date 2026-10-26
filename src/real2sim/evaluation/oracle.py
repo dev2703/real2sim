@@ -49,13 +49,12 @@ from pathlib import Path
 
 import numpy as np
 
-from real2sim.config import load_yaml
+from real2sim.config import json_default, load_yaml, project_path
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import IPHONE_KEY, ApplyResult
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
-from real2sim.sim.model import project_path
 
 CONTROLLER_SOURCE = "ORACLE_GEOMETRY_DIAGNOSTIC"
 EXPERIMENT_ID = "E4b_oracle_geometry_diagnostic"
@@ -424,21 +423,9 @@ def run_trials(*, config: Path, eval_config: Path, n_trials: int, seed_start: in
                      "system": platform.system()},
         "wall_s_total": round(time.perf_counter() - t_start, 2),
     }
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=_json_default) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=json_default) + "\n")
     print(f"successes {summary['summary']['successes']}/{n_trials} -> {out}", flush=True)
     return summary
-
-
-def _json_default(o):
-    if isinstance(o, (np.floating, np.integer)):
-        return o.item()
-    if isinstance(o, (np.ndarray, tuple)):
-        return list(o)
-    if isinstance(o, Path):
-        return str(o)
-    if isinstance(o, (np.bool_,)):
-        return bool(o)
-    raise TypeError(f"not JSON serialisable: {type(o)}")
 
 
 def main(argv: list[str] | None = None) -> None:
