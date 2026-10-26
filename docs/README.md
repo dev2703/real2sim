@@ -1,5 +1,9 @@
 # Project documentation
 
+Engineering maintainability findings from the same day are in the
+[software-engineering audit](se_audit_20261026.md) (redundancy, CI gaps, and
+opened cleanup PRs/issues).
+
 The [26 October capture-status audit](v2_calibration_status_20261026.md) records
 unavailable new capture inputs, the completed local checks and the combined session
 log for geometry, timing, loaded response and version lineage. Physical calibration
