@@ -100,3 +100,27 @@ def apply_delta(T_cur: np.ndarray, delta6: np.ndarray) -> np.ndarray:
     """Inverse of :func:`delta_action`: target pose from the current pose and a 6-D delta."""
     R = exp_so3(delta6[3:6]) @ T_cur[:3, :3]
     return make_T(R, T_cur[:3, 3] + delta6[:3])
+
+
+def clamp_delta6(
+    delta6: np.ndarray, max_translation: float, max_rotation: float,
+) -> tuple[np.ndarray, bool, bool]:
+    """Scale translation/rotation parts independently to the given L2 limits.
+
+    Returns ``(clamped_delta, translation_clamped, rotation_clamped)``. Used by SO-101 and
+    Panda Cartesian adapters and by label replay so per-tick bounds cannot drift apart.
+    """
+    delta = np.asarray(delta6, dtype=np.float64).copy()
+    if delta.shape != (6,) or not np.all(np.isfinite(delta)):
+        raise ValueError("delta6 must be six finite values")
+    if not (max_translation > 0 and max_rotation > 0):
+        raise ValueError("clamp limits must be positive")
+    translation_norm = float(np.linalg.norm(delta[:3]))
+    rotation_norm = float(np.linalg.norm(delta[3:6]))
+    translation_clamped = translation_norm > max_translation
+    rotation_clamped = rotation_norm > max_rotation
+    if translation_clamped:
+        delta[:3] *= max_translation / translation_norm
+    if rotation_clamped:
+        delta[3:6] *= max_rotation / rotation_norm
+    return delta, translation_clamped, rotation_clamped

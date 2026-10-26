@@ -35,7 +35,14 @@ from real2sim.data.labels import (
     PROPRIO_NAMES,
     TOOL_ACTION_NAMES,
 )
-from real2sim.geometry.so3 import apply_delta, delta_action, is_rotation, make_T, matrix_from_rot6d
+from real2sim.geometry.so3 import (
+    apply_delta,
+    clamp_delta6,
+    delta_action,
+    is_rotation,
+    make_T,
+    matrix_from_rot6d,
+)
 from real2sim.geometry.so101_fk import JointMapping
 
 IPHONE_KEY = "observation.images.iphone"
@@ -325,13 +332,10 @@ class CartesianActionAdapter:
         if a.shape != (7,) or not np.all(np.isfinite(a)):
             raise ValueError("cartesian action must be seven finite values")
         clamped = np.zeros(7, bool)
-        dp, dr, g = a[:3].copy(), a[3:6].copy(), float(a[6])
-        if (n := np.linalg.norm(dp)) > self.max_step_m:
-            dp *= self.max_step_m / n
-            clamped[:3] = True
-        if (n := np.linalg.norm(dr)) > self.max_step_rad:
-            dr *= self.max_step_rad / n
-            clamped[3:6] = True
+        g = float(a[6])
+        delta, t_clamped, r_clamped = clamp_delta6(a[:6], self.max_step_m, self.max_step_rad)
+        clamped[:3] = t_clamped
+        clamped[3:6] = r_clamped
         if not 0.0 <= g <= 1.0:
             g = float(np.clip(g, 0.0, 1.0))
             clamped[6] = True
@@ -341,16 +345,16 @@ class CartesianActionAdapter:
             if self._accepted_target is None:
                 self._accepted_target = T_cur.copy()
             reference = self._accepted_target
-        requested_target = apply_delta(reference, np.concatenate([dp, dr]))
+        requested_target = apply_delta(reference, delta)
         target = requested_target
         feedback_clamped = np.zeros(6, bool)
         requested_feedback = delta_action(T_cur, requested_target)
         bounded_feedback = requested_feedback.copy()
         if self.target_reference == "accepted_target":
-            for part, limit in ((slice(0, 3), self.max_step_m), (slice(3, 6), self.max_step_rad)):
-                if (n := np.linalg.norm(bounded_feedback[part])) > limit:
-                    bounded_feedback[part] *= limit / n
-                    feedback_clamped[part] = True
+            bounded_feedback, feedback_t, feedback_r = clamp_delta6(
+                bounded_feedback, self.max_step_m, self.max_step_rad)
+            feedback_clamped[:3] = feedback_t
+            feedback_clamped[3:6] = feedback_r
             # Do not retain the unbounded request for later catch-up. Zero actions retain a
             # stable target until this explicit feedback cap is reached by a large disturbance.
             target = apply_delta(T_cur, bounded_feedback)

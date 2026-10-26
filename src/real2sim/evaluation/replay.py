@@ -29,7 +29,7 @@ from real2sim.config import load_yaml
 from real2sim.data.labels import episode_labels
 from real2sim.data.raw import RawDataset, resolve_dataset_root
 from real2sim.data.resample import episode_tick_rows, policy_stride
-from real2sim.geometry.so3 import apply_delta
+from real2sim.geometry.so3 import apply_delta, clamp_delta6
 from real2sim.geometry.so101_fk import So101FK
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
@@ -84,16 +84,8 @@ def _start_scenario(env: So101PickPlaceEnv, first_state_real: np.ndarray) -> tup
 
 
 def _clamp_delta(delta6: np.ndarray, max_t: float, max_r: float) -> tuple[np.ndarray, bool]:
-    d = np.asarray(delta6, np.float64).copy()
-    clipped = False
-    nt, nr = np.linalg.norm(d[:3]), np.linalg.norm(d[3:6])
-    if nt > max_t:
-        d[:3] *= max_t / nt
-        clipped = True
-    if nr > max_r:
-        d[3:6] *= max_r / nr
-        clipped = True
-    return d, clipped
+    clamped, t_clamped, r_clamped = clamp_delta6(delta6, max_t, max_r)
+    return clamped, t_clamped or r_clamped
 
 
 class _Video:
