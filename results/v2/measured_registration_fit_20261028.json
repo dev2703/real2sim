@@ -1,0 +1,446 @@
+{
+  "schema": "measured_landmark_registration_hypothesis_20261028_v1",
+  "physical_calibration_accepted": false,
+  "lighting_changed": false,
+  "policy_inference_or_task_success_used": false,
+  "source_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/fit_v2_measured_registration_20261028.py": "6c59fe9059121a1beacb90612e35b551f468badb8f92b35a9ea14cce72511092",
+    ".cache/v2_exploratory_20261022/cartesian_iphone_top/arrays.npz": "01c1e8b1026415ee3ffa7b9136755b51a9326fd8b5bd4523a4da1f782c3cd08f",
+    "outputs/v2/iphone_stability_20261021/source_frames/ep00_f0200.png": "4c4d9ecfddc6ee7aa866d5a98e392e5d6bb7c852a69ebdc6471b62aeca3538c7",
+    "configs/v2/mat_camera.annotations_20261022.json": "ea3ba5bc003f499b2dca01aab12c855ca29ebf9f5bce4eaef098124d78cf4eda",
+    "outputs/v2/static_base_camera_20261023/report.json": "7e37c0da7e5d0400a7787b92d7f2248901f49264409a96bc0954f4a64faa9692",
+    "physical_measurements.md": "8a31d789968eef7543df6ab177ff9f60f820300b1a25ef766bf3894fc116273b"
+  },
+  "source_annotation": {
+    "ball_center_px": [
+      743.0,
+      237.0
+    ],
+    "ball_radius_px": 51.0,
+    "bowl_rim_center_px": [
+      846.0,
+      499.0
+    ],
+    "image": "outputs/v2/iphone_stability_20261021/source_frames/ep00_f0200.png",
+    "note": "Manual approximate sourcepixelreadings, not physical pointidentities."
+  },
+  "parameters": [
+    -1.5241413865117348,
+    2.121620318790481,
+    -0.14596397331951014,
+    -0.4744579883903349,
+    1391.5745990790583,
+    0.2663637480094974,
+    -0.21396362297097343,
+    -0.19942239886040125,
+    -0.03195862931727126,
+    -0.028057131220858057,
+    -0.039999999999999994,
+    -14.224879132551363,
+    26.217726624513205,
+    -11.659255826574611,
+    4.870663916864236,
+    7.257407638400397e-16
+  ],
+  "parameter_order": [
+    "operator_yaw_rad",
+    "optical_rvec_x",
+    "optical_rvec_y",
+    "optical_rvec_z",
+    "focal_px",
+    "mat_x",
+    "mat_y",
+    "mat_yaw",
+    "horn_axial_lift",
+    "horn_axial_elbow",
+    "horn_axial_wrist",
+    "offset_pan_deg",
+    "offset_lift_deg",
+    "offset_elbow_deg",
+    "bowl_bearing_rad",
+    "ball_support_height_m"
+  ],
+  "multistart_costs": [
+    361.22223668740975,
+    361.22220430489966,
+    361.2223295129911,
+    361.2221881105768
+  ],
+  "train_objective_cost": 361.2221881105768,
+  "score": {
+    "horns": {
+      "train": {
+        "n": 10,
+        "rms_px": 25.7907052344528
+      },
+      "val": {
+        "n": 6,
+        "rms_px": 28.160440892338045
+      }
+    },
+    "mat_rms_px": 131.3718898988832,
+    "horn_rows": [
+      {
+        "episode": 0,
+        "frame": 350,
+        "split": "train",
+        "joint": "shoulder_lift",
+        "observed_px": [
+          338.0,
+          192.0
+        ],
+        "predicted_px": [
+          341.60922287880453,
+          179.1143604052927
+        ],
+        "error_xy_px": [
+          3.6092228788045304,
+          -12.8856395947073
+        ],
+        "depth_m": 0.8883945040812609
+      },
+      {
+        "episode": 0,
+        "frame": 350,
+        "split": "train",
+        "joint": "elbow_flex",
+        "observed_px": [
+          478.0,
+          33.0
+        ],
+        "predicted_px": [
+          464.961092790419,
+          51.78140787471898
+        ],
+        "error_xy_px": [
+          -13.038907209580998,
+          18.78140787471898
+        ],
+        "depth_m": 0.9068499438174256
+      },
+      {
+        "episode": 0,
+        "frame": 350,
+        "split": "train",
+        "joint": "wrist_flex",
+        "observed_px": [
+          703.0,
+          44.0
+        ],
+        "predicted_px": [
+          653.9270607467122,
+          63.81022830944778
+        ],
+        "error_xy_px": [
+          -49.072939253287814,
+          19.81022830944778
+        ],
+        "depth_m": 0.9620900166225961
+      },
+      {
+        "episode": 6,
+        "frame": 350,
+        "split": "train",
+        "joint": "shoulder_lift",
+        "observed_px": [
+          280.0,
+          221.0
+        ],
+        "predicted_px": [
+          279.9313730384445,
+          220.94623008155244
+        ],
+        "error_xy_px": [
+          -0.06862696155548065,
+          -0.053769918447557075
+        ],
+        "depth_m": 0.8713120027382574
+      },
+      {
+        "episode": 6,
+        "frame": 350,
+        "split": "train",
+        "joint": "elbow_flex",
+        "observed_px": [
+          388.0,
+          99.0
+        ],
+        "predicted_px": [
+          386.8611602800306,
+          119.2143315055236
+        ],
+        "error_xy_px": [
+          -1.1388397199693827,
+          20.214331505523603
+        ],
+        "depth_m": 0.8042833198002454
+      },
+      {
+        "episode": 6,
+        "frame": 350,
+        "split": "train",
+        "joint": "wrist_flex",
+        "observed_px": [
+          642.0,
+          199.0
+        ],
+        "predicted_px": [
+          603.4981492232251,
+          182.63473688777253
+        ],
+        "error_xy_px": [
+          -38.50185077677486,
+          -16.365263112227467
+        ],
+        "depth_m": 0.774883125460577
+      },
+      {
+        "episode": 23,
+        "frame": 0,
+        "split": "train",
+        "joint": "shoulder_lift",
+        "observed_px": [
+          316.0,
+          209.0
+        ],
+        "predicted_px": [
+          323.9895226941058,
+          205.68981104602122
+        ],
+        "error_xy_px": [
+          7.989522694105801,
+          -3.3101889539787805
+        ],
+        "depth_m": 0.8760019366734829
+      },
+      {
+        "episode": 23,
+        "frame": 0,
+        "split": "train",
+        "joint": "elbow_flex",
+        "observed_px": [
+          112.0,
+          213.0
+        ],
+        "predicted_px": [
+          139.04473228517838,
+          205.06697688831187
+        ],
+        "error_xy_px": [
+          27.044732285178384,
+          -7.933023111688129
+        ],
+        "depth_m": 0.8647961503941205
+      },
+      {
+        "episode": 23,
+        "frame": 0,
+        "split": "train",
+        "joint": "wrist_flex",
+        "observed_px": [
+          335.0,
+          141.0
+        ],
+        "predicted_px": [
+          333.5029097336001,
+          138.58539859454507
+        ],
+        "error_xy_px": [
+          -1.49709026639988,
+          -2.414601405454931
+        ],
+        "depth_m": 0.8465012143052986
+      },
+      {
+        "episode": 23,
+        "frame": 400,
+        "split": "train",
+        "joint": "shoulder_lift",
+        "observed_px": [
+          273.0,
+          222.0
+        ],
+        "predicted_px": [
+          277.85290265685046,
+          231.3960150872747
+        ],
+        "error_xy_px": [
+          4.8529026568504605,
+          9.39601508727469
+        ],
+        "depth_m": 0.8718774760919679
+      },
+      {
+        "episode": 31,
+        "frame": 400,
+        "split": "val",
+        "joint": "shoulder_lift",
+        "observed_px": [
+          298.0,
+          224.0
+        ],
+        "predicted_px": [
+          293.94535358623443,
+          223.664531135229
+        ],
+        "error_xy_px": [
+          -4.054646413765568,
+          -0.335468864771002
+        ],
+        "depth_m": 0.8713726024928028
+      },
+      {
+        "episode": 31,
+        "frame": 400,
+        "split": "val",
+        "joint": "elbow_flex",
+        "observed_px": [
+          397.0,
+          98.0
+        ],
+        "predicted_px": [
+          396.1208948764679,
+          115.21959529112189
+        ],
+        "error_xy_px": [
+          -0.8791051235320992,
+          17.21959529112189
+        ],
+        "depth_m": 0.8072628238707437
+      },
+      {
+        "episode": 31,
+        "frame": 400,
+        "split": "val",
+        "joint": "wrist_flex",
+        "observed_px": [
+          653.0,
+          190.0
+        ],
+        "predicted_px": [
+          610.1643324781812,
+          167.63698148212742
+        ],
+        "error_xy_px": [
+          -42.83566752181878,
+          -22.363018517872575
+        ],
+        "depth_m": 0.7807848470474092
+      },
+      {
+        "episode": 36,
+        "frame": 400,
+        "split": "val",
+        "joint": "shoulder_lift",
+        "observed_px": [
+          292.0,
+          221.0
+        ],
+        "predicted_px": [
+          289.4402472334426,
+          225.9571901458429
+        ],
+        "error_xy_px": [
+          -2.5597527665573807,
+          4.957190145842901
+        ],
+        "depth_m": 0.8713129708962892
+      },
+      {
+        "episode": 36,
+        "frame": 400,
+        "split": "val",
+        "joint": "elbow_flex",
+        "observed_px": [
+          385.0,
+          93.0
+        ],
+        "predicted_px": [
+          379.52305784417484,
+          115.09819738838674
+        ],
+        "error_xy_px": [
+          -5.4769421558251565,
+          22.098197388386737
+        ],
+        "depth_m": 0.8011242745494135
+      },
+      {
+        "episode": 36,
+        "frame": 400,
+        "split": "val",
+        "joint": "wrist_flex",
+        "observed_px": [
+          625.0,
+          210.0
+        ],
+        "predicted_px": [
+          587.2553751791786,
+          198.37616246243638
+        ],
+        "error_xy_px": [
+          -37.7446248208214,
+          -11.623837537563617
+        ],
+        "depth_m": 0.7812222627370411
+      }
+    ],
+    "mat_prediction": [
+      [
+        439.9232416177373,
+        336.38429167036577
+      ],
+      [
+        1041.7853328372328,
+        211.0850371672331
+      ],
+      [
+        1010.666119025195,
+        623.0690231800293
+      ],
+      [
+        225.46810637553142,
+        687.0011104353541
+      ]
+    ],
+    "ball_prediction": [
+      746.4032279661856,
+      196.39391823617504
+    ],
+    "bowl_prediction": [
+      843.7139979790084,
+      492.4921853615492
+    ],
+    "ball_projected_radius": 52.36493422555653,
+    "minimum_depth_m": 0.5440797224587028
+  },
+  "task_candidate": "configs/v2/measured_registration_20261028/task_landmark_fit.yaml",
+  "joint_offsets_deg": [
+    -14.224879132551363,
+    26.217726624513205,
+    -11.659255826574611,
+    0.0,
+    0.0
+  ],
+  "operator_to_task_yaw_deg": -87.32686882833994,
+  "ball_xy": [
+    0.3322099059877642,
+    -0.035344849180621196
+  ],
+  "bowl_xy": [
+    0.3802509398926837,
+    -0.3363350467973316
+  ],
+  "camera_position": [
+    0.4825160025660712,
+    -0.8038711384716204,
+    0.3944
+  ],
+  "limitations": [
+    "Joint/optical/base/model registration remains conditional and underconstrained; cannot claim independently calibrated transforms.",
+    "Measured scalars fixed to centralvalues; operator axisrotation fitted, base reference assumed CADorigin.",
+    "Bowl diameter4.5in assumedouter; bowlheight retained provisional30mm.",
+    "Sourcepaperheight estimated toprojectball but supportgeometry notapplied in emitted candidate; report reveals mismatch.",
+    "Validationhorns scored after selection; allsourcecapture identities previously explored; no untouched physicalacceptance claim."
+  ]
+}
