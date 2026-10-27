@@ -25,30 +25,6 @@ Note: there could be +- 5% measurments error.
 
 ## Current v2 workflow
 
-The local dataset has **41 episodes**. Reviewed conditions are 32 baseline, four ball shifts
-(6, 8, 9, 10), and five bowl shifts (21–25), with a seeded 29/6/6 episode split.
-The **27 October learned ACT results use frozen weights during evaluation**:
-the simulation-trained RGB/joint ACT completes **3/5 SO-101 development trials
-and 4/10 additional trials**. A separate SO-trained semantic ACT completes
-**4/5 Panda development trials** with a robot-specific IK adapter, but the same
-semantic policy completes **0/5 SO-101 trials**. These are different checkpoints;
-one shared policy working on both arms remains unestablished. The uploaded
-real-demonstration ACT completes **0/3 trials for each of its root and latest
-weight versions** in the current provisional scene.
-See the [frozen ACT follow-up](docs/v2_frozen_act_followup_20261027.md) for the
-checkpoint distinctions and the motion-interface and real-data bridge experiments.
-The subsequent [frozen generalization test](docs/v2_frozen_generalization_20261027.md)
-uses one shared semantic ACT on 20 new paired ball-and-bowl layouts: **15/20 Panda
-placements and 0/20 SO-101**, followed by separate lighting, size and friction
-conditions (**280 trials total**). Brighter lighting and a 5% smaller ball each
-cause initial-perception failure in all 20 layouts on both arms. Weights and
-controller settings remain fixed; reliable completion on both arms is unestablished.
-The earlier **RGB waypoint controller completed 4/5 trials on each arm**;
-those [geometric-control results](docs/v2_waypoint_results_20261026.md) remain a separate baseline.
-The [new physical measurements](docs/v2_measurements_20261026.md) are ingested with
-their ±5% bounds. They expose scene-spacing and joint-neutral discrepancies; the
-full camera/base/jaw registration remains provisional.
-
 Run the working geometric baseline from the configured start, without a settling reset:
 
 ```sh
@@ -57,38 +33,6 @@ Run the working geometric baseline from the configured start, without a settling
 .venv/bin/python scripts/run_visual_waypoint.py --robot panda --seeds 0 1 2 3 4 \
   --out outputs/v2/waypoint_panda_NEXT --video
 ```
-
-See the [v2 runbook](docs/v2_implementation_20261020.md) for the 12.5 Hz two-camera pipeline,
-CLIP/DINO/flow/kinematics experiments and remaining calibration gates. These experiments are
-implemented; transfer of the real-demonstration ACT to Panda has not yet been demonstrated.
-The [26 October status](docs/v2_calibration_status_20261026.md) links current execution
-fixes, temporal-context training, measurements and external implementation references.
-The measured scalars in `configs/task.yaml` remain in use; image tracking does not verify
-metric registration. The completed [offline learning screen](docs/v2_learning_screen_20261022.md)
-used provisional geometry; physical registration remains unresolved.
-The commands below document the retained legacy 10 Hz workflow.
-
-See [documentation index](docs/README.md) for the current contracts and runbooks.
-The latest [vision alignment and bottleneck experiments](docs/v2_vision_alignment_and_bottlenecks_20261024.md)
-measure randomly selected source frames with local Grounding DINO/SAM2, test fresh
-camera confirmation, and compare auxiliary keypoints and feasible follower targets.
-The [24 October corrective experiments](docs/v2_corrective_experiments_20261024.md)
-add explicit ball-image features and motion-sensitive validation, verify the existing
-nominal wrist camera binding, and compare feasible control targets. Independent
-physical registration is still required before corrected-label retraining or
-reserved checkpoint promotion.
-The [matched-object action probes](docs/v2_matched_object_actions_20261025.md) now compare
-similar arm states across different ball/bowl layouts, including stationary starts and
-localized image swaps. They expose weak action dependence separately from localization.
-The [three-episode capacity test](docs/v2_three_episode_motion_20261025.md) checks each
-training condition against hold/persistence on movement and stationary-run error before
-common development rollouts.
-The [executed-prefix comparison](docs/v2_prefix_capacity_20261025.md) tests two-action
-supervision with the same model and data. Training errors improve, but the capacity
-gate still fails and [matched object probes](docs/v2_prefix_object_actions_20261025.md)
-show mixed action dependence. Its [motion-onset audit](docs/v2_motion_onset_audit_20261025.md)
-keeps ambiguous examples visible. The [calibration capture sheet](docs/v2_calibration_capture_20261025.md)
-includes a blank measurement log and printable board for the independent physical checks.
 
 ## Install
 
