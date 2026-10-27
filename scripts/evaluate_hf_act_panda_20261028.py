@@ -1,9 +1,9 @@
 """Run the actual native HF ACT on live Panda images and virtual SO-101 state.
 
 Robot-only FK/IK maps SO-101 joint commands to Panda grasp points. A wrist camera
-mounted on Panda's hand matches the source optical pose at the mapped start and
-then moves with the live hand. Both actual Panda views enter the saved native HF
-processor once. This is a provisional embodiment adapter, not physical calibration.
+sits outside Panda's hand and looks past its fingertips using fixed robot-local
+geometry. Both actual Panda views enter the saved native HF processor once.
+This is a provisional embodiment adapter, not physical calibration.
 """
 
 from __future__ import annotations
@@ -50,15 +50,17 @@ def save_rgb(path, image):
         raise OSError(f"Could not write image {path}")
 
 
-def prepare_source(out, joint_offsets_deg):
+def prepare_source(out, joint_offsets_deg, *, source_scene=None, initial_gripper_percent=None):
     directory = out / "source"
     directory.mkdir()
-    scene = native.prepare_scene(directory)
+    scene = native.prepare_scene(directory, source=source_scene or Path("configs/v2/sim_so101.waypoint_20261026.yaml"))
     cfg, task = load_yaml(scene), load_yaml(directory / "task.yaml")
-    task["robot_so101"]["real_to_sim"]["offset_deg"] = list(joint_offsets_deg)
+    task["robot_so101"]["real_to_sim"]["offset_deg"] = [float(value) for value in joint_offsets_deg]
     # Retain the native physical start under an explicitly changed registration;
     # the corresponding raw degree/percent state is recomputed, never clipped.
     mapping = JointMapping.from_task_config(task)
+    if initial_gripper_percent is not None:
+        cfg["initial_qpos"][5] = float(mapping.gripper_real_to_sim_rad(initial_gripper_percent))
     cfg["initial_qpos_real_deg"] = real_from_sim(mapping, np.asarray(cfg["initial_qpos"])).tolist()
     (directory / "task.yaml").write_text(yaml.safe_dump(task, sort_keys=False))
     scene.write_text(yaml.safe_dump(cfg, sort_keys=False))
@@ -78,7 +80,7 @@ def panda_start(env, source, base_dx):
     return solved.qpos.copy(), width
 
 
-def camera_mount_at_start(env, source):
+def camera_mount_at_start(env, source, mode="external_hand"):
     """Express the source initial wrist optics in Panda's live hand coordinates."""
     source.source.reset(seed=0)
     camera_name = source.source.camera_bindings["observation.images.top"]
@@ -91,17 +93,31 @@ def camera_mount_at_start(env, source):
     camera_p_world = source_camera_p_task + env.offset
     relative_R = hand_R.T @ source_camera_R
     relative_p = hand_R.T @ (camera_p_world - hand_p_world)
+    if mode == "external_hand":
+        # The initial optical-pose match can sit inside Panda's larger hand.
+        # Mount outside its side and look past the fingertips, using hand-local
+        # robot geometry only, independent of the ball/bowl or episode outcome.
+        relative_p = np.array([.08, 0., 0.])
+        forward = np.array([0., 0., .20]) - relative_p
+        forward /= np.linalg.norm(forward)
+        right = np.cross(forward, [1., 0., 0.])
+        right /= np.linalg.norm(right)
+        up = np.cross(right, forward)
+        relative_R = np.column_stack([right, up, -forward])
+    elif mode != "source_optical_match":
+        raise ValueError("Unknown Panda wrist camera mount")
     descriptor = copy.deepcopy(source.source.task["additional_cameras"][0])
     descriptor["name"] = "top_hf_panda_nominal"
     descriptor["mounts"]["panda"] = {"body": "hand", "position_body_m": relative_p.tolist(),
         "xyaxes_body": relative_R[:, :2].T.ravel().tolist()}
-    descriptor["provenance"]["panda_mount"] = "Robot-only match to source nominal optical pose at mapped start; then rigidly follows actual Panda hand"
+    descriptor["provenance"]["panda_mount"] = mode
+    descriptor["provenance"]["panda_mount_scope"] = "Robot-only fixed hand-relative camera; never aimed at privileged object coordinates"
     return descriptor, {"source_camera_position_task_m": source_camera_p_task,
         "source_camera_rotation_task": source_camera_R, "panda_hand_relative_position_m": relative_p,
-        "panda_hand_relative_rotation": relative_R}
+        "panda_hand_relative_rotation": relative_R, "mode": mode}
 
 
-def prepare_panda(out, source, task, base_dx):
+def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand"):
     cfg = load_yaml("configs/v2/sim_panda.waypoint_20261026.yaml")
     cfg["control_hz"] = 25.
     data = load_yaml("configs/v2/data.waypoint_20261026.yaml")
@@ -115,7 +131,7 @@ def prepare_panda(out, source, task, base_dx):
     with PandaPickPlaceEnv(paths["sim_panda.yaml"], render_images=False) as env:
         start, width = panda_start(env, source, base_dx)
         env.reset(seed=0, scenario={"joint_positions": start, "gripper_opening": width})
-        camera, provenance = camera_mount_at_start(env, source)
+        camera, provenance = camera_mount_at_start(env, source, wrist_mount)
     panda_task["additional_cameras"] = [camera]
     data["camera_keys"] = ["observation.images.top", "observation.images.iphone"]
     paths["panda_task.yaml"].write_text(yaml.safe_dump(panda_task, sort_keys=False))
@@ -124,20 +140,28 @@ def prepare_panda(out, source, task, base_dx):
 
 
 def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None,
-        base_dx=-.15, seat_mm=8., video=False):
+        base_dx=-.15, seat_mm=8., video=False, source_scene=None,
+        initial_gripper_percent=None, wrist_mount="external_hand", gripper_readback="endpoint",
+        head_dir=None):
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
     torch.set_num_threads(2)
-    checkpoint = NativeLeRobotACT(snapshot)
+    if head_dir is None:
+        checkpoint = NativeLeRobotACT(snapshot)
+    else:
+        from real2sim.policy.local_hf_head import LocalHeadACT
+
+        checkpoint = LocalHeadACT(snapshot, head_dir)
     checkpoint.policy.eval().requires_grad_(False)
     execute_steps = checkpoint.config.n_action_steps if execute_steps is None else execute_steps
     if not 1 <= execute_steps <= checkpoint.config.chunk_size:
         raise ValueError("Execution prefix must fit native saved chunk")
-    source_scene, task = prepare_source(out, joint_offsets_deg)
+    source_scene, task = prepare_source(out, joint_offsets_deg, source_scene=source_scene,
+        initial_gripper_percent=initial_gripper_percent)
     source = retarget.VirtualSource(source_scene, panda_offset=np.array([-seat_mm / 1000., 0., 0.]))
     try:
-        panda_scene, camera_setup = prepare_panda(out, source, task, base_dx)
+        panda_scene, camera_setup = prepare_panda(out, source, task, base_dx, wrist_mount=wrist_mount)
         files = [Path(__file__), Path(retarget.__file__), Path(native.__file__),
             Path("src/real2sim/policy/native_lerobot_act.py"),
             Path("src/real2sim/panda/adapter.py"), Path("src/real2sim/panda/env.py"),
@@ -145,6 +169,9 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
             Path("src/real2sim/serialization.py"), source_scene, panda_scene,
             out / "panda_task.yaml", out / "panda_data.yaml", out / "source/task.yaml", out / "source/data.yaml"]
         files += list(Path(snapshot).glob("*.json")) + list(Path(snapshot).glob("*.safetensors"))
+        if head_dir is not None:
+            files += [Path(head_dir) / "head.json", Path(head_dir) / "head.pt",
+                Path("src/real2sim/policy/local_hf_head.py")]
         hashes = {str(path.resolve()): sha256_file(path) for path in files}
         report = {"schema": "native_hf_act_panda_20261028_v1", "status": "running",
             "repo_id": native.REPO, "revision": native.REVISION, "snapshot": str(snapshot),
@@ -152,13 +179,17 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
             "policy_hz": 25., "horizon_s": 30., "camera_order": checkpoint.camera_keys,
             "actual_panda_images": True, "saved_native_processors_used_once": True,
             "semantic_act_used": False, "source_actions": "Actual frozen pretrained HF ACT, absolute SO-101 joint degrees plus gripper percent",
-            "source_state_projection": "Live Panda grasp-point position to virtual SO-101 position-only IK; measured jaw width plus prior source command at full-open stop",
+            "source_state_projection": "Live Panda grasp-point position to virtual SO-101 position-only IK; explicitly declared measured-jaw readback projection",
+            "gripper_readback_projection": gripper_readback,
+            "initial_gripper_percent": initial_gripper_percent,
             "panda_action_projection": "Source command FK grasp point to Panda fixed-top-down IK; source0closed/90open to Panda0/80mm",
             "joint_offsets_deg": joint_offsets_deg, "panda_base_dx_task_m": base_dx,
             "grasp_point_offsets_m": {"so101": retarget.SOURCE_OFFSET, "panda": source.panda_offset},
             "wrist_camera": camera_setup, "lighting": "Unchanged nominal model lighting; no variation or randomization",
             "no_scripted_object_goals_or_task_corrections": True,
             "physical_calibration_accepted": False, "weights_frozen": True,
+            "local_head": getattr(checkpoint, "head_metadata", None),
+            "local_head_sha256": getattr(checkpoint, "local_head_sha256", None),
             "source_sha256_before": hashes, "seeds": seeds, "trials": []}
         (out / "executed_script.py").write_bytes(Path(__file__).read_bytes())
         save(out / "report.json", report)
@@ -186,6 +217,11 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                             infer_ms, state, image_hashes = 0., None, None
                             if not queue:
                                 state, error = source.source_state(env)
+                                if gripper_readback == "endpoint":
+                                    state[5] = float(np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.)
+                                    source.q[5] = source.mapping.gripper_real_to_sim_rad(float(state[5]))
+                                elif gripper_readback != "cad":
+                                    raise ValueError("Unknown gripper readback projection")
                                 errors.append(error)
                                 images = {key: env.render(env.camera_bindings[key]) for key in checkpoint.camera_keys}
                                 if tick == 0:
@@ -234,6 +270,7 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                     mean_latency_ms=float(np.mean(latencies)) if latencies else None,
                     video_path=str(directory / "rollout.mp4") if video else "", abort=abort)
                 row.update(panda_ik_reasons=reasons, policy_calls=len(latencies),
+                    local_head_sha256=getattr(checkpoint, "local_head_sha256", None),
                     max_virtual_projection_error_m=max(errors) if errors else None,
                     held_ever=tracker.held_ever, wall_s=time.perf_counter() - wall_start,
                     initial_scoring_only=initial_info["privileged_metrics"], trace=str(directory / "ticks.jsonl"))
@@ -262,7 +299,14 @@ if __name__ == "__main__":
     parser.add_argument("--execute-steps", type=int)
     parser.add_argument("--base-dx", type=float, default=-.15)
     parser.add_argument("--seat-mm", type=float, default=8.)
+    parser.add_argument("--source-scene", type=Path)
+    parser.add_argument("--initial-gripper-percent", type=float)
+    parser.add_argument("--wrist-mount", choices=("external_hand", "source_optical_match"), default="external_hand")
+    parser.add_argument("--gripper-readback", choices=("endpoint", "cad"), default="endpoint")
+    parser.add_argument("--head-dir", type=Path)
     parser.add_argument("--video", action="store_true")
     args = parser.parse_args()
     run(args.snapshot, args.out, args.seeds, joint_offsets_deg=args.joint_offsets_deg,
-        execute_steps=args.execute_steps, base_dx=args.base_dx, seat_mm=args.seat_mm, video=args.video)
+        execute_steps=args.execute_steps, base_dx=args.base_dx, seat_mm=args.seat_mm, video=args.video,
+        source_scene=args.source_scene, initial_gripper_percent=args.initial_gripper_percent,
+        wrist_mount=args.wrist_mount, gripper_readback=args.gripper_readback, head_dir=args.head_dir)

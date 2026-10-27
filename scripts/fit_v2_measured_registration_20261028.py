@@ -43,11 +43,12 @@ def look_at(position, target):
 
 
 class Fit:
-    def __init__(self):
+    def __init__(self, camera_signs=(1.0, 1.0)):
         from diag_v2_mat_camera import fit_edges
 
         annotations = json.loads(MAT_ANNOTATIONS.read_text())
         self.mat_pixels, _ = fit_edges(annotations["edge_samples_source_px"])
+        self.camera_signs = np.asarray(camera_signs, float)
         self.arrays = np.load(DATA)
         self.model = mujoco.MjModel.from_xml_path("assets/menagerie/robotstudio_so101/so101.xml")
         self.data = mujoco.MjData(self.model)
@@ -69,12 +70,13 @@ class Fit:
                 {**capture, "state": np.asarray(self.arrays["joint_state"][ids[0]], float)}
             )
 
-    @staticmethod
-    def geometry(x):
+    def geometry(self, x):
         yaw = x[0]
         R2 = rotation(yaw)
         ball = R2 @ np.array([0.0508, 0.3302])
-        camera = np.r_[R2 @ np.array([0.8255, 0.4445]), 0.3944]
+        camera = np.r_[
+            R2 @ (np.array([0.0508, 0.3302]) + self.camera_signs * [0.7747, 0.1143]), 0.3944
+        ]
         bowl = ball + 0.3048 * np.array([np.cos(x[14]), np.sin(x[14])])
         return ball, camera, bowl
 
@@ -85,7 +87,9 @@ class Fit:
         # Smoothly finite even when a poor initial guess puts a point behind
         # the camera; all selected solutions report minimum depth separately.
         depth = np.maximum(optical[:, 2], 0.02)
-        return x[4] * optical[:, :2] / depth[:, None] + [640.0, 360.0], optical[:, 2]
+        focal = [x[4], x[4] * x[18]] if len(x) > 16 else [x[4], x[4]]
+        center = x[16:18] if len(x) > 16 else [640.0, 360.0]
+        return focal * optical[:, :2] / depth[:, None] + center, optical[:, 2]
 
     def components(self, x):
         ball, camera, bowl = self.geometry(x)
@@ -131,7 +135,8 @@ class Fit:
         radius = 0.2032 / (2 * np.pi)
         ball_point = np.r_[ball, -0.012 + radius + x[15]]
         ball_pixels, ball_depth = self.project(ball_point[None], x, camera)
-        ball_projected_radius = x[4] * radius / max(float(ball_depth[0]), 0.02)
+        aspect = x[18] if len(x) > 16 else 1.0
+        ball_projected_radius = x[4] * np.sqrt(aspect) * radius / max(float(ball_depth[0]), 0.02)
         bowl_pixels, bowl_depth = self.project(np.r_[bowl, 0.030 - 0.012][None], x, camera)
         return {
             "horn_rows": horn_rows,
@@ -156,6 +161,11 @@ class Fit:
         )
         # Centres/radius read on original ep0:200 before any candidate render.
         # Bowl's approximate rim centre is deliberately given wider uncertainty.
+        prior = (
+            np.r_[(x[16:18] - [640.0, 360.0]) / [128.0, 72.0], (x[18] - 1.0) / 0.1]
+            if len(x) > 16
+            else []
+        )
         return np.r_[
             horns.ravel() / 8,
             (parts["mat_prediction"] - self.mat_pixels).ravel() / 3,
@@ -164,6 +174,7 @@ class Fit:
             (parts["ball_projected_radius"] - 51.0) / 4,
             x[11:14] / 20.0,
             x[8:11] / 0.04,
+            prior,
         ]
 
     def score(self, x):
@@ -190,11 +201,12 @@ class Fit:
         }
 
 
-def run(report_path):
+def run(report_path, *, all_signs=False, free_intrinsics=False):
     if report_path.exists():
         raise FileExistsError(report_path)
     fit = Fit()
     solutions = []
+    solution_signs = []
     bounds = (
         np.r_[
             -4 * np.pi,
@@ -225,11 +237,22 @@ def run(report_path):
             0.03,
         ],
     )
-    for degrees in (-50.0, -80.0, -110.0, -140.0):
+    if free_intrinsics:
+        bounds = (np.r_[bounds[0], -640.0, -720.0, 0.7], np.r_[bounds[1], 1920.0, 1440.0, 1.4])
+    signs_to_try = (
+        [(1.0, 1.0), (1.0, -1.0), (-1.0, 1.0), (-1.0, -1.0)] if all_signs else [(1.0, 1.0)]
+    )
+    for signs, degrees in (
+        (signs, degrees) for signs in signs_to_try for degrees in (-50.0, -80.0, -110.0, -140.0)
+    ):
+        fit.camera_signs = np.asarray(signs)
         yaw = np.deg2rad(degrees)
         ball = rotation(yaw) @ [0.0508, 0.3302]
         bowl = ball + 0.3048 * (rotation(yaw) @ [0.674248302, -0.738504724])
-        camera = np.r_[rotation(yaw) @ [0.8255, 0.4445], 0.3944]
+        camera = np.r_[
+            rotation(yaw) @ (np.array([0.0508, 0.3302]) + np.asarray(signs) * [0.7747, 0.1143]),
+            0.3944,
+        ]
         target = np.r_[(ball + bowl) / 2, 0.02]
         start = np.r_[
             yaw,
@@ -244,6 +267,8 @@ def run(report_path):
             np.arctan2(*(bowl - ball)[::-1]),
             0.005,
         ]
+        if free_intrinsics:
+            start = np.r_[start, 640.0, 360.0, 1.0]
         result = least_squares(
             fit.residual,
             start,
@@ -258,10 +283,12 @@ def run(report_path):
             gtol=1e-8,
         )
         solutions.append(result)
+        solution_signs.append(signs)
         print(
             json.dumps(
                 {
                     "start_operator_yaw_deg": degrees,
+                    "camera_signs": signs,
                     "cost": result.cost,
                     "parameters": result.x.tolist(),
                     "nfev": result.nfev,
@@ -270,6 +297,8 @@ def run(report_path):
             flush=True,
         )
     best = min(solutions, key=lambda result: result.cost)
+    best_index = next(index for index, value in enumerate(solutions) if value is best)
+    fit.camera_signs = np.asarray(solution_signs[best_index])
     x = best.x
     ball, camera, bowl = fit.geometry(x)
     R = cv2.Rodrigues(x[1:4])[0]
@@ -277,7 +306,9 @@ def run(report_path):
     task = yaml.safe_load(task_path.read_text())
     task["ball"]["start_region"]["center_task_xy"] = ball.tolist()
     task["bowl"]["center_task_xy"] = bowl.tolist()
-    task["table"]["mat"].update(size_xy=[.3048, .4064], center_task_xy=x[5:7].tolist(), yaw_deg=float(np.rad2deg(x[7])))
+    task["table"]["mat"].update(
+        size_xy=[0.3048, 0.4064], center_task_xy=x[5:7].tolist(), yaw_deg=float(np.rad2deg(x[7]))
+    )
     task["camera_iphone"].update(
         approx_position_task=camera.tolist(),
         intrinsics_px={"fx": float(x[4]), "fy": float(x[4]), "cx": 640.0, "cy": 360.0},
@@ -286,6 +317,17 @@ def run(report_path):
         look_at_task=(camera + R[2]).tolist(),
         extrinsics_provenance="Provisional joint image+operator measurement fit20261028; fixed scalargeometry, freeoperator-to-CADyaw/opticalrotation/focal; not physicalcalibration",
     )
+    if free_intrinsics:
+        task["camera_iphone"].update(
+            projection_model="opencv_pinhole",
+            distortion_coefficients=[0.0, 0.0, 0.0, 0.0, 0.0],
+            intrinsics_px={
+                "fx": float(x[4]),
+                "fy": float(x[4] * x[18]),
+                "cx": float(x[16]),
+                "cy": float(x[17]),
+            },
+        )
     task["robot_so101"]["real_to_sim"].update(
         offset_deg=np.r_[x[11:14], 0.0, 0.0].tolist(),
         provenance="Provisional camera+horn fit20261028 from sourceimages only; no tasksuccess objective",
@@ -298,18 +340,33 @@ def run(report_path):
         "lighting_changed": False,
         "task_success_used_for_selection": False,
     }
-    candidate = OUT / "task_landmark_fit.yaml"
+    suffix = (
+        "landmark_fit_free_intrinsics"
+        if free_intrinsics
+        else "landmark_fit_all_signs"
+        if all_signs
+        else "landmark_fit"
+    )
+    candidate = OUT / f"task_{suffix}.yaml"
     candidate.write_text(yaml.safe_dump(task, sort_keys=False))
     for robot in ("so101", "panda"):
         sim = yaml.safe_load((OUT / f"sim_{robot}_positive_all_scalars.yaml").read_text())
         sim["task_config"] = str(candidate.resolve())
-        (OUT / f"sim_{robot}_landmark_fit.yaml").write_text(yaml.safe_dump(sim, sort_keys=False))
+        if robot == "so101":
+            from real2sim.geometry.so101_fk import JointMapping
+            from real2sim.sim.env import sim_from_real
+
+            sim["initial_qpos"] = sim_from_real(
+                JointMapping.from_task_config(task), np.asarray(sim["initial_qpos_real_deg"])
+            ).tolist()
+        (OUT / f"sim_{robot}_{suffix}.yaml").write_text(yaml.safe_dump(sim, sort_keys=False))
     score = fit.score(x)
     report = {
         "schema": "measured_landmark_registration_hypothesis_20261028_v1",
         "physical_calibration_accepted": False,
         "lighting_changed": False,
         "policy_inference_or_task_success_used": False,
+        "free_intrinsics": free_intrinsics,
         "source_sha256": {
             str(p): sha256_file(p)
             for p in (
@@ -348,6 +405,8 @@ def run(report_path):
             "ball_support_height_m",
         ],
         "multistart_costs": [float(s.cost) for s in solutions],
+        "multistart_camera_signs": solution_signs,
+        "selected_camera_horizontal_signs": fit.camera_signs,
         "train_objective_cost": float(best.cost),
         "score": score,
         "task_candidate": str(candidate),
@@ -364,6 +423,8 @@ def run(report_path):
             "Validationhorns scored after selection; allsourcecapture identities previously explored; no untouched physicalacceptance claim.",
         ],
     }
+    if free_intrinsics:
+        report["parameter_order"] += ["principal_x_px", "principal_y_px", "focal_aspect_fy_fx"]
     write_json(report_path, report)
     print(
         json.dumps(
@@ -384,4 +445,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--report", type=Path, default=Path("results/v2/measured_registration_fit_20261028.json")
     )
-    run(parser.parse_args().report)
+    parser.add_argument("--all-signs", action="store_true")
+    parser.add_argument("--free-intrinsics", action="store_true")
+    args = parser.parse_args()
+    run(args.report, all_signs=args.all_signs, free_intrinsics=args.free_intrinsics)
