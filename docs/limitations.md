@@ -1,5 +1,9 @@
 # Limitations
 
+This is a historical 13 October snapshot. For current learned ACT results and
+remaining transfer/registration gaps, use the
+[27 October frozen ACT follow-up](v2_frozen_act_followup_20261027.md).
+
 Updated 2026-10-13 00:55 AEDT. Each item says what is limited, why, and what it means for the
 claims this project can make.
 

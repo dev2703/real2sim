@@ -1,5 +1,12 @@
 # Project documentation
 
+The [27 October frozen ACT follow-up](v2_frozen_act_followup_20261027.md)
+distinguishes the successful simulation-trained models from the uploaded
+real-demonstration ACT, and tracks the requested motion-interface reconstruction
+and real-data replay/registration investigations. Frozen ACT is already used;
+a shared checkpoint completing on both arms and real-data ACT transfer remain
+unestablished. See that report before interpreting the historical status below.
+
 The [26 October status](v2_calibration_status_20261026.md) supersedes the earlier
 missing-measurement conclusion. The [operator measurements](v2_measurements_20261026.md)
 are ingested, and the [RGB waypoint controller](v2_waypoint_results_20261026.md)

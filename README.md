@@ -27,10 +27,18 @@ Note: there could be +- 5% measurments error.
 
 The local dataset has **41 episodes**. Reviewed conditions are 32 baseline, four ball shifts
 (6, 8, 9, 10), and five bowl shifts (21–25), with a seeded 29/6/6 episode split.
-On 26 October, the repaired **RGB waypoint controller completed 4/5 pick-and-place
-trials on SO-101 and 4/5 on Panda**, using the measured ball size, sparse IK and
-bounded joint execution. These are geometric-controller results; learned ACT success
-and frozen ACT transfer remain unproved. See the [rollouts, failures and videos](docs/v2_waypoint_results_20261026.md).
+The **27 October learned ACT results use frozen weights during evaluation**:
+the simulation-trained RGB/joint ACT completes **3/5 SO-101 development trials
+and 4/10 additional trials**. A separate SO-trained semantic ACT completes
+**4/5 Panda development trials** with a robot-specific IK adapter, but the same
+semantic policy completes **0/5 SO-101 trials**. These are different checkpoints;
+one shared policy working on both arms remains unestablished. The uploaded
+real-demonstration ACT completes **0/3 trials for each of its root and latest
+weight versions** in the current provisional scene.
+See the [frozen ACT follow-up](docs/v2_frozen_act_followup_20261027.md) for the
+checkpoint distinctions and the motion-interface and real-data bridge experiments.
+The earlier **RGB waypoint controller completed 4/5 trials on each arm**;
+those [geometric-control results](docs/v2_waypoint_results_20261026.md) remain a separate baseline.
 The [new physical measurements](docs/v2_measurements_20261026.md) are ingested with
 their ±5% bounds. They expose scene-spacing and joint-neutral discrepancies; the
 full camera/base/jaw registration remains provisional.
@@ -46,7 +54,7 @@ Run the working geometric baseline from the configured start, without a settling
 
 See the [v2 runbook](docs/v2_implementation_20261020.md) for the 12.5 Hz two-camera pipeline,
 CLIP/DINO/flow/kinematics experiments and remaining calibration gates. These experiments are
-implemented; v2 learned task success and frozen Panda transfer have not yet been demonstrated.
+implemented; transfer of the real-demonstration ACT to Panda has not yet been demonstrated.
 The [26 October status](docs/v2_calibration_status_20261026.md) links current execution
 fixes, temporal-context training, measurements and external implementation references.
 The measured scalars in `configs/task.yaml` remain in use; image tracking does not verify

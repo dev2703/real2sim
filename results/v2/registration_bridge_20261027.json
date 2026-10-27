@@ -1,0 +1,684 @@
+{
+  "schema": "curated_real_data_ACT_registration_bridge_20261027_v1",
+  "full_report": "outputs/v2/registration_bridge_20261027/report.json",
+  "full_report_sha256": "d59b59fcb7f1c0da60b3e010b7d045b893007af5013fcffd5c6ba59382c57317",
+  "script": "scripts/audit_v2_registration_bridge_20261027.py",
+  "executed_script": "outputs/v2/registration_bridge_20261027/executed_audit.py",
+  "overlay": "outputs/v2/registration_bridge_20261027/camera_projection_comparison.jpg",
+  "scope": {
+    "dataset_root": "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v2",
+    "HF_validation_episodes": [
+      4,
+      7,
+      18,
+      32,
+      38,
+      40
+    ],
+    "validation_rows": 3802,
+    "split_source": ".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/experiment.json",
+    "HF_split_differs_from_historical_project_reserved_split": true,
+    "model_weights_changed": false,
+    "task_success_used_for_parameter_selection": false
+  },
+  "current_mapping": {
+    "sign": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "offset_deg": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "native_limits_rad": [
+      [
+        -1.91986,
+        1.91986
+      ],
+      [
+        -1.7453293,
+        1.7453293
+      ],
+      [
+        -1.69,
+        1.69
+      ],
+      [
+        -1.65806,
+        1.65806
+      ],
+      [
+        -2.7438473,
+        2.8412063
+      ],
+      [
+        -0.17453,
+        1.7453292
+      ]
+    ],
+    "native_arm_limits_deg": [
+      [
+        -109.99987525598623,
+        109.99987525598623
+      ],
+      [
+        -100.00000275052231,
+        100.00000275052231
+      ],
+      [
+        -96.82986737710912,
+        96.82986737710912
+      ],
+      [
+        -94.99984017946129,
+        94.99984017946129
+      ],
+      [
+        -157.21086991836626,
+        162.78912971598044
+      ]
+    ]
+  },
+  "validation_episode_compatibility": [
+    {
+      "episode": 4,
+      "rows": 532,
+      "fps": 25.0,
+      "first_follower_state_deg_percent": [
+        -3.692307710647583,
+        -104.43955993652344,
+        96.83516693115234,
+        75.64835357666016,
+        1.4505494832992554,
+        1.2228261232376099
+      ],
+      "follower_state": {
+        "rows_outside_any_native_limit": 185,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 167,
+          "elbow_flex": 166,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -21.714284896850586,
+          -104.70330047607422,
+          -24.83516502380371,
+          -34.769229888916016,
+          -7.956043720245361,
+          1.2228261232376099
+        ],
+        "max_deg_percent": [
+          25.846153259277344,
+          24.0,
+          96.92308044433594,
+          75.64835357666016,
+          16.395605087280273,
+          50.611412048339844
+        ],
+        "first_native_compatible_frame": 110,
+        "first_native_compatible_timestamp_s": 4.400000095367432,
+        "first_compatible_is_approved_task_start": false
+      },
+      "recorded_action": {
+        "rows_outside_any_native_limit": 167,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 167,
+          "elbow_flex": 0,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -22.0219783782959,
+          -104.79120635986328,
+          -28.351648330688477,
+          -36.69230651855469,
+          -8.307692527770996,
+          0.5154638886451721
+        ],
+        "max_deg_percent": [
+          25.9780216217041,
+          23.208791732788086,
+          96.74725341796875,
+          76.0,
+          16.83516502380371,
+          51.03092956542969
+        ],
+        "first_native_compatible_frame": 107,
+        "first_native_compatible_timestamp_s": 4.28000020980835,
+        "first_compatible_is_approved_task_start": false
+      }
+    },
+    {
+      "episode": 7,
+      "rows": 628,
+      "fps": 25.0,
+      "first_follower_state_deg_percent": [
+        -3.604395627975464,
+        -104.70330047607422,
+        96.83516693115234,
+        75.73626708984375,
+        0.3956044018268585,
+        1.2228261232376099
+      ],
+      "follower_state": {
+        "rows_outside_any_native_limit": 181,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 163,
+          "elbow_flex": 161,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -24.615385055541992,
+          -104.70330047607422,
+          -30.10988998413086,
+          -48.57143020629883,
+          -14.813186645507812,
+          1.2228261232376099
+        ],
+        "max_deg_percent": [
+          28.131868362426758,
+          35.69230651855469,
+          96.92308044433594,
+          75.73626708984375,
+          5.846153736114502,
+          52.24184799194336
+        ],
+        "first_native_compatible_frame": 127,
+        "first_native_compatible_timestamp_s": 5.079999923706055,
+        "first_compatible_is_approved_task_start": false
+      },
+      "recorded_action": {
+        "rows_outside_any_native_limit": 163,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 163,
+          "elbow_flex": 0,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -25.010988235473633,
+          -104.70330047607422,
+          -33.098899841308594,
+          -50.593406677246094,
+          -15.164834976196289,
+          0.4295532703399658
+        ],
+        "max_deg_percent": [
+          28.703296661376953,
+          35.16483688354492,
+          96.74725341796875,
+          76.0,
+          6.461538314819336,
+          52.57732009887695
+        ],
+        "first_native_compatible_frame": 124,
+        "first_native_compatible_timestamp_s": 4.960000038146973,
+        "first_compatible_is_approved_task_start": false
+      }
+    },
+    {
+      "episode": 18,
+      "rows": 668,
+      "fps": 25.0,
+      "first_follower_state_deg_percent": [
+        1.9340659379959106,
+        -104.61538696289062,
+        96.83516693115234,
+        75.73626708984375,
+        5.5824174880981445,
+        1.2228261232376099
+      ],
+      "follower_state": {
+        "rows_outside_any_native_limit": 261,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 244,
+          "elbow_flex": 243,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -19.868131637573242,
+          -104.79120635986328,
+          21.846153259277344,
+          -68.70330047607422,
+          -11.648351669311523,
+          1.2228261232376099
+        ],
+        "max_deg_percent": [
+          28.571428298950195,
+          21.36263656616211,
+          96.92308044433594,
+          75.73626708984375,
+          12.0,
+          54.144020080566406
+        ],
+        "first_native_compatible_frame": 145,
+        "first_native_compatible_timestamp_s": 5.800000190734863,
+        "first_compatible_is_approved_task_start": false
+      },
+      "recorded_action": {
+        "rows_outside_any_native_limit": 244,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 244,
+          "elbow_flex": 0,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -20.175825119018555,
+          -104.87911987304688,
+          18.241758346557617,
+          -69.75823974609375,
+          -11.912087440490723,
+          0.5154638886451721
+        ],
+        "max_deg_percent": [
+          29.230770111083984,
+          21.010988235473633,
+          96.65933990478516,
+          76.0879135131836,
+          12.263736724853516,
+          54.38144302368164
+        ],
+        "first_native_compatible_frame": 142,
+        "first_native_compatible_timestamp_s": 5.679999828338623,
+        "first_compatible_is_approved_task_start": false
+      }
+    },
+    {
+      "episode": 32,
+      "rows": 629,
+      "fps": 25.0,
+      "first_follower_state_deg_percent": [
+        2.98901104927063,
+        -104.70330047607422,
+        96.74725341796875,
+        75.64835357666016,
+        1.274725317955017,
+        1.35869562625885
+      ],
+      "follower_state": {
+        "rows_outside_any_native_limit": 219,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 203,
+          "elbow_flex": 20,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -19.428571701049805,
+          -104.87911987304688,
+          0.21978022158145905,
+          -29.934066772460938,
+          -7.340659141540527,
+          1.35869562625885
+        ],
+        "max_deg_percent": [
+          28.131868362426758,
+          23.648351669311523,
+          96.83516693115234,
+          75.64835357666016,
+          4.791208744049072,
+          53.736412048339844
+        ],
+        "first_native_compatible_frame": 110,
+        "first_native_compatible_timestamp_s": 4.400000095367432,
+        "first_compatible_is_approved_task_start": false
+      },
+      "recorded_action": {
+        "rows_outside_any_native_limit": 202,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 202,
+          "elbow_flex": 0,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -19.91208839416504,
+          -104.87911987304688,
+          -4.263736248016357,
+          -30.72527503967285,
+          -7.780219554901123,
+          0.4295532703399658
+        ],
+        "max_deg_percent": [
+          28.615385055541992,
+          23.296703338623047,
+          96.74725341796875,
+          76.0879135131836,
+          5.05494499206543,
+          54.03779983520508
+        ],
+        "first_native_compatible_frame": 106,
+        "first_native_compatible_timestamp_s": 4.239999771118164,
+        "first_compatible_is_approved_task_start": false
+      }
+    },
+    {
+      "episode": 38,
+      "rows": 657,
+      "fps": 25.0,
+      "first_follower_state_deg_percent": [
+        0.35164836049079895,
+        -104.79120635986328,
+        96.65933990478516,
+        75.64835357666016,
+        -0.21978022158145905,
+        1.2228261232376099
+      ],
+      "follower_state": {
+        "rows_outside_any_native_limit": 226,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 196,
+          "elbow_flex": 34,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -19.16483497619629,
+          -104.87911987304688,
+          -17.36263656616211,
+          -52.96703338623047,
+          -5.318681240081787,
+          1.2228261232376099
+        ],
+        "max_deg_percent": [
+          29.714284896850586,
+          26.549449920654297,
+          96.83516693115234,
+          75.64835357666016,
+          9.538461685180664,
+          65.48912811279297
+        ],
+        "first_native_compatible_frame": 137,
+        "first_native_compatible_timestamp_s": 5.480000019073486,
+        "first_compatible_is_approved_task_start": false
+      },
+      "recorded_action": {
+        "rows_outside_any_native_limit": 196,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 196,
+          "elbow_flex": 0,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -19.384614944458008,
+          -104.96703338623047,
+          -20.879121780395508,
+          -54.10988998413086,
+          -5.318681240081787,
+          0.34364262223243713
+        ],
+        "max_deg_percent": [
+          30.373626708984375,
+          25.846153259277344,
+          96.65933990478516,
+          76.17582702636719,
+          10.241758346557617,
+          65.80756378173828
+        ],
+        "first_native_compatible_frame": 134,
+        "first_native_compatible_timestamp_s": 5.360000133514404,
+        "first_compatible_is_approved_task_start": false
+      }
+    },
+    {
+      "episode": 40,
+      "rows": 688,
+      "fps": 25.0,
+      "first_follower_state_deg_percent": [
+        3.4285714626312256,
+        -104.70330047607422,
+        96.74725341796875,
+        75.73626708984375,
+        1.6263736486434937,
+        1.35869562625885
+      ],
+      "follower_state": {
+        "rows_outside_any_native_limit": 221,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 203,
+          "elbow_flex": 79,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -20.30769157409668,
+          -104.70330047607422,
+          0.6593406796455383,
+          -41.010990142822266,
+          -4.439560413360596,
+          1.35869562625885
+        ],
+        "max_deg_percent": [
+          27.076923370361328,
+          23.384614944458008,
+          96.92308044433594,
+          75.73626708984375,
+          7.4285712242126465,
+          65.48912811279297
+        ],
+        "first_native_compatible_frame": 142,
+        "first_native_compatible_timestamp_s": 5.679999828338623,
+        "first_compatible_is_approved_task_start": false
+      },
+      "recorded_action": {
+        "rows_outside_any_native_limit": 203,
+        "outside_by_joint": {
+          "shoulder_pan": 0,
+          "shoulder_lift": 203,
+          "elbow_flex": 0,
+          "wrist_flex": 0,
+          "wrist_roll": 0,
+          "gripper": 0
+        },
+        "min_deg_percent": [
+          -20.879121780395508,
+          -104.79120635986328,
+          -2.4175825119018555,
+          -42.758243560791016,
+          -4.879120826721191,
+          0.4295532703399658
+        ],
+        "max_deg_percent": [
+          27.47252655029297,
+          23.120878219604492,
+          96.65933990478516,
+          76.0879135131836,
+          7.868131637573242,
+          65.89347076416016
+        ],
+        "first_native_compatible_frame": 139,
+        "first_native_compatible_timestamp_s": 5.559999942779541,
+        "first_compatible_is_approved_task_start": false
+      }
+    }
+  ],
+  "aggregate": {
+    "validation_rows": 3802,
+    "follower_rows_outside_native_limits": 1293,
+    "follower_invalid_fraction": 0.3400841662283009,
+    "recorded_action_rows_outside_native_limits": 1175,
+    "action_invalid_fraction": 0.30904786954234614
+  },
+  "camera_confirmation_rescore": [
+    {
+      "episode": 2,
+      "frame": 82,
+      "regime": "early",
+      "source": "outputs/v2/fresh_camera_confirmation_20261024/ep002_f0082_iphone.png",
+      "source_sha256": "f9263c314844141ed6b7045647e88772e4d37ce9f4534759ca86927639bf50bb",
+      "current_scene_mat_projection": {
+        "per_corner_error_px": [
+          80.1090955481761,
+          40.4090297515861,
+          38.80524933161459,
+          44.53588750159444
+        ],
+        "rms_px": 53.71138037291266,
+        "p95_px": 74.77311434118884
+      },
+      "frozen_conditional_mat_camera": {
+        "per_corner_error_px": [
+          18.980496918612502,
+          17.710274648207808,
+          6.008141648619205,
+          11.666122191920456
+        ],
+        "rms_px": 14.543978689298731,
+        "p95_px": 18.789963578051797
+      },
+      "candidate_passes_existing_3px_gate": false,
+      "current_scene_prediction_source_px": [
+        [
+          368.7151469343274,
+          199.71037307037594
+        ],
+        [
+          859.4840776359983,
+          243.21968660093094
+        ],
+        [
+          1027.7120977826207,
+          712.7625565482218
+        ],
+        [
+          325.70093089249025,
+          678.466516590056
+        ]
+      ],
+      "conditional_candidate_prediction_source_px": [
+        [
+          430.19282014082364,
+          215.28373385526115
+        ],
+        [
+          865.9960444016456,
+          208.39376877229668
+        ],
+        [
+          1015.6065944017301,
+          672.862009098243
+        ],
+        [
+          374.93734342619234,
+          693.8375357130932
+        ]
+      ]
+    },
+    {
+      "episode": 15,
+      "frame": 19,
+      "regime": "late",
+      "source": "outputs/v2/fresh_camera_confirmation_20261024/ep015_f0019_iphone.png",
+      "source_sha256": "8358dcec61382e764d84299c4cd635a9c8d8f8789f7bbaa0487cce944633d89d",
+      "current_scene_mat_projection": {
+        "per_corner_error_px": [
+          66.02142606385277,
+          33.381779952332394,
+          58.666100139294116,
+          60.01752596482248
+        ],
+        "rms_px": 55.939669870277534,
+        "p95_px": 65.12084104899823
+      },
+      "frozen_conditional_mat_camera": {
+        "per_corner_error_px": [
+          17.34587284938224,
+          15.107214196042909,
+          36.950771445583094,
+          42.94972844823656
+        ],
+        "rms_px": 30.57427803674617,
+        "p95_px": 42.04988489783854
+      },
+      "candidate_passes_existing_3px_gate": false,
+      "current_scene_prediction_source_px": [
+        [
+          368.7151469343274,
+          199.71037307037594
+        ],
+        [
+          859.4840776359983,
+          243.21968660093094
+        ],
+        [
+          1027.7120977826207,
+          712.7625565482218
+        ],
+        [
+          325.70093089249025,
+          678.466516590056
+        ]
+      ],
+      "conditional_candidate_prediction_source_px": [
+        [
+          415.11494808165133,
+          228.23463421920448
+        ],
+        [
+          843.0190131986845,
+          221.15717509899267
+        ],
+        [
+          979.6197265296696,
+          683.8418312148603
+        ],
+        [
+          345.99300214343975,
+          704.0415012989715
+        ]
+      ]
+    }
+  ],
+  "evidence_inventory": {
+    "verified_static_CAD_landmark_identities": 0,
+    "candidate_static_landmarks": 12,
+    "complete_camera_registration_rows": 0,
+    "complete_joint_registration_rows": 0,
+    "source_resolution_intrinsics_measured": false,
+    "wrist_intrinsics_measured": false,
+    "physical_signs_and_zeros_verified": false
+  },
+  "physical_calibration_accepted": false,
+  "configuration_correction_adopted": false,
+  "decision": "Retain the declared provisional mapping for controlled HF retests. Degree units are supported, but no independently justified physical neutral/sign/camera correction can be adopted from the available files.",
+  "specific_missing_evidence": [
+    "An independently known shoulder-lift physical pose relative to the base, paired with follower readback; the servo range midpoint and stored homing offset do not establish CAD neutral.",
+    "Source-resolution intrinsics/distortion for each camera capture regime, plus a target-to-base transform independent of the arm FK under test and named fixed landmarks with verification captures.",
+    "A measured jaw gap at known gripper percentages, including a closed-zero reference; current encoder span alone does not establish physical closure/TCP."
+  ],
+  "changed_inputs": [],
+  "validation": "Executed exact unit/limit audit; frozen camera RMS reproduced to 1e-8 px; source hashes unchanged; overlay inspected; Ruff passes."
+}

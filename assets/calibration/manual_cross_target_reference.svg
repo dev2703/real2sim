@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260mm" height="175mm" viewBox="0 0 260 175">
+<rect width="260" height="175" fill="white"/>
+<g font-family="sans-serif" fill="#15212c">
+<text x="12" y="12" font-size="5">Hand-marked target: reference layout, no printing needed</text>
+<text x="12" y="21" font-size="3.8">12 numbered crosses on a flat rigid surface. Suggested spacing: about 40 mm.</text>
+<path d="M47 125H53 M50 122V128" stroke="#15212c" stroke-width="0.6"/>
+<text x="55" y="121" font-size="4">01</text>
+<path d="M87 125H93 M90 122V128" stroke="#15212c" stroke-width="0.6"/>
+<text x="95" y="121" font-size="4">02</text>
+<path d="M127 125H133 M130 122V128" stroke="#15212c" stroke-width="0.6"/>
+<text x="135" y="121" font-size="4">03</text>
+<path d="M167 125H173 M170 122V128" stroke="#15212c" stroke-width="0.6"/>
+<text x="175" y="121" font-size="4">04</text>
+<path d="M47 85H53 M50 82V88" stroke="#15212c" stroke-width="0.6"/>
+<text x="55" y="81" font-size="4">05</text>
+<path d="M87 85H93 M90 82V88" stroke="#15212c" stroke-width="0.6"/>
+<text x="95" y="81" font-size="4">06</text>
+<path d="M127 85H133 M130 82V88" stroke="#15212c" stroke-width="0.6"/>
+<text x="135" y="81" font-size="4">07</text>
+<path d="M167 85H173 M170 82V88" stroke="#15212c" stroke-width="0.6"/>
+<text x="175" y="81" font-size="4">08</text>
+<path d="M47 45H53 M50 42V48" stroke="#15212c" stroke-width="0.6"/>
+<text x="55" y="41" font-size="4">09</text>
+<path d="M87 45H93 M90 42V48" stroke="#15212c" stroke-width="0.6"/>
+<text x="95" y="41" font-size="4">10</text>
+<path d="M127 45H133 M130 42V48" stroke="#15212c" stroke-width="0.6"/>
+<text x="135" y="41" font-size="4">11</text>
+<path d="M167 45H173 M170 42V48" stroke="#15212c" stroke-width="0.6"/>
+<text x="175" y="41" font-size="4">12</text>
+<path d="M50 125H210 M50 125V30" stroke="#327b88" stroke-width="0.7" fill="none"/>
+<text x="211" y="127" font-size="4">+x</text>
+<text x="42" y="29" font-size="4">+y</text>
+<text x="12" y="142" font-size="3.8">01 is the origin. Measure each centre in x and y relative to it.</text>
+<text x="12" y="151" font-size="3.8">Record actual coordinates and uncertainty; do not enter 40 mm as if measured.</text>
+<text x="12" y="162" font-size="3.8">Move the target through varied tilts for optics; keep camera mounts fixed.</text>
+</g></svg>

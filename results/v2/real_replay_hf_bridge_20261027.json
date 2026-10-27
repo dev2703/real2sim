@@ -1,0 +1,271 @@
+{
+  "schema": "real_replay_hf_bridge_review_20261027_v1",
+  "status": "complete",
+  "full_report": "outputs/v2/real_replay_hf_bridge_20261027/report.json",
+  "full_report_sha256": "080c43cf1099d5b47b7b85217e6b33e58398ba15f63c6df3e0e68fd96f8ff84e",
+  "plan": "outputs/v2/real_replay_hf_bridge_20261027/plan.json",
+  "plan_sha256": "74806daadec3182a82e4442bb9d6640be913ad8e0b65e499de5f7d38d865f318",
+  "executed_snapshot": {
+    "authoritative_executed_snapshot": "outputs/v2/real_replay_hf_bridge_20261027/executed_script.py",
+    "executed_snapshot_sha256": "1b036b602503f025b38a04681de398341b602567150c001943d0bcfef548527b",
+    "runtime_source_before_sha256": "1b036b602503f025b38a04681de398341b602567150c001943d0bcfef548527b",
+    "runtime_source_after_sha256": "1b036b602503f025b38a04681de398341b602567150c001943d0bcfef548527b",
+    "current_runner_sha256": "01f828f70fdf59603c0b326b88b5d290df954605af6f23f6428947d93d24bb0c",
+    "post_run_changes": [
+      "Fix finalization sha256_file(name) to sha256_file(Path(name)).",
+      "Add checkpoint validation-episode assertion already checked in supplementary run ledger.",
+      "Include meta/episodes parquet hashes in future frozen plans; current run metadata recorded and verified in input_metadata_supplement.json."
+    ],
+    "all_change_timing": "After all replay/probe/live computation and after final runtime hashes were recovered. No weights, controller math, trajectories or recorded runtime hashes changed."
+  },
+  "frozen_model_files_unchanged": true,
+  "runtime_source_changes": [],
+  "metadata_supplement": "outputs/v2/real_replay_hf_bridge_20261027/input_metadata_supplement.json",
+  "physical_calibration_accepted": false,
+  "replay_full_starts_compatible": 0,
+  "replay_episode_denominator": 6,
+  "replay_suffix_starts": [
+    {
+      "episode": 4,
+      "chosen_suffix_start_frame": 110,
+      "chosen_suffix_start_time_s": 4.4
+    },
+    {
+      "episode": 7,
+      "chosen_suffix_start_frame": 127,
+      "chosen_suffix_start_time_s": 5.08
+    },
+    {
+      "episode": 18,
+      "chosen_suffix_start_frame": 145,
+      "chosen_suffix_start_time_s": 5.8
+    },
+    {
+      "episode": 32,
+      "chosen_suffix_start_frame": 110,
+      "chosen_suffix_start_time_s": 4.4
+    },
+    {
+      "episode": 38,
+      "chosen_suffix_start_frame": 137,
+      "chosen_suffix_start_time_s": 5.48
+    },
+    {
+      "episode": 40,
+      "chosen_suffix_start_frame": 142,
+      "chosen_suffix_start_time_s": 5.68
+    }
+  ],
+  "replay_modes": {
+    "recorded_leader_command": {
+      "runs": 6,
+      "ticks": 3025,
+      "aborted": 0,
+      "guard_reasons": {
+        "accepted": 2133,
+        "target_collision": 466,
+        "target_native_limits": 417,
+        "path_collision": 9
+      },
+      "accepted_fraction": 0.7051239669421487,
+      "silently_clipped_components": 0,
+      "weighted_source_readback_mae_degree_percent": [
+        1.4706723895946072,
+        16.245049092492536,
+        5.658250207120229,
+        21.074357780186105,
+        1.4890022021618263,
+        4.136214310590886
+      ]
+    },
+    "recorded_next_readback_reference": {
+      "runs": 6,
+      "ticks": 3025,
+      "aborted": 0,
+      "guard_reasons": {
+        "accepted": 1815,
+        "target_collision": 518,
+        "target_native_limits": 522,
+        "target_outside_workspace": 33,
+        "path_collision": 137
+      },
+      "accepted_fraction": 0.6,
+      "silently_clipped_components": 0,
+      "weighted_source_readback_mae_degree_percent": [
+        1.2734195706457638,
+        22.210081103488434,
+        15.649494486858776,
+        18.942824020760117,
+        1.5806787108131184,
+        5.488902274951462
+      ]
+    }
+  },
+  "paired_image_probe": {
+    "source_states": 18,
+    "checkpoints": 2,
+    "pairs": 36,
+    "image_condition_predictions": 72,
+    "exact_same_input_repeats": 36,
+    "excluded_source_states": [],
+    "repeat_max_error": 0.0,
+    "per_checkpoint": {
+      "root": {
+        "n": 18,
+        "mean_prefix_mae_degree_percent": {
+          "recorded": [
+            2.309056957562765,
+            4.417299052741792,
+            2.79549044503106,
+            3.823194546169704,
+            1.3558261786897974,
+            3.77884890238444
+          ],
+          "rendered": [
+            3.0925114896562365,
+            11.754666831096014,
+            9.778630585140652,
+            2.9248677041795528,
+            3.0576023987597893,
+            4.150087144639758
+          ]
+        },
+        "mean_input_swap_action_change_degree_percent": [
+          3.7811265177196924,
+          14.142143419053818,
+          7.843158361646865,
+          2.8616209348042805,
+          2.4020425574647057,
+          5.246818584865995
+        ],
+        "overall_five_arm_joint_mae_degrees": {
+          "recorded": 2.9401734360390237,
+          "rendered": 6.121655801766449
+        }
+      },
+      "latest": {
+        "n": 18,
+        "mean_prefix_mae_degree_percent": {
+          "recorded": [
+            2.0920587089326643,
+            5.026807206869126,
+            1.9394141938951281,
+            3.659103213416206,
+            1.5711377791232533,
+            3.826966942681207
+          ],
+          "rendered": [
+            4.406778577963511,
+            12.471944326162337,
+            7.2088656637403705,
+            3.235523001352947,
+            3.3208240110013225,
+            4.109295781453451
+          ]
+        },
+        "mean_input_swap_action_change_degree_percent": [
+          4.672210413879817,
+          15.304739708370631,
+          7.288441477881538,
+          3.0219445758395724,
+          2.4350331809785635,
+          5.241316901312934
+        ],
+        "overall_five_arm_joint_mae_degrees": {
+          "recorded": 2.8577042204472756,
+          "rendered": 6.128787116044097
+        }
+      }
+    }
+  },
+  "live_screens": {
+    "root_prefix10": {
+      "n": 1,
+      "held_lift": 0,
+      "placement": 0,
+      "ticks": 750,
+      "closest_tool_ball_m": 0.23956,
+      "guard_reasons": {
+        "accepted": 750
+      },
+      "weights_sha256": "c3b65a5d97e1d78866062503b63b7c63fec60ec7c623fa264c82ea96a1c16877",
+      "unchanged_weight_file": true,
+      "policy_eval_mode": true,
+      "parameters_require_grad": false,
+      "trace": "outputs/v2/real_replay_hf_bridge_20261027/root_prefix10/ticks.jsonl",
+      "video": "outputs/v2/real_replay_hf_bridge_20261027/root_prefix10/rollout.mp4",
+      "wall_seconds": 16.395499625010416,
+      "timing_scope": "Simulation pauses while synchronous host inference runs; no real-time hardware claim."
+    },
+    "root_prefix1": {
+      "n": 1,
+      "held_lift": 0,
+      "placement": 0,
+      "ticks": 750,
+      "closest_tool_ball_m": 0.25515,
+      "guard_reasons": {
+        "accepted": 750
+      },
+      "weights_sha256": "c3b65a5d97e1d78866062503b63b7c63fec60ec7c623fa264c82ea96a1c16877",
+      "unchanged_weight_file": true,
+      "policy_eval_mode": true,
+      "parameters_require_grad": false,
+      "trace": "outputs/v2/real_replay_hf_bridge_20261027/root_prefix1/ticks.jsonl",
+      "video": "outputs/v2/real_replay_hf_bridge_20261027/root_prefix1/rollout.mp4",
+      "wall_seconds": 94.16102983301971,
+      "timing_scope": "Simulation pauses while synchronous host inference runs; no real-time hardware claim."
+    },
+    "latest_prefix10": {
+      "n": 1,
+      "held_lift": 0,
+      "placement": 0,
+      "ticks": 750,
+      "closest_tool_ball_m": 0.18334,
+      "guard_reasons": {
+        "accepted": 750
+      },
+      "weights_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "unchanged_weight_file": true,
+      "policy_eval_mode": true,
+      "parameters_require_grad": false,
+      "trace": "outputs/v2/real_replay_hf_bridge_20261027/latest_prefix10/ticks.jsonl",
+      "video": "outputs/v2/real_replay_hf_bridge_20261027/latest_prefix10/rollout.mp4",
+      "wall_seconds": 16.436503208009526,
+      "timing_scope": "Simulation pauses while synchronous host inference runs; no real-time hardware claim."
+    },
+    "latest_prefix1": {
+      "n": 1,
+      "held_lift": 0,
+      "placement": 0,
+      "ticks": 750,
+      "closest_tool_ball_m": 0.16986,
+      "guard_reasons": {
+        "accepted": 750
+      },
+      "weights_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "unchanged_weight_file": true,
+      "policy_eval_mode": true,
+      "parameters_require_grad": false,
+      "trace": "outputs/v2/real_replay_hf_bridge_20261027/latest_prefix1/ticks.jsonl",
+      "video": "outputs/v2/real_replay_hf_bridge_20261027/latest_prefix1/rollout.mp4",
+      "wall_seconds": 93.09106437501032,
+      "timing_scope": "Simulation pauses while synchronous host inference runs; no real-time hardware claim."
+    }
+  },
+  "videos": "outputs/v2/real_replay_hf_bridge_20261027/video_validation.json",
+  "verification": {
+    "ffmpeg_full_decodes": 16,
+    "focused_tests": "2 passed",
+    "ruff": "pass"
+  },
+  "limits": [
+    "No accepted camera/base/joint registration was available to adopt.",
+    "Real replay starts are explicitly truncated suffixes, not successful full-episode replays.",
+    "Source object layouts and servo-state histories are unmatched; replay has no task-success claim.",
+    "Paired images vary camera geometry, rendering, and object appearance/layout jointly; not causal physical camera calibration.",
+    "Recorded source1280x720 frames bilinear-resized to640x360 using OpenCV INTER_LINEAR; historical training resize kernel is not pinned in experiment.json.",
+    "Paired states are three early native-compatible anchors per validation episode, not whole-episode validation.",
+    "Each live checkpoint/prefix condition is one development seed with full30s horizon; no generalization inference.",
+    "No retraining, no privileged goals into inference, no native arm clipping or changed guard thresholds."
+  ]
+}
