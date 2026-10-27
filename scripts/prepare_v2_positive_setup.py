@@ -10,18 +10,14 @@ from __future__ import annotations
 
 import argparse
 import copy
-import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 import yaml
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def positive_setup(task, measurements, height_m=.4064):
@@ -99,7 +95,7 @@ def prepare(out, task_path, measurement_path):
         (out / f"sim_{robot}.yaml").write_text(yaml.safe_dump(sim, sort_keys=False))
     report = {"schema": "positive_setup_candidate_v1", "physical_calibration_accepted": False,
         "source_sha256": {str(path): digest(path) for path in
-            (Path(__file__), task_path, measurement_path)},
+            (Path(__file__), Path("src/real2sim/artifacts.py"), task_path, measurement_path)},
         "files_sha256": {p.name: digest(p) for p in out.iterdir() if p.is_file()},
         "ball_xy_task_m": candidate["ball"]["start_region"]["center_task_xy"],
         "bowl_xy_task_m": candidate["bowl"]["center_task_xy"],

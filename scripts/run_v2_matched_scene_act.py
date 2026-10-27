@@ -9,7 +9,6 @@ rollouts have no teacher goals, corrective IK, phase input or object-state input
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import time
@@ -20,6 +19,7 @@ import numpy as np
 import torch
 import yaml
 
+from real2sim.artifacts import sha256_file as sha256
 from real2sim.config import REPO_ROOT, load_yaml, project_path
 from real2sim.data.prepare import compute_stats
 from real2sim.evaluation.metrics import TrialTracker, summarize
@@ -35,6 +35,8 @@ from real2sim.policy.adapters import (
 from real2sim.policy.follower_joint import check_joint_request
 from real2sim.policy.train import train
 from real2sim.policy.visual_waypoint import VisualWaypointController
+from real2sim.serialization import json_default as serializable
+from real2sim.serialization import write_json as _write_json
 from real2sim.sim.env import So101PickPlaceEnv, real_from_sim, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
 
@@ -45,24 +47,8 @@ VERSION = "matched_scene_native_commands_20261026_v1"
 SOURCE = "SIMULATED_RGB_WAYPOINT_TEACHER"
 
 
-def sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def serializable(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
 def write_json(path, value):
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, indent=2, default=serializable, allow_nan=False) + "\n")
-    temporary.replace(path)
+    _write_json(path, value, atomic=True)
 
 
 def tracker_for(env):
@@ -297,8 +283,8 @@ def run(scene, out):
     torch.set_num_threads(2)
     sources = [Path(__file__), scene, project_path(load_yaml(scene)["task_config"]),
         *[REPO_ROOT / "src/real2sim" / name for name in (
-            "policy/train.py", "policy/act.py", "policy/dataset.py", "policy/adapters.py",
-            "policy/visual_waypoint.py", "policy/visual_targets.py", "sim/env.py", "sim/kinematics.py")]]
+            "artifacts.py", "serialization.py", "policy/train.py", "policy/act.py", "policy/dataset.py", "policy/adapters.py",
+            "policy/visual_waypoint.py", "policy/visual_targets.py", "sim/env.py", "sim/base_env.py", "sim/kinematics.py")]]
     hashes = {str(p.resolve()): sha256(p) for p in sources}
     report = {"schema": VERSION, "status": "collecting", "scene": str(scene),
         "training_jobs": 1, "maximum_training_examples": 32000,

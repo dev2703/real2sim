@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import math
 import sys
@@ -20,9 +19,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import REPO_ROOT, load_yaml
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
+from real2sim.serialization import json_default
+from real2sim.serialization import write_json as _write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 
 SOURCE = "RGB_WAYPOINT_CONTROLLER"
@@ -32,24 +34,8 @@ DEFAULT_CONFIGS = {
 }
 
 
-def json_default(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
 def write_json(path, value):
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, indent=2, default=json_default, allow_nan=False) + "\n")
-    temporary.replace(path)
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    _write_json(path, value, atomic=True)
 
 
 def project_path(path):

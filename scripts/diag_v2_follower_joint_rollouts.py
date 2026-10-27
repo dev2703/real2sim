@@ -18,20 +18,10 @@ from real2sim.data.follower_joint_targets import VARIANTS
 from real2sim.data.raw import sha256_file
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.run import build_learned_controller
+from real2sim.serialization import json_default as json_value
+from real2sim.serialization import write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
-
-
-def json_value(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    raise TypeError(type(value).__name__)
-
-
-def write_json(path: Path, value):
-    path.write_text(json.dumps(value, indent=2, default=json_value, allow_nan=False) + "\n")
 
 
 def run(pilot: Path, sim_path: Path, eval_path: Path, out: Path, seeds: list[int], max_ticks: int):

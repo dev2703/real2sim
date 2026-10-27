@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import hashlib
 import json
 import tempfile
 from pathlib import Path
@@ -19,14 +18,11 @@ import cv2
 import numpy as np
 import yaml
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml
 from real2sim.policy.visual_targets import camera_pose_task, locate_objects
 from real2sim.sim.cameras import camera_intrinsics_px
 from real2sim.sim.env import So101PickPlaceEnv
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def camera_height_candidate(task, clarification):
@@ -130,7 +126,7 @@ def main():
               "no_actions_or_task_success_evaluated": True, "seeds": args.seeds,
               "camera_identity_is_assumption": True, "camera_orientation_retained_provisionally": True,
               "source_sha256": {str(path): digest(path) for path in
-                  (Path(__file__), args.task, args.measurements, args.clarification, args.task_out,
+                  (Path(__file__), Path("src/real2sim/artifacts.py"), args.task, args.measurements, args.clarification, args.task_out,
                    args.measurements_out, args.sim, Path("src/real2sim/policy/visual_targets.py"))},
               "cases": {}}
     with tempfile.TemporaryDirectory() as temporary:

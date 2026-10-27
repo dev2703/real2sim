@@ -330,9 +330,9 @@ def main():
     cfg = load_yaml(args.config)
     sources = [args.config, Path(cfg["task_config"]), Path(cfg["data_config"]),
         Path(cfg["model"]), Path(cfg["manifest"]), Path(__file__),
-        Path("src/real2sim/config.py"), Path("src/real2sim/evaluation/oracle.py"),
-        Path("src/real2sim/evaluation/metrics.py"), Path("src/real2sim/sim/env.py"),
-        Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/sim/model.py"),
+        Path("src/real2sim/config.py"), Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/serialization.py"),
+        Path("src/real2sim/evaluation/metrics.py"), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"),
+        Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/sim/model.py"), Path("src/real2sim/artifacts.py"),
         Path("src/real2sim/sim/cameras.py"), Path("src/real2sim/geometry/so101_fk.py"),
         Path("src/real2sim/geometry/so3.py"), Path("src/real2sim/data/transforms.py"),
         Path("src/real2sim/policy/adapters.py")]

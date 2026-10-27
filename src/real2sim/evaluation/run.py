@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import math
 import platform
@@ -39,6 +38,7 @@ from pathlib import Path
 
 import numpy as np
 
+from real2sim.artifacts import sha256_file as sha256_file
 from real2sim.config import load_yaml
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
@@ -54,6 +54,7 @@ from real2sim.policy.adapters import (
     PandaActionAdapter,
     PandaObservationAdapter,
 )
+from real2sim.serialization import json_default as _json_default
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
@@ -107,14 +108,6 @@ class HoldPoseController:
     def step(self, obs: dict, env) -> ApplyResult:
         obs, _, _, truncated, info = env.step(self.action)
         return ApplyResult(obs, info, truncated, float(np.mean(info["control"]["limit_clipped"])))
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for block in iter(lambda: f.read(1 << 20), b""):
-            h.update(block)
-    return h.hexdigest()
 
 
 def check_contract_timing_and_image(contract: dict, env) -> None:
@@ -405,16 +398,6 @@ def _compact_stats(stats: dict | None) -> dict | None:
         out[f"{key}_mean"] = (float(np.mean(vals)) if vals else None)
         out[f"{key}_max"] = (float(np.max(vals)) if vals else None)
     return out
-
-
-def _json_default(o):
-    if isinstance(o, (np.floating, np.integer)):
-        return o.item()
-    if isinstance(o, np.ndarray):
-        return o.tolist()
-    if isinstance(o, Path):
-        return str(o)
-    raise TypeError(f"not JSON serialisable: {type(o)}")
 
 
 def main(argv: list[str] | None = None) -> None:

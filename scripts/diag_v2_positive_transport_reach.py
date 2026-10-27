@@ -9,7 +9,6 @@ Neither calculation establishes physical robot geometry or a measured bowl pose.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
@@ -17,24 +16,14 @@ import mujoco
 import numpy as np
 from scipy.optimize import least_squares
 
+from real2sim.artifacts import sha256_file as sha256
+from real2sim.serialization import json_default as as_json
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
 
 SCENE = Path("configs/v2/positive_setup_20261026/sim_so101.yaml")
 TRIALS = Path("outputs/v2/rgb_waypoint_so101_20261026_positive/report.json")
 BALL_IN_TOOL = np.array([-.010, 0., .030])
-
-
-def sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def as_json(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    raise TypeError(type(value).__name__)
 
 
 def reach_certificate(env, goal):
@@ -78,7 +67,8 @@ def run(out, starts=64):
     if out.exists():
         raise FileExistsError(out)
     previous = json.loads(TRIALS.read_text())
-    inputs = [Path(__file__), SCENE, TRIALS, Path("configs/v2/positive_setup_20261026/task.yaml"),
+    inputs = [Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
+              SCENE, TRIALS, Path("configs/v2/positive_setup_20261026/task.yaml"),
               Path("assets/menagerie/robotstudio_so101/so101.xml"),
               Path("src/real2sim/sim/kinematics.py")]
     before = {str(p): sha256(p) for p in inputs}
@@ -102,7 +92,7 @@ def run(out, starts=64):
         for name, rim in (("actual_rgb_transport_goal", bowl), ("nominal_declared_transport_goal", nominal)):
             goal = rim + [0, 0, env.task["ball"]["radius"] + .03]
 
-            def residual(q):
+            def residual(q, goal=goal):
                 pose = ik.forward(np.r_[q, grip])
                 return pose[:3, 3] + pose[:3, :3] @ BALL_IN_TOOL - goal
 

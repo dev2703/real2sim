@@ -67,8 +67,8 @@ def _homography_diversity(points, views, size):
         if H is None:
             raise ValueError("checkerboard homography failed")
 
-        def v(i, j):
-            a, b = H[:, i], H[:, j]
+        def v(i, j, homography=H):
+            a, b = homography[:, i], homography[:, j]
             return np.array([a[0]*b[0], a[0]*b[1]+a[1]*b[0], a[1]*b[1],
                              a[2]*b[0]+a[0]*b[2], a[2]*b[1]+a[1]*b[2], a[2]*b[2]])
         for row in (v(0, 1), v(0, 0) - v(1, 1)):

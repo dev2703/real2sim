@@ -7,19 +7,15 @@ physical calibration. Four fitted virtual corners are not held-out verification.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
 import cv2
 import numpy as np
 
+from real2sim.artifacts import sha256_file as sha256
 from real2sim.config import REPO_ROOT, load_yaml
 from real2sim.geometry.planar_camera import fit_planar_camera
-
-
-def sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def fit_edges(samples):
@@ -152,7 +148,7 @@ def run(annotations_path, output_path, overlay_path):
             "annotations_path": str(annotations_path), "annotations_sha256": sha256(annotations_path),
             "inputs": {key: {"path": str(path), "sha256": sha256(path)} for key, path in paths.items()},
             "dependencies_sha256": {str(path.relative_to(REPO_ROOT)): sha256(path) for path in (
-                Path(__file__).resolve(), REPO_ROOT / "src/real2sim/geometry/planar_camera.py",
+                Path(__file__).resolve(), REPO_ROOT / "src/real2sim/artifacts.py", REPO_ROOT / "src/real2sim/geometry/planar_camera.py",
                 REPO_ROOT / "src/real2sim/geometry/registration.py")},
             "opencv_version": cv2.__version__,
         },

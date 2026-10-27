@@ -11,18 +11,14 @@ from __future__ import annotations
 
 import argparse
 import copy
-import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 import yaml
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def total_distance_setup(task, measurements, *, height_m=.4064):
@@ -107,7 +103,7 @@ def prepare(out, task_path, measurement_path):
                                            "sha256": digest(clarification_path)}
     task_target = out / "task.yaml"
     task_target.write_text(yaml.safe_dump(candidate, sort_keys=False))
-    sources = [Path(__file__), task_path, measurement_path]
+    sources = [Path(__file__), Path("src/real2sim/artifacts.py"), task_path, measurement_path]
     for robot in ("so101", "panda"):
         source = Path(f"configs/v2/sim_{robot}.waypoint_20261026.yaml")
         sim = load_yaml(source)

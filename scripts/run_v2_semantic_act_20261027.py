@@ -9,7 +9,6 @@ open/close intent; robot-specific IK never supplies task translation goals.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -24,6 +23,7 @@ from scipy.optimize import least_squares
 from scipy.spatial.transform import Rotation
 from torch.utils.data import DataLoader, Dataset
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml
 from real2sim.data.prepare import compute_stats
 from real2sim.evaluation.metrics import TrialTracker, summarize
@@ -35,6 +35,8 @@ from real2sim.panda.env import PandaPickPlaceEnv
 from real2sim.panda.model import POINTING_DOWN
 from real2sim.policy.follower_joint import check_joint_request
 from real2sim.policy.visual_targets import camera_pose_task, locate_objects
+from real2sim.serialization import json_default as serial
+from real2sim.serialization import write_json as save
 from real2sim.sim.cameras import camera_intrinsics_px
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
@@ -45,24 +47,6 @@ PANDA_SCENE = Path("configs/v2/sim_panda.waypoint_20261026.yaml")
 SO_OFFSET = np.array([-.010, 0., .030])
 PANDA_OFFSET = np.array([-.008, 0., 0.])
 SEEDS = [300, 301, 302]
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def serial(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
-def save(path, value):
-    path.write_text(json.dumps(value, default=serial, indent=2, allow_nan=False) + "\n")
 
 
 def point(pose, offset):
@@ -399,7 +383,8 @@ def main(out):
         "physical_calibration_accepted": False, "real_hf_weights_used": False,
         "privileged_object_or_phase_inputs": False,
         "source_sha256_before": {str(p): digest(p) for p in
-            (Path(__file__), SOURCE / "arrays.npz", SOURCE / "manifest.json", SO_SCENE, PANDA_SCENE)}}
+            (Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
+             SOURCE / "arrays.npz", SOURCE / "manifest.json", SO_SCENE, PANDA_SCENE)}}
     save(out / "report.json", report)
     payload = prepare(out)
     report["status"] = "training"

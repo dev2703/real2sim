@@ -43,6 +43,14 @@ The hand-marked target uses manual source-pixel correspondences; it is not passe
 to the existing automatic checkerboard detector. Measurement and annotation error
 remain explicit, and results receive independent verification.
 
+The [manual target fitter](../scripts/calibrate_v2_manual_target.py) is implemented.
+Seven focused tests pass, including known-camera recovery, verification isolation,
+duplicate-source rejection and degenerate-view rejection. An explicitly
+[synthetic CLI check](../outputs/v2/manual_target_synthetic_verification_20261027/fitted/report.json)
+recovers its known focal lengths; it is software verification, not a physical
+calibration result. Both prepared real-camera inputs remain incomplete until the
+operator supplies actual measurements and source captures.
+
 ## Capture without changing the existing registration
 
 Keep the robot base and camera mounts at their recording positions. Move the

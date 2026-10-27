@@ -59,9 +59,9 @@ def main():
     sources = [Path(__file__), Path("scripts/diag_so101_long_hold.py"),
         Path("scripts/diag_so101_feasible_carry.py"),
         Path("scripts/diag_so101_contact_retention.py"),
-        Path("src/real2sim/sim/ball_support.py"), Path("src/real2sim/sim/model.py"),
-        Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/kinematics.py"),
-        Path("src/real2sim/evaluation/oracle.py"), args.config,
+        Path("src/real2sim/sim/ball_support.py"), Path("src/real2sim/sim/model.py"), Path("src/real2sim/artifacts.py"),
+        Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"), Path("src/real2sim/sim/kinematics.py"),
+        Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/serialization.py"), args.config,
         Path(load_yaml(args.config)["task_config"])]
     before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
     report = {"kind": "PRIVILEGED_SUPPORT_RETENTION_SENSITIVITY_NOT_CALIBRATION",

@@ -1,5 +1,10 @@
 # Frozen ACT, motion reconstruction and the real-data bridge — 27 October 2026
 
+The subsequent [frozen generalization evaluation](v2_frozen_generalization_20261027.md)
+now tests the shared semantic checkpoint on 20 new paired layouts and separate
+lighting, ball-size and friction conditions. Its 280-trial evidence retains every
+failure and leaves the checkpoints and controller settings unchanged.
+
 Both requested software experiments have been executed. The
 [combined evidence index](../results/v2/frozen_act_followup_20261027.json)
 records the component reports, result denominators, artifact hashes and remaining

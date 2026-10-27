@@ -37,6 +37,12 @@ real-demonstration ACT completes **0/3 trials for each of its root and latest
 weight versions** in the current provisional scene.
 See the [frozen ACT follow-up](docs/v2_frozen_act_followup_20261027.md) for the
 checkpoint distinctions and the motion-interface and real-data bridge experiments.
+The subsequent [frozen generalization test](docs/v2_frozen_generalization_20261027.md)
+uses one shared semantic ACT on 20 new paired ball-and-bowl layouts: **15/20 Panda
+placements and 0/20 SO-101**, followed by separate lighting, size and friction
+conditions (**280 trials total**). Brighter lighting and a 5% smaller ball each
+cause initial-perception failure in all 20 layouts on both arms. Weights and
+controller settings remain fixed; reliable completion on both arms is unestablished.
 The earlier **RGB waypoint controller completed 4/5 trials on each arm**;
 those [geometric-control results](docs/v2_waypoint_results_20261026.md) remain a separate baseline.
 The [new physical measurements](docs/v2_measurements_20261026.md) are ingested with

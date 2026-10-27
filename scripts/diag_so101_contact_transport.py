@@ -109,9 +109,9 @@ def main():
     scenes = [("original_no_spacer", Path("outputs/v2/feasible_carry_20261023_no_spacer_config/sim.yaml"), (0, 4, 20)),
               ("image10mm_fixed", Path("outputs/v2/image_support_scenes_20261023/image_support_10mm_sim.yaml"), (0,))]
     paths = {Path(__file__), Path("scripts/diag_so101_feasible_carry.py"),
-             Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/model.py"),
+             Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"), Path("src/real2sim/sim/model.py"), Path("src/real2sim/artifacts.py"),
              Path("src/real2sim/sim/ball_support.py"), Path("src/real2sim/sim/kinematics.py"),
-             Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/evaluation/metrics.py")}
+             Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/serialization.py"), Path("src/real2sim/evaluation/metrics.py")}
     for _, config, _ in scenes:
         cfg = load_yaml(config)
         paths.update([config, Path(cfg["task_config"]), Path(cfg["model"]), Path(cfg["manifest"]), Path(cfg["data_config"])])

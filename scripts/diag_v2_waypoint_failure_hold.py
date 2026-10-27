@@ -3,18 +3,14 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import importlib.util
 import json
 from pathlib import Path
 from unittest.mock import patch
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.policy import visual_waypoint
 from real2sim.policy.waypoint_failure_hold import FailureHoldWaypointController
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def run(out: Path):
@@ -49,7 +45,7 @@ def run(out: Path):
                 "inputs_for_failure_handling": "phase and accepted native command history only; no object/contact/success flags",
                 "changes_to_scene_grasp_ik_or_physics": False,
                 "source_sha256": {str(path): digest(path) for path in (Path(__file__), source,
-                    Path("src/real2sim/policy/waypoint_failure_hold.py"))},
+                    Path("src/real2sim/artifacts.py"), Path("src/real2sim/policy/waypoint_failure_hold.py"))},
                 "full_report": str(out / "report.json"), "trials": retained}
     (out / "failure_hold_protocol.json").write_text(json.dumps(metadata, indent=2) + "\n")
     return metadata

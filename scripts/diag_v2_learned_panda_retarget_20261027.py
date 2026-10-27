@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import hashlib
 import json
 import math
 import time
@@ -24,6 +23,7 @@ import torch
 import yaml
 from scipy.optimize import least_squares
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml, project_path
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
@@ -35,28 +35,11 @@ from real2sim.panda.retarget import classify_contacts
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.adapters import normalize_image_chw
 from real2sim.policy.bounded_joint import bound_gripper_command
+from real2sim.serialization import json_default, write_json
 from real2sim.sim.env import So101PickPlaceEnv, real_from_sim
 
 SOURCE_OFFSET = np.array([-.010, 0., .030])
 PANDA_OFFSET = np.array([-.008, 0., 0.])
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def json_default(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
-def write_json(path, value):
-    path.write_text(json.dumps(value, default=json_default, indent=2, allow_nan=False) + "\n")
 
 
 def validate_learned_trace(trace_path, checkpoint_sha256):
@@ -190,11 +173,12 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
     panda_offset = np.array([-seat_mm / 1000., 0., 0.])
     source = VirtualSource(source_scene, panda_offset=panda_offset)
     rows = []
-    sources = [Path(__file__), source_scene, panda_scene, checkpoint / "model.safetensors",
+    sources = [Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
+        source_scene, panda_scene, checkpoint / "model.safetensors",
         checkpoint / "real2sim_contract.json", checkpoint / "config.json", checkpoint / "stats.json",
         project_path(config["task_config"]), project_path(config["data_config"]),
         project_path(config["model"]), project_path(source.source.config["model"]),
-        Path("src/real2sim/panda/adapter.py"), Path("src/real2sim/panda/env.py"),
+        Path("src/real2sim/panda/adapter.py"), Path("src/real2sim/panda/env.py"), Path("src/real2sim/sim/base_env.py"),
         Path("src/real2sim/geometry/so101_fk.py"), Path("src/real2sim/policy/bounded_joint.py")]
     trace, provenance = None, None
     if mode == "trajectory":

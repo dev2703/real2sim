@@ -53,6 +53,7 @@ from real2sim.config import load_yaml
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import IPHONE_KEY, ApplyResult
+from real2sim.serialization import json_default as _json_default
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
 from real2sim.sim.model import project_path
@@ -427,18 +428,6 @@ def run_trials(*, config: Path, eval_config: Path, n_trials: int, seed_start: in
     (out / "summary.json").write_text(json.dumps(summary, indent=2, default=_json_default) + "\n")
     print(f"successes {summary['summary']['successes']}/{n_trials} -> {out}", flush=True)
     return summary
-
-
-def _json_default(o):
-    if isinstance(o, (np.floating, np.integer)):
-        return o.item()
-    if isinstance(o, (np.ndarray, tuple)):
-        return list(o)
-    if isinstance(o, Path):
-        return str(o)
-    if isinstance(o, (np.bool_,)):
-        return bool(o)
-    raise TypeError(f"not JSON serialisable: {type(o)}")
 
 
 def main(argv: list[str] | None = None) -> None:

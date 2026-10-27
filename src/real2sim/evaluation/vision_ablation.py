@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from real2sim.evaluation.run import sha256_file
+from real2sim.artifacts import sha256_file
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.dataset import DerivedTickDataset
 

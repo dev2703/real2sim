@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import collections
-import hashlib
 import json
 from pathlib import Path
 
@@ -17,12 +16,14 @@ import cv2
 import numpy as np
 import torch
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml
 from real2sim.data.transforms import letterbox_rgb
 from real2sim.evaluation.metrics import TrialTracker
 from real2sim.evaluation.run import build_learned_controller
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.adapters import CartesianActionAdapter
+from real2sim.serialization import json_default, write_json
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
 
@@ -30,22 +31,6 @@ CHECKPOINT = Path("outputs/v2/three_episode_history4_20261026/training/checkpoin
 SCENE = Path("outputs/v2/inference_sim_smoke_20261023/sim.yaml")
 HISTORY = Path(".cache/v2_history4_20261026")
 TRACES = Path("outputs/v2/history4_execution_20261026")
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def json_default(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    raise TypeError(type(value).__name__)
-
-
-def write_json(path, value):
-    path.write_text(json.dumps(value, indent=2, default=json_default, allow_nan=False) + "\n")
 
 
 def contact_probe(env):
@@ -196,7 +181,8 @@ def main():
         raise FileExistsError(args.out)
     args.out.mkdir(parents=True)
     torch.set_num_threads(2)
-    sources = [Path(__file__), SCENE, CHECKPOINT / "model.safetensors",
+    sources = [Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
+               SCENE, CHECKPOINT / "model.safetensors",
                Path("src/real2sim/policy/adapters.py"), Path("src/real2sim/sim/kinematics.py")]
     before = {str(p): digest(p) for p in sources}
     report = {"schema": "act_collision_and_image_domain_20261026_positive_v1",

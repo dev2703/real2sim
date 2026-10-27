@@ -7,7 +7,6 @@ exactly once; do not apply the repository's 192x256 letterbox or normalizer.
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 import numpy as np
@@ -16,9 +15,7 @@ from lerobot.configs.policies import PreTrainedConfig
 from lerobot.policies.act.modeling_act import ACTPolicy
 from lerobot.policies.factory import make_pre_post_processors
 
-
-def file_sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+from real2sim.artifacts import sha256_file as file_sha256
 
 
 class NativeLeRobotACT:

@@ -1,5 +1,11 @@
 # Calibration capture sheet — 25 October 2026
 
+**27 October update:** the robot and cameras are available and unchanged, but no
+printed target or printer is available. The active
+[hand-marked target session](v2_physical_capture_20261027.md) uses the operator's
+ruler and paper/cardboard. The checkerboard design below remains an optional
+historical route, rather than a requirement to proceed.
+
 The next physical session should resolve camera/base registration and provide a
 measured gripper hold/release reference. The existing footage supplies useful image
 tracks but no accepted metric registration. The operator reports **no calibration

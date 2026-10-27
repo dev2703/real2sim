@@ -14,17 +14,16 @@ import argparse
 import copy
 import itertools
 import json
-from contextlib import contextmanager
 from pathlib import Path
 
-import mujoco
 import numpy as np
 import yaml
 
 from real2sim.evaluation.metrics import TrialTracker
+from real2sim.evaluation.reference_control import contact_monitor as contact_monitor
 from real2sim.geometry.so3 import delta_action
 from real2sim.policy.paired import file_sha256
-from real2sim.sim.env import GRIPPER_BODIES, So101PickPlaceEnv, sim_from_real
+from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
 
 DEFAULT_CONFIG = Path("results/metrics/dinov2_act_pilot_20261015/configs/sim_so101.yaml")
@@ -40,88 +39,6 @@ def joint_target(state_next, leader_gripper, mode, scale=1.0):
         raise ValueError(mode)
     target[5] = 1.2 + scale * (target[5] - 1.2)
     return target
-
-
-@contextmanager
-def contact_monitor(env, *, capture=False):
-    """Read every solved contact before integration, without changing solver state."""
-    original = mujoco.mj_step
-    dt = float(env.model.opt.timestep)
-    result = {"contact_substeps": 0, "bilateral_substeps": 0,
-              "longest_bilateral_s": 0.0, "longest_bilateral_lift_s": 0.0,
-              "bilateral_lift_substeps": 0, "max_bilateral_height_m": 0.0,
-              "max_ball_height_m": 0.0, "max_contact_penetration_m": 0.0,
-              "max_min_jaw_normal_force_n": 0.0, "first_contact_s": None,
-              "first_contact_geom": None, "first_bilateral_s": None,
-              "bilateral_slip_mean_mps": None, "by_geom": {}, "trace": []}
-    bilateral_run = lift_run = 0
-    slip_sum = 0.0
-    slip_intervals = 0
-    previous_local = None
-    force = np.zeros(6)
-
-    def step(model, data):
-        nonlocal bilateral_run, lift_run, slip_sum, slip_intervals, previous_local
-        touching = set()
-        by_jaw = [0.0, 0.0]
-        names = []
-        for index, contact in enumerate(data.contact[:data.ncon]):
-            pair = (int(contact.geom1), int(contact.geom2))
-            if env.ball_geom not in pair:
-                continue
-            other = pair[1] if pair[0] == env.ball_geom else pair[0]
-            if other == env.table_geom:
-                continue
-            touching.add(other)
-            name = model.geom(other).name or f"geom_{other}"
-            names.append(name)
-            result["by_geom"][name] = result["by_geom"].get(name, 0) + 1
-            result["max_contact_penetration_m"] = max(
-                result["max_contact_penetration_m"], max(0.0, -float(contact.dist)))
-            mujoco.mj_contactForce(model, data, index, force)
-            for j, body in enumerate(GRIPPER_BODIES):
-                if other in env.gripper_geoms[body]:
-                    by_jaw[j] += max(0.0, float(force[0]))
-        two_jaw = all(bool(touching & env.gripper_geoms[body]) for body in GRIPPER_BODIES)
-        height = float(data.xpos[env.ball_body, 2] - env.table_top - env.task["ball"]["radius"])
-        result["max_ball_height_m"] = max(result["max_ball_height_m"], height)
-        if touching:
-            result["contact_substeps"] += 1
-            if result["first_contact_s"] is None:
-                result["first_contact_s"] = float(data.time)
-                result["first_contact_geom"] = names
-        bilateral_run = bilateral_run + 1 if two_jaw else 0
-        lift_run = lift_run + 1 if two_jaw and height > 0.03 else 0
-        result["longest_bilateral_s"] = max(result["longest_bilateral_s"], bilateral_run * dt)
-        result["longest_bilateral_lift_s"] = max(result["longest_bilateral_lift_s"], lift_run * dt)
-        if two_jaw:
-            result["bilateral_substeps"] += 1
-            result["bilateral_lift_substeps"] += int(height > 0.03)
-            result["max_bilateral_height_m"] = max(result["max_bilateral_height_m"], height)
-            result["max_min_jaw_normal_force_n"] = max(result["max_min_jaw_normal_force_n"], min(by_jaw))
-            if result["first_bilateral_s"] is None:
-                result["first_bilateral_s"] = float(data.time)
-            rotation = data.site_xmat[env.site_id].reshape(3, 3)
-            local = rotation.T @ (data.xpos[env.ball_body] - data.site_xpos[env.site_id])
-            if previous_local is not None:
-                slip_sum += float(np.linalg.norm(local - previous_local) / dt)
-                slip_intervals += 1
-            previous_local = local
-        else:
-            previous_local = None
-        if capture and touching:
-            result["trace"].append({"time_s": float(data.time), "geoms": names,
-                                    "bilateral": two_jaw, "normal_force_n": by_jaw,
-                                    "height_m": height})
-        return original(model, data)
-
-    mujoco.mj_step = step
-    try:
-        yield result
-    finally:
-        mujoco.mj_step = original
-        if slip_intervals:
-            result["bilateral_slip_mean_mps"] = slip_sum / slip_intervals
 
 
 def replay(config, joint, cart, episode, metadata, review, candidate, mode, capture=False):
@@ -219,6 +136,9 @@ def main():
     heights = args.base_offset_mm or [task["robot_so101"]["base_z_offset"] * 1000]
     report = {"kind": "EXPLORATORY_RECORDED_CONTROL_GEOMETRY_CONTACT_NOT_POLICY_OR_CALIBRATION",
               "script_sha256": file_sha256(Path(__file__)), "config_sha256": file_sha256(args.config),
+              "source_sha256": {str(path): file_sha256(path) for path in (
+                  Path(__file__), Path("src/real2sim/evaluation/reference_control.py"),
+                  Path("src/real2sim/artifacts.py"))},
               "source_hashes": {"joint": manifest["files_sha256"]["arrays.npz"],
                                 "cartesian": cart_manifest["files_sha256"]["arrays.npz"]},
               "reference_report": str(args.reference_report),

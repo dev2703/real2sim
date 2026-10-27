@@ -5,16 +5,13 @@ session is matched by its dataset name/FPS only and still requires row-level ver
 """
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-
-def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+from real2sim.artifacts import sha256_file as digest
 
 
 def inventory_dataset(root, session_paths, policy_hz=10.):
@@ -83,6 +80,8 @@ def inventory(roots, trace_roots, policy_hz=10.):
                                for path in root.rglob("SESSION.json")))
     return {
         "kind": "LOCAL_COLLECTION_EVIDENCE_INVENTORY", "script_sha256": digest(Path(__file__)),
+        "source_sha256": {str(path): digest(path) for path in (
+            Path(__file__), Path("src/real2sim/artifacts.py"))},
         "trace_search_roots": [{"path": str(root.resolve()), "exists": root.exists()} for root in searches],
         "trace_session_count": len(session_paths),
         "datasets": [inventory_dataset(root, session_paths, policy_hz) for root in roots],

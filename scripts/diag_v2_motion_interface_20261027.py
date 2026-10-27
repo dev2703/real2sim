@@ -209,9 +209,10 @@ def run(out, seeds=SEEDS, modes=MODES, video=True):
     if digest(task) != manifest["calibration_sha256"]:
         raise ValueError("source scene task differs from recorded teacher configuration")
     dependencies = [Path(__file__), Path(semantic.__file__), SCENE, task,
+        Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
         project_path(config["data_config"]), SOURCE / "arrays.npz", SOURCE / "manifest.json",
         SOURCE / "teacher_trials.json", Path("src/real2sim/policy/follower_joint.py"),
-        Path("src/real2sim/sim/env.py"), Path("assets/menagerie/robotstudio_so101/so101.xml")]
+        Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"), Path("assets/menagerie/robotstudio_so101/so101.xml")]
     before = {str(p): digest(p) for p in dependencies}
     # Check weights unchanged even though no policy is loaded by this diagnostic.
     frozen_weights = [Path("outputs/v2/semantic_act_transfer_20261027_v2/checkpoint/model.safetensors"),

@@ -23,22 +23,14 @@ from real2sim.config import load_yaml
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.run import build_learned_controller
 from real2sim.policy.paired import file_sha256
+from real2sim.serialization import json_default as jsonable
+from real2sim.serialization import write_json as _write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
 
 
-def jsonable(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, (np.floating, np.integer)):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
 def write_json(path, payload):
-    path.write_text(json.dumps(payload, indent=2, default=jsonable, allow_nan=False) + "\n")
+    _write_json(path, payload)
 
 
 def snapshot(root):

@@ -108,7 +108,7 @@ def main():
         displacement = float(np.linalg.norm(np.asarray(detections["recorded"]["policy_pixel"])
                                              - detections["rendered"]["policy_pixel"]))
     source_paths = [Path(__file__), a.config, a.data / "manifest.json", a.checkpoint / "model.safetensors",
-                    Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/model.py"),
+                    Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"), Path("src/real2sim/sim/model.py"), Path("src/real2sim/artifacts.py"),
                     Path("src/real2sim/policy/adapters.py"), Path("src/real2sim/sim/cameras.py")]
     report = {
         "kind": "ONE_VALIDATION_ANCHOR_IMAGE_VELOCITY_FACTORIAL_DIAGNOSTIC",

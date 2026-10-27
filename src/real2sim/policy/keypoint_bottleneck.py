@@ -96,9 +96,8 @@ class KeypointBottleneckPolicy(nn.Module):
         visibility_logits = self.visibility(features.mean(1)).squeeze(-1)
         probability = visibility_logits.sigmoid()
         # Predicted features are used identically during action training/inference.
-        grounded = torch.cat([uv * probability[:, None], probability[:, None]], -1)
-        actions = self.actions(torch.cat([batch["observation.state"], grounded], -1))
-        return actions.reshape(-1, c.chunk_size, c.action_dim), uv, visibility_logits, logits
+        actions = self.actions_from_keypoints(batch["observation.state"], uv, probability)
+        return actions, uv, visibility_logits, logits
 
     def actions_from_keypoints(self, state, uv, probability):
         """Controlled dependence probe; inference normally predicts its own keypoints."""

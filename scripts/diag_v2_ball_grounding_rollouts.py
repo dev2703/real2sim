@@ -21,20 +21,10 @@ from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.run import build_learned_controller
 from real2sim.policy.paired import file_sha256
 from real2sim.policy.visual_grounding import BallImageFeatures, ball_features, rgb_from_env
+from real2sim.serialization import json_default as json_value
+from real2sim.serialization import write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
-
-
-def json_value(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    raise TypeError(type(value).__name__)
-
-
-def write_json(path, value):
-    path.write_text(json.dumps(value, indent=2, default=json_value, allow_nan=False) + "\n")
 
 
 def source_hashes(args):

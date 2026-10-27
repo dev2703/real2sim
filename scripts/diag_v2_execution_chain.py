@@ -23,6 +23,7 @@ from real2sim.evaluation.run import check_contract_timing_and_image
 from real2sim.geometry.so3 import delta_action
 from real2sim.policy.act import load_checkpoint
 from real2sim.policy.adapters import CartesianActionAdapter, ObservationAdapter
+from real2sim.serialization import write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
@@ -30,16 +31,6 @@ from real2sim.sim.kinematics import NativeKinematics
 EPISODES = (11, 8, 23)
 MODES = ("policy_prefix", "recorded_achieved_delta_reference", "hold")
 LAGS = np.arange(-10, 21)
-
-
-def write_json(path, value):
-    def convert(item):
-        if isinstance(item, np.ndarray):
-            return item.tolist()
-        if isinstance(item, np.generic):
-            return item.item()
-        raise TypeError(type(item).__name__)
-    path.write_text(json.dumps(value, indent=2, default=convert, allow_nan=False) + "\n")
 
 
 def stats(values):
@@ -173,8 +164,8 @@ def dependency_ledger(sim_path, eval_path, checkpoint, data):
     files = [Path(__file__), sim_path, eval_path, data / "manifest.json", data / "stats.json",
              *(checkpoint / p for p in ("model.safetensors", "config.json", "stats.json", "run_info.json", "real2sim_contract.json")),
              *(Path(sim[key]) for key in ("model", "manifest", "task_config", "data_config")),
-             *(Path("src/real2sim") / p for p in ("policy/act.py", "policy/adapters.py", "policy/attention.py",
-                "sim/env.py", "sim/kinematics.py", "sim/model.py", "geometry/so3.py", "geometry/so101_fk.py", "data/raw.py"))]
+             *(Path("src/real2sim") / p for p in ("artifacts.py", "serialization.py", "policy/act.py", "policy/adapters.py", "policy/attention.py",
+                "sim/env.py", "sim/base_env.py", "sim/kinematics.py", "sim/model.py", "geometry/so3.py", "geometry/so101_fk.py", "data/raw.py"))]
     return {str(p.resolve()): sha256_file(p) for p in files}
 
 
@@ -240,7 +231,7 @@ def run(args):
                 continue
             observer = ObservationAdapter(contract, norm, device="cpu")
             class PreviousPose:
-                def ee_pose(self):
+                def ee_pose(self, tick=tick):
                     pose = np.eye(4)
                     pose[:3, 3] = arrays["state"][tick - 1, :3]
                     return pose
@@ -274,14 +265,14 @@ def run(args):
                     max_step_rad=config["max_step_rad"], target_reference=config["target_reference"])
                 traced, calls = [], {}
                 original_step, original_solve = env.step, ik.solve
-                def measured_step(action):
+                def measured_step(action, step=original_step, calls=calls):
                     began = time.perf_counter()
-                    value = original_step(action)
+                    value = step(action)
                     calls["environment_step_ms"] = (time.perf_counter() - began) * 1000
                     return value
-                def measured_solve(*a, **kw):
+                def measured_solve(*a, solve=original_solve, calls=calls, **kw):
                     began = time.perf_counter()
-                    value = original_solve(*a, **kw)
+                    value = solve(*a, **kw)
                     calls["ik_solve_ms"] = (time.perf_counter() - began) * 1000
                     calls["ik_result_native_q_rad"] = value.qpos.copy()
                     return value

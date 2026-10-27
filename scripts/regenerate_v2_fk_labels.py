@@ -112,7 +112,7 @@ def regenerate(source: Path, config: Path, out: Path) -> dict:
     task = load_yaml(task_path)
     dependencies = [Path(__file__), DEFAULT_MJCF, *map(Path, (
         "src/real2sim/geometry/so101_fk.py", "src/real2sim/data/labels.py",
-        "src/real2sim/data/prepare.py", "src/real2sim/sim/cameras.py", "src/real2sim/config.py"))]
+        "src/real2sim/data/prepare.py", "src/real2sim/artifacts.py", "src/real2sim/sim/cameras.py", "src/real2sim/config.py"))]
     lineage = {
         "schema": "v2_fk_label_regeneration_v1", "source_dataset": str(source.resolve()),
         "source_manifest_sha256": sha256_file(source / "manifest.json"),

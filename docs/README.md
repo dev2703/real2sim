@@ -1,5 +1,11 @@
 # Project documentation
 
+The [27 October frozen generalization test](v2_frozen_generalization_20261027.md)
+evaluates one unchanged semantic ACT on 20 new paired layouts and six separate
+scene variations: 280 trials, with every failure retained. Nominal placement is
+15/20 on Panda and 0/20 on SO-101; brighter lighting and smaller balls expose
+initial-perception failures on both arms.
+
 The [27 October frozen ACT follow-up](v2_frozen_act_followup_20261027.md)
 distinguishes the successful simulation-trained models from the uploaded
 real-demonstration ACT, and tracks the requested motion-interface reconstruction

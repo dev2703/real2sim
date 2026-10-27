@@ -327,8 +327,9 @@ def run(out, local_root):
     scene_dir.mkdir()
     scene = prepare_scene(scene_dir)
     dependencies = [Path(__file__), Path("scripts/evaluate_hf_act_20261027.py"),
-        Path("src/real2sim/policy/native_lerobot_act.py"), Path("src/real2sim/policy/follower_joint.py"),
-        Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/kinematics.py"),
+        Path("src/real2sim/serialization.py"),
+        Path("src/real2sim/policy/native_lerobot_act.py"), Path("src/real2sim/artifacts.py"), Path("src/real2sim/policy/follower_joint.py"),
+        Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"), Path("src/real2sim/sim/kinematics.py"),
         Path("assets/menagerie/robotstudio_so101/so101.xml"),
         Path("configs/v2/sim_so101.waypoint_20261026.yaml"), Path("configs/v2/task.scalar_measured_20261026.yaml"),
         *scene_dir.glob("*.yaml"), local_root / "meta/info.json", *local_root.glob("data/**/*.parquet"),

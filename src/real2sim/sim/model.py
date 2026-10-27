@@ -17,7 +17,6 @@ The upstream ``so101.xml`` is parsed and extended in memory only; the pinned fil
 
 from __future__ import annotations
 
-import hashlib
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -26,6 +25,7 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
 
 ROOT = REPO_ROOT
@@ -33,15 +33,12 @@ DEFAULT_CONFIG = ROOT / "configs/sim_so101.yaml"
 MIN_WALL_BOXES = 12
 
 
-
-
 def verify_assets(manifest_path: str | Path) -> dict:
     path = project_path(manifest_path)
     manifest = json.loads(path.read_text())
     for row in manifest["files"]:
         asset = path.parent / row["path"]
-        payload = asset.read_bytes()
-        if len(payload) != row["bytes"] or hashlib.sha256(payload).hexdigest() != row["sha256"]:
+        if asset.stat().st_size != row["bytes"] or sha256_file(asset) != row["sha256"]:
             raise ValueError(f"asset hash mismatch: {asset}")
     return manifest
 

@@ -14,33 +14,19 @@ import time
 from pathlib import Path
 from unittest.mock import patch
 
-import numpy as np
 import torch
 import yaml
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import REPO_ROOT, load_yaml, project_path
 from real2sim.evaluation.run import run_trials
 from real2sim.policy.adapters import ChunkExecutor
-
-
-def json_default(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+from real2sim.serialization import json_default
+from real2sim.serialization import write_json as _write_json
 
 
 def write_json(path, value):
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, default=json_default, indent=2, allow_nan=False) + "\n")
-    temporary.replace(path)
+    _write_json(path, value, atomic=True)
 
 
 def run(checkpoint, scene, out, *, video=True, torch_threads=2):
@@ -60,13 +46,15 @@ def run(checkpoint, scene, out, *, video=True, torch_threads=2):
     sources = [Path(__file__), scene, task, data, *required,
                project_path(cfg["model"]), project_path(cfg["manifest"]),
                REPO_ROOT / "src/real2sim/config.py",
+               REPO_ROOT / "src/real2sim/artifacts.py",
+               REPO_ROOT / "src/real2sim/serialization.py",
                REPO_ROOT / "src/real2sim/evaluation/run.py",
                REPO_ROOT / "src/real2sim/evaluation/metrics.py",
                REPO_ROOT / "src/real2sim/policy/act.py",
                REPO_ROOT / "src/real2sim/policy/adapters.py",
                REPO_ROOT / "src/real2sim/policy/temporal_ensemble.py",
                REPO_ROOT / "src/real2sim/policy/observation_variants.py",
-               REPO_ROOT / "src/real2sim/sim/env.py",
+               REPO_ROOT / "src/real2sim/sim/env.py", REPO_ROOT / "src/real2sim/sim/base_env.py",
                REPO_ROOT / "src/real2sim/sim/model.py",
                REPO_ROOT / "src/real2sim/sim/cameras.py",
                REPO_ROOT / "src/real2sim/sim/contact_solver.py",

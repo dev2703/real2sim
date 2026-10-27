@@ -16,26 +16,16 @@ from real2sim.data.raw import sha256_file
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.run import build_learned_controller
 from real2sim.policy.act import load_checkpoint
+from real2sim.serialization import json_default as serialize
+from real2sim.serialization import write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
 
 
-def serialize(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    raise TypeError(type(value).__name__)
-
-
-def write_json(path, value):
-    path.write_text(json.dumps(value, indent=2, default=serialize, allow_nan=False) + "\n")
-
-
 def dependencies(sim, args):
-    source = ["config.py", "policy/act.py", "policy/adapters.py", "policy/dataset.py",
-              "policy/keypoint_bottleneck.py", "policy/dinov2_act.py", "policy/flow_matching.py",
-              "sim/env.py", "sim/model.py", "sim/kinematics.py", "sim/cameras.py",
+    source = ["artifacts.py", "serialization.py", "config.py", "policy/act.py", "policy/adapters.py", "policy/dataset.py",
+              "policy/keypoint_bottleneck.py", "policy/dinov2_act.py", "policy/vision.py", "policy/flow_matching.py",
+              "sim/env.py", "sim/base_env.py", "sim/model.py", "sim/kinematics.py", "sim/cameras.py",
               "sim/contact_solver.py", "geometry/so3.py", "geometry/so101_fk.py"]
     paths = [*(Path("src/real2sim") / p for p in source), Path(__file__), args.sim, args.eval,
              *(Path(sim[k]) for k in ("task_config", "data_config", "model", "manifest"))]

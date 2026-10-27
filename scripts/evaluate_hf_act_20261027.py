@@ -24,6 +24,8 @@ from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo
 from real2sim.policy.follower_joint import check_joint_request
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT, file_sha256
+from real2sim.serialization import json_default as json_value
+from real2sim.serialization import write_json as _write_json
 from real2sim.sim.cameras import nominal_so101_wrist_camera
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
@@ -33,20 +35,8 @@ REVISION = "e696c8a078935432e3501e2c28c1fb2598fbff7e"
 SNAPSHOT = Path(f".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/{REVISION}")
 
 
-def json_value(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
 def write_json(path, value):
-    temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(value, default=json_value, indent=2, allow_nan=False) + "\n")
-    temporary.replace(path)
+    _write_json(path, value, atomic=True)
 
 
 def prepare_scene(out, source=Path("configs/v2/sim_so101.waypoint_20261026.yaml")):
@@ -83,7 +73,8 @@ def run(snapshot, out, seeds, execute_steps=None, video=True):
     if not 1 <= n <= checkpoint.config.chunk_size:
         raise ValueError("execution prefix must fit saved chunk")
     scene = prepare_scene(out)
-    files = [Path(__file__), scene, out / "task.yaml", out / "data.yaml",
+    files = [Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
+        scene, out / "task.yaml", out / "data.yaml",
         Path("src/real2sim/policy/native_lerobot_act.py"),
         Path("src/real2sim/policy/follower_joint.py"),
         *[snapshot / name for name in ("config.json", "experiment.json", "model.safetensors",
