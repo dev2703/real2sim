@@ -15,7 +15,19 @@ from real2sim.policy.local_hf_head import ResidualActionHead
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT
 from real2sim.serialization import write_json
 
-SNAPSHOT = Path(".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e")
+SNAPSHOT = Path(".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest")
+
+
+def validate_feature_source(data, snapshot):
+    """A decoder feature cache is specific to the exact frozen base weights."""
+    provenance = json.loads((data / "report.json").read_text())
+    if provenance.get("status") != "complete":
+        raise ValueError("Feature collection must be complete before training")
+    if provenance.get("checkpoint_unchanged") is not True or provenance.get("runtime_source_changes"):
+        raise ValueError("Feature collection changed its checkpoint or runtime sources")
+    if provenance.get("weights_sha256") != sha256_file(snapshot / "model.safetensors"):
+        raise ValueError("Cached decoder features belong to a different HF checkpoint; recollect them")
+    return provenance
 
 
 def load_rows(path, prefix=10):
@@ -39,6 +51,7 @@ def evaluate(head, features, targets, robots):
 
 
 def run(data, out, snapshot=SNAPSHOT, *, kind="mlp", steps=2000):
+    validate_feature_source(data, snapshot)
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)

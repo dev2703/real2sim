@@ -32,7 +32,10 @@ from real2sim.sim.kinematics import NativeKinematics
 
 REPO = "bottowork/so101-act-h256-b16"
 REVISION = "e696c8a078935432e3501e2c28c1fb2598fbff7e"
-SNAPSHOT = Path(f".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/{REVISION}")
+ROOT_SNAPSHOT = Path(f".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/{REVISION}")
+# The root export and latest/ are different trained weights at this immutable
+# revision. New evaluations use the user's explicitly requested latest checkpoint.
+SNAPSHOT = ROOT_SNAPSHOT / "latest"
 
 
 def write_json(path, value):
@@ -63,7 +66,7 @@ def saturate_gripper_only(raw, env):
     return requested, bounded
 
 
-def run(snapshot, out, seeds, execute_steps=None, video=True):
+def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=None):
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
@@ -72,7 +75,8 @@ def run(snapshot, out, seeds, execute_steps=None, video=True):
     n = checkpoint.config.n_action_steps if execute_steps is None else execute_steps
     if not 1 <= n <= checkpoint.config.chunk_size:
         raise ValueError("execution prefix must fit saved chunk")
-    scene = prepare_scene(out)
+    source_scene = Path(source_scene or "configs/v2/sim_so101.waypoint_20261026.yaml")
+    scene = prepare_scene(out, source_scene)
     files = [Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
         scene, out / "task.yaml", out / "data.yaml",
         Path("src/real2sim/policy/native_lerobot_act.py"),
@@ -84,6 +88,7 @@ def run(snapshot, out, seeds, execute_steps=None, video=True):
     hashes = {str(path): file_sha256(path) for path in files}
     report = {"schema": "native_hf_act_20261027_v1", "status": "running",
         "repo_id": REPO, "revision": REVISION, "snapshot": str(snapshot),
+        "source_scene": str(source_scene), "source_scene_sha256": file_sha256(source_scene),
         "weights_sha256": checkpoint.weights_sha256, "execution_steps": n,
         "checkpoint_execution_steps": checkpoint.config.n_action_steps,
         "image_shape_chw": [3, 360, 640], "camera_order": checkpoint.camera_keys,
@@ -93,7 +98,8 @@ def run(snapshot, out, seeds, execute_steps=None, video=True):
         "runtime_overrides": {"device": "cpu", "temporary_pretrained_backbone_initialization": None},
         "gripper_only_saturation": True, "arm_limits_collision_and_path_gates_unchanged": True,
         "physical_calibration_accepted": False, "wrist_camera": "pinned nominal CAD optical transform; not physically verified",
-        "no_task_goal_or_corrective_ik": True, "source_sha256_before": hashes,
+        "no_task_goal_or_corrective_ik": True, "lighting_changed": False,
+        "source_sha256_before": hashes,
         "seeds": seeds, "trials": []}
     write_json(out / "report.json", report)
     rows = []
@@ -178,9 +184,12 @@ def run(snapshot, out, seeds, execute_steps=None, video=True):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", type=Path, default=SNAPSHOT)
+    parser.add_argument("--source-scene", type=Path,
+                        help="SO-101 simulation YAML; camera inputs and 25 Hz contract are applied without changing lighting")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     parser.add_argument("--execute-steps", type=int)
     parser.add_argument("--no-video", action="store_true")
     args = parser.parse_args()
-    run(args.snapshot, args.out, args.seeds, args.execute_steps, video=not args.no_video)
+    run(args.snapshot, args.out, args.seeds, args.execute_steps, video=not args.no_video,
+        source_scene=args.source_scene)

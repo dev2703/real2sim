@@ -29,6 +29,7 @@ from real2sim.evaluation.video import CaptionedVideo
 from real2sim.geometry.so101_fk import JointMapping
 from real2sim.panda.adapter import PandaIK
 from real2sim.panda.env import PandaPickPlaceEnv
+from real2sim.panda.workspace import register_measured_task_workspace
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT
 from real2sim.serialization import json_default, write_json
 from real2sim.sim.env import real_from_sim
@@ -117,8 +118,11 @@ def camera_mount_at_start(env, source, mode="external_hand"):
         "panda_hand_relative_rotation": relative_R, "mode": mode}
 
 
-def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand"):
-    cfg = load_yaml("configs/v2/sim_panda.waypoint_20261026.yaml")
+def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand", panda_scene=None):
+    if panda_scene is None:
+        panda_scene = ("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml"
+            if task.get("operator_measurements") else "configs/v2/sim_panda.waypoint_20261026.yaml")
+    cfg = register_measured_task_workspace(load_yaml(panda_scene), task)
     cfg["control_hz"] = 25.
     data = load_yaml("configs/v2/data.waypoint_20261026.yaml")
     data.update(policy_hz=25., camera_keys=["observation.images.iphone"], excluded_cameras=[])
@@ -142,7 +146,7 @@ def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand"):
 def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None,
         base_dx=-.15, seat_mm=8., video=False, source_scene=None,
         initial_gripper_percent=None, wrist_mount="external_hand", gripper_readback="endpoint",
-        head_dir=None):
+        head_dir=None, projection_prior="command", panda_scene=None):
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
@@ -159,12 +163,15 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
         raise ValueError("Execution prefix must fit native saved chunk")
     source_scene, task = prepare_source(out, joint_offsets_deg, source_scene=source_scene,
         initial_gripper_percent=initial_gripper_percent)
-    source = retarget.VirtualSource(source_scene, panda_offset=np.array([-seat_mm / 1000., 0., 0.]))
+    source = retarget.VirtualSource(source_scene, panda_offset=np.array([-seat_mm / 1000., 0., 0.]),
+        projection_prior=projection_prior)
     try:
-        panda_scene, camera_setup = prepare_panda(out, source, task, base_dx, wrist_mount=wrist_mount)
+        panda_scene, camera_setup = prepare_panda(out, source, task, base_dx,
+            wrist_mount=wrist_mount, panda_scene=panda_scene)
         files = [Path(__file__), Path(retarget.__file__), Path(native.__file__),
             Path("src/real2sim/policy/native_lerobot_act.py"),
             Path("src/real2sim/panda/adapter.py"), Path("src/real2sim/panda/env.py"),
+            Path("src/real2sim/panda/workspace.py"),
             Path("src/real2sim/sim/cameras.py"), Path("src/real2sim/geometry/so101_fk.py"),
             Path("src/real2sim/serialization.py"), source_scene, panda_scene,
             out / "panda_task.yaml", out / "panda_data.yaml", out / "source/task.yaml", out / "source/data.yaml"]
@@ -180,6 +187,8 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
             "actual_panda_images": True, "saved_native_processors_used_once": True,
             "semantic_act_used": False, "source_actions": "Actual frozen pretrained HF ACT, absolute SO-101 joint degrees plus gripper percent",
             "source_state_projection": "Live Panda grasp-point position to virtual SO-101 position-only IK; explicitly declared measured-jaw readback projection",
+            "virtual_source_projection_prior": projection_prior,
+            "virtual_source_unobservable_coordinates": "Source orientation is not executed on Panda. Command prior preserves the most recent causal SO-101 command in the position inverse null space; these coordinates are inferred history, not measured Panda joints.",
             "gripper_readback_projection": gripper_readback,
             "initial_gripper_percent": initial_gripper_percent,
             "panda_action_projection": "Source command FK grasp point to Panda fixed-top-down IK; source0closed/90open to Panda0/80mm",
@@ -214,7 +223,7 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                 with (directory / "ticks.jsonl").open("w") as handle:
                     try:
                         for tick in range(env.max_episode_steps):
-                            infer_ms, state, image_hashes = 0., None, None
+                            infer_ms, state, image_hashes, error = 0., None, None, None
                             if not queue:
                                 state, error = source.source_state(env)
                                 if gripper_readback == "endpoint":
@@ -250,6 +259,7 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                                 saturation=float(np.mean(info["control"]["limit_clipped"])))
                             record = {"tick": tick, "inference_ms": infer_ms, "native_input_degree_percent": state,
                                 "actual_panda_image_sha256": image_hashes, "raw_hf_action_degree_percent": action,
+                                "virtual_source_projection_error_m": error,
                                 "source_requested_native_rad": raw_source, "source_bounded_native_rad": bounded_source,
                                 "panda_requested_pose_task": desired, "panda_ik_accepted": solved.accepted,
                                 "panda_ik_reason": solved.reason, "panda_ik_position_error_m": solved.position_error_m,
@@ -300,13 +310,17 @@ if __name__ == "__main__":
     parser.add_argument("--base-dx", type=float, default=-.15)
     parser.add_argument("--seat-mm", type=float, default=8.)
     parser.add_argument("--source-scene", type=Path)
+    parser.add_argument("--panda-scene", type=Path)
     parser.add_argument("--initial-gripper-percent", type=float)
     parser.add_argument("--wrist-mount", choices=("external_hand", "source_optical_match"), default="external_hand")
     parser.add_argument("--gripper-readback", choices=("endpoint", "cad"), default="endpoint")
+    parser.add_argument("--projection-prior", choices=("command", "previous"), default="command",
+                        help="Causal source command history or legacy previous-observation null-space prior")
     parser.add_argument("--head-dir", type=Path)
     parser.add_argument("--video", action="store_true")
     args = parser.parse_args()
     run(args.snapshot, args.out, args.seeds, joint_offsets_deg=args.joint_offsets_deg,
         execute_steps=args.execute_steps, base_dx=args.base_dx, seat_mm=args.seat_mm, video=args.video,
         source_scene=args.source_scene, initial_gripper_percent=args.initial_gripper_percent,
-        wrist_mount=args.wrist_mount, gripper_readback=args.gripper_readback, head_dir=args.head_dir)
+        wrist_mount=args.wrist_mount, gripper_readback=args.gripper_readback, head_dir=args.head_dir,
+        projection_prior=args.projection_prior, panda_scene=args.panda_scene)

@@ -20,7 +20,7 @@ else:
     import evaluate_hf_act_panda_20261028 as panda
 
 
-def run(robot, head_dir, out, seeds, snapshot=so.SNAPSHOT, *, video=False):
+def run(robot, head_dir, out, seeds, snapshot=so.SNAPSHOT, *, video=False, source_scene=None):
     metadata = json.loads((head_dir / "head.json").read_text())
     before = {str(path): sha256_file(path) for path in (
         head_dir / "head.pt", head_dir / "head.json", Path(__file__),
@@ -31,7 +31,8 @@ def run(robot, head_dir, out, seeds, snapshot=so.SNAPSHOT, *, video=False):
 
     runner = so if robot == "so101" else panda
     with patch.object(runner, "NativeLeRobotACT", load):
-        report = runner.run(snapshot, out, seeds, execute_steps=10, video=video)
+        report = runner.run(snapshot, out, seeds, execute_steps=10, video=video,
+                            source_scene=source_scene)
     after = {path: sha256_file(path) for path in before}
     if before != after:
         raise RuntimeError("Local adapter source changed during evaluation")
@@ -60,5 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--seeds", type=int, nargs="+", default=[300, 301, 302, 303, 304])
     parser.add_argument("--snapshot", type=Path, default=so.SNAPSHOT)
     parser.add_argument("--video", action="store_true")
+    parser.add_argument("--source-scene", type=Path)
     args = parser.parse_args()
-    run(args.robot, args.head, args.out, args.seeds, args.snapshot, video=args.video)
+    run(args.robot, args.head, args.out, args.seeds, args.snapshot, video=args.video,
+        source_scene=args.source_scene)

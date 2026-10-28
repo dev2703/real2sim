@@ -21,10 +21,20 @@ from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml
 
 
-def total_distance_setup(task, measurements, *, height_m=.4064):
+def total_distance_setup(task, measurements, *, height_m=None):
     entries = measurements["reported_setup"]
     ball = np.asarray(entries["ball from robot base"]["value_m"], float)
-    offset = np.asarray(entries["camera from ball"]["value_m"][:2], float)
+    camera_components = np.asarray(entries["camera from ball"]["value_m"], float)
+    if camera_components.shape != (3,):
+        raise ValueError("camera measurement must have three components")
+    offset = camera_components[:2]
+    # The operator clarified that camera Z is measured above the tabletop.
+    # Read the supplied measurement instead of silently pinning every revision
+    # to the original 16-inch example.
+    height_m = float(camera_components[2] if height_m is None else height_m)
+    uncertainty = float(measurements["source"]["relative_uncertainty"])
+    if not 0 < uncertainty < 1:
+        raise ValueError("measurement uncertainty must be between zero and one")
     spacing = float(entries["ball & bowl"]["value_m"][0])
     mat_size = np.asarray(entries["mat"]["value_m"], float)
     old_ball = np.asarray(task["ball"]["start_region"]["center_task_xy"], float)
@@ -43,6 +53,12 @@ def total_distance_setup(task, measurements, *, height_m=.4064):
     midpoint = (ball + bowl) / 2
     result = copy.deepcopy(task)
     base_height = float(task["robot_so101"]["base_z_offset"])
+    radius = float(entries["ball"]["value_m"][0]) / (2 * np.pi)
+    result["ball"].update(
+        radius=radius,
+        radius_interval_m=(np.asarray(entries["ball"]["interval_m"][0]) / (2 * np.pi)).tolist(),
+        radius_provenance="OPERATOR-MEASURED circumference; current measurement source; radius=C/(2*pi)",
+    )
     result["ball"]["start_region"].update(
         center_task_xy=ball.tolist(),
         provenance="Operator (+2,+13) in base components; task/operator axes follow the declared working convention")
@@ -53,10 +69,10 @@ def total_distance_setup(task, measurements, *, height_m=.4064):
     camera = result["camera_iphone"]
     camera.update(
         approx_position_task=(ball + offset).tolist() + [height_m - base_height],
-        look_at_task=midpoint.tolist() + [float(task["ball"]["radius"]) - base_height],
+        look_at_task=midpoint.tolist() + [radius - base_height],
         height_above_table_m=height_m,
-        height_above_table_interval_m=[height_m * .95, height_m * 1.05],
-        extrinsics_provenance="Positive camera-minus-ball horizontal offsets assigned by operator; height16in above tabletop. Roll-free look-at midpoint and old intrinsics are hypotheses, not a measured camera rotation/optical calibration.")
+        height_above_table_interval_m=[height_m * (1 - uncertainty), height_m * (1 + uncertainty)],
+        extrinsics_provenance="Positive camera-minus-ball horizontal offsets assigned by operator; reported Z is above tabletop. Roll-free look-at midpoint and old intrinsics are hypotheses, not a measured camera rotation/optical calibration.")
     camera.pop("xyaxes_task", None)
     assumptions = {
         "camera_minus_ball_xy_signs": [1, 1],
@@ -76,6 +92,18 @@ def total_distance_setup(task, measurements, *, height_m=.4064):
     result.update(
         geometry_status="positive_camera_total_distance_image_bearing_prior_unverified",
         physical_calibration_accepted=False, total_distance_setup_assumptions=assumptions)
+    result.setdefault("operator_measurements", {}).update(
+        source=measurements["source"]["path"],
+        sha256=measurements["source"]["sha256"],
+        relative_uncertainty=uncertainty,
+        applied_fields=[
+            "ball.radius",
+            "ball.start_region.center_task_xy",
+            "bowl.center_task_xy total distance with image-derived bearing prior",
+            "table.mat.size_xy",
+            "camera_iphone.approx_position_task",
+        ],
+    )
     return result
 
 
@@ -91,7 +119,8 @@ def prepare(out, task_path, measurement_path):
         "source": "operator replies in this conversation",
         "camera_sign_instruction_verbatim": "assign +ve sign",
         "spacing_clarification_verbatim": "12 inches is total distance, not an x-only offset",
-        "ball_bowl_distance_m": .3048, "ball_bowl_distance_interval_m": [.28956, .32004],
+        "ball_bowl_distance_m": float(measured["reported_setup"]["ball & bowl"]["value_m"][0]),
+        "ball_bowl_distance_interval_m": measured["reported_setup"]["ball & bowl"]["interval_m"][0],
         "supersedes_bowl_bearing_only": "configs/v2/positive_setup_20261026/task.yaml",
         "camera_horizontal_signs_assigned": True, "physical_calibration_accepted": False,
         "working_assumptions": candidate["total_distance_setup_assumptions"],

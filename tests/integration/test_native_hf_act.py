@@ -5,8 +5,9 @@ import pytest
 import torch
 from safetensors.torch import load_file
 
+from real2sim.config import load_yaml
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT, file_sha256
-from scripts.evaluate_hf_act_20261027 import SNAPSHOT
+from scripts.evaluate_hf_act_20261027 import ROOT_SNAPSHOT, SNAPSHOT, prepare_scene
 
 pytestmark = [pytest.mark.integration,
     pytest.mark.skipif(not (SNAPSHOT / "model.safetensors").is_file(),
@@ -42,3 +43,20 @@ def test_native_prediction_preserves_weights_and_rejects_missing_camera(native):
     images.pop(native.camera_keys[0])
     with pytest.raises(ValueError, match="exactly match"):
         native.batch(np.zeros(6), images)
+
+
+def test_native_scene_accepts_measured_geometry_and_preserves_lighting(tmp_path):
+    source = "configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml"
+    original = load_yaml(source)
+    original_task = load_yaml(original["task_config"])
+    scene = prepare_scene(tmp_path, source)
+    prepared = load_yaml(scene)
+    task = load_yaml(prepared["task_config"])
+    assert prepared["appearance"]["lighting"] == original["appearance"]["lighting"]
+    assert task["ball"] == original_task["ball"]
+    assert task["bowl"] == original_task["bowl"]
+    assert task["camera_iphone"] == original_task["camera_iphone"]
+    assert prepared["control_hz"] == 25.
+    assert load_yaml(prepared["data_config"])["camera_keys"] == [
+        "observation.images.top", "observation.images.iphone"]
+    assert SNAPSHOT == ROOT_SNAPSHOT / "latest"

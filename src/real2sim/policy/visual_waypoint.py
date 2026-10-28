@@ -145,7 +145,21 @@ class VisualWaypointController:
         else:
             from real2sim.panda.model import POINTING_DOWN
 
-            seeds, rotations = [current], [POINTING_DOWN]
+            # A seven-joint Panda has several branches for one six-dimensional
+            # tool pose. Its folded configured start alone can converge against
+            # a wrist stop even when another native branch reaches the same
+            # grasp. Fixed robot-joint seeds explore those branches; all results
+            # still pass the original pose, native-limit and full-path gates.
+            home = np.asarray(env.config["initial_qpos"], float)
+            seeds = [current, home]
+            for shoulder in (-.8, 0., .8):
+                for elbow in (-.9, .9):
+                    seed = home.copy()
+                    seed[[0, 2, 4]] += [shoulder, elbow, -.5 * elbow]
+                    seeds.append(np.clip(seed, lo, hi))
+            seeds.append(np.clip([0., -.5, 0., -2.2, 0., 2., -.785398], lo, hi))
+            rotations = [POINTING_DOWN]
+        attempts = {"pre_rejected": 0, "grasp_rejected": 0, "path_rejected": 0}
         for rotation in rotations:
             target = np.eye(4)
             target[:3, :3] = rotation
@@ -155,13 +169,16 @@ class VisualWaypointController:
             for seed in seeds:
                 first = self._solve(pre, seed, grip)
                 if not first.accepted:
+                    attempts["pre_rejected"] += 1
                     continue
                 second = self._solve(target, first.qpos, grip)
                 if not second.accepted:
+                    attempts["grasp_rejected"] += 1
                     continue
                 pre_q = np.clip(first.qpos[:self.n], lo, hi)
                 grasp_q = np.clip(second.qpos[:self.n], lo, hi)
                 if not self._path_safe(current, pre_q, grip) or not self._path_safe(pre_q, grasp_q, grip):
+                    attempts["path_rejected"] += 1
                     continue
                 score = float(np.linalg.norm(pre_q - current) + np.linalg.norm(grasp_q - pre_q))
                 candidates.append((score, pre_q, grasp_q, rotation.copy()))
@@ -170,6 +187,7 @@ class VisualWaypointController:
             return False
         _, self.pre_q, self.grasp_q, self.grasp_rotation = min(candidates, key=lambda c: c[0])
         self.plan_log.append({"phase": "GRASP", "candidate_count": len(candidates),
+            "seed_count": len(seeds), "branch_rejections": attempts,
             "pre_qpos": self.pre_q.tolist(), "grasp_qpos": self.grasp_q.tolist(),
             "ball_in_tool_assumption_m": self.ball_in_tool.tolist(),
             "uses_object_ground_truth": False})

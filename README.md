@@ -25,12 +25,36 @@ Note: there could be +- 5% measurments error.
 
 ## Current v2 workflow
 
-Run the working geometric baseline from the configured start, without a settling reset:
+The measured scene uses [physical_measurements.md](physical_measurements.md). The
+latest HF ACT plus explicit RGB recovery completed **10/10 SO101 and 10/10 Panda**
+fresh simulation trials on 28 October 2026, with lighting and HF weights unchanged.
+Recovery completed every task; unassisted HF transfer still fails approach.
+See [results and remaining bottlenecks](docs/v2_hf_both_arms_20261028.md).
+
+Run the assisted system with the pinned HF `latest/` checkpoint:
+
+```sh
+.venv/bin/python scripts/evaluate_hf_recovery.py --robot so101 --seeds 500 501 502 503 504 \
+  --out outputs/v2/hf_recovery_so101_NEXT --video
+.venv/bin/python scripts/evaluate_hf_recovery.py --robot panda --seeds 500 501 502 503 504 \
+  --out outputs/v2/hf_recovery_panda_NEXT --video
+```
+
+Evaluate the unchanged HF policy alone in the measured scene:
+
+```sh
+.venv/bin/python scripts/evaluate_hf_act.py --robot so101 --out outputs/v2/hf_only_so101_NEXT
+.venv/bin/python scripts/evaluate_hf_act.py --robot panda --out outputs/v2/hf_only_panda_NEXT
+```
+
+Run the separate geometric baseline from the configured start:
 
 ```sh
 .venv/bin/python scripts/run_visual_waypoint.py --robot so101 --seeds 0 1 2 3 4 \
+  --config configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml \
   --out outputs/v2/waypoint_so101_NEXT --video
 .venv/bin/python scripts/run_visual_waypoint.py --robot panda --seeds 0 1 2 3 4 \
+  --config configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml \
   --out outputs/v2/waypoint_panda_NEXT --video
 ```
 

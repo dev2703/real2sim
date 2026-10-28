@@ -66,7 +66,10 @@ def validate_learned_trace(trace_path, checkpoint_sha256):
 class VirtualSource:
     """Robot-only pose/opening projection; no object goals or task phase input."""
 
-    def __init__(self, scene, *, panda_offset=PANDA_OFFSET):
+    def __init__(self, scene, *, panda_offset=PANDA_OFFSET, projection_prior="command"):
+        if projection_prior not in ("command", "previous"):
+            raise ValueError("Virtual source projection prior must be command or previous")
+        self.projection_prior = projection_prior
         self.source = So101PickPlaceEnv(scene, render_images=False)
         self.source.reset(seed=0)
         self.mapping = self.source.mapping
@@ -101,10 +104,15 @@ class VirtualSource:
     def source_state(self, panda):
         pose = panda.ee_pose()
         equivalent_point = pose[:3, 3] + pose[:3, :3] @ self.panda_offset
-        previous = self.q[:5].copy()
+        # Panda executes only the source grasp-point position; the two source
+        # rotational coordinates are unobservable in its measured pose. Preserve
+        # their causal command history rather than pulling them back towards the
+        # last observation on every inverse. Otherwise even a perfectly achieved
+        # source command changes the next policy input by tens of degrees.
+        prior = (self.last_target if self.projection_prior == "command" else self.q)[:5].copy()
 
         def residual(q):
-            return np.r_[self.ball_point(q) - equivalent_point, .0001 * (q - previous)]
+            return np.r_[self.ball_point(q) - equivalent_point, .0001 * (q - prior)]
 
         fitted = least_squares(residual, np.clip(self.last_target[:5], *self.limits[:5].T),
             bounds=tuple(self.limits[:5].T), max_nfev=60,

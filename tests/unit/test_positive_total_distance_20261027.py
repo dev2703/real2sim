@@ -59,3 +59,22 @@ def test_degenerate_image_bearing_cannot_manufacture_a_direction():
     task["bowl"]["center_task_xy"] = task["ball"]["start_region"]["center_task_xy"].copy()
     with pytest.raises(ValueError, match="nondegenerate"):
         total_distance_setup(task, measurements)
+
+
+def test_revised_camera_measurement_and_uncertainty_are_used_with_current_source():
+    task, measurements = source()
+    measurements["reported_setup"]["camera from ball"]["value_m"][2] = .45
+    measurements["reported_setup"]["ball"]["value_m"][0] = .21
+    measurements["source"]["relative_uncertainty"] = .08
+    measurements["source"]["sha256"] = "revised_measurement_hash"
+    candidate = total_distance_setup(task, measurements)
+    camera = candidate["camera_iphone"]
+    assert camera["height_above_table_m"] == pytest.approx(.45)
+    assert camera["approx_position_task"][2] == pytest.approx(.438)
+    assert camera["height_above_table_interval_m"] == pytest.approx([.414, .486])
+    assert candidate["ball"]["radius"] == pytest.approx(.21 / (2 * np.pi))
+    provenance = candidate["operator_measurements"]
+    assert provenance["sha256"] == "revised_measurement_hash"
+    assert provenance["relative_uncertainty"] == .08
+    assert "camera_iphone.approx_position_task" in provenance["applied_fields"]
+    assert "table.mat.size_xy" in provenance["applied_fields"]
