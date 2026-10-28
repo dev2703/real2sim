@@ -1,0 +1,246 @@
+{
+  "schema": "phase_supervised_recovery_pilot_20261028_v1",
+  "status": "offline_fit_complete",
+  "report": "outputs/v2/recovery_mlp_iteration2_phase_20261028/report.json",
+  "report_sha256": "74feba06caca560f6a52037fb4ef5a1c20e1869e3c04745d20b642b36cf263a4",
+  "head_directory": "outputs/v2/recovery_mlp_iteration2_phase_20261028",
+  "head_sha256": "a8cb533a655e63373ee5096be0281a899225464e8cf6ded8d46f43592c3dffe2",
+  "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+  "base_weights_frozen": true,
+  "lighting_changed": false,
+  "runtime_source_changes": [],
+  "training_only_expert_phase_supervision": true,
+  "expert_phase_is_runtime_input": false,
+  "inference_inputs": [
+    "observable_history",
+    "frozen_ACT_proposed_common_action",
+    "frozen_ACT_decoder_features"
+  ],
+  "architecture": "Shared MLP256->128, 11 phase logits, 11x7 residual actions; predicted soft phase mixture",
+  "train_rows": 5254,
+  "validation_rows": 1067,
+  "train_episodes": [
+    10024,
+    10025,
+    10026,
+    10027,
+    10028,
+    10029,
+    10030,
+    10031
+  ],
+  "validation_episodes": [
+    11006,
+    11007
+  ],
+  "phase_names": [
+    "ACQUIRE",
+    "PRE_GRASP",
+    "DESCEND",
+    "CLOSE",
+    "LIFT",
+    "TRANSPORT",
+    "LOWER",
+    "RELEASE",
+    "RETREAT",
+    "DONE",
+    "FAILED"
+  ],
+  "train_phase_counts": {
+    "ACQUIRE": 0,
+    "PRE_GRASP": 1171,
+    "DESCEND": 980,
+    "CLOSE": 309,
+    "LIFT": 1457,
+    "TRANSPORT": 938,
+    "LOWER": 102,
+    "RELEASE": 138,
+    "RETREAT": 159
+  },
+  "validation_phase_counts": {
+    "ACQUIRE": 0,
+    "PRE_GRASP": 231,
+    "DESCEND": 117,
+    "CLOSE": 78,
+    "LIFT": 280,
+    "TRANSPORT": 276,
+    "LOWER": 18,
+    "RELEASE": 41,
+    "RETREAT": 26,
+    "DONE": 0,
+    "FAILED": 0
+  },
+  "best_step": 3600,
+  "validation_metrics": {
+    "mean_absolute_normalized_error": 0.04555276866794451,
+    "robot_balanced_mae_normalized": 0.045699752901746535,
+    "per_robot_mae_normalized": {
+      "0": 0.04653842764755806,
+      "1": 0.04486107815593501
+    },
+    "translation_mae_mm": 1.959475040435791,
+    "rotation_mae_rad": 0.004824920557439327,
+    "gripper_mae_fraction": 0.07467266917228699,
+    "phase_accuracy": 0.8181818181818182,
+    "phase_confusion": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        214,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        12,
+        95,
+        10,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        41,
+        30,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        11,
+        9,
+        232,
+        28,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        32,
+        244,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        14,
+        3,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        4,
+        1,
+        36,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        7,
+        19,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "critical_transition_recall": {
+    "CLOSE": 0.38461538461538464,
+    "LOWER": 0.16666666666666666
+  },
+  "closed_loop_task_success_evaluated": false,
+  "limitations": [
+    "Teacher phases label intended motions, not verified grasp success.",
+    "Initial-reference cohort does not solve stale or moved-ball observations.",
+    "Overall phase accuracy obscures low CLOSE and LOWER recall.",
+    "Offline action/phase errors do not establish task success."
+  ],
+  "validation": {
+    "focused_tests_passed": 6,
+    "ruff": "passed"
+  }
+}

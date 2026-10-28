@@ -25,6 +25,7 @@ from real2sim.policy.common_recovery import (
     ACTION_NAMES,
     ACTION_SCALE,
     OBSERVATION_NAMES,
+    TRACKED_OBSERVATION_NAMES,
     CommonCartesianExecutor,
     FrozenACTFeatures,
     RecoveryObservation,
@@ -32,6 +33,7 @@ from real2sim.policy.common_recovery import (
 )
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT
 from real2sim.policy.recovery_mlp import RecoveryMLPPolicy
+from real2sim.policy.rgb_reference_tracker import RGBReferenceTracker
 from real2sim.serialization import json_default, write_json
 
 if __package__:
@@ -112,12 +114,31 @@ def tracker_for(env):
 
 def source_files(snapshot, source_scene, extra=()):
     return runtime_hashes(snapshot, source_scene, extra_paths=[Path(__file__),
-        Path("src/real2sim/policy/common_recovery.py"), Path("src/real2sim/policy/recovery_mlp.py"), *extra])
+        Path("src/real2sim/policy/common_recovery.py"), Path("src/real2sim/policy/recovery_mlp.py"),
+        Path("src/real2sim/policy/phase_recovery_mlp.py"),
+        Path("src/real2sim/policy/rgb_reference_tracker.py"), *extra])
+
+
+def load_recovery_head(directory, base_hash):
+    metadata = json.loads((Path(directory) / "head.json").read_text())
+    if metadata.get("schema") == "frozen_act_phase_supervised_recovery_mlp_v1":
+        from real2sim.policy.phase_recovery_mlp import PhaseRecoveryMLPPolicy
+
+        return PhaseRecoveryMLPPolicy(directory, expected_base_sha256=base_hash)
+    return RecoveryMLPPolicy(directory, expected_base_sha256=base_hash)
+
+
+def head_reference_mode(head):
+    names = head.metadata.get("observation_names") or []
+    return "tracked" if any("fresh_rgb_" in name for name in names) else "initial"
 
 
 def save_pack(path, rows):
     if rows:
         arrays = {name: np.stack([row[name] for row in rows]) for name in ARRAY_NAMES}
+        for name in ("expert_phase_id", "tick"):
+            if name in rows[0]:
+                arrays[name] = np.stack([row[name] for row in rows])
     else:
         arrays = {"observations": np.empty((0, 99), np.float32),
             "base_actions": np.empty((0, 7), np.float32), "features": np.empty((0, 256), np.float32),
@@ -132,6 +153,7 @@ class LearnedRecoveryController:
         self.executor = CommonCartesianExecutor(episode)
         self.use_act = bool(head.metadata["use_act"])
         self.encoder = RecoveryObservation(self.robot, self.env.control_hz)
+        self.reference_mode = head_reference_mode(head)
         self.act = FrozenACTFeatures(episode, policy) if self.use_act else None
         if policy is not None:
             policy.policy.eval().requires_grad_(False)
@@ -139,15 +161,22 @@ class LearnedRecoveryController:
 
     def reset(self):
         self.tick, self.ball, self.bowl = 0, None, None
+        self.references = RGBReferenceTracker(self.env) if self.reference_mode == "tracked" else None
         self.encoder.reset()
         if self.act:
             self.act.reset()
 
     def step(self, obs, env):
         del obs
-        if self.ball is None:
+        if self.references:
+            self.references.update(self.tick, force=self.ball is None)
+            metadata = self.references.observation_metadata(self.tick)
+            self.ball, self.bowl = self.references.ball, self.references.bowl
+            self.rgb_acquisition = self.references.log[0]
+        elif self.ball is None:
             self.ball, self.bowl, self.rgb_acquisition = initial_references(env, self.robot)
-        observed = self.encoder.encode(env, self.ball, self.bowl, self.tick)
+        metadata = self.references.observation_metadata(self.tick) if self.references else {}
+        observed = self.encoder.encode(env, self.ball, self.bowl, self.tick, **metadata)
         if self.act:
             raw, features = self.act.next()
             try:
@@ -164,7 +193,10 @@ class LearnedRecoveryController:
         self.tick += 1
         result.detail.update(uses_act=self.use_act, intervention=True,
             no_runtime_geometric_teacher=True, invalid_base_prior=invalid_prior,
-            head_sha256=self.head.head_sha256)
+            head_sha256=self.head.head_sha256, reference_mode=self.reference_mode,
+            rgb_ball_reference=self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist())
+        if hasattr(self.head, "last_phase_id"):
+            result.detail["learned_phase_id"] = self.head.last_phase_id
         return result
 
     def close(self):
@@ -174,7 +206,7 @@ class LearnedRecoveryController:
 
 def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
             source_scene=MEASURED_SCENE, learner=None, beta=1., iteration=0,
-            expert_execution="common"):
+            expert_execution="common", reference_mode="initial"):
     if out.exists():
         raise FileExistsError(out)
     if not 0 <= beta <= 1 or set(train_seeds) & set(val_seeds):
@@ -183,7 +215,9 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
     torch.set_num_threads(2)
     policy = NativeLeRobotACT(snapshot)
     policy.policy.eval().requires_grad_(False)
-    head = RecoveryMLPPolicy(learner, expected_base_sha256=policy.weights_sha256) if learner else None
+    head = load_recovery_head(learner, policy.weights_sha256) if learner else None
+    if head is not None and head_reference_mode(head) != reference_mode:
+        raise ValueError("Learner and collection RGB-reference contracts differ")
     if head is None and beta < 1:
         raise ValueError("Learner-mixture DAgger requires a fitted recovery head")
     extra = ([Path(learner) / "head.json", Path(learner) / "head.pt"] if learner else [])
@@ -198,13 +232,17 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "base_weights_frozen": True, "lighting_changed": False,
         "iteration": iteration, "beta_teacher_execution": beta, "learner": str(learner) if learner else None,
         "expert_execution": expert_execution, "action_names": ACTION_NAMES,
-        "action_scales": ACTION_SCALE.tolist(), "observation_names": OBSERVATION_NAMES,
+        "action_scales": ACTION_SCALE.tolist(),
+        "observation_names": TRACKED_OBSERVATION_NAMES if reference_mode == "tracked" else OBSERVATION_NAMES,
         "act_feature_dim": 256,
         "split": {"train": list(train_seeds), "val": list(val_seeds), "evaluation": list(range(13000, 13100))},
         "expert_queries_actual_learner_states": head is not None,
         "teacher_phase_convergence": "Measured TCP; close/release dwell pauses on opposing executed jaw commands",
         "teacher_phase_or_object_truth_in_observations": False,
-        "reference_source": "Initial RGB detections plus declared camera/object geometry",
+        "expert_phase_is_audit_label_only": True,
+        "expert_terminal_hold_labels_included": False,
+        "reference_mode": reference_mode,
+        "reference_source": "Confident RGB detections plus declared camera/object geometry; tracked mode refreshes every5ticks",
         "source_sha256_before": before, "trials": []}
     cache = {"train": [], "val": []}
     write_json(out / "manifest.json", report, atomic=True)
@@ -213,7 +251,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
             for seed in seeds:
                 env = shared.env
                 tracker = tracker_for(env)
-                abort, initial_rgb, failures, learner_ticks = None, None, 0, 0
+                abort, initial_rgb, failures, learner_ticks, replans = None, None, 0, 0, 0
+                references = None
                 reason_counts = {}
                 trial_rows = []
                 try:
@@ -221,13 +260,26 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                     shadow.reset(seed)
                     initial_lighting = lighting(env)
                     ball, bowl, initial_rgb = initial_references(env, robot)
+                    if reference_mode == "tracked":
+                        references = RGBReferenceTracker(env)
+                        references.update(0, force=True)
+                        references.observation_metadata(0)
+                        ball, bowl = references.ball, references.bowl
                     teacher = CartesianConvergenceTeacher(shadow.env, robot=robot)
                     teacher.bowl_memory = bowl.copy()
                     encoder.reset()
                     act.reset()
                     rng = np.random.default_rng(np.random.SeedSequence([seed, iteration, 20261028]))
                     for tick in range(env.max_episode_steps):
-                        observation = encoder.encode(env, ball, bowl, tick)
+                        if references:
+                            update = references.update(tick)
+                            ball, bowl = references.ball, references.bowl
+                            if references.expert_needs_replan(teacher, update):
+                                teacher.reset()
+                                teacher.bowl_memory = bowl.copy()
+                                replans += 1
+                        metadata = references.observation_metadata(tick) if references else {}
+                        observation = encoder.encode(env, ball, bowl, tick, **metadata)
                         raw, features = act.next()
                         try:
                             base = executor.hf_to_common(raw)
@@ -243,11 +295,16 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         teacher.executed_semantic_gripper = float(encoder.previous_action[6]) if tick else None
                         label_result = teacher.step({}, shadow.env)
                         target = teacher_common_action(teacher, label_result, executor)
-                        if teacher.phase != "FAILED":
+                        # Terminal expert holds from a failed physical pickup
+                        # are not corrective demonstrations. Retain the attempt
+                        # in scoring but avoid hundreds of idle terminal labels.
+                        if teacher.phase not in ("FAILED", "DONE"):
                             row = {"observations": observation,
                                 "base_actions": base.astype(np.float32), "features": features,
                                 "target_actions": target.astype(np.float32),
-                                "robot_id": np.int64(robot == "panda"), "episode_index": np.int64(seed)}
+                                "robot_id": np.int64(robot == "panda"), "episode_index": np.int64(seed),
+                                "expert_phase_id": np.int64(teacher.phases.index(teacher.phase)),
+                                "tick": np.int64(tick)}
                             cache[partition].append(row)
                             trial_rows.append(row)
                         choose_teacher = head is None or rng.random() < beta
@@ -278,7 +335,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                     mean_latency_ms=None, video_path="", abort=abort)
                 row.update(partition=partition, supervised_rows=len(trial_rows), learner_executed_ticks=learner_ticks,
                     invalid_hf_priors=failures, command_reasons=reason_counts, initial_rgb=initial_rgb,
-                    teacher_final_phase=getattr(teacher, "phase", None) if initial_rgb else None)
+                    teacher_final_phase=getattr(teacher, "phase", None) if initial_rgb else None,
+                    rgb_expert_replans=replans, rgb_reference_log=references.log if references else None)
                 report["trials"].append(row)
                 report["summary"] = summarize(report["trials"])
                 for name in cache:
@@ -307,7 +365,7 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     out.mkdir(parents=True)
     torch.set_num_threads(2)
     frozen_hash = sha256_file(Path(snapshot) / "model.safetensors")
-    head = RecoveryMLPPolicy(head_dir, expected_base_sha256=frozen_hash)
+    head = load_recovery_head(head_dir, frozen_hash)
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] else None
     shared = SharedEpisode(robot, out / "setup", source_scene)
     controller = LearnedRecoveryController(shared, head, policy)
@@ -315,6 +373,7 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     report = {"schema": "learned_recovery_mlp_closed_loop_v1", "status": "running",
         "robot": robot, "seeds": seeds, "head": str(head_dir), "head_sha256": head.head_sha256,
         "base_checkpoint_sha256": frozen_hash, "use_act": head.metadata["use_act"],
+        "reference_mode": head_reference_mode(head),
         "no_runtime_geometric_teacher": True, "lighting_changed": False,
         "source_sha256_before": before, "trials": []}
     write_json(out / "report.json", report, atomic=True)
@@ -375,8 +434,7 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
 
 def controller_factory(*, env, source, robot, snapshot, condition, options):
     """Plugin for the matched benchmark; models are instantiated independently."""
-    head = RecoveryMLPPolicy(Path(options["head"]),
-        expected_base_sha256=sha256_file(snapshot / "model.safetensors"))
+    head = load_recovery_head(Path(options["head"]), sha256_file(snapshot / "model.safetensors"))
     if (condition == "no_act") == bool(head.metadata["use_act"]):
         raise ValueError("Benchmark condition and recovery head ACT ablation differ")
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] else None
@@ -398,12 +456,14 @@ def main():
     parser.add_argument("--beta", type=float, default=1.)
     parser.add_argument("--iteration", type=int, default=0)
     parser.add_argument("--expert-execution", choices=("native", "common"), default="common")
+    parser.add_argument("--reference-mode", choices=("initial", "tracked"), default="initial")
     parser.add_argument("--video", action="store_true")
     args = parser.parse_args()
     if args.mode == "collect":
         return collect(args.robot, args.out, args.train_seeds, args.val_seeds,
             snapshot=args.snapshot, source_scene=args.source_scene, learner=args.head,
-            beta=args.beta, iteration=args.iteration, expert_execution=args.expert_execution)
+            beta=args.beta, iteration=args.iteration, expert_execution=args.expert_execution,
+            reference_mode=args.reference_mode)
     if args.head is None:
         parser.error("--head is required for evaluation")
     return evaluate(args.robot, args.head, args.out, args.seeds,
