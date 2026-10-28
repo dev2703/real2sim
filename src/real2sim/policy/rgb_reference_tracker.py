@@ -64,15 +64,29 @@ class RGBReferenceTracker:
 
     def expert_needs_replan(self, teacher, update):
         """Recognize a displaced free ball using RGB and measured TCP only."""
-        if update is None or update["ball_reference_shift_m"] <= .006 or not self.visible["ball"]:
+        if update is None or not self.visible["ball"]:
+            return False
+        phase = teacher.phase
+        # Acquisition already refreshes its own targets. Terminal phases retain
+        # their outcome, and intentional release/retreat separation must not
+        # silently start another pickup attempt.
+        if phase not in ("PRE_GRASP", "DESCEND", "CLOSE", "LIFT", "TRANSPORT", "LOWER"):
             return False
         env = self.env
         # A ball observed within the observed bowl footprint should be left
         # there, rather than acquired again by the demonstration expert.
         if np.linalg.norm(self.ball[:2] - self.bowl[:2]) <= env.bowl["rim_radius"]:
             return False
-        if teacher.phase in ("ACQUIRE", "PRE_GRASP", "DESCEND"):
-            return True
+        if phase in ("PRE_GRASP", "DESCEND"):
+            # Compare with the goal used to construct the current grasp plan.
+            # Small per-refresh movements may accumulate into a large drift.
+            planned_ball = getattr(teacher, "ball", None)
+            displacement = (float(np.linalg.norm(self.ball - planned_ball))
+                            if planned_ball is not None else update["ball_reference_shift_m"])
+            return displacement > .006
+        # A missed pickup can leave the ball completely unmoved at the planned
+        # table goal. Fresh RGB evidence far from the estimated carried pose is
+        # sufficient; requiring goal displacement would hide this failure.
         grasp = env.ee_pose()
         predicted_ball = grasp[:3, 3] + grasp[:3, :3] @ teacher.ball_in_tool
         return bool(np.linalg.norm(self.ball - predicted_ball) > .06)

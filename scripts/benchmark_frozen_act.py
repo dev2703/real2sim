@@ -13,6 +13,7 @@ import argparse
 import importlib
 import json
 import math
+import sys
 import time
 from pathlib import Path
 
@@ -32,8 +33,11 @@ if __package__:
     from scripts import evaluate_hf_act_panda_20261028 as transfer
     from scripts.evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
 else:
-    import evaluate_hf_act_panda_20261028 as transfer
-    from evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
+    # Direct-file invocation puts scripts/, rather than the project root, on
+    # sys.path. Factories use the same scripts.module names as module invocation.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from scripts import evaluate_hf_act_panda_20261028 as transfer
+    from scripts.evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
 
 CONDITIONS = ("raw", "rgb", "hf_rgb", "learned", "no_act")
 
@@ -56,7 +60,8 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
               for p in Path(directory).glob("*.py")}
     paths |= {Path("src/real2sim/policy") / name for name in (
         "native_lerobot_act.py", "hf_recovery.py", "visual_waypoint.py", "visual_targets.py",
-        "follower_joint.py", "adapters.py")}
+        "follower_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
+        "phase_recovery_mlp.py", "rgb_reference_tracker.py")}
     paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py")}
     paths |= {Path("src/real2sim") / name for name in ("config.py", "serialization.py", "artifacts.py")}
     paths |= set(Path(snapshot).glob("*.json")) | set(Path(snapshot).glob("*.safetensors"))
@@ -250,8 +255,21 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
             perception_log = geometric.perception_log
     except (RuntimeError, ValueError, OSError) as exc:
         abort = f"{type(exc).__name__}: {exc}"
+    finally:
+        close = getattr(controller, "close", None)
+        if close is not None:
+            try:
+                close()
+            except (RuntimeError, ValueError, OSError) as exc:
+                message = f"Controller cleanup {type(exc).__name__}: {exc}"
+                abort = f"{abort}; {message}" if abort else message
+    checkpoint_hash = getattr(policy, "weights_sha256", None)
+    if checkpoint_hash is None and options and options.get("snapshot"):
+        # Factory controllers own their native policy, while no-ACT still binds
+        # the same reference checkpoint for its paired ablation.
+        checkpoint_hash = sha256_file(Path(options["snapshot"]) / "model.safetensors")
     row = tracker.row(experiment_id="MATCHED_FROZEN_ACT_BENCHMARK", controller_source=condition,
-        robot=shared.robot, seed=seed, checkpoint_sha256=getattr(policy, "weights_sha256", None),
+        robot=shared.robot, seed=seed, checkpoint_sha256=checkpoint_hash,
         checkpoint_step=None, mean_latency_ms=float(np.mean(latencies)) if latencies else None,
         video_path="", abort=abort)
     row.update(condition=condition, initial_state=initial,
@@ -336,10 +354,14 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         extra_paths += [Path(imported.__file__)]
     options = dict(controller_options or {})
     options["snapshot"] = str(snapshot)
-    for key in ("head_dir", "checkpoint", "model"):
+    for key in ("head", "head_dir", "checkpoint", "model"):
         path = options.get(key)
-        if path and Path(path).is_dir():
-            extra_paths += [p for p in Path(path).iterdir() if p.is_file()]
+        if path:
+            artifact = Path(path)
+            if artifact.is_dir():
+                extra_paths += [p for p in artifact.iterdir() if p.is_file()]
+            elif artifact.is_file():
+                extra_paths.append(artifact)
     hashes = runtime_hashes(snapshot, source_scene, extra_paths)
     protocol = {"schema": "matched_frozen_act_protocol_v1", "robots": robots,
         "conditions": conditions, "seeds": seeds, "snapshot": str(snapshot),

@@ -86,3 +86,12 @@ in the denominator. No lighting perturbations are included.
 
 Three focused robustness-generation tests and the existing training-only yaw
 regression pass; Ruff passes for both new diagnostic tools and their tests.
+
+The completed [RGB-only robustness pilot](../results/v2/fixed_lighting_rgb_robustness_pilot_20261028.json)
+uses three separate seeds, 14000–14002, in each of the seven conditions above.
+Both arms completed all 21 tasks each (42/42 total), with no aborts or lighting
+changes. This is a small geometric-controller pilot, rather than learned-head
+or ACT-only evidence. The RGB frontend receives the actual varied sphere radius;
+the size conditions therefore test scene-aware operation, not tolerance to an
+unknown radius. Mid-trajectory occlusion and independently measured camera
+registration remain untested by this pilot.

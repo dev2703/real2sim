@@ -163,7 +163,7 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
               "validation_episodes": sorted(set(val_rows["episode_index"].tolist())),
               "collections": manifests,
               "sampling": "Equal robot probability then equal source-episode probability within each robot",
-              "checkpoint_selection": "Minimum held-out episode normalized action MAE; closed-loop task performance evaluated separately",
+              "checkpoint_selection": "Minimum pooled-row normalized action MAE on held-out episodes; closed-loop task performance evaluated separately",
               "normalization_source": "Training rows only",
               "seed": seed, "steps": steps, "batch_size": batch_size,
               "learning_rate": learning_rate, "source_sha256_before": sources,
@@ -196,6 +196,9 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
     if after != sources:
         raise RuntimeError("Recovery training inputs, source or frozen ACT weights changed")
     head_hash = sha256_file(out / "head.pt")
+    best_metrics = {key: value for key, value in next(
+        entry for entry in report["history"] if entry["step"] == best_step).items()
+        if key not in ("step", "training_loss")}
     policy_id = hashlib.sha256(f"{base_hash}:{head_hash}:{use_act}".encode()).hexdigest()
     metadata = {"schema": report["schema"], "head_sha256": head_hash,
                 "base_checkpoint_sha256": base_hash, "effective_policy_identifier": policy_id,
@@ -204,10 +207,12 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
                 "act_feature_dim": model.feature_dim, "hidden_sizes": list(model.hidden_sizes),
                 "action_names": ACTION_NAMES, "action_scales": ACTION_SCALES,
                 "best_step": best_step, "validation_mae_normalized": best,
+                "validation_metrics": best_metrics,
                 "collection_iterations": [item["manifest"].get("iteration", 0) for item in manifests],
                 "base_weights_frozen": True, "training_report": str(out / "report.json")}
     write_json(out / "head.json", metadata, atomic=True)
     report.update(status="complete", head=metadata, best_step=best_step,
+                  validation_metrics=best_metrics,
                   best_validation_mae_normalized=best, training_wall_s=time.perf_counter() - started,
                   source_sha256_after=after, runtime_source_changes=[])
     write_json(out / "report.json", report, atomic=True)

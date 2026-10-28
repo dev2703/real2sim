@@ -126,7 +126,7 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         "train_rows": len(training["observations"]), "validation_rows": len(data["val"]["observations"]),
         "train_episodes": sorted(set(training["episode_index"].tolist())),
         "validation_episodes": sorted(set(data["val"]["episode_index"].tolist())),
-        "selection": "Minimum held-out episode mean of per-robot action MAE; task success remains a separate closed-loop test",
+        "selection": "Minimum mean of per-robot pooled-row action MAE on held-out episodes; task success remains a separate closed-loop test",
         "normalization_source": "Training rows only", "collections": manifests,
         "seed": seed, "steps": steps, "source_sha256_before": sources,
         "baseline_validation": evaluate(model, tensors["val"], data["val"]["robot_id"]), "history": []}

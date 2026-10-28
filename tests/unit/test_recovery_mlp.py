@@ -93,6 +93,9 @@ def test_saved_head_uses_training_only_stats_and_exact_frozen_base_identity(tmp_
     data = collection(tmp_path, "data", base_hash=base_hash)
     report = train([data], tmp_path / "head", snapshot=checkpoint, steps=2, use_act=False)
     assert report["status"] == "complete" and report["base_weights_frozen"]
+    selected = next(row for row in report["history"] if row["step"] == report["best_step"])
+    assert report["validation_metrics"]["translation_mae_mm"] == selected["translation_mae_mm"]
+    assert report["head"]["validation_metrics"] == report["validation_metrics"]
     loaded = RecoveryMLPPolicy(tmp_path / "head", expected_base_sha256=base_hash)
     with np.load(data / "train.npz") as values:
         np.testing.assert_allclose(loaded.model.observation_mean.numpy(), values["observations"].mean(0))

@@ -26,10 +26,21 @@ Note: there could be +- 5% measurments error.
 ## Current v2 workflow
 
 The measured scene uses [physical_measurements.md](physical_measurements.md). The
-latest HF ACT plus explicit RGB recovery completed **10/10 SO101 and 10/10 Panda**
-fresh simulation trials on 28 October 2026, with lighting and HF weights unchanged.
-Recovery completed every task; unassisted HF transfer still fails approach.
-See [results and remaining bottlenecks](docs/v2_hf_both_arms_20261028.md).
+completed matched benchmark scored **100/100 on each arm** with frozen HF ACT
+followed by explicit RGB recovery, and 100/100 with RGB recovery alone. ACT alone
+scored 0/100 in this simulation. Lighting and HF weights stayed unchanged;
+recovery took over in every assisted trial. See the
+[matched results and attribution](docs/v2_matched_benchmark_20261028.md) and
+[camera alignment and robustness evidence](docs/v2_alignment_and_fixed_lighting_robustness_20261028.md).
+
+A separate [recovery MLP and DAgger experiment](docs/v2_learned_recovery_dagger_20261028.md)
+keeps ACT frozen and evaluates learned actions without the geometric teacher.
+Those experimental heads have not established reliable complete-task performance
+on both arms. The geometric controller remains the working fallback.
+
+The [29 October progress report](docs/v2_progress_20261029.md) records the final
+phase-head development result (3/10 per arm), completed checks, and the remaining
+grasp-retention, camera-alignment and state-transfer bottlenecks.
 
 Run the assisted system with the pinned HF `latest/` checkpoint:
 
@@ -102,5 +113,5 @@ uv run python scripts/aggregate_trials.py
 - Replaced ACT VAE with flow matching head
 - Replaced ACT resnet18 backbone with DinoV2 or Clip (fine tuned ViT on our dataset)
 - Used end effector delta as action state
-- Added a recovery MLP head (256->128->512) 
+- Added a separate Cartesian recovery MLP (hidden widths 256→128, seven action outputs), trained with DAgger corrective labels around frozen ACT.
 - On going experiments continued... 

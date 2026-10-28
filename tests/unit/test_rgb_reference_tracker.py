@@ -59,3 +59,66 @@ def test_expert_replans_displaced_free_ball_but_leaves_observed_bowl_contents(mo
     assert tracker.expert_needs_replan(teacher, update)
     tracker.ball = tracker.bowl.copy()
     assert not tracker.expert_needs_replan(teacher, update)
+
+
+def test_small_refresh_shifts_replan_once_cumulative_drift_leaves_planned_goal(monkeypatch):
+    tracker = setup(monkeypatch, [
+        {"ball": target(.1 + shift, .2), "bowl": target(.3, .1)}
+        for shift in (0., .002, .004, .007)
+    ])
+    tracker.update(0)
+    teacher = SimpleNamespace(phase="DESCEND", ball=tracker.ball.copy(), ball_in_tool=np.zeros(3))
+    assert not tracker.expert_needs_replan(teacher, tracker.update(5))
+    assert not tracker.expert_needs_replan(teacher, tracker.update(10))
+    update = tracker.update(15)
+    assert update["ball_reference_shift_m"] < .006
+    assert tracker.expert_needs_replan(teacher, update)
+    # Replanning to this observation resets the cumulative displacement.
+    teacher.ball = tracker.ball.copy()
+    assert not tracker.expert_needs_replan(teacher, update)
+    assert not tracker.expert_needs_replan(teacher, None)
+
+
+def test_retained_reference_does_not_trigger_replan_without_fresh_ball(monkeypatch):
+    tracker = setup(monkeypatch, [
+        {"ball": target(.1, .2), "bowl": target(.3, .1)},
+        {"ball": None, "bowl": target(.3, .1)},
+    ])
+    tracker.update(0)
+    teacher = SimpleNamespace(phase="DESCEND", ball=np.zeros(3), ball_in_tool=np.zeros(3))
+    assert not tracker.expert_needs_replan(teacher, tracker.update(5))
+
+
+@pytest.mark.parametrize("phase", ["CLOSE", "LIFT", "TRANSPORT", "LOWER"])
+def test_unmoved_visible_ball_exposes_empty_pickup_in_active_carry_phases(monkeypatch, phase):
+    tracker = setup(monkeypatch, [
+        {"ball": target(.1, .2), "bowl": target(.3, .1)},
+        {"ball": target(.1, .2), "bowl": target(.3, .1)},
+    ])
+    tracker.update(0)
+    teacher = SimpleNamespace(phase=phase, ball=tracker.ball.copy(), ball_in_tool=np.zeros(3))
+    pose = np.eye(4)
+    pose[:3, 3] = tracker.ball + [0., 0., .09]
+    tracker.env.ee_pose = lambda: pose
+    update = tracker.update(5)
+    assert update["ball_reference_shift_m"] == 0.
+    assert tracker.expert_needs_replan(teacher, update)
+    # A matching measured tool/ball geometry does not invent a pickup failure.
+    pose[:3, 3] = tracker.ball
+    assert not tracker.expert_needs_replan(teacher, update)
+
+
+@pytest.mark.parametrize("phase", ["ACQUIRE", "DONE", "FAILED", "RELEASE", "RETREAT"])
+def test_terminal_or_post_release_phases_never_start_another_pickup(monkeypatch, phase):
+    tracker = setup(monkeypatch, [{"ball": target(.1, .2), "bowl": target(.3, .1)}])
+    update = tracker.update(0)
+    teacher = SimpleNamespace(phase=phase, ball=np.zeros(3), ball_in_tool=np.zeros(3))
+    assert not tracker.expert_needs_replan(teacher, update)
+
+
+@pytest.mark.parametrize("phase", ["PRE_GRASP", "DESCEND"])
+def test_early_approach_distance_alone_does_not_signal_a_missed_pickup(monkeypatch, phase):
+    tracker = setup(monkeypatch, [{"ball": target(.1, .2), "bowl": target(.3, .1)}])
+    update = tracker.update(0)
+    teacher = SimpleNamespace(phase=phase, ball=tracker.ball.copy(), ball_in_tool=np.zeros(3))
+    assert not tracker.expert_needs_replan(teacher, update)

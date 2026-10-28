@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -89,7 +90,9 @@ def teacher_common_action(teacher, label_result, executor):
 
     native = label_result.detail["requested_native"]
     common = executor.native_to_common(native)
-    if (teacher.robot == "panda" and teacher.target_q is not None and teacher.phase in (
+    command_phase = label_result.detail["phase"]
+    if (teacher.robot == "panda" and command_phase == teacher.phase
+            and teacher.target_q is not None and command_phase in (
             "PRE_GRASP", "DESCEND", "LIFT", "TRANSPORT", "LOWER", "RETREAT")):
         opened = teacher.phase in ("PRE_GRASP", "DESCEND", "RETREAT")
         target = teacher._forward(teacher.target_q, teacher._grip(opened))
@@ -117,6 +120,31 @@ def source_files(snapshot, source_scene, extra=()):
         Path("src/real2sim/policy/common_recovery.py"), Path("src/real2sim/policy/recovery_mlp.py"),
         Path("src/real2sim/policy/phase_recovery_mlp.py"),
         Path("src/real2sim/policy/rgb_reference_tracker.py"), *extra])
+
+
+def snapshot_sources(out, hashes):
+    """Preserve hashed executable text; reference large binary artifacts by hash."""
+    root, directory = Path.cwd().resolve(), out / "executed_sources"
+    directory.mkdir()
+    entries = []
+    for index, (filename, digest) in enumerate(sorted(hashes.items())):
+        source = Path(filename)
+        entry = {"source": filename, "sha256": digest, "snapshot": None}
+        if source.suffix in {".py", ".yaml", ".yml", ".xml", ".md", ".json"}:
+            relative = (source.relative_to(root) if source.is_relative_to(root)
+                        else Path("external") / str(index) / source.name)
+            target = directory / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+            if sha256_file(target) != digest:
+                raise RuntimeError("Runtime source changed while taking its executed snapshot")
+            entry["snapshot"] = str(target.relative_to(out))
+        else:
+            entry["storage"] = "external_artifact_reference"
+        entries.append(entry)
+    ledger = directory / "manifest.json"
+    write_json(ledger, {"schema": "recovery_executed_sources_v1", "entries": entries}, atomic=True)
+    return str(ledger)
 
 
 def load_recovery_head(directory, base_hash):
@@ -177,6 +205,8 @@ class LearnedRecoveryController:
             self.ball, self.bowl, self.rgb_acquisition = initial_references(env, self.robot)
         metadata = self.references.observation_metadata(self.tick) if self.references else {}
         observed = self.encoder.encode(env, self.ball, self.bowl, self.tick, **metadata)
+        reference_ages = [(self.tick - seen) / env.control_hz
+                          for seen in metadata.get("last_seen_ticks", (0, 0))]
         if self.act:
             raw, features = self.act.next()
             try:
@@ -194,7 +224,11 @@ class LearnedRecoveryController:
         result.detail.update(uses_act=self.use_act, intervention=True,
             no_runtime_geometric_teacher=True, invalid_base_prior=invalid_prior,
             head_sha256=self.head.head_sha256, reference_mode=self.reference_mode,
-            rgb_ball_reference=self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist())
+            rgb_ball_reference=self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist(),
+            rgb_reference_visibility=list(metadata.get("visibility", (True, True))),
+            rgb_reference_age_s=reference_ages,
+            recovery_inputs={"observations": observed.tolist(), "base_actions": base.tolist(),
+                             "features": features.tolist()})
         if hasattr(self.head, "last_phase_id"):
             result.detail["learned_phase_id"] = self.head.last_phase_id
         return result
@@ -222,6 +256,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         raise ValueError("Learner-mixture DAgger requires a fitted recovery head")
     extra = ([Path(learner) / "head.json", Path(learner) / "head.pt"] if learner else [])
     before = source_files(snapshot, source_scene, extra)
+    executed_sources = snapshot_sources(out, before)
     shared = SharedEpisode(robot, out / "live", source_scene)
     shadow = SharedEpisode(robot, out / "expert_shadow", source_scene)
     act = FrozenACTFeatures(shared, policy)
@@ -240,10 +275,11 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "teacher_phase_convergence": "Measured TCP; close/release dwell pauses on opposing executed jaw commands",
         "teacher_phase_or_object_truth_in_observations": False,
         "expert_phase_is_audit_label_only": True,
+        "expert_phase_label_source": "issued_command",
         "expert_terminal_hold_labels_included": False,
         "reference_mode": reference_mode,
         "reference_source": "Confident RGB detections plus declared camera/object geometry; tracked mode refreshes every5ticks",
-        "source_sha256_before": before, "trials": []}
+        "source_sha256_before": before, "executed_sources_manifest": executed_sources, "trials": []}
     cache = {"train": [], "val": []}
     write_json(out / "manifest.json", report, atomic=True)
     try:
@@ -294,16 +330,17 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                             shadow.env._ee_velocity = env._ee_velocity.copy()
                         teacher.executed_semantic_gripper = float(encoder.previous_action[6]) if tick else None
                         label_result = teacher.step({}, shadow.env)
+                        command_phase = label_result.detail["phase"]
                         target = teacher_common_action(teacher, label_result, executor)
                         # Terminal expert holds from a failed physical pickup
                         # are not corrective demonstrations. Retain the attempt
                         # in scoring but avoid hundreds of idle terminal labels.
-                        if teacher.phase not in ("FAILED", "DONE"):
+                        if command_phase not in ("FAILED", "DONE"):
                             row = {"observations": observation,
                                 "base_actions": base.astype(np.float32), "features": features,
                                 "target_actions": target.astype(np.float32),
                                 "robot_id": np.int64(robot == "panda"), "episode_index": np.int64(seed),
-                                "expert_phase_id": np.int64(teacher.phases.index(teacher.phase)),
+                                "expert_phase_id": np.int64(teacher.phases.index(command_phase)),
                                 "tick": np.int64(tick)}
                             cache[partition].append(row)
                             trial_rows.append(row)
@@ -370,12 +407,13 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     shared = SharedEpisode(robot, out / "setup", source_scene)
     controller = LearnedRecoveryController(shared, head, policy)
     before = source_files(snapshot, source_scene, [head_dir / "head.json", head_dir / "head.pt"])
+    executed_sources = snapshot_sources(out, before)
     report = {"schema": "learned_recovery_mlp_closed_loop_v1", "status": "running",
         "robot": robot, "seeds": seeds, "head": str(head_dir), "head_sha256": head.head_sha256,
         "base_checkpoint_sha256": frozen_hash, "use_act": head.metadata["use_act"],
         "reference_mode": head_reference_mode(head),
         "no_runtime_geometric_teacher": True, "lighting_changed": False,
-        "source_sha256_before": before, "trials": []}
+        "source_sha256_before": before, "executed_sources_manifest": executed_sources, "trials": []}
     write_json(out / "report.json", report, atomic=True)
     try:
         for seed in seeds:
