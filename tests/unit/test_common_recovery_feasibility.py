@@ -56,3 +56,60 @@ def test_soft_stop_projection_only_accepts_small_measured_seed_error():
     assert measured[0] == 1.0001
     with pytest.raises(ValueError, match="soft-stop"):
         soft_stop_seed(np.array([1.002, 0.]), limits)
+
+
+def source_constrained_executor(representable):
+    controller, commands, _ = executor(.04)
+
+    def forward(q, **_kwargs):
+        pose = np.eye(4)
+        pose[0, 3] = q[0]
+        return pose
+
+    def solve(target, _seed, **_kwargs):
+        q = np.zeros(7)
+        q[0] = target[0, 3]
+        return SimpleNamespace(accepted=True, reason="accepted", qpos=q)
+
+    def project_pose(pose):
+        error = 0. if representable(pose[0, 3]) else .01
+        return SimpleNamespace(error_m=error, tolerance_m=.003, accepted=error <= .003,
+            diagnostics=lambda: {"accepted": error <= .003, "position_error_m": error,
+                                 "position_tolerance_m": .003})
+
+    controller.guard = SimpleNamespace(solve=solve, forward=forward)
+    controller.source = SimpleNamespace(project_pose=project_pose)
+    controller.require_source_mapping = True
+    return controller, commands
+
+
+def test_act_input_requirement_backtracks_native_feasible_unrepresentable_pose():
+    controller, commands = source_constrained_executor(lambda x: x <= .005)
+    result = controller.step(np.array([.03, 0., 0., 0., 0., 0., 1.]))
+    assert result.detail["feasibility_fraction"] == .125
+    assert result.detail["requires_virtual_source_mapping"]
+    assert commands[0][0] == .00375
+    attempts = result.detail["feasibility_attempts"]
+    assert [attempt["reason"] for attempt in attempts] == [
+        "virtual_source_unrepresentable"] * 3 + ["accepted"]
+    assert attempts[0]["source_mapping"]["position_tolerance_m"] == .003
+    assert attempts[-1]["source_mapping"]["path_samples"] == 5
+
+
+def test_source_constraint_checks_interior_of_native_joint_path():
+    controller, commands = source_constrained_executor(lambda x: not .002 < x < .008)
+    # The full-step endpoint is representable but the native path crosses a
+    # source-unrepresentable interval; endpoint-only checks would accept it.
+    result = controller.step(np.array([.01, 0., 0., 0., 0., 0., 1.]))
+    assert result.detail["feasibility_fraction"] == .125
+    assert commands[0][0] == .00125
+    assert result.detail["feasibility_attempts"][0]["reason"] == "virtual_source_unrepresentable"
+
+
+def test_no_act_executor_keeps_native_feasible_workspace():
+    controller, commands = source_constrained_executor(lambda x: x <= .005)
+    controller.require_source_mapping = False
+    result = controller.step(np.array([.03, 0., 0., 0., 0., 0., 1.]))
+    assert result.detail["feasibility_fraction"] == 1.
+    assert not result.detail["requires_virtual_source_mapping"]
+    assert commands[0][0] == .03

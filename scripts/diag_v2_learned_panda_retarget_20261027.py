@@ -15,6 +15,7 @@ import json
 import math
 import time
 from contextlib import closing
+from dataclasses import dataclass
 from pathlib import Path
 
 import mujoco
@@ -27,6 +28,7 @@ from real2sim.artifacts import sha256_file as digest
 from real2sim.config import load_yaml, project_path
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
+from real2sim.geometry.so3 import is_rotation
 from real2sim.geometry.so101_fk import So101FK
 from real2sim.panda.adapter import PandaIK
 from real2sim.panda.env import PandaPickPlaceEnv
@@ -40,6 +42,36 @@ from real2sim.sim.env import So101PickPlaceEnv, real_from_sim
 
 SOURCE_OFFSET = np.array([-.010, 0., .030])
 PANDA_OFFSET = np.array([-.008, 0., 0.])
+SOURCE_PROJECTION_TOLERANCE_M = .003
+
+
+@dataclass(frozen=True)
+class VirtualSourceProjection:
+    """Position-only source representation, independently of native Panda IK.
+
+    Source rotation remains a causal command prior, not a Panda measurement.
+    The residual quantifies position representability rather than calibration
+    uncertainty or correctness of the otherwise unobservable source joints.
+    """
+
+    arm_qpos: np.ndarray
+    error_m: float
+    accepted: bool
+    tolerance_m: float = SOURCE_PROJECTION_TOLERANCE_M
+
+    def diagnostics(self):
+        return {"accepted": self.accepted, "position_error_m": self.error_m,
+                "position_tolerance_m": self.tolerance_m,
+                "representation": "position_only_with_causal_source_rotation_prior"}
+
+
+class VirtualSourceProjectionError(RuntimeError):
+    """Measured Panda pose cannot supply a validated source ACT observation."""
+
+    def __init__(self, projection):
+        self.projection = projection
+        super().__init__("Panda pose has no virtual SO-101 representation within3mm: "
+                         f"{projection.error_m:.6f}m")
 
 
 def validate_learned_trace(trace_path, checkpoint_sha256):
@@ -101,8 +133,18 @@ class VirtualSource:
         pose = self.fk.fk_sim(np.asarray(q)[:5])
         return pose[:3, 3] + pose[:3, :3] @ SOURCE_OFFSET
 
-    def source_state(self, panda):
-        pose = panda.ee_pose()
+    def project_pose(self, pose):
+        """Check a robot pose without changing source state or command memory.
+
+        The first solve preserves the historical causal-prior behavior. Bounded
+        deterministic alternative seeds are used only after a rejected solve,
+        so local numerical failures do not masquerade as source-workspace loss.
+        Every result retains the same 3 mm hard acceptance threshold.
+        """
+        pose = np.asarray(pose, float)
+        if (pose.shape != (4, 4) or not np.isfinite(pose).all()
+                or not np.allclose(pose[3], [0, 0, 0, 1]) or not is_rotation(pose[:3, :3])):
+            raise ValueError("Virtual source projection requires a finite proper pose")
         equivalent_point = pose[:3, 3] + pose[:3, :3] @ self.panda_offset
         # Panda executes only the source grasp-point position; the two source
         # rotational coordinates are unobservable in its measured pose. Preserve
@@ -114,12 +156,28 @@ class VirtualSource:
         def residual(q):
             return np.r_[self.ball_point(q) - equivalent_point, .0001 * (q - prior)]
 
-        fitted = least_squares(residual, np.clip(self.last_target[:5], *self.limits[:5].T),
-            bounds=tuple(self.limits[:5].T), max_nfev=60,
-            ftol=1e-8, xtol=1e-8, gtol=1e-8)
-        error = float(np.linalg.norm(self.ball_point(fitted.x) - equivalent_point))
-        if not np.isfinite(fitted.x).all() or error > .003:
-            raise RuntimeError(f"Panda pose has no virtual SO-101 representation within3mm: {error:.6f}m")
+        best_q, best_error = None, float("inf")
+        seeds = (self.last_target[:5], self.q[:5], self.source.initial_qpos[:5])
+        for seed in seeds:
+            fitted = least_squares(residual, np.clip(seed, *self.limits[:5].T),
+                bounds=tuple(self.limits[:5].T), max_nfev=60,
+                ftol=1e-8, xtol=1e-8, gtol=1e-8)
+            error = float(np.linalg.norm(self.ball_point(fitted.x) - equivalent_point))
+            if np.isfinite(fitted.x).all() and np.isfinite(error) and error < best_error:
+                best_q, best_error = fitted.x.copy(), error
+            if best_error <= SOURCE_PROJECTION_TOLERANCE_M:
+                break
+        if best_q is None:
+            raise RuntimeError("Virtual source projection produced no finite bounded solution")
+        best_q.setflags(write=False)
+        return VirtualSourceProjection(best_q, best_error,
+                                       best_error <= SOURCE_PROJECTION_TOLERANCE_M)
+
+    def source_state(self, panda):
+        projection = self.project_pose(panda.ee_pose())
+        self.last_projection = projection.diagnostics()
+        if not projection.accepted:
+            raise VirtualSourceProjectionError(projection)
         opening = panda.gripper_opening()
         # Panda cannot open as far as the SO-101. At the fully-open stop the
         # command history disambiguates the equivalent source opening; below it
@@ -127,8 +185,8 @@ class VirtualSource:
         grip_percent = (float(self.mapping.gripper_sim_to_real_percent(self.last_target[5]))
             if opening >= panda.max_opening - .001 else
             float(np.interp(opening, self.gaps, self.percent)))
-        self.q = np.r_[fitted.x, self.mapping.gripper_real_to_sim_rad(grip_percent)]
-        return real_from_sim(self.mapping, self.q).astype(np.float32), error
+        self.q = np.r_[projection.arm_qpos, self.mapping.gripper_real_to_sim_rad(grip_percent)]
+        return real_from_sim(self.mapping, self.q).astype(np.float32), projection.error_m
 
     def source_action(self, action):
         requested, bounded = bound_gripper_command(self.mapping, self.limits, action)

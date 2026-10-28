@@ -41,6 +41,10 @@ on both arms. The geometric controller remains the working fallback.
 The [29 October progress report](docs/v2_progress_20261029.md) records the final
 phase-head development result (3/10 per arm), completed checks, and the remaining
 grasp-retention, camera-alignment and state-transfer bottlenecks.
+The [retention and representation follow-up](docs/v2_retention_and_representation_20261029.md)
+adds issued-command feedback, continuous teacher dwell, Panda source-mapping
+checks, and an experimental optional phase guard. Retention and physical camera
+calibration remain unresolved; the geometric fallback stays the working default.
 
 Run the assisted system with the pinned HF `latest/` checkpoint:
 

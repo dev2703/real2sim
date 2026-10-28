@@ -101,8 +101,12 @@ class RecoveryObservation:
 class CommonCartesianExecutor:
     """Execute a learned common action under each robot's existing native gates."""
 
-    def __init__(self, episode):
+    def __init__(self, episode, *, require_source_mapping=False):
         self.env, self.robot, self.source = episode.env, episode.robot, episode.source
+        # Native Panda feasibility does not imply the six-value source ACT can
+        # observe that pose. Apply this extra representation constraint only to
+        # pipelines which actually require source ACT inputs.
+        self.require_source_mapping = bool(require_source_mapping and self.robot == "panda")
         config = deepcopy(self.env.config)
         # Numerical polish is necessary for small per-tick targets; retain the
         # same hard acceptance tolerances, native limits and collision gates.
@@ -115,6 +119,53 @@ class CommonCartesianExecutor:
             from real2sim.panda.adapter import PandaIK
 
             self.guard = PandaIK(self.env.model, config, task_origin=self.env.offset)
+
+    def _source_mapping_path(self, current, command, grip):
+        """Check bounded native motion without mutating the virtual source.
+
+        A 1 mm command margin sits inside the unchanged 3 mm measured-pose
+        acceptance threshold. Samples cover both the measured-to-target joint
+        path and the servo's rate-limited command path. This is a kinematic
+        guard, not a prediction of contact dynamics or a substitute for checking
+        measured feedback at the next ACT query.
+        """
+        maximum_error, checked = 0., 0
+        current_projection = self.source.project_pose(self.env.ee_pose())
+        maximum_error = current_projection.error_m
+        if not current_projection.accepted:
+            return False, {**current_projection.diagnostics(), "path_samples": 1,
+                           "command_margin_m": .001, "failed_at": "measured_pose",
+                           "reason": "virtual_source_unrepresentable"}
+        paths = [(np.asarray(current), np.asarray(command))]
+        # env.step limits from the last actuator target, not the measured arm.
+        # Check that separately when an actual actuator interface is available.
+        if hasattr(self.env, "actuator_ids"):
+            previous = self.env.data.ctrl[self.env.actuator_ids].copy()
+            applied = previous + np.clip(command - previous,
+                -self.env.max_velocity / self.env.control_hz,
+                self.env.max_velocity / self.env.control_hz)
+            paths.append((previous, applied))
+        for start, end in paths:
+            for fraction in np.linspace(0., 1., 5):
+                pose = self.guard.forward(start + fraction * (end - start), finger_opening=grip)
+                projection = self.source.project_pose(pose)
+                maximum_error = max(maximum_error, projection.error_m)
+                checked += 1
+                # Intermediate samples retain the measured bound, allowing a
+                # pose near the boundary to move inward. Native target endpoints
+                # have a tighter bound to leave tracking headroom.
+                tolerance = projection.tolerance_m - (.001 if fraction == 1. else 0.)
+                if not projection.accepted or projection.error_m > tolerance:
+                    return False, {**projection.diagnostics(), "accepted": False,
+                        "within_measured_tolerance": projection.accepted,
+                        "command_tolerance_m": tolerance, "path_samples": checked,
+                        "reason": ("virtual_source_command_margin" if projection.accepted
+                                   else "virtual_source_unrepresentable"),
+                        "command_margin_m": .001, "maximum_position_error_m": maximum_error,
+                        "failed_at": "sampled_native_path"}
+        return True, {"accepted": True, "maximum_position_error_m": maximum_error,
+                      "position_tolerance_m": current_projection.tolerance_m,
+                      "command_margin_m": .001, "path_samples": checked}
 
     def native_to_common(self, native):
         native = np.asarray(native, float)
@@ -196,7 +247,13 @@ class CommonCartesianExecutor:
                     accepted, reason, _ = check_joint_request(self.guard, guard_current,
                         env.data.ctrl[env.actuator_ids], command, env.max_velocity / env.control_hz,
                         samples=17)
-            attempts.append({"fraction": candidate_fraction, "accepted": accepted, "reason": reason})
+            projection = None
+            if accepted and getattr(self, "require_source_mapping", False):
+                accepted, projection = self._source_mapping_path(current, solved.qpos, grip)
+                if not accepted:
+                    reason = projection["reason"]
+            attempts.append({"fraction": candidate_fraction, "accepted": accepted, "reason": reason,
+                             **({"source_mapping": projection} if projection is not None else {})})
             if accepted:
                 fraction = candidate_fraction
                 break
@@ -212,6 +269,7 @@ class CommonCartesianExecutor:
             detail={"common_action": executed.tolist(), "requested_common_action": action.tolist(),
                     "feasibility_fraction": fraction, "feasibility_attempts": attempts,
                     "arm_joint_stop_command_margin_rad": .003,
+                    "requires_virtual_source_mapping": getattr(self, "require_source_mapping", False),
                     "panda_orientation_projection": "fixed_top_down_expert_manifold" if self.robot == "panda" else None,
                     "requested_native": command.tolist(),
                     "ik_reason": reason, "uses_act": True, "intervention": True,
@@ -226,6 +284,7 @@ class FrozenACTFeatures:
         self.pending = []
         self.calls = 0
         self._captured = None
+        self.last_source_projection = None
         self.handle = policy.policy.model.action_head.register_forward_pre_hook(self._hook)
 
     def _hook(self, _module, inputs):
@@ -234,6 +293,8 @@ class FrozenACTFeatures:
     def reset(self):
         self.pending.clear()
         self.calls = 0
+        self.last_source_projection = None
+        self._captured = None
         self.policy.reset()
 
     def next(self):
@@ -243,8 +304,10 @@ class FrozenACTFeatures:
                 state = env.real_state()
             else:
                 state, _ = source.source_state(env)
+                self.last_source_projection = source.last_projection.copy()
                 state[5] = float(np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.)
             images = {key: env.render(env.camera_bindings[key]) for key in self.policy.camera_keys}
+            self._captured = None
             chunks = self.policy.predict_action_chunk(state, images)
             n = self.policy.config.n_action_steps
             if self._captured is None or self._captured.shape != (50, 256):

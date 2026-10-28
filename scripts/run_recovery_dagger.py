@@ -31,7 +31,9 @@ from real2sim.policy.common_recovery import (
     FrozenACTFeatures,
     RecoveryObservation,
     clip_common,
+    semantic_gripper,
 )
+from real2sim.policy.grasp_feedback import ObservableGraspMonitor, RecoveryPhaseGuard
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT
 from real2sim.policy.recovery_mlp import RecoveryMLPPolicy
 from real2sim.policy.rgb_reference_tracker import RGBReferenceTracker
@@ -61,12 +63,13 @@ class CartesianConvergenceTeacher(StaticBowlRecovery):
         from real2sim.geometry.so3 import delta_action
 
         # DAgger may execute a learner command instead of the queried expert.
-        # Do not count an opposing executed jaw command as expert close/release
-        # dwell time. This uses causal command history, never held/contact flags.
+        # Require continuous executed close/release dwell. Opposing commands
+        # reset it; the hypothetical expert query must not earn a dwell tick.
+        # This uses causal command history, never held/contact flags.
         selected = getattr(self, "executed_semantic_gripper", None)
         if selected is not None and ((self.phase == "CLOSE" and selected >= .5)
                                      or (self.phase == "RELEASE" and selected < .5)):
-            self.phase_tick = max(0, self.phase_tick - 1)
+            self.phase_tick = -1  # super().step increments once for this query
         if self.target_q is not None and self.phase in (
                 "PRE_GRASP", "DESCEND", "LIFT", "TRANSPORT", "LOWER", "RETREAT"):
             opened = self.phase in ("PRE_GRASP", "DESCEND", "RETREAT")
@@ -119,6 +122,7 @@ def source_files(snapshot, source_scene, extra=()):
     return runtime_hashes(snapshot, source_scene, extra_paths=[Path(__file__),
         Path("src/real2sim/policy/common_recovery.py"), Path("src/real2sim/policy/recovery_mlp.py"),
         Path("src/real2sim/policy/phase_recovery_mlp.py"),
+        Path("src/real2sim/policy/grasp_feedback.py"),
         Path("src/real2sim/policy/rgb_reference_tracker.py"), *extra])
 
 
@@ -161,6 +165,13 @@ def head_reference_mode(head):
     return "tracked" if any("fresh_rgb_" in name for name in names) else "initial"
 
 
+def issued_gripper_opening(env, robot, native):
+    """Semantic jaw intent of the issued native command, including arm holds."""
+    opening = (env.mapping.gripper_sim_to_real_percent(native[-1]) / 90.
+               if robot == "so101" else native[-1] / env.max_opening)
+    return float(np.clip(opening, 0., 1.))
+
+
 def save_pack(path, rows):
     if rows:
         arrays = {name: np.stack([row[name] for row in rows]) for name in ARRAY_NAMES}
@@ -176,10 +187,14 @@ def save_pack(path, rows):
 
 
 class LearnedRecoveryController:
-    def __init__(self, episode, head, policy=None):
+    def __init__(self, episode, head, policy=None, *, phase_guard=False):
         self.episode, self.env, self.robot, self.head = episode, episode.env, episode.robot, head
-        self.executor = CommonCartesianExecutor(episode)
         self.use_act = bool(head.metadata["use_act"])
+        self.executor = CommonCartesianExecutor(episode, require_source_mapping=self.use_act)
+        if phase_guard and not hasattr(head, "last_phase_id"):
+            raise ValueError("Phase guard requires a phase-supervised recovery head")
+        self.grasp_monitor = ObservableGraspMonitor(self.env.control_hz)
+        self.phase_guard = RecoveryPhaseGuard(self.env.control_hz) if phase_guard else None
         self.encoder = RecoveryObservation(self.robot, self.env.control_hz)
         self.reference_mode = head_reference_mode(head)
         self.act = FrozenACTFeatures(episode, policy) if self.use_act else None
@@ -190,6 +205,11 @@ class LearnedRecoveryController:
     def reset(self):
         self.tick, self.ball, self.bowl = 0, None, None
         self.references = RGBReferenceTracker(self.env) if self.reference_mode == "tracked" else None
+        self.grasp_anchor = None
+        self.previous_issued_gripper = 1.
+        self.grasp_monitor.reset()
+        if self.phase_guard:
+            self.phase_guard.reset()
         self.encoder.reset()
         if self.act:
             self.act.reset()
@@ -207,6 +227,15 @@ class LearnedRecoveryController:
         observed = self.encoder.encode(env, self.ball, self.bowl, self.tick, **metadata)
         reference_ages = [(self.tick - seen) / env.control_hz
                           for seen in metadata.get("last_seen_ticks", (0, 0))]
+        pose = env.ee_pose()
+        predicted_ball = (None if self.grasp_anchor is None
+                          else pose[:3, 3] + pose[:3, :3] @ self.grasp_anchor)
+        fresh_ball = (self.ball if metadata.get("visibility", (False, False))[0]
+                      and metadata.get("last_seen_ticks", (None, None))[0] == self.tick else None)
+        feedback = self.grasp_monitor.update(self.tick, pose[:3, 3],
+            semantic_gripper(env, self.robot),
+            self.previous_issued_gripper,
+            fresh_ball=fresh_ball, predicted_ball=predicted_ball)
         if self.act:
             raw, features = self.act.next()
             try:
@@ -218,7 +247,27 @@ class LearnedRecoveryController:
         else:
             base, features, invalid_prior = np.zeros(7), np.zeros(256, np.float32), None
         action = self.head.predict(observed, base, features)
+        predicted_action = action.copy()
+        guard_detail = None
+        if self.phase_guard:
+            from real2sim.policy.phase_recovery_mlp import PHASE_NAMES
+
+            action, guard_detail = self.phase_guard.filter(
+                action, PHASE_NAMES[self.head.last_phase_id], feedback)
         result = self.executor.step(action)
+        native = result.detail.get("requested_native")
+        issued = (issued_gripper_opening(env, self.robot, native) if native is not None
+                  else float(action[6]))
+        # Anchor only a nearby, recent RGB reference at the issued close edge.
+        # Its rigid carry prediction is a hypothesis used to detect separation,
+        # never a measurement of the carried ball or an input to the old head.
+        if issued >= .5:
+            self.grasp_anchor = None
+        elif self.previous_issued_gripper >= .5:
+            recent = bool(reference_ages and reference_ages[0] <= .2)
+            if recent and np.linalg.norm(self.ball - pose[:3, 3]) <= .06:
+                self.grasp_anchor = pose[:3, :3].T @ (self.ball - pose[:3, 3])
+        self.previous_issued_gripper = issued
         self.encoder.selected_action(action, self.tick)
         self.tick += 1
         result.detail.update(uses_act=self.use_act, intervention=True,
@@ -228,9 +277,15 @@ class LearnedRecoveryController:
             rgb_reference_visibility=list(metadata.get("visibility", (True, True))),
             rgb_reference_age_s=reference_ages,
             recovery_inputs={"observations": observed.tolist(), "base_actions": base.tolist(),
-                             "features": features.tolist()})
+                             "features": features.tolist()},
+            observable_grasp_feedback=feedback, phase_guard=guard_detail,
+            phase_guard_enabled=self.phase_guard is not None,
+            predicted_common_action=predicted_action.tolist(),
+            issued_gripper_open_fraction=issued,
+            virtual_source_projection=getattr(self.act, "last_source_projection", None))
         if hasattr(self.head, "last_phase_id"):
             result.detail["learned_phase_id"] = self.head.last_phase_id
+            result.detail["learned_phase_probabilities"] = self.head.last_phase_probabilities
         return result
 
     def close(self):
@@ -260,7 +315,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
     shared = SharedEpisode(robot, out / "live", source_scene)
     shadow = SharedEpisode(robot, out / "expert_shadow", source_scene)
     act = FrozenACTFeatures(shared, policy)
-    executor = CommonCartesianExecutor(shared)
+    executor = CommonCartesianExecutor(shared, require_source_mapping=True)
     encoder = RecoveryObservation(robot, shared.env.control_hz)
     report = {"schema": "recovery_mlp_dagger_collection_v1", "status": "collecting",
         "robot": robot, "base_checkpoint_sha256": policy.weights_sha256,
@@ -272,10 +327,12 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "act_feature_dim": 256,
         "split": {"train": list(train_seeds), "val": list(val_seeds), "evaluation": list(range(13000, 13100))},
         "expert_queries_actual_learner_states": head is not None,
-        "teacher_phase_convergence": "Measured TCP; close/release dwell pauses on opposing executed jaw commands",
+        "teacher_phase_convergence": "Measured TCP; continuous close/release dwell resets on opposing issued jaw commands",
         "teacher_phase_or_object_truth_in_observations": False,
         "expert_phase_is_audit_label_only": True,
         "expert_phase_label_source": "issued_command",
+        "panda_actions_require_source_mapping": robot == "panda" and expert_execution == "common",
+        "native_teacher_execution_bypasses_source_mapping": robot == "panda" and expert_execution == "native",
         "expert_terminal_hold_labels_included": False,
         "reference_mode": reference_mode,
         "reference_source": "Confident RGB detections plus declared camera/object geometry; tracked mode refreshes every5ticks",
@@ -288,6 +345,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                 env = shared.env
                 tracker = tracker_for(env)
                 abort, initial_rgb, failures, learner_ticks, replans = None, None, 0, 0, 0
+                abort_projection = None
+                previous_issued_gripper = None
                 references = None
                 reason_counts = {}
                 trial_rows = []
@@ -328,7 +387,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         shadow.env.steps, shadow.env._ready = env.steps, True
                         if robot == "panda":
                             shadow.env._ee_velocity = env._ee_velocity.copy()
-                        teacher.executed_semantic_gripper = float(encoder.previous_action[6]) if tick else None
+                        teacher.executed_semantic_gripper = previous_issued_gripper
                         label_result = teacher.step({}, shadow.env)
                         command_phase = label_result.detail["phase"]
                         target = teacher_common_action(teacher, label_result, executor)
@@ -351,11 +410,14 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                             _, _, _, truncated, info = env.step(action)
                             rejected, saturation = label_result.ik_rejected, label_result.saturation
                             reason = "teacher_native"
+                            issued_native = action
                         else:
                             result = executor.step(selected)
                             truncated, info = result.truncated, result.info
                             rejected, saturation = result.ik_rejected, result.saturation
                             reason = result.detail["ik_reason"]
+                            issued_native = result.detail["requested_native"]
+                        previous_issued_gripper = issued_gripper_opening(env, robot, issued_native)
                         learner_ticks += not choose_teacher
                         encoder.selected_action(selected, tick)
                         reason_counts[reason] = reason_counts.get(reason, 0) + 1
@@ -367,11 +429,14 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         raise RuntimeError("Lighting changed during collection")
                 except (ValueError, RuntimeError) as exc:
                     abort = f"{type(exc).__name__}: {exc}"
+                    if (projection := getattr(exc, "projection", None)) is not None:
+                        abort_projection = projection.diagnostics()
                 row = tracker.row(experiment_id="RECOVERY_DAGGER_COLLECTION", controller_source="DISCLOSED_RGB_EXPERT_MIXTURE",
                     robot=robot, seed=seed, checkpoint_sha256=policy.weights_sha256, checkpoint_step=None,
                     mean_latency_ms=None, video_path="", abort=abort)
                 row.update(partition=partition, supervised_rows=len(trial_rows), learner_executed_ticks=learner_ticks,
                     invalid_hf_priors=failures, command_reasons=reason_counts, initial_rgb=initial_rgb,
+                    abort_source_projection=abort_projection,
                     teacher_final_phase=getattr(teacher, "phase", None) if initial_rgb else None,
                     rgb_expert_replans=replans, rgb_reference_log=references.log if references else None)
                 report["trials"].append(row)
@@ -396,7 +461,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
 
 
 def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
-             source_scene=MEASURED_SCENE, video=False):
+             source_scene=MEASURED_SCENE, video=False, phase_guard=False):
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
@@ -405,13 +470,19 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     head = load_recovery_head(head_dir, frozen_hash)
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] else None
     shared = SharedEpisode(robot, out / "setup", source_scene)
-    controller = LearnedRecoveryController(shared, head, policy)
+    controller = LearnedRecoveryController(shared, head, policy, phase_guard=phase_guard)
     before = source_files(snapshot, source_scene, [head_dir / "head.json", head_dir / "head.pt"])
     executed_sources = snapshot_sources(out, before)
     report = {"schema": "learned_recovery_mlp_closed_loop_v1", "status": "running",
         "robot": robot, "seeds": seeds, "head": str(head_dir), "head_sha256": head.head_sha256,
         "base_checkpoint_sha256": frozen_hash, "use_act": head.metadata["use_act"],
         "reference_mode": head_reference_mode(head),
+        "panda_actions_require_source_mapping": robot == "panda" and bool(head.metadata["use_act"]),
+        "observable_grasp_feedback_changes_head_inputs": False,
+        "phase_guard_enabled": phase_guard,
+        "phase_guard_is_additional_execution_assistance": phase_guard,
+        "observable_grasp_monitor_config": controller.grasp_monitor.config,
+        "phase_guard_config": controller.phase_guard.config if controller.phase_guard else None,
         "no_runtime_geometric_teacher": True, "lighting_changed": False,
         "source_sha256_before": before, "executed_sources_manifest": executed_sources, "trials": []}
     write_json(out / "report.json", report, atomic=True)
@@ -419,6 +490,7 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
         for seed in seeds:
             tracker = tracker_for(shared.env)
             writer, abort = None, None
+            abort_projection = None
             directory = out / f"seed_{seed}"
             directory.mkdir()
             try:
@@ -445,6 +517,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
                     raise RuntimeError("Lighting changed during learned evaluation")
             except (ValueError, RuntimeError) as exc:
                 abort = f"{type(exc).__name__}: {exc}"
+                if (projection := getattr(exc, "projection", None)) is not None:
+                    abort_projection = projection.diagnostics()
             finally:
                 if writer:
                     writer.close()
@@ -452,6 +526,7 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
                 robot=robot, seed=seed, checkpoint_sha256=frozen_hash, checkpoint_step=None,
                 mean_latency_ms=None, video_path=str(directory / "rollout.mp4") if video else "", abort=abort)
             row.update(head_sha256=head.head_sha256, no_runtime_geometric_teacher=True,
+                abort_source_projection=abort_projection,
                 act_policy_calls=controller.act.calls if controller.act else 0,
                 trace=str(directory / "ticks.jsonl"))
             report["trials"].append(row)
@@ -477,7 +552,8 @@ def controller_factory(*, env, source, robot, snapshot, condition, options):
         raise ValueError("Benchmark condition and recovery head ACT ablation differ")
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] else None
     shared = SimpleNamespace(env=env, source=source, robot=robot)
-    return LearnedRecoveryController(shared, head, policy)
+    return LearnedRecoveryController(shared, head, policy,
+        phase_guard=bool(options.get("phase_guard", False)))
 
 
 def main():
@@ -496,8 +572,12 @@ def main():
     parser.add_argument("--expert-execution", choices=("native", "common"), default="common")
     parser.add_argument("--reference-mode", choices=("initial", "tracked"), default="initial")
     parser.add_argument("--video", action="store_true")
+    parser.add_argument("--phase-guard", action="store_true",
+                        help="Evaluate disclosed stateful jaw/phase/motion assistance")
     args = parser.parse_args()
     if args.mode == "collect":
+        if args.phase_guard:
+            parser.error("--phase-guard is an evaluation assistance option")
         return collect(args.robot, args.out, args.train_seeds, args.val_seeds,
             snapshot=args.snapshot, source_scene=args.source_scene, learner=args.head,
             beta=args.beta, iteration=args.iteration, expert_execution=args.expert_execution,
@@ -505,7 +585,8 @@ def main():
     if args.head is None:
         parser.error("--head is required for evaluation")
     return evaluate(args.robot, args.head, args.out, args.seeds,
-        snapshot=args.snapshot, source_scene=args.source_scene, video=args.video)
+        snapshot=args.snapshot, source_scene=args.source_scene, video=args.video,
+        phase_guard=args.phase_guard)
 
 
 if __name__ == "__main__":
