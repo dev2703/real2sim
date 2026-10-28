@@ -1,0 +1,578 @@
+{
+  "schema": "fixed_lighting_rgb_robustness_pilot_v1",
+  "status": "complete",
+  "controller": "RGB_GEOMETRIC_CONTROLLER_ONLY",
+  "learned_recovery_success_claimed": false,
+  "hf_inference_used": false,
+  "lighting_changed": false,
+  "seeds": [
+    14000,
+    14001,
+    14002
+  ],
+  "conditions": {
+    "nominal": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/nominal/report.json",
+      "report_sha256": "1345d8148c537d3464710732a781e318fbf69afbd5506c2b7a619668017456b3",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 2.978366169928067,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.626666666666667,
+          "mean_wall_s": 0.6556544723377252
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 1.5243726620354945,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.173333333333332,
+          "mean_wall_s": 0.40668615299121785
+        }
+      }
+    },
+    "bowl_jitter": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/bowl_jitter/report.json",
+      "report_sha256": "ef763c68a62d5657c23f95cdcc536c507dcd1ccbf98bfdb38a0c200a9d8576fe",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 2.817562786441547,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 9.053333333333333,
+          "mean_wall_s": 0.6522519443727409
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 1.7125980411222264,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.706666666666665,
+          "mean_wall_s": 0.4802134999772534
+        }
+      }
+    },
+    "layout_extended": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/layout_extended/report.json",
+      "report_sha256": "2893df89216cd92ef8979546775a17e789db42bedb9e52c0c07541831e3c6e19",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 4.869627319128665,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.826666666666666,
+          "mean_wall_s": 1.0870758889941499
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 2.318591903546517,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 11.026666666666666,
+          "mean_wall_s": 0.6678257083597904
+        }
+      }
+    },
+    "ball_small": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/ball_small/report.json",
+      "report_sha256": "6479d25ffe1e43f7c8c9425f8f8a114cbc972070d9eb7b0bb4187fb61c76c3a6",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 4.780850501159761,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.613333333333332,
+          "mean_wall_s": 1.0457079723322142
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 1.897260389810377,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 11.56,
+          "mean_wall_s": 0.5738004723098129
+        }
+      }
+    },
+    "ball_large": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/ball_large/report.json",
+      "report_sha256": "eaad46f0fb98f57ee2080648526b9118ab50c19386ee453d35a083ce09ba30ef",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 3.527713735245864,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 9.106666666666667,
+          "mean_wall_s": 0.8211852643483629
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 1.8876505955537493,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.146666666666667,
+          "mean_wall_s": 0.5026805279776454
+        }
+      }
+    },
+    "friction_low": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/friction_low/report.json",
+      "report_sha256": "f1a47a6ad0310d116a63d3c86163209504eea819870f52ac2adb5b1469a9518b",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 3.9502425345050587,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.6,
+          "mean_wall_s": 0.8694166113467267
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 1.847762938602229,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.186666666666666,
+          "mean_wall_s": 0.4936590000288561
+        }
+      }
+    },
+    "friction_high": {
+      "report": "outputs/v2/fixed_lighting_rgb_pilot_20261028/friction_high/report.json",
+      "report_sha256": "794c633549370b3aaf9a2b059d028cf81be89359639a2c7c8db9ba98b6bfa91a",
+      "robots": {
+        "so101/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 3.121783278962077,
+          "max_action_saturation": 0.1667,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 9.293333333333333,
+          "mean_wall_s": 0.7385882916472232
+        },
+        "panda/rgb": {
+          "n": 3,
+          "aborted": 0,
+          "successes": 3,
+          "success_rate": 1.0,
+          "pick_place_successes": 3,
+          "pick_place_success_rate": 1.0,
+          "lifted": 3,
+          "delivered": 3,
+          "released": 3,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 3,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 1.7692811977767875,
+          "max_action_saturation": 0.0,
+          "intervention_rate": 1.0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.226666666666667,
+          "mean_wall_s": 0.4747345419988657
+        }
+      }
+    }
+  },
+  "model_effects_source": "scripts/prepare_fixed_lighting_robustness.py",
+  "protocol": "outputs/v2/fixed_lighting_robustness_pilot_20261028/protocol.json",
+  "size_perception_assumption": "Actual configured varied radius is supplied to geometric perception; this is scene-aware size testing, not unknown-size generalization."
+}
