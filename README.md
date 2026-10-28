@@ -23,29 +23,6 @@ Ball: 8 circumference
 
 Note: there could be +- 5% measurments error.
 
-## Current v2 workflow
-
-The measured scene uses [physical_measurements.md](physical_measurements.md). The
-completed matched benchmark scored **100/100 on each arm** with frozen HF ACT
-followed by explicit RGB recovery, and 100/100 with RGB recovery alone. ACT alone
-scored 0/100 in this simulation. Lighting and HF weights stayed unchanged;
-recovery took over in every assisted trial. See the
-[matched results and attribution](docs/v2_matched_benchmark_20261028.md) and
-[camera alignment and robustness evidence](docs/v2_alignment_and_fixed_lighting_robustness_20261028.md).
-
-A separate [recovery MLP and DAgger experiment](docs/v2_learned_recovery_dagger_20261028.md)
-keeps ACT frozen and evaluates learned actions without the geometric teacher.
-Those experimental heads have not established reliable complete-task performance
-on both arms. The geometric controller remains the working fallback.
-
-The [29 October progress report](docs/v2_progress_20261029.md) records the final
-phase-head development result (3/10 per arm), completed checks, and the remaining
-grasp-retention, camera-alignment and state-transfer bottlenecks.
-The [retention and representation follow-up](docs/v2_retention_and_representation_20261029.md)
-adds issued-command feedback, continuous teacher dwell, Panda source-mapping
-checks, and an experimental optional phase guard. Retention and physical camera
-calibration remain unresolved; the geometric fallback stays the working default.
-
 Run the assisted system with the pinned HF `latest/` checkpoint:
 
 ```sh
