@@ -57,6 +57,13 @@ class CartesianConvergenceTeacher(StaticBowlRecovery):
     def step(self, obs, env):
         from real2sim.geometry.so3 import delta_action
 
+        # DAgger may execute a learner command instead of the queried expert.
+        # Do not count an opposing executed jaw command as expert close/release
+        # dwell time. This uses causal command history, never held/contact flags.
+        selected = getattr(self, "executed_semantic_gripper", None)
+        if selected is not None and ((self.phase == "CLOSE" and selected >= .5)
+                                     or (self.phase == "RELEASE" and selected < .5)):
+            self.phase_tick = max(0, self.phase_tick - 1)
         if self.target_q is not None and self.phase in (
                 "PRE_GRASP", "DESCEND", "LIFT", "TRANSPORT", "LOWER", "RETREAT"):
             opened = self.phase in ("PRE_GRASP", "DESCEND", "RETREAT")
@@ -126,6 +133,8 @@ class LearnedRecoveryController:
         self.use_act = bool(head.metadata["use_act"])
         self.encoder = RecoveryObservation(self.robot, self.env.control_hz)
         self.act = FrozenACTFeatures(episode, policy) if self.use_act else None
+        if policy is not None:
+            policy.policy.eval().requires_grad_(False)
         self.reset()
 
     def reset(self):
@@ -193,6 +202,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "act_feature_dim": 256,
         "split": {"train": list(train_seeds), "val": list(val_seeds), "evaluation": list(range(13000, 13100))},
         "expert_queries_actual_learner_states": head is not None,
+        "teacher_phase_convergence": "Measured TCP; close/release dwell pauses on opposing executed jaw commands",
         "teacher_phase_or_object_truth_in_observations": False,
         "reference_source": "Initial RGB detections plus declared camera/object geometry",
         "source_sha256_before": before, "trials": []}
@@ -230,6 +240,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         shadow.env.steps, shadow.env._ready = env.steps, True
                         if robot == "panda":
                             shadow.env._ee_velocity = env._ee_velocity.copy()
+                        teacher.executed_semantic_gripper = float(encoder.previous_action[6]) if tick else None
                         label_result = teacher.step({}, shadow.env)
                         target = teacher_common_action(teacher, label_result, executor)
                         if teacher.phase != "FAILED":

@@ -1,0 +1,372 @@
+{
+  "schema": "proper_recovery_mlp_iteration0_comparison_20261028_v1",
+  "status": "complete",
+  "source_packs": [
+    "outputs/v2/recovery_mlp_iteration0_so101_20261028",
+    "outputs/v2/recovery_mlp_iteration0_panda_20261028"
+  ],
+  "evaluation_scope": "Two development seeds12000/12001 perarm; no reserved evaluation episodes consumed",
+  "base_weights_frozen": true,
+  "lighting_changed": false,
+  "runtime_geometric_teacher": false,
+  "validation_metric_is_task_success": false,
+  "conditions": {
+    "act": {
+      "head_directory": "outputs/v2/recovery_mlp_iteration0_act_20261028",
+      "head_metadata_sha256": "4ece9f411ccc1d6a21cf9f3ce3bd7dd7d7fdf0f599b09a82bd6be9f2916534e9",
+      "head_sha256": "be0a72d4c5f28d298fce55b943edf67ce8834f36eeaeda8f25257b885f86b5ff",
+      "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "use_act": true,
+      "train_rows": 4978,
+      "validation_rows": 1694,
+      "best_step": 3900,
+      "offline_validation": {
+        "step": 3900,
+        "training_loss": 0.002747450489550829,
+        "mean_absolute_normalized_error": 0.015918003395199776,
+        "translation_mae_mm": 0.6343858242034912,
+        "rotation_mae_rad": 0.0024043195880949497,
+        "gripper_mae_fraction": 0.023944249376654625,
+        "per_robot_mae_normalized": {
+          "0": 0.015518512576818466,
+          "1": 0.01643924042582512
+        }
+      },
+      "train_runtime_source_changes": [],
+      "robots": {
+        "so101": {
+          "report": "outputs/v2/recovery_mlp_iteration0_act_so101_dev2_20261028/report.json",
+          "report_sha256": "533ea8ccf993438d1ba24f6560f89db6468f347a756981e0992ff8c589fd693d",
+          "summary": {
+            "n": 2,
+            "aborted": 0,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 0,
+            "delivered": 0,
+            "released": 0,
+            "rolled_out": 0,
+            "ball_escaped_table": 0,
+            "phase_failed_counts": {
+              "approach": 2,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 2,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "ik_rejections_total": 1407,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.1667
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.20365,
+              "ik_rejections": 712,
+              "act_policy_calls": 75,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_act_so101_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_act_so101_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 38,
+                "residual_rejected": 406,
+                "current_native_limits": 306
+              },
+              "held_ticks": 0
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.20606,
+              "ik_rejections": 695,
+              "act_policy_calls": 75,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_act_so101_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_act_so101_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 55,
+                "residual_rejected": 111,
+                "current_native_limits": 584
+              },
+              "held_ticks": 0
+            }
+          ]
+        },
+        "panda": {
+          "report": "outputs/v2/recovery_mlp_iteration0_act_panda_dev2_20261028/report.json",
+          "report_sha256": "b731dd977b45c5e960d4722de8912652b8465963ff7de2151a5a72c42b526ba7",
+          "summary": {
+            "n": 2,
+            "aborted": 0,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 0,
+            "delivered": 0,
+            "released": 1,
+            "rolled_out": 0,
+            "ball_escaped_table": 1,
+            "phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "ik_rejections_total": 0,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.0
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.04548,
+              "ik_rejections": 0,
+              "act_policy_calls": 75,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_act_panda_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_act_panda_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 750
+              },
+              "held_ticks": 0
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "grasp",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.00744,
+              "ik_rejections": 0,
+              "act_policy_calls": 75,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_act_panda_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_act_panda_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 750
+              },
+              "held_ticks": 55
+            }
+          ]
+        }
+      }
+    },
+    "noact": {
+      "head_directory": "outputs/v2/recovery_mlp_iteration0_noact_20261028",
+      "head_metadata_sha256": "b45488463579da415941e7dde6cfb8c982019b84e24ae420e77a0a2f50e53341",
+      "head_sha256": "25b7e264bfa28310707fbe9bfdecb336c874238a8a4baa08ec711f7d999683ed",
+      "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "use_act": false,
+      "train_rows": 4978,
+      "validation_rows": 1694,
+      "best_step": 4000,
+      "offline_validation": {
+        "step": 4000,
+        "training_loss": 0.002385434927418828,
+        "mean_absolute_normalized_error": 0.008242147043347359,
+        "translation_mae_mm": 0.36982235312461853,
+        "rotation_mae_rad": 0.0005389421712607145,
+        "gripper_mae_fraction": 0.01532337348908186,
+        "per_robot_mae_normalized": {
+          "0": 0.006147845182567835,
+          "1": 0.010974712669849396
+        }
+      },
+      "train_runtime_source_changes": [],
+      "robots": {
+        "so101": {
+          "report": "outputs/v2/recovery_mlp_iteration0_noact_so101_dev2_20261028/report.json",
+          "report_sha256": "c8f40ff95cd33f1ba38d2b714dc0ba7a38745e33967283bd91a836f1730d1317",
+          "summary": {
+            "n": 2,
+            "aborted": 0,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 0,
+            "delivered": 0,
+            "released": 0,
+            "rolled_out": 0,
+            "ball_escaped_table": 0,
+            "phase_failed_counts": {
+              "approach": 2,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 2,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "ik_rejections_total": 1275,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.1667
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.07092,
+              "ik_rejections": 637,
+              "act_policy_calls": 0,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_noact_so101_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_noact_so101_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 113,
+                "residual_rejected": 3,
+                "path_collision": 634
+              },
+              "held_ticks": 0
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.09201,
+              "ik_rejections": 638,
+              "act_policy_calls": 0,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_noact_so101_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_noact_so101_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 112,
+                "residual_rejected": 12,
+                "path_collision": 626
+              },
+              "held_ticks": 0
+            }
+          ]
+        },
+        "panda": {
+          "report": "outputs/v2/recovery_mlp_iteration0_noact_panda_dev2_20261028/report.json",
+          "report_sha256": "852eae6b9623982640f61f9e6015d8872474af39e95788243599cddb7d9fea6f",
+          "summary": {
+            "n": 2,
+            "aborted": 0,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 0,
+            "delivered": 0,
+            "released": 0,
+            "rolled_out": 0,
+            "ball_escaped_table": 1,
+            "phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "ik_rejections_total": 770,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.0
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.04183,
+              "ik_rejections": 420,
+              "act_policy_calls": 0,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_noact_panda_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_noact_panda_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 330,
+                "collision": 37,
+                "outside_workspace": 171,
+                "residual_rejected": 212
+              },
+              "held_ticks": 0
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "grasp",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.02721,
+              "ik_rejections": 350,
+              "act_policy_calls": 0,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration0_noact_panda_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration0_noact_panda_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 400,
+                "outside_workspace": 213,
+                "collision": 53,
+                "residual_rejected": 84
+              },
+              "held_ticks": 0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "video_validation": {
+    "fully_decoded": 8,
+    "failures": []
+  },
+  "interpretation": "Both heads fit held-out teacher actions closely but complete0/2developmenttasks on eacharm. ACT features/prior do not establish task benefit in this bounded pilot. SO101 suffers action/IK drift; Panda ACT commands are feasible but do not establish held grasp. DAgger should collect corrective labels on learner-visited states before any reserved promotion."
+}
