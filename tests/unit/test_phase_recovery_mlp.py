@@ -57,6 +57,17 @@ def test_training_shapes_both_phase_prediction_and_specialized_action_components
                             torch.full((5,), 9, dtype=torch.long))
 
 
+def test_no_act_phase_head_cannot_use_action_or_decoder_inputs():
+    network = PhaseRecoveryMLP(np.zeros(6), np.ones(6), np.zeros(4), np.ones(4),
+                               hidden_sizes=(16, 8), use_act=False)
+    torch.nn.init.normal_(network.action_heads.weight, std=.1)
+    observations, actions, features = torch.randn(5, 6), torch.randn(5, 7), torch.randn(5, 4)
+    first = network(observations, actions, features)
+    second = network(observations, actions * 100 + 7, features * -100 - 3)
+    for left, right in zip(first, second, strict=True):
+        torch.testing.assert_close(left, right, rtol=0, atol=0)
+
+
 def collection(tmp_path, *, audit=True, terminal=False):
     checkpoint = tmp_path / "snapshot"
     checkpoint.mkdir()
@@ -106,13 +117,15 @@ def test_audit_phase_cannot_be_copied_into_the_observation_contract(tmp_path):
         load_phase_collections([pack], expected_base_sha256=base_hash)
 
 
-def test_saved_phase_head_uses_training_only_stats_and_frozen_provenance(tmp_path):
+@pytest.mark.parametrize("use_act", [True, False])
+def test_saved_phase_head_uses_training_only_stats_and_frozen_provenance(tmp_path, use_act):
     checkpoint, base_hash, pack = collection(tmp_path)
     before = sha256_file(checkpoint / "model.safetensors")
-    report = train([pack], tmp_path / "head", snapshot=checkpoint, steps=2)
+    report = train([pack], tmp_path / "head", snapshot=checkpoint, steps=2, use_act=use_act)
     assert report["status"] == "complete" and report["runtime_source_changes"] == []
     assert report["expert_phase_is_runtime_input"] is False
     policy = PhaseRecoveryMLPPolicy(tmp_path / "head", expected_base_sha256=base_hash)
+    assert policy.model.use_act is use_act
     with np.load(pack / "train.npz") as rows:
         np.testing.assert_allclose(policy.model.observation_mean.numpy(), rows["observations"].mean(0))
         output = policy.predict(rows["observations"][0], rows["base_actions"][0], rows["features"][0])

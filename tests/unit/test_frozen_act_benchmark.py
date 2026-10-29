@@ -100,6 +100,29 @@ def test_head_changes_invalidate_protocol_and_recovery_runtime_is_hashed(tmp_pat
     assert second["protocol_id"] != first["protocol_id"]
 
 
+def test_both_condition_heads_enter_matched_protocol(tmp_path):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+    heads = {}
+    for condition in ("learned", "no_act"):
+        directory = tmp_path / condition
+        directory.mkdir()
+        (directory / "head.pt").write_bytes(condition.encode())
+        heads[condition] = str(directory)
+    options = {"heads": heads}
+    protocol = benchmark.run(tmp_path / "run", ["so101", "panda"],
+        ["learned", "no_act"], [12000], snapshot=snapshot,
+        controller_options=options, plan_only=True)
+    for directory in heads.values():
+        path = Path(directory) / "head.pt"
+        assert protocol["runtime_source_sha256"][str(path.resolve())] == sha256_file(path)
+    (Path(heads["no_act"]) / "head.pt").write_bytes(b"changed no-ACT head")
+    with pytest.raises(ValueError, match="protocol/inputs changed"):
+        benchmark.run(tmp_path / "run", ["so101", "panda"], ["learned", "no_act"],
+            [12000], snapshot=snapshot, controller_options=options, plan_only=True)
+
+
 @pytest.mark.parametrize("failure", [None, "reset", "step"])
 @pytest.mark.parametrize("condition", ["learned", "no_act"])
 def test_custom_controller_releases_hooks_after_completion_or_abort(

@@ -161,3 +161,54 @@ def test_frozen_features_follow_the_executed_query_and_reset_drops_old_chunk():
     assert len(policy.action_head._forward_pre_hooks) == 1
     stream.close()
     assert len(policy.action_head._forward_pre_hooks) == 0
+
+
+def test_invalidation_discards_old_action_and_feature_together_without_resetting_history():
+    policy = FakeNativeACT()
+    stream = FrozenACTFeatures(SimpleNamespace(env=MeasuredEnvironment(), source=None, robot="so101"), policy)
+    try:
+        first, _ = stream.next()
+        assert first[0] == 0 and stream.last_inference_ms > 0
+        second, _ = stream.next()
+        assert second[0] == 1 and stream.last_inference_ms == 0
+        stream.invalidate("phase_transition")
+        raw, features = stream.next()
+        assert raw[0] == features[0] == 1000
+        assert stream.calls == 2 and policy.inference_calls == 2
+        assert stream.invalidations == 1
+        assert stream.last_invalidation_reason == "phase_transition"
+    finally:
+        stream.close()
+
+
+class DifferentCheckpoint(FakeNativeACT):
+    def __init__(self, *, malformed=False):
+        super().__init__()
+        self.config = SimpleNamespace(n_action_steps=2, chunk_size=8, dim_model=128)
+        self.malformed = malformed
+
+    def predict_action_chunk(self, state, images):
+        features = torch.ones((1, 8, 128))
+        if self.malformed:
+            features[0, 0, 0] = torch.nan
+        self.action_head(features)
+        self.inference_calls += 1
+        return np.ones((8, 6))
+
+
+def test_frozen_features_follow_checkpoint_dimensions_and_reject_nonfinite_features():
+    episode = SimpleNamespace(env=MeasuredEnvironment(), source=None, robot="so101")
+    stream = FrozenACTFeatures(episode, DifferentCheckpoint())
+    try:
+        raw, features = stream.next()
+        assert raw.shape == (6,) and features.shape == (128,)
+        assert len(stream.pending) == 1
+    finally:
+        stream.close()
+    bad_stream = FrozenACTFeatures(episode, DifferentCheckpoint(malformed=True))
+    try:
+        with pytest.raises(ValueError, match="decoder feature"):
+            bad_stream.next()
+        assert not bad_stream.pending and bad_stream.calls == 0
+    finally:
+        bad_stream.close()

@@ -32,7 +32,19 @@ uv run python scripts/evaluate_hf_act.py --robot so101 \
 # Matched resets: raw ACT, RGB alone, ACT + RGB recovery
 uv run python scripts/benchmark_frozen_act.py --robots so101 \
   --out outputs/v2/benchmark_so101_NEW --plan-only
+
+# Collect, fit ACT/no-ACT recovery heads, and compare both arms on matched resets
+uv run python scripts/run_cross_embodiment_recovery.py \
+  --out outputs/v2/recovery_pipeline_NEW --matched-benchmark --plan-only
+# Remove --plan-only to execute. Add --train-robots so101 to test source-only
+# training followed by SO-101/Panda evaluation; defaults train on both arms.
+# --recovery-frame source also tests the explicit source-frame Panda adapter.
 ```
+
+The recovery workflow keeps ACT weights frozen, supports phase or residual MLP
+heads, and separates training, validation and development episodes. It records
+unseen target arms explicitly. These are experimental learned heads; reliable
+learned cross-embodiment task completion remains unresolved.
 
 Sources: [demonstrations](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v2)
 and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16).

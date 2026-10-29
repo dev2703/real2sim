@@ -1,0 +1,60 @@
+{
+  "schema": "virtual_source_projection_performance_v1",
+  "date": "2026-10-30",
+  "scope": "Local kinematic projection microbenchmark; no closed-loop or physical robot performance claim",
+  "method": "Compare the preceding finite-difference least-squares objective and seed schedule with current analytic Jacobian on the same 40 deterministic nearby source-representable poses. Alternate measurement order over five batches. No exact-prior poses are included.",
+  "position_acceptance_tolerance_m": 0.003,
+  "regularization_coefficient": 0.0001,
+  "command_margin_m": 0.001,
+  "solver_limits": {
+    "max_nfev": 60,
+    "ftol": 1e-08,
+    "xtol": 1e-08,
+    "gtol": 1e-08
+  },
+  "platform": {
+    "python": "3.12.13",
+    "system": "Darwin",
+    "machine": "arm64"
+  },
+  "source_sha256": {
+    "scripts/diag_v2_learned_panda_retarget_20261027.py": "aab8f9e878fe94b6f07368091a55b94201e13366adb48b6b2c5929470b505aaa",
+    "src/real2sim/geometry/so101_fk.py": "a74a640f405c2a0ecda3c87e4d456863162a48f8a805468090170c249f512a41",
+    "configs/v2/sim_so101.waypoint_20261026.yaml": "950381e293e22e337addd6251b153517914192695a7d8c438a2c3e40de2c209a"
+  },
+  "runtime_sources_unchanged": true,
+  "result": {
+    "poses_per_batch": 40,
+    "repetitions": 5,
+    "finite_difference_ms": [
+      93.0178330745548,
+      93.56795798521489,
+      97.0236249268055,
+      94.29824992548674,
+      93.98616605903953
+    ],
+    "analytic_ms": [
+      51.97429098188877,
+      51.04304198175669,
+      56.32875009905547,
+      55.87958300020546,
+      54.363375063985586
+    ],
+    "median_batch_speedup": 1.7288508292286489,
+    "maximum_position_residual_difference_m": 1.0797708939714996e-09,
+    "acceptance_matches": true,
+    "accepted_pose_count": 40,
+    "source_state_unchanged": true,
+    "versions": {
+      "numpy": "2.2.6",
+      "scipy": "1.18.1",
+      "mujoco": "3.15.0"
+    }
+  },
+  "limitations": [
+    "Shared-host timings can vary; median speedup applies only to this local microbenchmark.",
+    "3 mm position representability does not establish source joint observability, calibration accuracy, or task success."
+  ],
+  "reproduce_from_repository_root": ".venv/bin/python followed by the embedded reproduction_python source",
+  "reproduction_python": "import time\nimport numpy as np\nimport mujoco\nimport scipy\nfrom scipy.optimize import least_squares\nfrom scripts.diag_v2_learned_panda_retarget_20261027 import VirtualSource, target_from_source\nsource = VirtualSource(\"configs/v2/sim_so101.waypoint_20261026.yaml\")\nrng = np.random.default_rng(19)\nposes = []\nfor _ in range(40):\n    q = np.clip(source.q[:5] + rng.normal(0., .07, 5), *source.limits[:5].T)\n    poses.append(target_from_source(source, np.r_[q, source.q[5]]))\ndef baseline(pose):\n    point = pose[:3, 3] + pose[:3, :3] @ source.panda_offset\n    prior = source.last_target[:5].copy()\n    def residual(q):\n        return np.r_[source.ball_point(q) - point, .0001 * (q - prior)]\n    best = float(\"inf\")\n    for seed in (source.last_target[:5], source.q[:5], source.source.initial_qpos[:5]):\n        fitted = least_squares(residual, np.clip(seed, *source.limits[:5].T),\n            bounds=tuple(source.limits[:5].T), max_nfev=60,\n            ftol=1e-8, xtol=1e-8, gtol=1e-8)\n        best = min(best, float(np.linalg.norm(source.ball_point(fitted.x) - point)))\n        if best <= .003:\n            break\n    return best\ntry:\n    original_q, original_target = source.q.copy(), source.last_target.copy()\n    timings = {\"finite_difference_ms\": [], \"analytic_ms\": []}\n    errors = {}\n    baseline(poses[0]); source.project_pose(poses[0])\n    for repetition in range(5):\n        order = (\"finite_difference\", \"analytic\") if repetition % 2 == 0 else (\"analytic\", \"finite_difference\")\n        for method in order:\n            started = time.perf_counter()\n            errors[method] = np.array([baseline(pose) if method == \"finite_difference\"\n                else source.project_pose(pose).error_m for pose in poses])\n            timings[method + \"_ms\"].append((time.perf_counter() - started) * 1000.)\n    result = {\"poses_per_batch\": len(poses), \"repetitions\": 5, **timings,\n        \"median_batch_speedup\": float(np.median(timings[\"finite_difference_ms\"]) / np.median(timings[\"analytic_ms\"])),\n        \"maximum_position_residual_difference_m\": float(np.max(np.abs(errors[\"finite_difference\"] - errors[\"analytic\"]))),\n        \"acceptance_matches\": bool(np.array_equal(errors[\"finite_difference\"] <= .003, errors[\"analytic\"] <= .003)),\n        \"accepted_pose_count\": int(np.sum(errors[\"analytic\"] <= .003)),\n        \"source_state_unchanged\": bool(np.array_equal(source.q, original_q) and np.array_equal(source.last_target, original_target)),\n        \"versions\": {\"numpy\": np.__version__, \"scipy\": scipy.__version__, \"mujoco\": mujoco.__version__}}\nfinally:\n    source.close()\n"
+}

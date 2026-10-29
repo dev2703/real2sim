@@ -8,7 +8,13 @@ import torch
 
 from real2sim.artifacts import sha256_file
 from real2sim.policy.recovery_mlp import RecoveryMLP, RecoveryMLPPolicy, bound_common_action
-from scripts.train_recovery_mlp import load_collections, robot_episode_weights, train
+from scripts.train_recovery_mlp import (
+    evaluate,
+    load_collections,
+    recovery_normalizers,
+    robot_episode_weights,
+    train,
+)
 
 
 def model(*, use_act=True):
@@ -35,6 +41,32 @@ def test_common_action_caps_are_vector_norms_and_gripper_has_semantic_endpoints(
     np.testing.assert_array_equal(bounded[:, 6], [0., 1.])
     with pytest.raises(ValueError, match="finite"):
         bound_common_action(np.full(7, np.nan))
+
+
+def test_unseen_low_variance_inputs_cannot_dominate_the_residual():
+    network = RecoveryMLP(np.zeros(6), np.zeros(6), np.zeros(4), np.zeros(4))
+    torch.nn.init.normal_(network.network[-1].weight, std=.1)
+    actions = torch.zeros(1, 7)
+    # A coordinate can be constant on the source arm but variable on the target
+    # arm. Saturating its z-score keeps that extrapolation bounded at inference.
+    first = network(torch.full((1, 6), 1.), actions, torch.full((1, 4), 1.))
+    second = network(torch.full((1, 6), 1000.), actions, torch.full((1, 4), 1000.))
+    torch.testing.assert_close(first, second, rtol=0, atol=0)
+    assert torch.isfinite(first).all()
+
+
+def test_validation_weights_short_episodes_and_target_embodiment_equally():
+    robots = np.asarray([0] * 10 + [1] * 2)
+    episodes = np.asarray([10] * 8 + [11] * 2 + [20] * 2)
+    network = model()
+    errors = torch.tensor([0.] * 8 + [1.] * 2 + [.5] * 2)
+    tensors = {"observations": torch.zeros(12, 6), "features": torch.zeros(12, 4),
+               "base_actions": errors[:, None] * network.action_scales,
+               "target_actions": torch.zeros(12, 7)}
+    metrics = evaluate(network, tensors, robots, episodes=episodes)
+    assert metrics["mean_absolute_normalized_error"] == pytest.approx(.25)
+    assert metrics["robot_balanced_mae_normalized"] == pytest.approx(.35)
+    assert metrics["robot_episode_balanced_mae_normalized"] == pytest.approx(.5)
 
 
 def collection(tmp_path, name, *, train_episodes=(10, 11), val_episodes=(20,), base_hash="base",
@@ -75,6 +107,39 @@ def test_dagger_aggregation_rejects_cross_iteration_split_leakage_and_stale_feat
         load_collections([reserved], expected_base_sha256="base")
 
 
+def test_collection_cannot_hide_episode_rows_outside_the_declared_split(tmp_path):
+    directory = collection(tmp_path, "undeclared")
+    path = directory / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["split"] = {"train": [10], "val": [20]}
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="declared train split"):
+        load_collections([directory], expected_base_sha256="base")
+
+
+def test_collection_cannot_hide_target_arm_rows_in_a_source_arm_manifest(tmp_path):
+    directory = collection(tmp_path, "wrong_robot")
+    path = directory / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["robot"] = "so101"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="declared robot"):
+        load_collections([directory], expected_base_sha256="base")
+
+
+def test_single_arm_binary_indicators_keep_their_natural_scale_for_an_unseen_arm():
+    rows = {"observations": np.array([[.1, 1., 0., 1.], [.3, 1., 0., 1.]]),
+            "features": np.ones((2, 4))}
+    names = ["history_0_tcp_x_m", "history_0_robot_so101", "history_0_robot_panda",
+             "history_0_ball_observed"]
+    mean, std, _, _ = recovery_normalizers(rows, names)
+    assert mean[0] == pytest.approx(.2)
+    np.testing.assert_array_equal(mean[1:], 0.)
+    np.testing.assert_array_equal(std[1:], 1.)
+    unseen_arm = np.array([.2, 0., 1., 0.])
+    np.testing.assert_array_equal(((unseen_arm - mean) / std)[1:], [0., 1., 0.])
+
+
 def test_sampler_balances_robots_then_episodes_despite_unequal_rollout_lengths():
     robots = np.asarray([0] * 10 + [1] * 4)
     episodes = np.asarray([1] * 8 + [2] * 2 + [1] * 4)
@@ -97,12 +162,23 @@ def test_saved_head_uses_training_only_stats_and_exact_frozen_base_identity(tmp_
     assert report["validation_metrics"]["translation_mae_mm"] == selected["translation_mae_mm"]
     assert report["head"]["validation_metrics"] == report["validation_metrics"]
     loaded = RecoveryMLPPolicy(tmp_path / "head", expected_base_sha256=base_hash)
+    assert loaded.model.normalization_clip == 10.
+    assert report["best_validation_mae_normalized"] == report["validation_metrics"][
+        "robot_episode_balanced_mae_normalized"]
     with np.load(data / "train.npz") as values:
         np.testing.assert_allclose(loaded.model.observation_mean.numpy(), values["observations"].mean(0))
         result = loaded.predict(values["observations"][0], values["base_actions"][0], values["features"][0])
         assert result.shape == (7,) and np.isfinite(result).all()
     with pytest.raises(ValueError, match="different frozen ACT"):
         RecoveryMLPPolicy(tmp_path / "head", expected_base_sha256="another checkpoint")
+    # Historical weights did not clip. Loading their existing schema must retain
+    # their original prediction contract rather than quietly changing behavior.
+    metadata_path = tmp_path / "head/head.json"
+    metadata = json.loads(metadata_path.read_text())
+    metadata.pop("normalization_clip")
+    metadata_path.write_text(json.dumps(metadata))
+    legacy = RecoveryMLPPolicy(tmp_path / "head", expected_base_sha256=base_hash)
+    assert legacy.model.normalization_clip is None
     with (tmp_path / "head/head.pt").open("ab") as handle:
         handle.write(b"changed")
     with pytest.raises(ValueError, match="checksum"):

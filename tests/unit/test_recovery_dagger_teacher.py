@@ -123,7 +123,8 @@ def test_executed_source_snapshot_refuses_source_drift(tmp_path):
         snapshot_sources(out, hashes)
 
 
-def test_learned_trace_records_exact_causal_inputs_and_reference_ages(monkeypatch):
+@pytest.mark.parametrize("feature_dim", [256, 512])
+def test_learned_trace_records_exact_causal_inputs_and_reference_ages(monkeypatch, feature_dim):
     class References:
         def __init__(self, _env):
             self.ball, self.bowl = np.array([.1, .2, .03]), np.array([.3, .1, .03])
@@ -149,7 +150,8 @@ def test_learned_trace_records_exact_causal_inputs_and_reference_ages(monkeypatc
         captured.update(observations=observations.copy(), base_actions=base.copy(), features=features.copy())
         return np.r_[np.zeros(6), 1.]
 
-    head = SimpleNamespace(metadata={"use_act": False, "observation_names": ["fresh_rgb_ball_relative_x"]},
+    head = SimpleNamespace(metadata={"use_act": False, "observation_names": ["fresh_rgb_ball_relative_x"],
+        "act_feature_dim": feature_dim},
         head_sha256="head", predict=predict)
     env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4), gripper_semantic=lambda: .5)
     episode = SimpleNamespace(env=env, robot="panda", source=None)
@@ -162,6 +164,13 @@ def test_learned_trace_records_exact_causal_inputs_and_reference_ages(monkeypatc
     assert detail["rgb_reference_age_s"] == [.2, 0.]
     for name, values in captured.items():
         np.testing.assert_array_equal(detail["recovery_inputs"][name], values)
+    assert captured["features"].shape == (feature_dim,)
+
+
+def test_empty_pack_keeps_checkpoint_feature_width(tmp_path):
+    dagger_module.save_pack(tmp_path / "pack.npz", [], feature_dim=512)
+    with np.load(tmp_path / "pack.npz", allow_pickle=False) as pack:
+        assert pack["features"].shape == (0, 512)
 
 
 @pytest.mark.parametrize("robot", ["so101", "panda"])
@@ -221,3 +230,108 @@ def test_grasp_monitor_and_rgb_close_anchor_follow_issued_jaw_without_changing_h
     # The checkpoint was trained on selected actions; retain that exact causal
     # contract while supplying actual issued command separately to diagnosis.
     assert observed_history[1][-33 + 29] == 0.
+
+
+@pytest.mark.parametrize("condition,use_act", [("learned", True), ("no_act", False)])
+def test_matched_factory_selects_condition_head_and_reuses_frozen_backbone(
+        tmp_path, monkeypatch, condition, use_act):
+    (tmp_path / "model.safetensors").write_bytes(b"frozen")
+    digest = sha256_file(tmp_path / "model.safetensors")
+    backbone = SimpleNamespace(weights_sha256=digest)
+    heads = {"learned": str(tmp_path / "act"), "no_act": str(tmp_path / "no_act")}
+    loaded = []
+
+    def load(directory, base_hash):
+        loaded.append((directory, base_hash))
+        return SimpleNamespace(metadata={"use_act": use_act})
+
+    monkeypatch.setattr(dagger_module, "load_recovery_head", load)
+    monkeypatch.setattr(dagger_module, "NativeLeRobotACT",
+                        lambda *_: pytest.fail("Reloaded the shared frozen ACT"))
+    monkeypatch.setattr(dagger_module, "LearnedRecoveryController",
+                        lambda shared, head, policy, **kwargs: (shared, policy))
+    shared, actual_policy = dagger_module.controller_factory(
+        env="env", source="source", robot="panda", snapshot=tmp_path,
+        condition=condition, options={"heads": heads, "_frozen_act_policy": backbone})
+    assert loaded == [(Path(heads[condition]), digest)]
+    assert shared.env == "env" and shared.robot == "panda"
+    assert actual_policy is (backbone if use_act else None)
+
+
+def test_matched_factory_rejects_shared_backbone_with_wrong_weights(tmp_path, monkeypatch):
+    (tmp_path / "model.safetensors").write_bytes(b"frozen")
+    monkeypatch.setattr(dagger_module, "load_recovery_head",
+                        lambda *_: SimpleNamespace(metadata={"use_act": True}))
+    with pytest.raises(ValueError, match="different frozen checkpoint"):
+        dagger_module.controller_factory(env=None, source=None, robot="panda", snapshot=tmp_path,
+            condition="learned", options={"head": "head", "_frozen_act_policy": SimpleNamespace(
+                weights_sha256="other")})
+
+
+def test_source_frame_routes_observations_actions_and_history_consistently(monkeypatch):
+    from real2sim.policy import source_recovery_frame
+
+    proxy, executed, histories = object(), [], []
+    source_action = np.r_[.001, np.zeros(5), .4]
+
+    class Frame:
+        def __init__(self, env, source, *, source_offset):
+            assert source == "source" and len(source_offset) == 3
+
+        def reset(self):
+            pass
+
+        def update(self):
+            return proxy
+
+        def map_action(self, action):
+            return action + np.r_[.002, np.zeros(6)]
+
+        def diagnostics(self):
+            return {"schema": "source"}
+
+    class Encoder:
+        def __init__(self, robot, hz):
+            assert robot == "so101"
+
+        def reset(self):
+            pass
+
+        def encode(self, env, *args, **kwargs):
+            assert env is proxy
+            return np.zeros(99)
+
+        def selected_action(self, action, tick):
+            histories.append(action.copy())
+
+    class Executor:
+        def __init__(self, episode, *, require_source_mapping):
+            assert require_source_mapping is True
+
+        def step(self, action):
+            executed.append(action.copy())
+            return SimpleNamespace(detail={"requested_native": np.r_[np.zeros(7), .032]})
+
+    monkeypatch.setattr(source_recovery_frame, "SourceRecoveryFrame", Frame)
+    monkeypatch.setattr(dagger_module, "RecoveryObservation", Encoder)
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
+    monkeypatch.setattr(dagger_module, "initial_references",
+                        lambda *_: (np.zeros(3), np.ones(3), {}))
+    head = SimpleNamespace(metadata={"use_act": False, "training_robot_ids": [0]},
+        predict=lambda *_: source_action.copy(), head_sha256="head")
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4), max_opening=.08,
+                          gripper_semantic=lambda: .4)
+    controller = dagger_module.LearnedRecoveryController(
+        SimpleNamespace(env=env, source="source", robot="panda"), head, recovery_frame="source")
+    detail = controller.step({}, env).detail
+    np.testing.assert_allclose(histories[0], source_action)
+    np.testing.assert_allclose(executed[0], source_action + np.r_[.002, np.zeros(6)])
+    assert detail["recovery_frame"] == "source"
+    assert detail["source_recovery_frame"] == {"schema": "source"}
+
+
+def test_source_frame_rejects_heads_trained_in_another_schema():
+    episode = SimpleNamespace(env=None, source=None, robot="panda")
+    head = SimpleNamespace(metadata={"use_act": False, "training_robot_ids": [0, 1]})
+    with pytest.raises(ValueError, match="SO-101-only"):
+        dagger_module.LearnedRecoveryController(episode, head, recovery_frame="source")

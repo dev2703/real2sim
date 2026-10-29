@@ -70,7 +70,7 @@ class VirtualSourceProjectionError(RuntimeError):
 
     def __init__(self, projection):
         self.projection = projection
-        super().__init__("Panda pose has no virtual SO-101 representation within3mm: "
+        super().__init__("Panda pose has no virtual SO-101 representation within 3 mm: "
                          f"{projection.error_m:.6f}m")
 
 
@@ -153,14 +153,36 @@ class VirtualSource:
         # source command changes the next policy input by tens of degrees.
         prior = (self.last_target if self.projection_prior == "command" else self.q)[:5].copy()
 
+        # Source rotations remain unobservable. A perfectly achieved prior is
+        # already the minimum of both objective terms and needs no inverse.
+        bounded_prior = np.clip(prior, *self.limits[:5].T)
+        prior_error = float(np.linalg.norm(self.ball_point(bounded_prior) - equivalent_point))
+        if np.array_equal(prior, bounded_prior) and prior_error <= 1e-10:
+            bounded_prior.setflags(write=False)
+            return VirtualSourceProjection(bounded_prior, prior_error, True)
+
+        cached_q, cached_point, cached_jacobian = None, None, None
+
+        def kinematics(q):
+            nonlocal cached_q, cached_point, cached_jacobian
+            if cached_q is None or not np.array_equal(cached_q, q):
+                cached_point, cached_jacobian = self.fk.point_kinematics_sim(q, SOURCE_OFFSET)
+                cached_q = q.copy()
+            return cached_point, cached_jacobian
+
         def residual(q):
-            return np.r_[self.ball_point(q) - equivalent_point, .0001 * (q - prior)]
+            point, _ = kinematics(q)
+            return np.r_[point - equivalent_point, .0001 * (q - prior)]
+
+        def jacobian(q):
+            _, position_jacobian = kinematics(q)
+            return np.vstack([position_jacobian, .0001 * np.eye(5)])
 
         best_q, best_error = None, float("inf")
         seeds = (self.last_target[:5], self.q[:5], self.source.initial_qpos[:5])
         for seed in seeds:
             fitted = least_squares(residual, np.clip(seed, *self.limits[:5].T),
-                bounds=tuple(self.limits[:5].T), max_nfev=60,
+                jac=jacobian, bounds=tuple(self.limits[:5].T), max_nfev=60,
                 ftol=1e-8, xtol=1e-8, gtol=1e-8)
             error = float(np.linalg.norm(self.ball_point(fitted.x) - equivalent_point))
             if np.isfinite(fitted.x).all() and np.isfinite(error) and error < best_error:

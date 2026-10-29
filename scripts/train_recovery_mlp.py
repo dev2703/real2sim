@@ -73,6 +73,16 @@ def load_collections(directories, *, expected_base_sha256):
             with np.load(path, allow_pickle=False) as payload:
                 rows = {name: payload[name] for name in ARRAY_NAMES if name in payload.files}
             validate_rows(rows, where=str(path))
+            declared_robot = manifest.get("robot")
+            if declared_robot is not None:
+                if declared_robot not in ("so101", "panda"):
+                    raise ValueError(f"{path}: unknown declared recovery robot")
+                if not np.all(rows["robot_id"] == {"so101": 0, "panda": 1}[declared_robot]):
+                    raise ValueError(f"{path}: recovery rows differ from the declared robot")
+            declared_episodes = manifest.get("split", {}).get(partition)
+            if declared_episodes is not None and not set(rows["episode_index"].tolist()).issubset(
+                    set(declared_episodes)):
+                raise ValueError(f"{path}: recovery rows do not belong to the declared {partition} split")
             current = (rows["observations"].shape[1], rows["features"].shape[1])
             if dimension is None:
                 dimension = current
@@ -111,23 +121,45 @@ def robot_episode_weights(robots, episodes):
     return torch.as_tensor(weights, dtype=torch.float64)
 
 
-def evaluate(model, tensors, robots):
+def recovery_normalizers(rows, observation_names=None):
+    """Fit continuous channels on training rows; preserve binary natural scales.
+
+    Visibility and robot indicators may be constant in a source-arm pack. Their
+    unseen value is still a valid 0/1 input, rather than a 10,000-sigma outlier.
+    This controls representation scale; it does not supply target-arm examples.
+    """
+    mean, std = rows["observations"].mean(0), rows["observations"].std(0)
+    if observation_names is not None:
+        for i, name in enumerate(observation_names):
+            if name.endswith(("_robot_so101", "_robot_panda", "_ball_observed", "_bowl_observed")):
+                mean[i], std[i] = 0., 1.
+    return mean, std, rows["features"].mean(0), rows["features"].std(0)
+
+
+def evaluate(model, tensors, robots, *, episodes=None):
     with torch.inference_mode():
         prediction = model(tensors["observations"], tensors["base_actions"], tensors["features"])
         error = (prediction - tensors["target_actions"]).abs()
         normalized = error / model.action_scales
     values, raw = normalized.cpu().numpy(), error.cpu().numpy()
+    per_robot = {str(int(robot)): float(values[robots == robot].mean())
+                 for robot in np.unique(robots)}
+    # Collection length reflects termination and failure behavior. It must not
+    # decide which embodiment or episode dominates checkpoint selection.
+    weights = (robot_episode_weights(robots, episodes).numpy() if episodes is not None
+               else robot_episode_weights(robots, np.zeros(len(robots), np.int64)).numpy())
     return {"mean_absolute_normalized_error": float(values.mean()),
+            "robot_balanced_mae_normalized": float(np.mean(list(per_robot.values()))),
+            "robot_episode_balanced_mae_normalized": float(np.sum(weights * values.mean(axis=-1))),
             "translation_mae_mm": float(raw[:, :3].mean() * 1000),
             "rotation_mae_rad": float(raw[:, 3:6].mean()),
             "gripper_mae_fraction": float(raw[:, 6].mean()),
-            "per_robot_mae_normalized": {str(int(robot)): float(values[robots == robot].mean())
-                                        for robot in np.unique(robots)}}
+            "per_robot_mae_normalized": per_robot}
 
 
 def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
-          batch_size=256, learning_rate=5e-4, seed=42):
-    if steps < 1 or batch_size < 1 or learning_rate <= 0:
+          batch_size=256, learning_rate=5e-4, seed=42, normalization_clip=10.):
+    if steps < 1 or batch_size < 1 or not np.isfinite(learning_rate) or learning_rate <= 0:
         raise ValueError("Training steps, batch size and learning rate must be positive")
     if out.exists():
         raise FileExistsError(out)
@@ -139,8 +171,9 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
     np.random.seed(seed)
     train_rows, val_rows = data["train"], data["val"]
     # All statistics are fitted to training rows alone, including ACT features.
-    model = RecoveryMLP(train_rows["observations"].mean(0), train_rows["observations"].std(0),
-        train_rows["features"].mean(0), train_rows["features"].std(0), use_act=use_act)
+    observation_names = manifests[0]["manifest"].get("observation_names")
+    model = RecoveryMLP(*recovery_normalizers(train_rows, observation_names), use_act=use_act,
+        normalization_clip=normalization_clip)
     tensors = {partition: {name: torch.from_numpy(rows[name].astype(np.float32))
                           for name in ("observations", "base_actions", "features", "target_actions")}
                for partition, rows in data.items()}
@@ -163,11 +196,15 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
               "validation_episodes": sorted(set(val_rows["episode_index"].tolist())),
               "collections": manifests,
               "sampling": "Equal robot probability then equal source-episode probability within each robot",
-              "checkpoint_selection": "Minimum pooled-row normalized action MAE on held-out episodes; closed-loop task performance evaluated separately",
+              "checkpoint_selection": "Minimum equal-robot then equal-episode normalized action MAE on held-out episodes; closed-loop task performance evaluated separately",
               "normalization_source": "Training rows only",
+              "binary_channel_normalization": "Declared robot/visibility indicators use mean 0 and scale 1",
+              "training_robot_ids": sorted(set(train_rows["robot_id"].tolist())),
+              "normalization_clip": model.normalization_clip,
               "seed": seed, "steps": steps, "batch_size": batch_size,
               "learning_rate": learning_rate, "source_sha256_before": sources,
-              "baseline_validation": evaluate(model, tensors["val"], val_rows["robot_id"]),
+              "baseline_validation": evaluate(model, tensors["val"], val_rows["robot_id"],
+                                               episodes=val_rows["episode_index"]),
               "history": []}
     write_json(out / "report.json", report, atomic=True)
     best, best_step, started = float("inf"), 0, time.perf_counter()
@@ -184,11 +221,12 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
         optimizer.step()
         if step % 100 == 0 or step == steps:
             model.eval()
-            metrics = evaluate(model, tensors["val"], val_rows["robot_id"])
+            metrics = evaluate(model, tensors["val"], val_rows["robot_id"],
+                               episodes=val_rows["episode_index"])
             entry = {"step": step, "training_loss": float(loss.detach()), **metrics}
             report["history"].append(entry)
-            if metrics["mean_absolute_normalized_error"] < best:
-                best, best_step = metrics["mean_absolute_normalized_error"], step
+            if metrics["robot_episode_balanced_mae_normalized"] < best:
+                best, best_step = metrics["robot_episode_balanced_mae_normalized"], step
                 torch.save(model.state_dict(), out / "head.pt")
             write_json(out / "report.json", report, atomic=True)
             print(json.dumps(entry), flush=True)
@@ -199,12 +237,14 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
     best_metrics = {key: value for key, value in next(
         entry for entry in report["history"] if entry["step"] == best_step).items()
         if key not in ("step", "training_loss")}
-    policy_id = hashlib.sha256(f"{base_hash}:{head_hash}:{use_act}".encode()).hexdigest()
+    policy_id = hashlib.sha256(f"{base_hash}:{head_hash}:{use_act}:{model.normalization_clip}".encode()).hexdigest()
     metadata = {"schema": report["schema"], "head_sha256": head_hash,
                 "base_checkpoint_sha256": base_hash, "effective_policy_identifier": policy_id,
                 "use_act": use_act, "observation_dim": model.observation_dim,
                 "observation_names": manifests[0]["manifest"].get("observation_names"),
                 "act_feature_dim": model.feature_dim, "hidden_sizes": list(model.hidden_sizes),
+                "normalization_clip": model.normalization_clip,
+                "training_robot_ids": report["training_robot_ids"],
                 "action_names": ACTION_NAMES, "action_scales": ACTION_SCALES,
                 "best_step": best_step, "validation_mae_normalized": best,
                 "validation_metrics": best_metrics,
@@ -231,6 +271,8 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--learning-rate", type=float, default=5e-4)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--normalization-clip", type=float, default=10.)
     args = parser.parse_args()
     train(args.data, args.out, snapshot=args.snapshot, use_act=args.use_act, steps=args.steps,
-          batch_size=args.batch_size, learning_rate=args.learning_rate, seed=args.seed)
+          batch_size=args.batch_size, learning_rate=args.learning_rate, seed=args.seed,
+          normalization_clip=args.normalization_clip)

@@ -42,7 +42,8 @@ class RecoveryMLP(nn.Module):
     """
 
     def __init__(self, observation_mean, observation_std, feature_mean, feature_std,
-                 *, use_act=True, hidden_sizes=(256, 128), action_scales=ACTION_SCALES):
+                 *, use_act=True, hidden_sizes=(256, 128), action_scales=ACTION_SCALES,
+                 normalization_clip=10.):
         super().__init__()
         self.use_act = bool(use_act)
         self.hidden_sizes = tuple(int(size) for size in hidden_sizes)
@@ -54,6 +55,10 @@ class RecoveryMLP(nn.Module):
             raise ValueError("Finite nonempty recovery normalizers required")
         if any(np.any(std < 0) for std in stds):
             raise ValueError("Recovery standard deviations cannot be negative")
+        if normalization_clip is not None and (not np.isfinite(normalization_clip)
+                                                or normalization_clip <= 0):
+            raise ValueError("Normalization clip must be positive and finite, or None")
+        self.normalization_clip = normalization_clip
         scale = np.asarray(action_scales, np.float32)
         if scale.shape != (7,) or not np.isfinite(scale).all() or np.any(scale <= 0):
             raise ValueError("Seven positive finite action scales required")
@@ -80,9 +85,15 @@ class RecoveryMLP(nn.Module):
                 or observations.shape[:-1] != features.shape[:-1]):
             raise ValueError("Recovery observation, prior and feature dimensions differ")
         normalized_observations = (observations - self.observation_mean) / self.observation_std
+        if self.normalization_clip is not None:
+            normalized_observations = normalized_observations.clamp(
+                -self.normalization_clip, self.normalization_clip)
         if self.use_act:
             prior = base_actions / self.action_scales
             normalized_features = (features - self.feature_mean) / self.feature_std
+            if self.normalization_clip is not None:
+                normalized_features = normalized_features.clamp(
+                    -self.normalization_clip, self.normalization_clip)
         else:
             prior = torch.zeros_like(base_actions)
             normalized_features = torch.zeros_like(features)
@@ -110,7 +121,10 @@ class RecoveryMLPPolicy:
         self.model = RecoveryMLP(state["observation_mean"].numpy(), state["observation_std"].numpy(),
             state["feature_mean"].numpy(), state["feature_std"].numpy(),
             use_act=self.metadata["use_act"], hidden_sizes=self.metadata["hidden_sizes"],
-            action_scales=self.metadata["action_scales"])
+            action_scales=self.metadata["action_scales"],
+            # Historical artifacts used unbounded normalization. Preserve their
+            # predictions instead of silently changing saved policy behavior.
+            normalization_clip=self.metadata.get("normalization_clip"))
         self.model.load_state_dict(state, strict=True)
         if (self.model.observation_dim != self.metadata["observation_dim"]
                 or self.model.feature_dim != self.metadata["act_feature_dim"]):

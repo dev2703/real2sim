@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import deque
 from copy import deepcopy
+from time import perf_counter
 
 import numpy as np
 
@@ -281,25 +282,47 @@ class FrozenACTFeatures:
 
     def __init__(self, episode, policy):
         self.episode, self.policy = episode, policy
-        self.pending = []
+        self.pending = deque()
         self.calls = 0
         self._captured = None
         self.last_source_projection = None
+        self.last_inference_ms = 0.
+        self.invalidations = 0
+        self.last_invalidation_reason = None
         self.handle = policy.policy.model.action_head.register_forward_pre_hook(self._hook)
 
     def _hook(self, _module, inputs):
-        self._captured = inputs[0].detach().cpu().numpy()[0].copy()
+        features = inputs[0]
+        if features.ndim != 3 or features.shape[0] != 1:
+            raise ValueError("Frozen ACT requires a single batch of decoder features")
+        self._captured = features.detach().cpu().numpy()[0].copy()
+
+    def invalidate(self, reason=None):
+        """Requery after takeover or a recovery state transition.
+
+        Pending actions and decoder rows describe the same old observation;
+        discard them together while retaining causal processor history.
+        """
+        self.pending.clear()
+        self._captured = None
+        self.invalidations += 1
+        self.last_invalidation_reason = reason
 
     def reset(self):
         self.pending.clear()
         self.calls = 0
         self.last_source_projection = None
+        self.last_inference_ms = 0.
+        self.invalidations = 0
+        self.last_invalidation_reason = None
         self._captured = None
         self.policy.reset()
 
     def next(self):
         env, source = self.episode.env, self.episode.source
+        self.last_inference_ms = 0.
         if not self.pending:
+            started = perf_counter()
             if self.episode.robot == "so101":
                 state = env.real_state()
             else:
@@ -309,12 +332,26 @@ class FrozenACTFeatures:
             images = {key: env.render(env.camera_bindings[key]) for key in self.policy.camera_keys}
             self._captured = None
             chunks = self.policy.predict_action_chunk(state, images)
-            n = self.policy.config.n_action_steps
-            if self._captured is None or self._captured.shape != (50, 256):
-                raise ValueError("Frozen ACT decoder feature shape differs from the pinned checkpoint")
-            self.pending = list(zip(chunks[:n], self._captured[:n], strict=True))
+            chunks = np.asarray(chunks)
+            config = self.policy.config
+            n = config.n_action_steps
+            if chunks.ndim != 2:
+                raise ValueError("Frozen ACT returned an invalid checkpoint action chunk")
+            chunk_size = getattr(config, "chunk_size", chunks.shape[0])
+            head = self.policy.policy.model.action_head
+            feature_dim = getattr(config, "dim_model", getattr(head, "in_features", None))
+            if (chunks.shape[0] != chunk_size or not 0 < n <= chunk_size
+                    or not np.isfinite(chunks).all()):
+                raise ValueError("Frozen ACT returned an invalid checkpoint action chunk")
+            if (self._captured is None or self._captured.ndim != 2
+                    or self._captured.shape[0] != chunk_size
+                    or (feature_dim is not None and self._captured.shape[1] != feature_dim)
+                    or not np.isfinite(self._captured).all()):
+                raise ValueError("Frozen ACT decoder feature shape differs from the checkpoint")
+            self.pending.extend(zip(chunks[:n], self._captured[:n], strict=True))
             self.calls += 1
-        raw, features = self.pending.pop(0)
+            self.last_inference_ms = (perf_counter() - started) * 1000.
+        raw, features = self.pending.popleft()
         return raw.copy(), features.astype(np.float32)
 
     def close(self):

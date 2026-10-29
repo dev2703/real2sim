@@ -26,7 +26,7 @@ class PhaseRecoveryMLP(nn.Module):
     """Predict phase logits and mix seven-value per-phase residual actions."""
 
     def __init__(self, observation_mean, observation_std, feature_mean, feature_std,
-                 *, hidden_sizes=(256, 128), temperature=.5):
+                 *, hidden_sizes=(256, 128), temperature=.5, use_act=True):
         super().__init__()
         observations, features = np.asarray(observation_mean), np.asarray(feature_mean)
         obs_std, feat_std = np.asarray(observation_std), np.asarray(feature_std)
@@ -40,6 +40,7 @@ class PhaseRecoveryMLP(nn.Module):
         self.observation_dim, self.feature_dim = len(observations), len(features)
         self.hidden_sizes = tuple(int(n) for n in hidden_sizes)
         self.temperature = float(temperature)
+        self.use_act = bool(use_act)
         for name, value in (("observation_mean", observations),
                             ("observation_std", np.maximum(obs_std, 1e-4)),
                             ("feature_mean", features),
@@ -63,8 +64,12 @@ class PhaseRecoveryMLP(nn.Module):
                 or observations.shape[:-1] != features.shape[:-1]):
             raise ValueError("Phase-recovery observable input dimensions differ")
         observation = ((observations - self.observation_mean) / self.observation_std).clamp(-10., 10.)
-        feature = ((features - self.feature_mean) / self.feature_std).clamp(-10., 10.)
-        prior = base_actions / self.action_scales
+        if self.use_act:
+            feature = ((features - self.feature_mean) / self.feature_std).clamp(-10., 10.)
+            prior = base_actions / self.action_scales
+        else:
+            feature = torch.zeros_like(features)
+            prior = torch.zeros_like(base_actions)
         encoded = self.trunk(torch.cat([observation, prior, feature], dim=-1))
         raw_logits = self.phase_head(encoded)
         # Terminal phases supply no valid corrective labels and cannot drive
@@ -108,7 +113,7 @@ class PhaseRecoveryMLPPolicy:
         if (self.metadata.get("action_names") != ACTION_NAMES
                 or self.metadata.get("phase_names") != PHASE_NAMES
                 or not np.allclose(self.metadata.get("action_scales", []), ACTION_SCALES)
-                or self.metadata.get("use_act") is not True
+                or not isinstance(self.metadata.get("use_act"), bool)
                 or self.metadata.get("expert_phase_is_runtime_input") is not False):
             raise ValueError("Phase-recovery action or observable-input contract differs")
         if expected_base_sha256 is not None and self.metadata["base_checkpoint_sha256"] != expected_base_sha256:
@@ -119,7 +124,8 @@ class PhaseRecoveryMLPPolicy:
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)
         self.model = PhaseRecoveryMLP(state["observation_mean"].numpy(), state["observation_std"].numpy(),
             state["feature_mean"].numpy(), state["feature_std"].numpy(),
-            hidden_sizes=self.metadata["hidden_sizes"], temperature=self.metadata["phase_temperature"])
+            hidden_sizes=self.metadata["hidden_sizes"], temperature=self.metadata["phase_temperature"],
+            use_act=self.metadata["use_act"])
         self.model.load_state_dict(state, strict=True)
         if (self.model.observation_dim != self.metadata["observation_dim"]
                 or self.model.feature_dim != self.metadata["act_feature_dim"]):

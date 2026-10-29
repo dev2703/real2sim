@@ -29,10 +29,20 @@ from real2sim.serialization import write_json
 
 if __package__:
     from scripts.run_recovery_dagger import snapshot_sources
-    from scripts.train_recovery_mlp import SNAPSHOT, load_collections, robot_episode_weights
+    from scripts.train_recovery_mlp import (
+        SNAPSHOT,
+        load_collections,
+        recovery_normalizers,
+        robot_episode_weights,
+    )
 else:
     from run_recovery_dagger import snapshot_sources
-    from train_recovery_mlp import SNAPSHOT, load_collections, robot_episode_weights
+    from train_recovery_mlp import (
+        SNAPSHOT,
+        load_collections,
+        recovery_normalizers,
+        robot_episode_weights,
+    )
 
 
 def load_phase_collections(directories, *, expected_base_sha256,
@@ -113,7 +123,8 @@ def evaluate(model, tensors, robots, *, episodes=None, pairs=None):
 
 
 def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
-          phase_weight=.2, temperature=.5, temporal_weight=0., require_command_labels=False):
+          phase_weight=.2, temperature=.5, temporal_weight=0., require_command_labels=False,
+          use_act=True):
     if (steps < 1 or not np.isfinite([phase_weight, temporal_weight]).all()
             or phase_weight <= 0 or temporal_weight < 0):
         raise ValueError("Positive training steps and phase-loss weight required")
@@ -126,8 +137,9 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     torch.manual_seed(seed)
     out.mkdir(parents=True)
     training = data["train"]
-    model = PhaseRecoveryMLP(training["observations"].mean(0), training["observations"].std(0),
-        training["features"].mean(0), training["features"].std(0), temperature=temperature)
+    observation_names = manifests[0]["manifest"].get("observation_names")
+    model = PhaseRecoveryMLP(*recovery_normalizers(training, observation_names), temperature=temperature,
+        use_act=use_act)
     tensors = {partition: {name: torch.from_numpy(rows[name].astype(
         np.int64 if name == "expert_phase_id" else np.float32))
         for name in ("observations", "base_actions", "features", "target_actions", "expert_phase_id")}
@@ -155,7 +167,7 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     executed_sources = snapshot_sources(out, sources)
     report = {"schema": "frozen_act_phase_supervised_recovery_mlp_v1", "status": "training",
         "base_checkpoint_sha256": base_hash, "base_weights_frozen": True, "lighting_changed": False,
-        "use_act": True, "architecture": "Shared MLP256->128, 11 phase logits, 11x7 residual actions; predicted soft phase mixture",
+        "use_act": use_act, "architecture": "Shared MLP256->128, 11 phase logits, 11x7 action components; predicted soft phase mixture with optional ACT residual prior",
         "phase_names": PHASE_NAMES, "phase_temperature": model.temperature,
         "phase_loss_weight": phase_weight, "expert_phase_is_runtime_input": False,
         "temporal_loss_weight": temporal_weight,
@@ -177,6 +189,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         "validation_episodes": sorted(set(data["val"]["episode_index"].tolist())),
         "selection": "Minimum equal-robot then equal-episode normalized action MAE on held-out episodes; task success remains a separate closed-loop test",
         "normalization_source": "Training rows only", "collections": manifests,
+        "binary_channel_normalization": "Declared robot/visibility indicators use mean 0 and scale 1",
+        "training_robot_ids": sorted(set(training["robot_id"].tolist())),
         "seed": seed, "steps": steps, "source_sha256_before": sources,
         "executed_sources_manifest": executed_sources,
         "baseline_validation": evaluate(model, tensors["val"], data["val"]["robot_id"],
@@ -219,10 +233,11 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     model.eval()
     metrics = evaluate(model, tensors["val"], data["val"]["robot_id"], **validation_options)
     head_hash = sha256_file(out / "head.pt")
-    identity = hashlib.sha256(f"{base_hash}:{head_hash}:predicted_phase_mixture".encode()).hexdigest()
+    identity = hashlib.sha256(f"{base_hash}:{head_hash}:predicted_phase_mixture:{use_act}".encode()).hexdigest()
     metadata = {"schema": report["schema"], "head_sha256": head_hash,
         "base_checkpoint_sha256": base_hash, "effective_policy_identifier": identity,
-        "use_act": True, "observation_dim": model.observation_dim,
+        "use_act": use_act, "observation_dim": model.observation_dim,
+        "training_robot_ids": report["training_robot_ids"],
         "act_feature_dim": model.feature_dim, "hidden_sizes": list(model.hidden_sizes),
         "action_names": ACTION_NAMES, "action_scales": ACTION_SCALES,
         "observation_names": report["observation_names"], "phase_names": PHASE_NAMES,
@@ -249,8 +264,12 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", type=float, default=.5)
     parser.add_argument("--temporal-weight", type=float, default=0.)
     parser.add_argument("--require-command-labels", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--use-act", action="store_true", dest="use_act", default=True)
+    mode.add_argument("--no-act", action="store_false", dest="use_act")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     train(args.data, args.out, snapshot=args.snapshot, steps=args.steps,
           seed=args.seed, phase_weight=args.phase_weight, temperature=args.temperature,
-          temporal_weight=args.temporal_weight, require_command_labels=args.require_command_labels)
+          temporal_weight=args.temporal_weight, require_command_labels=args.require_command_labels,
+          use_act=args.use_act)

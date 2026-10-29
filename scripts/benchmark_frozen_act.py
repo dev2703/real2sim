@@ -62,6 +62,7 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
         "native_lerobot_act.py", "hf_recovery.py", "visual_waypoint.py", "visual_targets.py",
         "follower_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
         "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py")}
+    paths.add(Path("src/real2sim/policy/source_recovery_frame.py"))
     paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py")}
     paths |= {Path("src/real2sim") / name for name in ("config.py", "serialization.py", "artifacts.py")}
     paths |= set(Path(snapshot).glob("*.json")) | set(Path(snapshot).glob("*.safetensors"))
@@ -201,7 +202,8 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
             if controller_factory is None:
                 raise ValueError("Learned conditions require a controller factory")
             controller = controller_factory(env=env, source=shared.source, robot=shared.robot,
-                snapshot=Path(options["snapshot"]), condition=condition, options=options)
+                snapshot=Path(options["snapshot"]), condition=condition,
+                options={**options, "_frozen_act_policy": policy})
             controller.reset()
         else:
             geometric = StaticBowlRecovery(env, robot=shared.robot)
@@ -354,8 +356,14 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         extra_paths += [Path(imported.__file__)]
     options = dict(controller_options or {})
     options["snapshot"] = str(snapshot)
-    for key in ("head", "head_dir", "checkpoint", "model"):
-        path = options.get(key)
+    head_paths = [options.get(key) for key in ("head", "head_dir", "checkpoint", "model")]
+    # A single matched run can compare ACT-conditioned and no-ACT heads. Both
+    # artifacts must enter the protocol, so changing either invalidates resume.
+    heads = options.get("heads", {})
+    if not isinstance(heads, dict) or set(heads) - {"learned", "no_act"}:
+        raise ValueError("heads must map learned/no_act conditions to head directories")
+    head_paths.extend(heads.values())
+    for path in head_paths:
         if path:
             artifact = Path(path)
             if artifact.is_dir():

@@ -1,6 +1,6 @@
 # Real2Sim-RaC project summary
 
-Consolidated through 29 October 2026. This replaces the dated reports and
+Consolidated through 30 October 2026. This replaces the dated reports and
 duplicated runbooks previously in `docs/`; their full text remains in Git history.
 Compact evidence remains under `results/`. Historical output paths inside that
 evidence record provenance; cleanup may remove bulk videos, intermediate
@@ -240,6 +240,91 @@ experimental: final known-failure-seed checks completed one SO-101 task while
 Panda missed pickup. Fresh expert-only contract checks completed 2/2 per arm;
 no head was retrained. These smoke cases are not reliability estimates. See
 [engineering smoke](../results/v2/retention_representation_smoke_20261029.json).
+
+## Recovery integration work, 30 October
+
+`scripts/run_cross_embodiment_recovery.py` connects collection, phase/residual
+head training, ACT/no-ACT ablations and evaluation. `--matched-benchmark` runs
+all fitted heads alongside raw ACT, RGB and ACT+RGB on identical resets. Both
+head artifacts enter the benchmark protocol hash, and serial trials reuse the
+frozen ACT model while removing each episode's feature hook. `--plan-only`
+prints the exact commands without loading models or writing outputs.
+
+Training arms and evaluation arms can differ: `--train-robots so101 --robots
+so101 panda` tests a source-only head on the unseen Panda. Workflow reports
+record training and unseen target arms; actual fitted episode/robot IDs are
+checked before any development rollout. Reserved seeds cannot enter workflow
+training, validation or development selection. Existing compatible collections
+can be supplied with `--collections`.
+
+New residual heads bound normalized continuous inputs and select checkpoints
+using equal robot/episode validation weights. Binary visibility/robot channels
+retain their natural 0/1 scale, including when only one arm appears in training.
+Historical artifacts preserve their saved normalization behavior. Phase heads
+now support genuine no-ACT fitting/inference, masking both decoder features and
+the action prior. Collection loading checks row robot/episode IDs against the
+declared manifest. ACT feature extraction follows checkpoint dimensions rather
+than a fixed decoder shape; empty packs and no-ACT inputs retain that width.
+
+An analytic MuJoCo grasp-point Jacobian replaces repeated finite differences in
+Panda feedback projection, retaining the objective, seeds, limits and 3 mm
+acceptance threshold. Five alternating 40-pose batches measured a median
+1.729× local speedup, identical acceptance decisions and a maximum position
+residual difference of 1.08e-9 m. This is a kinematic microbenchmark, not a
+physical latency result. See the [reproducible projection
+measurement](../results/v2/virtual_source_projection_performance_20261030.json).
+
+Two corrected-label development heads trained on 2,591 training and 1,863
+validation rows with unchanged ACT weights. Equal robot/episode action MAE was
+0.07958 with ACT and 0.05255 without ACT. The [training
+evidence](../results/v2/recovery_head_training_20261030.json) retains commands,
+hashes and phase-transition metrics. On development reset 12010, both heads
+completed 0/1 tasks on each arm; RGB and ACT+RGB each completed 1/1 per arm.
+Source-only ACT/no-ACT heads also completed 0/1 per arm. No learned trial aborted
+or achieved a held lift. These smoke trials establish workflow execution, not
+reliable transfer. The [causal trace analysis](../results/v2/recovery_failure_analysis_20261030.json)
+identifies phase advancement after missed pickup, repeated native-limit holds
+and continuous observation/history shift on the unseen arm. Fixed binary scales
+and input clipping do not resolve that shift.
+
+The optional `--recovery-frame source` evaluates SO-101-only heads using a
+measured Panda-to-virtual-source observation. Both the ACT action prior and
+selected-action history retain the source schema. Source rotational actions
+contribute their grasp-point displacement to Panda motion, rather than being
+discarded by the fixed top-down orientation. The mapping anchors displacement
+on the measured Panda pose, so a zero action never executes the tolerated
+projection residual. Native guards and source representability checks still
+apply, including for no-ACT heads. This is an explicit experimental adapter;
+source rotation remains an unobserved causal prior and target RGB remains a
+different input distribution.
+
+The fresh workflow collected 20/20 successful expert rollouts, with 2,915
+training and 726 validation rows across both arms. Its new ACT/no-ACT heads had
+balanced validation MAE 0.01982/0.006286; both completed 0/1 development tasks
+per arm on seed 12011. A further SO-101-only fit with the source-frame adapter
+also completed 0/1 per arm on seed 12012. Its Panda ACT-conditioned trial had
+zero IK rejections and at most 6.23 µm source projection error, yet failed
+approach. This isolates a learned behavior failure even when native commands
+and source representation pass their gates.
+
+Across these development cohorts, the 16 learned trials completed no tasks,
+achieved no held lifts and had no aborts. The three matched comparisons each
+used one reset per arm: raw ACT completed 0/6 tasks, RGB and ACT+RGB each 6/6.
+All 30 matched trial/trace hashes, reset fingerprints, unchanged weights and
+lighting were verified. These small, different training cohorts do not support
+a model ranking or a reliability estimate. The [aggregate engineering
+report](../results/v2/cross_embodiment_recovery_20261030.json) records artifacts,
+head metrics, trial outcomes and the remaining bottlenecks. Final validation
+passed 1,089 unit/selected integration checks plus the new source-frame
+integration check; three GPU/optional-payload cases skipped. Ruff and whitespace
+checks passed. Reliable learned cross-embodiment completion remains unresolved.
+
+```sh
+# Inspect a fresh collection/training/matched comparison workflow
+uv run python scripts/run_cross_embodiment_recovery.py \
+  --out outputs/v2/recovery_pipeline_NEW --matched-benchmark --plan-only
+# Remove --plan-only to execute; add --train-robots so101 for source-only fitting.
+```
 
 ## Evaluation and reproducibility
 

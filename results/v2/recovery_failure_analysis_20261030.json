@@ -1,0 +1,462 @@
+{
+  "schema": "recovery_failure_analysis_v1",
+  "scope": "One development reset per arm, no reliability estimate. Causal trace evidence is separated from scoring-only diagnosis.",
+  "completed_learned_trials": 8,
+  "all_learned_trials_scoring_only": {
+    "pick_place_successes": 0,
+    "held_lift_trials": 0,
+    "aborts": 0
+  },
+  "matched_baseline_scoring_only": {
+    "raw_act_complete_tasks": "0/2",
+    "rgb_complete_tasks": "2/2",
+    "act_rgb_complete_tasks": "2/2",
+    "joint_arm_learned_act_complete_tasks": "0/2",
+    "joint_arm_learned_no_act_complete_tasks": "0/2"
+  },
+  "sourceonly_scoring_only": {
+    "train_robots": [
+      "so101"
+    ],
+    "source_arm_learned_complete_tasks": "0/2",
+    "unseen_panda_learned_complete_tasks": "0/2"
+  },
+  "categorical_normalization_check": "All robot indicator normalizers in analyzed heads have mean0/scale1; target-arm failure is not a categorical near-zero standard deviation artifact.",
+  "findings": [
+    {
+      "bottleneck": "Phase progression does not reliably track geometric progress",
+      "causal_evidence": [
+        "Joint-arm SO101 ACT head predicts CLOSE for ticks92\u2013550 (18.36s), starting when the declared RGB grasp-point error is69mm.",
+        "Joint-arm SO101 no-ACT head predicts RETREAT for ticks33\u2013600 (22.72s), issues no fully closed jaw command, and reaches659 zero-feasibility joint-stop holds.",
+        "Source-only SO101-trained ACT head on Panda predicts TRANSPORT for ticks9\u2013749 (29.64s); at first fully closed command tick31 the RGB grasp-point error is432mm."
+      ],
+      "inference": "Phase classification or low action validation MAE does not provide a causal grasp transition or reset/retry mechanism."
+    },
+    {
+      "bottleneck": "Closed-loop action distribution leaves the demonstrated feasible motion set",
+      "causal_evidence": [
+        "Joint-arm Panda ACT head has218 outside_workspace holds; its longest DESCEND run spans269 ticks.",
+        "Joint-arm Panda no-ACT head has473 outside_workspace holds; later predicts LOWER despite failed pickup.",
+        "Source-only SO101 no-ACT head stalls612 ticks at command_joint_stop_margin after early CLOSE/LIFT/TRANSPORT progression."
+      ],
+      "inference": "The native guards preserve constraints but do not correct the learned request; correction data should cover these actual held/rejected learner states."
+    },
+    {
+      "bottleneck": "Unseen embodiment exposes continuous action/history shift after categorical normalization is fixed",
+      "causal_evidence": [
+        "Source-only Panda ACT rollout has an observation beyond the10-sigma clipping limit on749/750 ticks; previous rotation-y actions alone exceed it747 times.",
+        "Source-only Panda no-ACT rollout has clipping on420/750 ticks, dominated by gripper-switch elapsed time.",
+        "All saved robot one-hot normalizers use mean0/scale1; the cross-arm failure is not caused by dividing an unseen robot bit by near-zero standard deviation."
+      ],
+      "inference": "Clipping keeps inputs bounded but does not supply target-arm coverage. Source-only and joint-arm development outcomes both fail; successful zero-shot learned transfer is not established."
+    },
+    {
+      "bottleneck": "Offline no-ACT advantage does not predict execution success",
+      "causal_evidence": [
+        "Joint-arm offline balanced action MAE is .07958 for ACT and .05255 for no-ACT.",
+        "Both learned variants complete0/2 matched development tasks; raw frozen ACT completes0/2; RGB and ACT+RGB each complete2/2 with identical arm-specific resets."
+      ],
+      "scoring_only_diagnosis": "No learned trial in the two cohorts achieved a held lift. RGB task completion establishes feasibility only for this single reset per arm."
+    }
+  ],
+  "trials": [
+    {
+      "cohort": "matched",
+      "robot": "panda",
+      "condition": "learned",
+      "trace": "outputs/v2/cross_embodiment_matched_dev1_20261030/panda/learned/seed_012010/attempt_0001/ticks.jsonl",
+      "trace_sha256": "026a8334c263a2e8f6d21dac9cbfe35824a9636f8dc8056f5a85f3cb3fb908e9",
+      "report": "outputs/v2/cross_embodiment_matched_dev1_20261030/panda/learned/seed_012010/attempt_0001/report.json",
+      "report_sha256": "357dbb4fc4980a9c7dc492c8f12d1db732186fc7e54f55a8e50f58300cb334b7",
+      "ticks": 750,
+      "scoring_only_failure_phase": "grasp",
+      "scoring_only_min_tool_ball_distance_m": 0.027620521858003875,
+      "causal_phase_counts": {
+        "PRE_GRASP": 130,
+        "DESCEND": 271,
+        "TRANSPORT": 337,
+        "CLOSE": 1,
+        "LIFT": 11
+      },
+      "causal_phase_switches": 14,
+      "longest_predicted_phase": "DESCEND: ticks 52..320 (10.76s)",
+      "jaw_closed_command_ticks": 279,
+      "first_closed_command": {
+        "tick": 328,
+        "rgb_grasp_point_error_m": 0.10458021000176251,
+        "rgb_ball_age_s": 6.92
+      },
+      "native_request_rejected_ticks": 218,
+      "native_request_reduced_ticks": 237,
+      "native_ik_reasons": {
+        "accepted": 532,
+        "outside_workspace": 218
+      },
+      "observations_clipped_on_ticks": 199,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_previous_world_drz_rad",
+          "ticks": 189,
+          "max_abs_zscore": 14.286646773811295
+        },
+        {
+          "name": "history_1_previous_world_drz_rad",
+          "ticks": 188,
+          "max_abs_zscore": 14.301189051891788
+        },
+        {
+          "name": "history_0_previous_world_drz_rad",
+          "ticks": 187,
+          "max_abs_zscore": 14.32612319636825
+        }
+      ]
+    },
+    {
+      "cohort": "matched",
+      "robot": "panda",
+      "condition": "no_act",
+      "trace": "outputs/v2/cross_embodiment_matched_dev1_20261030/panda/no_act/seed_012010/attempt_0001/ticks.jsonl",
+      "trace_sha256": "b12992ace0f5bcc10c866a9dbb2e2eccf8d7a4b50ef92ef2923ce512a07a218a",
+      "report": "outputs/v2/cross_embodiment_matched_dev1_20261030/panda/no_act/seed_012010/attempt_0001/report.json",
+      "report_sha256": "629fdf924e5bc03c405262de01949a33a38896e98de4fedc0096b7ba3b766454",
+      "ticks": 750,
+      "scoring_only_failure_phase": "grasp",
+      "scoring_only_min_tool_ball_distance_m": 0.010816507424695625,
+      "causal_phase_counts": {
+        "PRE_GRASP": 77,
+        "DESCEND": 430,
+        "CLOSE": 23,
+        "LIFT": 33,
+        "TRANSPORT": 67,
+        "LOWER": 120
+      },
+      "causal_phase_switches": 9,
+      "longest_predicted_phase": "DESCEND: ticks 284..528 (9.8s)",
+      "jaw_closed_command_ticks": 242,
+      "first_closed_command": {
+        "tick": 244,
+        "rgb_grasp_point_error_m": 0.03410388914791342,
+        "rgb_ball_age_s": 7.36
+      },
+      "native_request_rejected_ticks": 473,
+      "native_request_reduced_ticks": 529,
+      "native_ik_reasons": {
+        "accepted": 277,
+        "outside_workspace": 473
+      },
+      "observations_clipped_on_ticks": 117,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_previous_world_dry_rad",
+          "ticks": 117,
+          "max_abs_zscore": 14.272015721320447
+        },
+        {
+          "name": "history_1_previous_world_dry_rad",
+          "ticks": 116,
+          "max_abs_zscore": 14.296741350517326
+        },
+        {
+          "name": "history_0_previous_world_dry_rad",
+          "ticks": 115,
+          "max_abs_zscore": 14.372453880152781
+        }
+      ]
+    },
+    {
+      "cohort": "matched",
+      "robot": "so101",
+      "condition": "learned",
+      "trace": "outputs/v2/cross_embodiment_matched_dev1_20261030/so101/learned/seed_012010/attempt_0001/ticks.jsonl",
+      "trace_sha256": "2fed5fb8bc1091397dde2cd6f612596a3e4fc828538f7eab16983d8830891bd4",
+      "report": "outputs/v2/cross_embodiment_matched_dev1_20261030/so101/learned/seed_012010/attempt_0001/report.json",
+      "report_sha256": "bc717411c6ade9eb87c6ade27f4fb15694424ac70e9219428dd66e861867a198",
+      "ticks": 750,
+      "scoring_only_failure_phase": "approach",
+      "scoring_only_min_tool_ball_distance_m": 0.03593417866879721,
+      "causal_phase_counts": {
+        "PRE_GRASP": 75,
+        "RETREAT": 111,
+        "DESCEND": 17,
+        "CLOSE": 459,
+        "TRANSPORT": 71,
+        "RELEASE": 17
+      },
+      "causal_phase_switches": 18,
+      "longest_predicted_phase": "CLOSE: ticks 92..550 (18.36s)",
+      "jaw_closed_command_ticks": 529,
+      "first_closed_command": {
+        "tick": 92,
+        "rgb_grasp_point_error_m": 0.06931293819562843,
+        "rgb_ball_age_s": 0.08
+      },
+      "native_request_rejected_ticks": 0,
+      "native_request_reduced_ticks": 455,
+      "native_ik_reasons": {
+        "accepted": 750
+      },
+      "observations_clipped_on_ticks": 60,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_previous_world_dry_rad",
+          "ticks": 24,
+          "max_abs_zscore": 29.27444140756245
+        },
+        {
+          "name": "history_1_previous_world_dry_rad",
+          "ticks": 24,
+          "max_abs_zscore": 29.327618777811377
+        },
+        {
+          "name": "history_0_previous_world_dry_rad",
+          "ticks": 24,
+          "max_abs_zscore": 29.505417759633726
+        }
+      ]
+    },
+    {
+      "cohort": "matched",
+      "robot": "so101",
+      "condition": "no_act",
+      "trace": "outputs/v2/cross_embodiment_matched_dev1_20261030/so101/no_act/seed_012010/attempt_0001/ticks.jsonl",
+      "trace_sha256": "e8b960d6b1d9c24697f0745d40bfc55fd6645a28fe8ad6e29262a7edacfd3821",
+      "report": "outputs/v2/cross_embodiment_matched_dev1_20261030/so101/no_act/seed_012010/attempt_0001/report.json",
+      "report_sha256": "bbe0b6e0eec39333e773cd3711f089942fe7b1bc62b19e2ab3d2404fbfe5747c",
+      "ticks": 750,
+      "scoring_only_failure_phase": "approach",
+      "scoring_only_min_tool_ball_distance_m": 0.24110866489504293,
+      "causal_phase_counts": {
+        "PRE_GRASP": 47,
+        "RETREAT": 578,
+        "RELEASE": 125
+      },
+      "causal_phase_switches": 11,
+      "longest_predicted_phase": "RETREAT: ticks 33..600 (22.72s)",
+      "jaw_closed_command_ticks": 0,
+      "first_closed_command": null,
+      "native_request_rejected_ticks": 659,
+      "native_request_reduced_ticks": 681,
+      "native_ik_reasons": {
+        "accepted": 91,
+        "command_joint_stop_margin": 659
+      },
+      "observations_clipped_on_ticks": 107,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_0_seconds_since_selected_gripper_switch",
+          "ticks": 107,
+          "max_abs_zscore": 12.285457281262646
+        },
+        {
+          "name": "history_1_seconds_since_selected_gripper_switch",
+          "ticks": 105,
+          "max_abs_zscore": 12.247199451950703
+        },
+        {
+          "name": "history_2_seconds_since_selected_gripper_switch",
+          "ticks": 104,
+          "max_abs_zscore": 12.209196519153922
+        }
+      ]
+    },
+    {
+      "cohort": "sourceonly",
+      "robot": "panda",
+      "condition": "learned",
+      "trace": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/panda/learned/seed_12010/ticks.jsonl",
+      "trace_sha256": "bcdfb25780489799165d881653a24b83d1a30f8edb98e66f00c8e4978268f65f",
+      "report": "outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/panda/learned/report.json",
+      "report_sha256": "b379006697e4acda3eee6d654388003da312daca51feb43a60737052c94daf94",
+      "ticks": 750,
+      "scoring_only_failure_phase": "approach",
+      "scoring_only_min_tool_ball_distance_m": 0.378150470636161,
+      "causal_phase_counts": {
+        "PRE_GRASP": 4,
+        "RETREAT": 5,
+        "TRANSPORT": 741
+      },
+      "causal_phase_switches": 4,
+      "longest_predicted_phase": "TRANSPORT: ticks 9..749 (29.64s)",
+      "jaw_closed_command_ticks": 699,
+      "first_closed_command": {
+        "tick": 31,
+        "rgb_grasp_point_error_m": 0.43247878803104883,
+        "rgb_ball_age_s": 0.04
+      },
+      "native_request_rejected_ticks": 0,
+      "native_request_reduced_ticks": 0,
+      "native_ik_reasons": {
+        "accepted": 750
+      },
+      "observations_clipped_on_ticks": 749,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_previous_world_dry_rad",
+          "ticks": 747,
+          "max_abs_zscore": 17.949627193754946
+        },
+        {
+          "name": "history_1_previous_world_dry_rad",
+          "ticks": 746,
+          "max_abs_zscore": 17.98700700182851
+        },
+        {
+          "name": "history_0_previous_world_dry_rad",
+          "ticks": 745,
+          "max_abs_zscore": 18.125255098304397
+        }
+      ]
+    },
+    {
+      "cohort": "sourceonly",
+      "robot": "panda",
+      "condition": "no_act",
+      "trace": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/panda/no_act/seed_12010/ticks.jsonl",
+      "trace_sha256": "fa1ca1e744715bdec984c673eadbd4b92c21e515a944215f69df39f257851906",
+      "report": "outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/panda/no_act/report.json",
+      "report_sha256": "38bb71fb61d8f0bada59ff62e3d50acf84970d1cbc6f6145e136fa10ff08b621",
+      "ticks": 750,
+      "scoring_only_failure_phase": "approach",
+      "scoring_only_min_tool_ball_distance_m": 0.3728857070108606,
+      "causal_phase_counts": {
+        "PRE_GRASP": 373,
+        "RETREAT": 377
+      },
+      "causal_phase_switches": 37,
+      "longest_predicted_phase": "RETREAT: ticks 182..474 (11.72s)",
+      "jaw_closed_command_ticks": 0,
+      "first_closed_command": null,
+      "native_request_rejected_ticks": 0,
+      "native_request_reduced_ticks": 574,
+      "native_ik_reasons": {
+        "accepted": 750
+      },
+      "observations_clipped_on_ticks": 420,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_seconds_since_selected_gripper_switch",
+          "ticks": 420,
+          "max_abs_zscore": 24.37152612001308
+        },
+        {
+          "name": "history_1_seconds_since_selected_gripper_switch",
+          "ticks": 418,
+          "max_abs_zscore": 24.269575822660933
+        },
+        {
+          "name": "history_0_seconds_since_selected_gripper_switch",
+          "ticks": 416,
+          "max_abs_zscore": 24.169270120066546
+        }
+      ]
+    },
+    {
+      "cohort": "sourceonly",
+      "robot": "so101",
+      "condition": "learned",
+      "trace": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/so101/learned/seed_12010/ticks.jsonl",
+      "trace_sha256": "b1be119b8ccc57cbcbd2e3fae0a759d036e8027f6ad423f2c49bc65938c55d34",
+      "report": "outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/so101/learned/report.json",
+      "report_sha256": "759399f0fc871559637d8efd0c1fc3869c1f9958101458ebea60153794d63f62",
+      "ticks": 750,
+      "scoring_only_failure_phase": "approach",
+      "scoring_only_min_tool_ball_distance_m": 0.047987320309960405,
+      "causal_phase_counts": {
+        "PRE_GRASP": 438,
+        "RETREAT": 41,
+        "DESCEND": 55,
+        "CLOSE": 56,
+        "LIFT": 155,
+        "TRANSPORT": 4,
+        "RELEASE": 1
+      },
+      "causal_phase_switches": 61,
+      "longest_predicted_phase": "PRE_GRASP: ticks 0..108 (4.36s)",
+      "jaw_closed_command_ticks": 153,
+      "first_closed_command": {
+        "tick": 174,
+        "rgb_grasp_point_error_m": 0.03612947990460017,
+        "rgb_ball_age_s": 0.16
+      },
+      "native_request_rejected_ticks": 0,
+      "native_request_reduced_ticks": 19,
+      "native_ik_reasons": {
+        "accepted": 750
+      },
+      "observations_clipped_on_ticks": 145,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_previous_world_drz_rad",
+          "ticks": 66,
+          "max_abs_zscore": 19.879327521247077
+        },
+        {
+          "name": "history_0_previous_world_drz_rad",
+          "ticks": 66,
+          "max_abs_zscore": 19.935961292559938
+        },
+        {
+          "name": "history_1_previous_world_drz_rad",
+          "ticks": 66,
+          "max_abs_zscore": 19.926405183710905
+        }
+      ]
+    },
+    {
+      "cohort": "sourceonly",
+      "robot": "so101",
+      "condition": "no_act",
+      "trace": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/so101/no_act/seed_12010/ticks.jsonl",
+      "trace_sha256": "14876ea3230c927f0fe1039e32d334e5b684a01ad19e38691ea57ac3a4af72ae",
+      "report": "outputs/v2/cross_embodiment_sourceonly_dev1_20261030/evaluation/so101/no_act/report.json",
+      "report_sha256": "00a98abc939161fd9684d6a8999f400dfa6515ba453a39c6db982aa340da2454",
+      "ticks": 750,
+      "scoring_only_failure_phase": "approach",
+      "scoring_only_min_tool_ball_distance_m": 0.04717100687561636,
+      "causal_phase_counts": {
+        "PRE_GRASP": 71,
+        "DESCEND": 13,
+        "CLOSE": 6,
+        "LIFT": 19,
+        "TRANSPORT": 641
+      },
+      "causal_phase_switches": 4,
+      "longest_predicted_phase": "TRANSPORT: ticks 109..749 (25.64s)",
+      "jaw_closed_command_ticks": 666,
+      "first_closed_command": {
+        "tick": 84,
+        "rgb_grasp_point_error_m": 0.04216505685138569,
+        "rgb_ball_age_s": 0.16
+      },
+      "native_request_rejected_ticks": 612,
+      "native_request_reduced_ticks": 640,
+      "native_ik_reasons": {
+        "accepted": 138,
+        "command_joint_stop_margin": 612
+      },
+      "observations_clipped_on_ticks": 340,
+      "top3_clipped_observation_channels": [
+        {
+          "name": "history_2_seconds_since_selected_gripper_switch",
+          "ticks": 340,
+          "max_abs_zscore": 21.628357382275997
+        },
+        {
+          "name": "history_1_seconds_since_selected_gripper_switch",
+          "ticks": 338,
+          "max_abs_zscore": 21.53452672001891
+        },
+        {
+          "name": "history_0_seconds_since_selected_gripper_switch",
+          "ticks": 336,
+          "max_abs_zscore": 21.44215595159627
+        }
+      ]
+    }
+  ],
+  "next_experiments": [
+    "Collect corrected issued-command expert labels on the observed joint-stop and workspace-hold states, with long no-progress sequences and legitimate retry transitions.",
+    "Compare temporal and phase-transition objectives on identical held-out episodes; keep any runtime phase/jaw guard explicitly labelled as assistance.",
+    "Evaluate phase-invariant object-relative geometry or mask embodiment-dependent policy rotation history in a separately versioned head, using arm-held-out validation before claiming transfer."
+  ]
+}
