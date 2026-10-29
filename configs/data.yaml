@@ -1,4 +1,4 @@
-# Data contract configuration. Changes require a docs/decisions.md entry (plan rule 8).
+# Data contract configuration. Changes require a docs/PROJECT_SUMMARY.md entry (plan rule 8).
 source:
   repo_id: bottowork/so101_act_pickplace_v1
   revision: fd65a6600b0cd111a434ece1abfa3d44dc7b4d57   # immutable commit SHA, pinned 2026-10-12

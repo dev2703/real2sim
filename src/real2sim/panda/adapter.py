@@ -1,4 +1,4 @@
-"""Panda ``CartesianActionAdapter`` (docs/architecture.md section 4.4, plan M5 step 2).
+"""Panda ``CartesianActionAdapter`` (docs/PROJECT_SUMMARY.md, plan M5 step 2).
 
 The 7-D canonical action ``[dx, dy, dz, d_rx, d_ry, d_rz, gripper_target]`` is interpreted
 exactly as for the SO-101: translation in task-frame metres and a rotation vector

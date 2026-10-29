@@ -1,6 +1,6 @@
 # SO-101 MuJoCo scene (plan M2). Geometry, objects, camera and the real->sim joint mapping are
 # read from configs/task.yaml (single source of truth, provenance labels there and in
-# docs/calibration.md). This file holds simulator-only knobs. Upstream Menagerie actuator gains
+# docs/PROJECT_SUMMARY.md). This file holds simulator-only knobs. Upstream Menagerie actuator gains
 # and collision exclusions are never changed (plan rule 3; tests pin the so101.xml SHA).
 robot: so101
 model: assets/menagerie/robotstudio_so101/so101.xml
@@ -20,7 +20,7 @@ tool_site: gripperframe
 
 # Dataset-typical start pose in dataset units (LeRobot degrees, gripper %). shoulder_lift -104.7 deg
 # lies outside the MJCF range (+-100 deg) and is clamped to -100 deg (clamp 4.7 deg = 0.082 rad);
-# see docs/calibration.md section 2 (23 % of shoulder_lift readings exceed the model limit).
+# see docs/PROJECT_SUMMARY.md (23 % of shoulder_lift readings exceed the model limit).
 initial_qpos_real_deg: [-5, -104.7, 96.7, 75, 3, 1.2]
 # Native radians of the clamped pose under task.yaml robot_so101 (sign +1, offset 0, gripper
 # -0.1745..1.7454 rad over 0..100 %). The env checks consistency at construction.

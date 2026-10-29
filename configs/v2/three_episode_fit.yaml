@@ -1,0 +1,44 @@
+# Base architecture for the three-condition capacity gate. The runner supplies
+# the data directory and bounded training schedule; keep this config in source
+# so the experiment does not depend on an old generated learning-screen run.
+name: L1_resnet_iphone
+model:
+  chunk_size: 25
+  n_action_steps: 2
+  vision_backbone: resnet18
+  pretrained_backbone_weights: ResNet18_Weights.IMAGENET1K_V1
+  dim_model: 512
+  n_heads: 8
+  dim_feedforward: 3200
+  n_encoder_layers: 4
+  n_decoder_layers: 1
+  use_vae: true
+  latent_dim: 32
+  n_vae_encoder_layers: 4
+  dropout: 0.1
+  kl_weight: 10.0
+  optimizer_lr: 0.0001
+  optimizer_lr_backbone: 1.0e-05
+  optimizer_weight_decay: 0.05
+  freeze_backbone: true
+  attention_backend: sdpa
+scheduler:
+  warmup_steps: 1000
+  start_factor: 0.001
+  min_lr: 1.0e-07
+train:
+  seed: 0
+  batch_size: 8
+  grad_accum: 2
+  steps: 4000
+  grad_clip_norm: 1.0
+  log_every: 50
+  val_every: 500
+  save_every: 500
+  val_max_batches: null
+  num_workers: 0
+  device: mps
+  keep_only_best_and_last: true
+  schedule_steps: 20000
+  exact_resume: true
+  precision: float32

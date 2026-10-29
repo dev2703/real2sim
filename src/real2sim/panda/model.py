@@ -4,7 +4,7 @@ The task objects (table top, black mat, ball, bowl), their placement and the ``i
 come from ``configs/task.yaml`` so the Panda sees the same task frame as the SO-101 scene
 (plan M5 step 1). ``configs/sim_panda.yaml`` holds simulator-only knobs.
 
-Frames (docs/architecture.md section 4.3):
+Frames (docs/PROJECT_SUMMARY.md):
 
 * ``world``  MuJoCo world, z up. The table top is at ``z = task.table.height``; the Panda base
   body ``link0`` is placed on it at ``(0, 0, table.height)`` with identity orientation, so the

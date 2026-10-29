@@ -28,6 +28,34 @@ MAT_ANNOTATIONS = Path("configs/v2/mat_camera.annotations_20261022.json")
 STATIC = Path("outputs/v2/static_base_camera_20261023/report.json")
 
 
+def fit_edges(samples):
+    lines, diagnostics = [], {}
+    for name in ("top", "right", "bottom", "left"):
+        points = np.asarray(samples[name], dtype=float)
+        if points.ndim != 2 or points.shape[1] != 2 or len(points) < 3 or not np.isfinite(points).all():
+            raise ValueError("each edge requires at least three finite source-pixel samples")
+        centre = points.mean(axis=0)
+        _, singular, vt = np.linalg.svd(points - centre, full_matrices=False)
+        if singular[0] < 1:
+            raise ValueError("edge samples must span a visible straight segment")
+        normal = vt[-1]
+        line = np.r_[normal, -normal @ centre]
+        lines.append(line)
+        distances = points @ normal + line[2]
+        diagnostics[name] = {
+            "line_ax_by_c_equals_zero": line.tolist(), "sample_count": len(points),
+            "orthogonal_residual_rms_px": float(np.sqrt(np.mean(distances**2))),
+            "per_sample_signed_distance_px": distances.tolist(),
+        }
+    corners = []
+    for first, second in ((3, 0), (0, 1), (1, 2), (2, 3)):
+        homogeneous = np.cross(lines[first], lines[second])
+        if abs(homogeneous[2]) < 1e-8:
+            raise ValueError("adjacent mat edges do not have a finite intersection")
+        corners.append(homogeneous[:2] / homogeneous[2])
+    return np.asarray(corners), diagnostics
+
+
 def rotation(angle):
     c, s = np.cos(angle), np.sin(angle)
     return np.array([[c, -s], [s, c]])
@@ -44,8 +72,6 @@ def look_at(position, target):
 
 class Fit:
     def __init__(self, camera_signs=(1.0, 1.0)):
-        from diag_v2_mat_camera import fit_edges
-
         annotations = json.loads(MAT_ANNOTATIONS.read_text())
         self.mat_pixels, _ = fit_edges(annotations["edge_samples_source_px"])
         self.camera_signs = np.asarray(camera_signs, float)

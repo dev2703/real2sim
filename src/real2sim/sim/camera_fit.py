@@ -61,7 +61,7 @@ OUT_DIR = ROOT / "results" / "audit" / "camera_fit"
 HSV_LO = (22, 70, 90)  # same tennis-ball yellow window as real2sim.data.quality.ball_area_px
 HSV_HI = (50, 255, 255)
 MIN_BALL_AREA_PX = 1500  # at 1280x720 a free ball is ~17 000 px; a half-occluded held ball ~5 000
-IMAGE_LAG_FRAMES = 2  # the iphone image trails the joint state by ~2 frames (docs/data_contract.md)
+IMAGE_LAG_FRAMES = 2  # the iphone image trails the joint state by ~2 frames (docs/PROJECT_SUMMARY.md)
 HOLD_LEADER_MAX_PCT = 8.0
 HOLD_FOLLOWER_RANGE_PCT = (12.0, 60.0)
 HOLD_MIN_FRAMES = 30
@@ -450,7 +450,7 @@ def run(task_path: Path = DEFAULT_TASK, data_path: Path = DEFAULT_DATA, out_dir:
         report["fit_refined_focal"] = _fit_summary(fit2)
         if fit2["ok"] and fit2["rms_inliers_px"] < fit["rms_inliers_px"]:
             fit, focal_refined = fit2, True
-    # Diagnostic only: the pan sign is unverified (docs/calibration.md section 2).
+    # Diagnostic only: the pan sign is unverified (docs/PROJECT_SUMMARY.md).
     report["diagnostic_pan_sign_flipped"] = _pan_flip_diagnostic(cs, task, K0, (W, H))
     if not fit["ok"]:
         report["failure"] = fit.get("reason", "PnP failed")

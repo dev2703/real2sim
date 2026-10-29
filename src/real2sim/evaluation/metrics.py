@@ -29,7 +29,7 @@ class TrialTracker:
     ``success`` latches once ``ball_in_bowl and ball_resting and not ball_held`` has held for
     ``success_hold_ticks`` consecutive ticks. ``approach_distance_m`` is the tool-site-to-ball-centre
     distance below which a failed trial counts as having reached the ball (``grasp`` rather than
-    ``approach``); it must match docs/experiment_protocol.md section 3.
+    ``approach``); it must match docs/PROJECT_SUMMARY.md
 
     ``lifted`` means the ball was above the lift height *while held* (plan M7 "lift success"); a
     ball knocked into the air without a grasp is not a lift. ``rolled_out`` means a released ball
@@ -107,7 +107,7 @@ class TrialTracker:
         return self.success
 
     def phase_failed(self) -> str:
-        """Furthest phase reached (docs/experiment_protocol.md section 3).
+        """Furthest phase reached (docs/PROJECT_SUMMARY.md).
 
         approach: never held and never came within ``approach_distance_m``; grasp: reached or
         touched the ball but never lifted it while held; transport: lifted but never in the bowl;

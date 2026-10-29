@@ -1,4 +1,4 @@
-"""Scoring semantics of TrialTracker (docs/experiment_protocol.md sections 2-3), edge cases."""
+"""Scoring semantics of TrialTracker (docs/PROJECT_SUMMARY.md), edge cases."""
 
 import pytest
 
