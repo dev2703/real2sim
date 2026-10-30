@@ -342,3 +342,271 @@ def test_dagger_run_checks_declared_mix_and_pins_each_collection(tmp_path):
     collection_results = [stage for stage in report["stage_results"] if stage["name"].startswith("collect_")]
     assert all(len(stage["collection_artifact_sha256"]) == 3 for stage in collection_results)
     assert collection_results[1]["collection_execution"] == "expert_learner_mixture"
+
+
+def test_phase_prior_and_timer_options_reach_every_dagger_fit(tmp_path):
+    plan = build_plan(options(tmp_path, "--dagger-iterations", "1", "--no-residual-prior",
+                              "--approach-timer-dropout", "1"))
+    assert plan["phase_training"]["residual_prior"] is False
+    assert plan["phase_training"]["approach_timer_dropout"] == 1.
+    fits = [stage for stage in plan["stages"] if stage["name"].startswith("train_")]
+    assert len(fits) == 4
+    for stage in fits:
+        command = stage["command"]
+        assert "--no-residual-prior" in command
+        assert command[command.index("--approach-timer-dropout") + 1] == "1.0"
+    baseline = build_plan(options(tmp_path))
+    assert baseline["phase_training"]["residual_prior"] is True
+    assert baseline["phase_training"]["approach_timer_dropout"] == 0.
+    assert all("--no-residual-prior" not in stage["command"] for stage in baseline["stages"])
+
+
+@pytest.mark.parametrize("extra, message", [
+    (["--history-dropout", "1"], "History dropout"),
+    (["--history-dropout", "-0.1"], "nonnegative"),
+    (["--approach-timer-dropout", "1.01"], "Approach timer dropout"),
+    (["--approach-timer-dropout", "nan"], "nonnegative"),
+    (["--head-type", "residual", "--no-residual-prior"], "phase head"),
+    (["--head-type", "residual", "--approach-timer-dropout", ".5"], "phase head"),
+])
+def test_invalid_phase_prior_or_timer_options_fail_before_work(tmp_path, extra, message):
+    with pytest.raises(ValueError, match=message):
+        build_plan(options(tmp_path, *extra))
+
+
+@pytest.mark.parametrize("head_type,history_mode,recovery_frame", [
+    ("phase", "selected", "native"),
+    ("residual", "achieved", "native"),
+    ("phase", "achieved", "source"),
+])
+def test_grasp_geometry_reaches_initial_and_dagger_collections(
+        tmp_path, head_type, history_mode, recovery_frame):
+    extra = ["--observation-geometry", "grasp", "--dagger-iterations", "1",
+             "--head-type", head_type, "--history-mode", history_mode,
+             "--recovery-frame", recovery_frame]
+    if recovery_frame == "source":
+        extra.extend(["--train-robots", "so101"])
+    plan = build_plan(options(tmp_path, *extra))
+    assert plan["observation_geometry"] == "grasp"
+    collections = [stage for stage in plan["stages"] if stage["name"].startswith("collect_")]
+    assert len(collections) == (2 if recovery_frame == "source" else 4)
+    for stage in collections:
+        command = stage["command"]
+        assert command[command.index("--observation-geometry") + 1] == "grasp"
+        if "dagger_collection" in stage:
+            assert stage["dagger_collection"]["observation_geometry"] == "grasp"
+
+
+def test_reused_grasp_names_infer_geometry_with_initial_selected_history(tmp_path):
+    pack = collection(tmp_path, "so101")
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    content.update(reference_mode="initial", observation_names=[
+        "history_0_initial_rgb_ball_grasp_relative_x", "history_0_previous_tcp_dx_m"])
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match="differs from --observation-geometry"):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack)))
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+        "--observation-geometry", "grasp", "--dagger-iterations", "1"))
+    assert plan["observation_geometry"] == "grasp"
+    assert plan["dagger"]["reference_mode"] == "initial"
+    assert plan["history_mode"] == "selected"
+
+
+@pytest.mark.parametrize("geometry,names,message", [
+    ("tcp", ["history_0_fresh_rgb_ball_grasp_relative_x"], "geometry metadata"),
+    ("grasp", ["history_0_fresh_rgb_ball_relative_x"], "geometry metadata"),
+    ("grasp", None, "require versioned observation names"),
+])
+def test_reused_geometry_metadata_must_agree_with_observation_names(tmp_path, geometry, names, message):
+    pack = collection(tmp_path, "so101")
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    content.update(observation_geometry=geometry, observation_names=names)
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match=message):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--observation-geometry", geometry))
+
+
+@pytest.mark.parametrize("geometry,head_type", [("tcp", "phase"), ("grasp", "residual")])
+def test_task_event_clock_reaches_every_initial_and_dagger_collection(tmp_path, geometry, head_type):
+    plan = build_plan(options(tmp_path, "--history-mode", "achieved", "--gripper-clock", "task_events",
+        "--observation-geometry", geometry, "--head-type", head_type, "--dagger-iterations", "1"))
+    assert plan["gripper_clock"] == "task_events"
+    stages = [stage for stage in plan["stages"] if stage["name"].startswith("collect_")]
+    assert len(stages) == 4
+    for stage in stages:
+        command = stage["command"]
+        assert command[command.index("--gripper-clock") + 1] == "task_events"
+        if "dagger_collection" in stage:
+            assert stage["dagger_collection"]["gripper_clock"] == "task_events"
+
+
+def test_task_event_clock_requires_achieved_history(tmp_path):
+    with pytest.raises(ValueError, match="requires --history-mode achieved"):
+        build_plan(options(tmp_path, "--gripper-clock", "task_events"))
+
+
+def test_reused_clock_names_infer_task_event_contract(tmp_path):
+    pack = collection(tmp_path, "so101")
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    content.update(history_mode="achieved", reference_mode="initial", observation_names=[
+        "history_0_previous_achieved_tcp_dx_m", "history_0_seconds_since_task_gripper_event"])
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match="differs from --gripper-clock"):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--history-mode", "achieved"))
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+        "--history-mode", "achieved", "--gripper-clock", "task_events", "--dagger-iterations", "1"))
+    assert plan["gripper_clock"] == "task_events"
+    assert plan["dagger"]["reference_mode"] == "initial"
+
+
+@pytest.mark.parametrize("clock,names,message", [
+    ("all_switches", ["history_0_previous_achieved_tcp_dx_m",
+                      "history_0_seconds_since_task_gripper_event"], "gripper-clock metadata"),
+    ("task_events", ["history_0_previous_achieved_tcp_dx_m",
+                     "history_0_seconds_since_issued_gripper_switch"], "gripper-clock metadata"),
+    ("task_events", None, "require versioned observation names"),
+])
+def test_reused_clock_metadata_must_agree_with_observation_names(tmp_path, clock, names, message):
+    pack = collection(tmp_path, "so101")
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    content.update(history_mode="achieved", gripper_clock=clock, observation_names=names)
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match=message):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--history-mode", "achieved", "--gripper-clock", clock))
+
+
+@pytest.mark.parametrize("extra,expected", [
+    ([], "no_act"),
+    (["--no-act"], "no_act"),
+    (["--skip-no-act-ablation"], "learned"),
+    (["--prefix-recovery", "learned"], "learned"),
+])
+def test_matched_frozen_prefix_selects_final_recovery_head_without_extra_training(tmp_path, extra, expected):
+    plan = build_plan(options(tmp_path, "--frozen-prefix", "--matched-benchmark", *extra))
+    assert plan["frozen_prefix"] is True
+    assert plan["prefix_recovery_variant"] == expected
+    command = plan["stages"][-1]["command"]
+    conditions = command[command.index("--conditions") + 1:command.index("--seeds")]
+    assert conditions[-1] == "hf_learned"
+    options_map = json.loads(command[-1])
+    assert options_map["heads"]["hf_learned"] == plan["heads"][expected]
+    assert {key: value for key, value in options_map["heads"].items() if key != "hf_learned"} == plan["heads"]
+    assert not any("hf_learned" in stage["name"] for stage in plan["stages"][:-1])
+
+
+def test_standalone_frozen_prefix_adds_one_evaluation_per_robot_after_final_dagger_fit(tmp_path):
+    plan = build_plan(options(tmp_path, "--frozen-prefix", "--dagger-iterations", "1", "--video"))
+    assert len([stage for stage in plan["stages"] if stage["name"].startswith("train_")]) == 4
+    evaluations = [stage for stage in plan["stages"] if stage["name"].startswith("evaluate_")]
+    assert [stage["name"] for stage in evaluations] == [
+        "evaluate_so101_learned", "evaluate_so101_no_act", "evaluate_so101_hf_learned",
+        "evaluate_panda_learned", "evaluate_panda_no_act", "evaluate_panda_hf_learned"]
+    for stage in evaluations:
+        command = stage["command"]
+        is_prefix = stage["name"].endswith("_hf_learned")
+        assert ("--act-prefix" in command) is is_prefix
+        assert "--video" in command
+        if is_prefix:
+            assert command[command.index("--head") + 1] == plan["head_history"][-1]["heads"]["no_act"]
+
+
+@pytest.mark.parametrize("extra,message", [
+    (["--prefix-recovery", "learned"], "requires --frozen-prefix"),
+    (["--frozen-prefix", "--no-act", "--prefix-recovery", "learned"], "fitted head variant"),
+    (["--frozen-prefix", "--skip-no-act-ablation", "--prefix-recovery", "no_act"], "fitted head variant"),
+])
+def test_invalid_frozen_prefix_head_selection_fails_before_work(tmp_path, extra, message):
+    with pytest.raises(ValueError, match=message):
+        build_plan(options(tmp_path, *extra))
+
+
+def test_collection_prefix_reaches_every_round_independently_of_evaluation_prefix(tmp_path):
+    plan = build_plan(options(tmp_path, "--collection-act-prefix-steps", "50", "--dagger-iterations", "1"))
+    assert plan["collection_act_prefix_steps"] == 50
+    assert plan["frozen_prefix"] is False
+    collections = [stage for stage in plan["stages"] if stage["name"].startswith("collect_")]
+    assert len(collections) == 4
+    for stage in collections:
+        command = stage["command"]
+        assert command[command.index("--act-prefix-steps") + 1] == "50"
+        assert stage["act_prefix_steps"] == 50
+        if "dagger_collection" in stage:
+            assert stage["dagger_collection"]["act_prefix_steps"] == 50
+
+
+def test_collection_prefix_may_mix_existing_prefix_lengths_with_same_contract(tmp_path):
+    packs = []
+    for name, steps in (("base", 0), ("warm", 50)):
+        parent = tmp_path / name
+        parent.mkdir()
+        pack = collection(parent, "so101")
+        manifest = pack / "manifest.json"
+        content = json.loads(manifest.read_text())
+        content.update(reference_mode="tracked", act_prefix_steps=steps)
+        manifest.write_text(json.dumps(content))
+        packs.append(str(pack))
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--collections", *packs,
+        "--collection-act-prefix-steps", "50", "--dagger-iterations", "1"))
+    assert len(plan["collection_inputs"]) == 2
+    assert plan["collection_act_prefix_steps"] == 50
+
+
+@pytest.mark.parametrize("mode", ["initial", None])
+def test_collection_prefix_rejects_initial_or_undeclared_reference_cohorts(tmp_path, mode):
+    pack = collection(tmp_path, "so101")
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    if mode is not None:
+        content["reference_mode"] = mode
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match="requires declared tracked"):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--collection-act-prefix-steps", "50"))
+
+
+def test_negative_collection_prefix_fails_before_work(tmp_path):
+    with pytest.raises(ValueError, match="must be nonnegative"):
+        build_plan(options(tmp_path, "--collection-act-prefix-steps", "-1"))
+
+
+def test_collection_prefix_execution_must_match_the_planned_length(tmp_path):
+    initial = executable_plan(tmp_path)
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--skip-no-act-ablation",
+        "--snapshot", initial["snapshot"], "--source-scene", initial["source_scene"],
+        "--collection-act-prefix-steps", "50"))
+
+    def runner(_command, **_kwargs):
+        path = Path(plan["stages"][0]["report"])
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({"status": "complete", "act_prefix_steps": 0}))
+
+    with pytest.raises(RuntimeError, match="differs from planned collection ACT prefix"):
+        run_plan(plan, runner=runner)
+    report = json.loads((Path(plan["output"]) / "workflow.json").read_text())
+    assert report["status"] == "failed"
+    assert report["stage_results"] == [{"name": "collect_so101", "status": "failed"}]
+
+
+@pytest.mark.parametrize("declared, message", [
+    (None, "requires declared tracked"),
+    ("tracked", "RGB-reference metadata differs"),
+])
+def test_collection_prefix_rejects_initial_names_even_with_misleading_reference_metadata(
+        tmp_path, declared, message):
+    pack = collection(tmp_path, "so101")
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    content["observation_names"] = ["history_0_initial_rgb_ball_relative_x"]
+    if declared is not None:
+        content["reference_mode"] = declared
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match=message):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--collection-act-prefix-steps", "50"))

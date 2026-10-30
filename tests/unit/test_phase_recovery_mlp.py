@@ -15,7 +15,12 @@ from real2sim.policy.phase_recovery_mlp import (
     PhaseRecoveryMLPPolicy,
     phase_training_loss,
 )
-from scripts.train_phase_recovery_mlp import corrupt_action_history, load_phase_collections, train
+from scripts.train_phase_recovery_mlp import (
+    corrupt_action_history,
+    drop_approach_timers,
+    load_phase_collections,
+    train,
+)
 
 
 def model():
@@ -67,6 +72,38 @@ def test_no_act_phase_head_cannot_use_action_or_decoder_inputs():
     second = network(observations, actions * 100 + 7, features * -100 - 3)
     for left, right in zip(first, second, strict=True):
         torch.testing.assert_close(left, right, rtol=0, atol=0)
+
+
+def test_direct_act_head_keeps_frozen_inputs_without_forcing_their_action_prior():
+    torch.manual_seed(72)
+    direct = PhaseRecoveryMLP(np.zeros(6), np.ones(6), np.zeros(4), np.ones(4),
+        hidden_sizes=(16, 8), use_act=True, residual_prior=False)
+    residual = model()
+    residual.load_state_dict(direct.state_dict())
+    inputs = torch.randn(3, 6), torch.ones(3, 7) * .01, torch.randn(3, 4)
+    direct_action = direct(*inputs)[0]
+    torch.testing.assert_close(direct_action, torch.zeros_like(direct_action))
+    torch.testing.assert_close(residual(*inputs)[0], inputs[1])
+    torch.nn.init.normal_(direct.action_heads.weight, std=.1)
+    first = direct(*inputs)[0]
+    second = direct(inputs[0], inputs[1] * 2, inputs[2] + 1.)[0]
+    assert not torch.allclose(first, second)
+
+
+def test_approach_timer_dropout_keeps_geometry_and_close_release_dwell():
+    observations = torch.arange(4 * 99).reshape(4, 99).float()
+    original = observations.clone()
+    mean = torch.arange(99).float() / 10.
+    phases = torch.tensor([1, 2, 3, 7])
+    altered = drop_approach_timers(observations, OBSERVATION_NAMES, phases, mean, probability=1.)
+    columns = [32, 65, 98]
+    torch.testing.assert_close(altered[:2, columns], mean[columns].expand(2, -1))
+    torch.testing.assert_close(altered[2:], original[2:])
+    remaining = [i for i in range(99) if i not in columns]
+    torch.testing.assert_close(altered[:, remaining], original[:, remaining])
+    torch.testing.assert_close(observations, original)
+    with pytest.raises(ValueError, match="dropout"):
+        drop_approach_timers(observations, OBSERVATION_NAMES, phases, mean, probability=1.1)
 
 
 def test_hard_routing_executes_one_predicted_component_without_losing_phase_gradient():
@@ -184,16 +221,19 @@ def test_audit_phase_cannot_be_copied_into_the_observation_contract(tmp_path):
 
 @pytest.mark.parametrize("use_act", [True, False])
 @pytest.mark.parametrize("action_routing", ["soft", "hard"])
-def test_saved_phase_head_uses_training_only_stats_and_frozen_provenance(tmp_path, use_act, action_routing):
+@pytest.mark.parametrize("residual_prior", [True, False])
+def test_saved_phase_head_uses_training_only_stats_and_frozen_provenance(tmp_path, use_act, action_routing,
+                                                                      residual_prior):
     checkpoint, base_hash, pack = collection(tmp_path)
     before = sha256_file(checkpoint / "model.safetensors")
     report = train([pack], tmp_path / "head", snapshot=checkpoint, steps=2, use_act=use_act,
-                   action_routing=action_routing)
+                   action_routing=action_routing, residual_prior=residual_prior)
     assert report["status"] == "complete" and report["runtime_source_changes"] == []
     assert report["expert_phase_is_runtime_input"] is False
     policy = PhaseRecoveryMLPPolicy(tmp_path / "head", expected_base_sha256=base_hash)
     assert policy.model.use_act is use_act
     assert policy.model.action_routing == action_routing
+    assert policy.model.residual_prior is residual_prior
     with np.load(pack / "train.npz") as rows:
         np.testing.assert_allclose(policy.model.observation_mean.numpy(), rows["observations"].mean(0))
         output = policy.predict(rows["observations"][0], rows["base_actions"][0], rows["features"][0])

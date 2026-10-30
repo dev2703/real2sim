@@ -232,13 +232,14 @@ def test_grasp_monitor_and_rgb_close_anchor_follow_issued_jaw_without_changing_h
     assert observed_history[1][-33 + 29] == 0.
 
 
-@pytest.mark.parametrize("condition,use_act", [("learned", True), ("no_act", False)])
+@pytest.mark.parametrize("condition,use_act", [("learned", True), ("no_act", False), ("hf_learned", False)])
 def test_matched_factory_selects_condition_head_and_reuses_frozen_backbone(
         tmp_path, monkeypatch, condition, use_act):
     (tmp_path / "model.safetensors").write_bytes(b"frozen")
     digest = sha256_file(tmp_path / "model.safetensors")
     backbone = SimpleNamespace(weights_sha256=digest)
-    heads = {"learned": str(tmp_path / "act"), "no_act": str(tmp_path / "no_act")}
+    heads = {"learned": str(tmp_path / "act"), "no_act": str(tmp_path / "no_act"),
+             "hf_learned": str(tmp_path / "prefix")}
     loaded = []
 
     def load(directory, base_hash):
@@ -250,12 +251,14 @@ def test_matched_factory_selects_condition_head_and_reuses_frozen_backbone(
                         lambda *_: pytest.fail("Reloaded the shared frozen ACT"))
     monkeypatch.setattr(dagger_module, "LearnedRecoveryController",
                         lambda shared, head, policy, **kwargs: (shared, policy))
+    monkeypatch.setattr(dagger_module, "frozen_prefix_controller",
+                        lambda shared, recovery, policy: (shared, policy))
     shared, actual_policy = dagger_module.controller_factory(
         env="env", source="source", robot="panda", snapshot=tmp_path,
         condition=condition, options={"heads": heads, "_frozen_act_policy": backbone})
     assert loaded == [(Path(heads[condition]), digest)]
     assert shared.env == "env" and shared.robot == "panda"
-    assert actual_policy is (backbone if use_act else None)
+    assert actual_policy is (backbone if use_act or condition == "hf_learned" else None)
 
 
 def test_matched_factory_rejects_shared_backbone_with_wrong_weights(tmp_path, monkeypatch):
@@ -337,8 +340,14 @@ def test_source_frame_rejects_heads_trained_in_another_schema():
         dagger_module.LearnedRecoveryController(episode, head, recovery_frame="source")
 
 
-def test_achieved_history_controller_remembers_motion_and_issued_jaw_after_a_rejected_request(monkeypatch):
-    from real2sim.policy.common_recovery import TRACKED_ACHIEVED_OBSERVATION_NAMES
+@pytest.mark.parametrize("geometry", ["tcp", "grasp"])
+@pytest.mark.parametrize("clock", ["all_switches", "task_events"])
+def test_achieved_history_controller_remembers_motion_and_issued_jaw_after_a_rejected_request(monkeypatch, geometry, clock):
+    from real2sim.policy.common_recovery import (
+        TRACKED_ACHIEVED_OBSERVATION_NAMES,
+        TRACKED_TASK_EVENT_OBSERVATION_NAMES,
+    )
+    from real2sim.policy.progress_geometry import observation_geometry_names
 
     pose = np.eye(4)
     observations = []
@@ -372,12 +381,48 @@ def test_achieved_history_controller_remembers_motion_and_issued_jaw_after_a_rej
     monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
     env = SimpleNamespace(control_hz=25., ee_pose=lambda: pose.copy(), max_opening=.08,
                           gripper_semantic=lambda: .8)
+    names = TRACKED_TASK_EVENT_OBSERVATION_NAMES if clock == "task_events" else TRACKED_ACHIEVED_OBSERVATION_NAMES
     head = SimpleNamespace(metadata={"use_act": False,
-        "observation_names": TRACKED_ACHIEVED_OBSERVATION_NAMES}, predict=predict, head_sha256="head")
+        "observation_names": observation_geometry_names(names, geometry)},
+        predict=predict, head_sha256="head")
     controller = dagger_module.LearnedRecoveryController(
         SimpleNamespace(env=env, robot="panda", source=None), head)
     first = controller.step({}, env).detail
     controller.step({}, env)
     assert first["history_mode"] == "achieved"
+    assert first["observation_geometry"] == geometry
+    assert first["gripper_clock"] == clock
+    assert observations[0][-33 + 13] == pytest.approx(1.008 if geometry == "grasp" else 1.)
     np.testing.assert_allclose(observations[1][-33 + 23:-33 + 30], [.001, 0., 0., 0., 0., 0., 1.])
-    assert observations[1][-1] == pytest.approx(.04)
+    assert observations[1][-1] == pytest.approx(0. if clock == "task_events" else .04)
+
+
+@pytest.mark.parametrize("tracked", [True, False])
+def test_rgb_handover_preserves_observation_ages_and_cached_static_bowl(tracked):
+    controller = object.__new__(dagger_module.LearnedRecoveryController)
+    controller.env = SimpleNamespace(control_hz=25.)
+    controller.references = SimpleNamespace(log=[]) if tracked else None
+    prefix = SimpleNamespace(ball=np.array([.1, .2, .03]), bowl=np.array([.3, .1, .02]),
+        last_seen={"ball": 45, "bowl": 10}, visible={"ball": True, "bowl": False})
+    controller.inherit_rgb_references(prefix, 50)
+    assert controller.rgb_reference_handover["target_ages_s"] == {"ball": .2, "bowl": 1.6}
+    assert controller.rgb_reference_handover["configured_object_position_fallback"] is False
+    if tracked:
+        assert controller.references.last_seen == {"ball": -5, "bowl": -40}
+        assert controller.references.visible == {"ball": True, "bowl": False}
+        assert len(controller.references.log) == 1
+        prefix.bowl[:] = 99
+        np.testing.assert_allclose(controller.references.bowl, [.3, .1, .02])
+    else:
+        assert controller.reference_seed_metadata["last_seen_ticks"] == (-5, -40)
+        np.testing.assert_allclose(controller.bowl, [.3, .1, .02])
+
+
+def test_rgb_handover_rejects_future_or_unobserved_reference_times():
+    controller = object.__new__(dagger_module.LearnedRecoveryController)
+    controller.env = SimpleNamespace(control_hz=25.)
+    controller.references = None
+    prefix = SimpleNamespace(ball=np.zeros(3), bowl=np.ones(3),
+        last_seen={"ball": 51, "bowl": 10}, visible={"ball": True, "bowl": False})
+    with pytest.raises(ValueError, match="previously observed"):
+        controller.inherit_rgb_references(prefix, 50)

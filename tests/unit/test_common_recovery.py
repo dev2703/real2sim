@@ -12,6 +12,7 @@ from real2sim.policy.common_recovery import (
     ACHIEVED_OBSERVATION_NAMES,
     FRAME_NAMES,
     OBSERVATION_NAMES,
+    TASK_EVENT_OBSERVATION_NAMES,
     TRACKED_ACHIEVED_OBSERVATION_NAMES,
     CommonCartesianExecutor,
     FrozenACTFeatures,
@@ -127,6 +128,46 @@ def test_achieved_history_uses_actual_motion_and_issued_jaw_with_distinct_contra
         encoder.selected_action(np.zeros(7), 1)
     with pytest.raises(ValueError, match="selected_action"):
         RecoveryObservation("panda", 25.).executed_action(np.zeros(7), 0)
+
+
+def test_task_event_clock_has_no_initial_open_countdown_and_preserves_close_release_retry_dwell():
+    env = MeasuredEnvironment("panda")
+    encoder = RecoveryObservation("panda", 25., action_history="achieved", gripper_clock="task_events")
+
+    def timer(tick):
+        values = encoder.encode(env, [.05, .33, .02], [.26, .11, .018], tick)
+        return dict(zip(TASK_EVENT_OBSERVATION_NAMES[-33:], values[-33:], strict=True))[
+            "history_2_seconds_since_task_gripper_event"]
+
+    assert timer(0) == 0.  # Initial zero previous jaw is not an issued close.
+    encoder.executed_action(np.r_[np.zeros(6), 1.], 0)
+    assert timer(65) == 0.  # Initial opening cannot encode a 2.6s approach schedule.
+    encoder.executed_action(np.r_[np.zeros(6), 1.], 65)
+    assert timer(80) == 0. and encoder.has_closed is False
+    encoder.executed_action(np.r_[np.zeros(6), 0.], 80)
+    assert timer(81) == pytest.approx(.04) and encoder.has_closed
+    encoder.executed_action(np.r_[np.zeros(6), .1], 81)
+    assert timer(90) == pytest.approx(.4)
+    encoder.executed_action(np.r_[np.zeros(6), 1.], 90)
+    assert timer(95) == pytest.approx(.2)
+    encoder.executed_action(np.r_[np.zeros(6), 0.], 95)
+    assert timer(96) == pytest.approx(.04)
+    encoder.reset()
+    assert timer(0) == 0. and encoder.has_closed is False
+
+
+def test_task_event_clock_contract_is_opt_in_and_requires_issued_action_feedback():
+    with pytest.raises(ValueError, match="achieved"):
+        RecoveryObservation("so101", 25., gripper_clock="task_events")
+    with pytest.raises(ValueError, match="gripper clock"):
+        RecoveryObservation("panda", 25., gripper_clock="task_phase")
+    assert len(TASK_EVENT_OBSERVATION_NAMES) == 99
+    assert "previous_achieved_" in TASK_EVENT_OBSERVATION_NAMES[23]
+    assert "previous_issued_" in TASK_EVENT_OBSERVATION_NAMES[29]
+    assert TASK_EVENT_OBSERVATION_NAMES[32].endswith("seconds_since_task_gripper_event")
+    legacy = RecoveryObservation("panda", 25., action_history="achieved")
+    legacy.executed_action(np.r_[np.zeros(6), 1.], 0)
+    assert legacy.encode(MeasuredEnvironment("panda"), np.zeros(3), np.zeros(3), 65)[-1] == pytest.approx(2.6)
 
 
 def test_native_cartesian_action_uses_world_rotation_and_task_translation():

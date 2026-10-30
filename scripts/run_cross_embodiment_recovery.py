@@ -39,6 +39,12 @@ def parser():
                         help="Reuse completed collection directories instead of collecting fresh demonstrations")
     result.add_argument("--history-mode", choices=("selected", "achieved"), default="selected",
                         help="Versioned previous-action observation contract used in all collection rounds")
+    result.add_argument("--gripper-clock", choices=("all_switches", "task_events"), default="all_switches",
+                        help="Time since every jaw switch, or zero before the first issued close (achieved history only)")
+    result.add_argument("--observation-geometry", choices=("tcp", "grasp"), default="tcp",
+                        help="Versioned RGB target reference geometry used in all collection rounds")
+    result.add_argument("--collection-act-prefix-steps", type=int, default=0,
+                        help="Execute this many frozen ACT ticks before every corrective collection rollout")
     result.add_argument("--train-seeds", nargs="+", type=int, default=list(range(10000, 10004)))
     result.add_argument("--val-seeds", nargs="+", type=int, default=list(range(11000, 11002)))
     result.add_argument("--seeds", nargs="+", type=int, default=list(range(12000, 12004)),
@@ -55,8 +61,12 @@ def parser():
     result.add_argument("--temporal-weight", type=float, default=0.)
     result.add_argument("--transition-weight", type=float, default=0.)
     result.add_argument("--action-routing", choices=("soft", "hard"), default="soft")
+    result.add_argument("--no-residual-prior", dest="residual_prior", action="store_false", default=True,
+                        help="Keep ACT inputs but predict phase actions without adding the ACT action prior")
     result.add_argument("--history-noise", type=float, default=0.)
     result.add_argument("--history-dropout", type=float, default=0.)
+    result.add_argument("--approach-timer-dropout", type=float, default=0.,
+                        help="Mask the three gripper-switch timers together on approach-phase training rows")
     result.add_argument("--require-command-labels", action="store_true",
                         help="Also require issued-command phase label provenance for reused collections")
     result.add_argument("--dagger-iterations", type=int, default=0,
@@ -71,6 +81,10 @@ def parser():
                         help="Held-out layouts revisited each DAgger round; defaults to --val-seeds")
     result.add_argument("--matched-benchmark", action="store_true",
                         help="Evaluate raw ACT, RGB, ACT+RGB and fitted heads on identical resets")
+    result.add_argument("--frozen-prefix", action="store_true",
+                        help="Also compare frozen ACT followed by a fitted learned recovery head")
+    result.add_argument("--prefix-recovery", choices=("learned", "no_act"),
+                        help="Head used after frozen ACT; defaults to no_act when fitted, otherwise learned")
     result.add_argument("--video", action="store_true", help="Save learned rollouts (without --matched-benchmark)")
     result.add_argument("--plan-only", action="store_true")
     return result
@@ -94,19 +108,29 @@ def build_plan(args):
         raise ValueError("Embodiments must be unique")
     if args.recovery_frame == "source" and train_robots != ["so101"]:
         raise ValueError("Source recovery frame requires --train-robots so101")
+    if args.gripper_clock == "task_events" and args.history_mode != "achieved":
+        raise ValueError("Task-event gripper clock requires --history-mode achieved")
+    if args.collection_act_prefix_steps < 0:
+        raise ValueError("Collection ACT prefix steps must be nonnegative")
     if args.steps < 1 or not math.isfinite(args.temporal_weight) or args.temporal_weight < 0:
         raise ValueError("Positive training steps and nonnegative temporal weight required")
-    phase_values = (args.transition_weight, args.history_noise, args.history_dropout)
-    if (not all(math.isfinite(value) and value >= 0 for value in phase_values)
-            or args.history_dropout > 1):
-        raise ValueError("Finite nonnegative phase options and history dropout in 0..1 required")
+    phase_values = (args.transition_weight, args.history_noise, args.history_dropout,
+                    args.approach_timer_dropout)
+    if not all(math.isfinite(value) and value >= 0 for value in phase_values):
+        raise ValueError("Finite nonnegative phase options required")
+    if args.history_dropout >= 1:
+        raise ValueError("History dropout must be in [0, 1)")
+    if args.approach_timer_dropout > 1:
+        raise ValueError("Approach timer dropout must be in [0, 1]")
     if args.head_type != "phase" and (args.temporal_weight or args.require_command_labels
-            or any(phase_values) or args.action_routing != "soft"):
+            or any(phase_values) or args.action_routing != "soft" or not args.residual_prior):
         raise ValueError("Temporal and command-label options require a phase head")
     if not args.use_act and args.skip_no_act_ablation:
         raise ValueError("--skip-no-act-ablation requires --use-act")
     if args.matched_benchmark and args.video:
         raise ValueError("--video is supported by standalone learned evaluation")
+    if args.prefix_recovery is not None and not args.frozen_prefix:
+        raise ValueError("--prefix-recovery requires --frozen-prefix")
     if args.dagger_iterations < 0:
         raise ValueError("DAgger iterations must be nonnegative")
     if not args.dagger_iterations and any(value is not None for value in (
@@ -159,6 +183,15 @@ def build_plan(args):
             covered.add(robot)
             mode = manifest.get("reference_mode")
             observation_names = manifest.get("observation_names")
+            inferred_geometry = ("grasp" if any("_grasp_relative_" in name
+                for name in (observation_names or [])) else "tcp")
+            geometry = manifest.get("observation_geometry", inferred_geometry)
+            if geometry != args.observation_geometry:
+                raise ValueError("Collection RGB target geometry differs from --observation-geometry")
+            if observation_names and geometry != inferred_geometry:
+                raise ValueError("Collection geometry metadata differs from its observation names")
+            if geometry == "grasp" and not observation_names:
+                raise ValueError("Grasp-relative collections require versioned observation names")
             inferred_history = ("achieved" if any("previous_achieved_" in name
                 for name in (observation_names or [])) else "selected")
             history_mode = manifest.get("history_mode", inferred_history)
@@ -166,8 +199,24 @@ def build_plan(args):
                 raise ValueError("Collection previous-action history contract differs from --history-mode")
             if observation_names and history_mode != inferred_history:
                 raise ValueError("Collection history metadata differs from its observation names")
+            inferred_clock = ("task_events" if any("seconds_since_task_gripper_event" in name
+                for name in (observation_names or [])) else "all_switches")
+            gripper_clock = manifest.get("gripper_clock", inferred_clock)
+            if gripper_clock != args.gripper_clock:
+                raise ValueError("Collection gripper clock differs from --gripper-clock")
+            if observation_names and gripper_clock != inferred_clock:
+                raise ValueError("Collection gripper-clock metadata differs from its observation names")
+            if gripper_clock == "task_events" and not observation_names:
+                raise ValueError("Task-event gripper clocks require versioned observation names")
+            fresh_names = any("fresh_rgb_" in name for name in (observation_names or []))
+            initial_names = any("initial_rgb_" in name for name in (observation_names or []))
+            if fresh_names and initial_names:
+                raise ValueError("Collection mixes initial and tracked RGB-reference names")
+            inferred_reference = "tracked" if fresh_names else "initial" if initial_names else None
             if mode is None and observation_names:
-                mode = "tracked" if any("fresh_rgb_" in name for name in observation_names) else "initial"
+                mode = inferred_reference or "initial"
+            elif inferred_reference is not None and mode != inferred_reference:
+                raise ValueError("Collection RGB-reference metadata differs from its observation names")
             if mode is not None:
                 reference_modes.add(mode)
             if observation_names is not None:
@@ -201,7 +250,11 @@ def build_plan(args):
                  "--snapshot", snapshot, "--source-scene", source_scene,
                  "--train-seeds", *args.train_seeds, "--val-seeds", *args.val_seeds,
                  "--history-mode", args.history_mode,
-                 "--reference-mode", "tracked", "--expert-execution", "common"], directory, "manifest.json")
+                 "--gripper-clock", args.gripper_clock,
+                 "--observation-geometry", args.observation_geometry,
+                 "--act-prefix-steps", args.collection_act_prefix_steps,
+                 "--reference-mode", "tracked", "--expert-execution", "common"], directory, "manifest.json",
+                 act_prefix_steps=args.collection_act_prefix_steps)
     if fitted_episodes & (set(args.seeds) | RESERVED_SEEDS):
         raise ValueError("Development/reserved episodes overlap collection training or validation")
     if fitted_train_episodes & fitted_val_episodes:
@@ -209,6 +262,8 @@ def build_plan(args):
     if len(reference_modes) > 1 or len(observation_contracts) > 1:
         raise ValueError("Collection RGB-reference/observation contracts differ")
     reference_mode = next(iter(reference_modes), "tracked")
+    if args.collection_act_prefix_steps and reference_modes != {"tracked"}:
+        raise ValueError("Collection ACT prefix requires declared tracked RGB references")
     if args.dagger_iterations:
         dagger_train = set(requested_splits["dagger_train_seeds"])
         dagger_val = set(requested_splits["dagger_val_seeds"])
@@ -217,6 +272,11 @@ def build_plan(args):
             raise ValueError("DAgger training, validation and development episode roles must stay disjoint")
     trainer = "train_phase_recovery_mlp.py" if args.head_type == "phase" else "train_recovery_mlp.py"
     variants = (["learned"] if args.skip_no_act_ablation else ["learned", "no_act"]) if args.use_act else ["no_act"]
+    prefix_variant = None
+    if args.frozen_prefix:
+        prefix_variant = args.prefix_recovery or ("no_act" if "no_act" in variants else variants[0])
+        if prefix_variant not in variants:
+            raise ValueError("Prefix recovery must select a fitted head variant")
     collecting_variant = args.dagger_learner or variants[0]
     if args.dagger_iterations and collecting_variant not in variants:
         raise ValueError("DAgger collecting learner must be one of the fitted head variants")
@@ -234,7 +294,10 @@ def build_plan(args):
             if args.head_type == "phase":
                 options.extend(["--temporal-weight", args.temporal_weight,
                     "--transition-weight", args.transition_weight, "--action-routing", args.action_routing,
-                    "--history-noise", args.history_noise, "--history-dropout", args.history_dropout])
+                    "--history-noise", args.history_noise, "--history-dropout", args.history_dropout,
+                    "--approach-timer-dropout", args.approach_timer_dropout])
+                if not args.residual_prior:
+                    options.append("--no-residual-prior")
                 if not args.collections or args.require_command_labels or args.dagger_iterations:
                     options.append("--require-command-labels")
             name = f"train_{variant}" if iteration == 0 else f"train_dagger_{iteration:04d}_{variant}"
@@ -258,32 +321,49 @@ def build_plan(args):
                  "--train-seeds", *requested_splits["dagger_train_seeds"],
                  "--val-seeds", *requested_splits["dagger_val_seeds"],
                  "--history-mode", args.history_mode,
+                 "--gripper-clock", args.gripper_clock,
+                 "--observation-geometry", args.observation_geometry,
+                 "--act-prefix-steps", args.collection_act_prefix_steps,
                  "--reference-mode", reference_mode, "--expert-execution", "common"],
-                 directory, "manifest.json", dagger_collection={"robot": robot,
+                 directory, "manifest.json", act_prefix_steps=args.collection_act_prefix_steps,
+                 dagger_collection={"robot": robot,
                     "iteration": iteration, "learner": learner,
                     "beta_teacher_execution": betas[iteration - 1],
                     "reference_mode": reference_mode, "expert_execution": "common",
                     "history_mode": args.history_mode,
+                    "gripper_clock": args.gripper_clock,
+                    "observation_geometry": args.observation_geometry,
+                    "act_prefix_steps": args.collection_act_prefix_steps,
                     "train_seeds": requested_splits["dagger_train_seeds"],
                     "val_seeds": requested_splits["dagger_val_seeds"]})
         directories.extend(additions)
         heads = fit_heads(iteration)
     if args.matched_benchmark:
         directory = out / "benchmark"
+        conditions = ["raw", "rgb", "hf_rgb", *variants]
+        benchmark_heads = dict(heads)
+        if args.frozen_prefix:
+            conditions.append("hf_learned")
+            benchmark_heads["hf_learned"] = heads[prefix_variant]
         add("matched_development_benchmark", "benchmark_frozen_act.py",
             ["--out", directory, "--robots", *args.robots,
-             "--conditions", "raw", "rgb", "hf_rgb", *variants,
+             "--conditions", *conditions,
              "--seeds", *args.seeds, "--snapshot", snapshot, "--source-scene", source_scene,
              "--controller-factory", "scripts.run_recovery_dagger:controller_factory",
-             "--controller-options", json.dumps({"heads": heads, "recovery_frame": args.recovery_frame},
+             "--controller-options", json.dumps({"heads": benchmark_heads, "recovery_frame": args.recovery_frame},
                                                  sort_keys=True)], directory, "report.json")
     else:
+        evaluations = [(variant, head, False) for variant, head in heads.items()]
+        if args.frozen_prefix:
+            evaluations.append(("hf_learned", heads[prefix_variant], True))
         for robot in args.robots:
-            for variant, head in heads.items():
+            for variant, head, prefix in evaluations:
                 directory = out / "evaluation" / robot / variant
                 options = ["evaluate", "--robot", robot, "--head", head, "--out", directory,
                            "--snapshot", snapshot, "--source-scene", source_scene,
                            "--recovery-frame", args.recovery_frame, "--seeds", *args.seeds]
+                if prefix:
+                    options.append("--act-prefix")
                 if args.video:
                     options.append("--video")
                 add(f"evaluate_{robot}_{variant}", "run_recovery_dagger.py", options, directory, "report.json")
@@ -293,11 +373,17 @@ def build_plan(args):
             "zero_shot_target_robots": [robot for robot in args.robots if robot not in train_robots],
             "recovery_frame": args.recovery_frame,
             "history_mode": args.history_mode,
+            "gripper_clock": args.gripper_clock,
+            "observation_geometry": args.observation_geometry,
+            "collection_act_prefix_steps": args.collection_act_prefix_steps,
+            "frozen_prefix": args.frozen_prefix, "prefix_recovery_variant": prefix_variant,
             "head_type": args.head_type, "heads": heads, "collection_inputs": collection_inputs,
             "head_history": head_history,
             "phase_training": {"action_routing": args.action_routing,
+                "residual_prior": args.residual_prior,
                 "temporal_weight": args.temporal_weight, "transition_weight": args.transition_weight,
-                "history_noise": args.history_noise, "history_dropout": args.history_dropout},
+                "history_noise": args.history_noise, "history_dropout": args.history_dropout,
+                "approach_timer_dropout": args.approach_timer_dropout},
             "dagger": {"iterations": args.dagger_iterations,
                 "expert_execution_probabilities": betas if args.dagger_iterations else [],
                 "collecting_learner": collecting_variant if args.dagger_iterations else None,
@@ -377,10 +463,14 @@ def run_plan(plan, *, runner=None):
                 raise RuntimeError(f"Stage {stage['name']} did not complete with unchanged runtime inputs")
             if artifact.get("checkpoint_unchanged") is False:
                 raise RuntimeError(f"Stage {stage['name']} changed frozen ACT weights")
+            if ("act_prefix_steps" in stage
+                    and artifact.get("act_prefix_steps", 0) != stage["act_prefix_steps"]):
+                raise RuntimeError(f"Stage {stage['name']} differs from planned collection ACT prefix")
             if "dagger_collection" in stage:
                 expected = stage["dagger_collection"]
                 exact_keys = ("robot", "iteration", "learner", "beta_teacher_execution",
-                              "reference_mode", "expert_execution", "history_mode")
+                              "reference_mode", "expert_execution", "history_mode", "gripper_clock",
+                              "observation_geometry", "act_prefix_steps")
                 if (any(artifact.get(key) != expected[key] for key in exact_keys)
                         or artifact.get("base_weights_frozen") is not True
                         or artifact.get("checkpoint_unchanged") is not True

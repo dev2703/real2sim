@@ -181,10 +181,37 @@ def corrupt_action_history(observations, observation_names, *, noise=0., dropout
     return corrupted
 
 
+def drop_approach_timers(observations, observation_names, phase_ids, training_mean, *,
+                         probability=0., generator=None):
+    """Reduce approach-clock shortcuts without erasing close/release dwell.
+
+    One training-only mask replaces all timer-history columns with their
+    training means. Expert labels select augmentation rows, never runtime
+    observations. Geometry, jaw feedback and non-approach rows stay unchanged.
+    """
+    if not np.isfinite(probability) or not 0 <= probability <= 1:
+        raise ValueError("Approach timer dropout must be in [0,1]")
+    if not probability:
+        return observations
+    if observation_names is None or len(observation_names) != observations.shape[-1]:
+        raise ValueError("Approach timer augmentation requires declared observation names")
+    columns = [i for i, name in enumerate(observation_names)
+               if name.endswith(("seconds_since_selected_gripper_switch", "seconds_since_issued_gripper_switch",
+                                  "seconds_since_task_gripper_event"))]
+    if len(columns) != 3 or phase_ids.shape != observations.shape[:-1]:
+        raise ValueError("Approach timer augmentation requires three timers and per-row phase labels")
+    selected = (phase_ids == PHASE_NAMES.index("PRE_GRASP")) | (phase_ids == PHASE_NAMES.index("DESCEND"))
+    dropped = selected & (torch.rand(phase_ids.shape, device=observations.device,
+                                    generator=generator) < probability)
+    result = observations.clone()
+    result[..., columns] = torch.where(dropped[..., None], training_mean[columns], observations[..., columns])
+    return result
+
+
 def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
           phase_weight=.2, temperature=.5, temporal_weight=0., require_command_labels=False,
           use_act=True, action_routing="soft", history_noise=0., history_dropout=0.,
-          transition_weight=0.):
+          transition_weight=0., residual_prior=True, approach_timer_dropout=0.):
     if (steps < 1 or not np.isfinite([phase_weight, temporal_weight, transition_weight]).all()
             or phase_weight <= 0 or min(temporal_weight, transition_weight) < 0):
         raise ValueError("Positive training steps and phase-loss weight required")
@@ -200,7 +227,7 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     training = data["train"]
     observation_names = manifests[0]["manifest"].get("observation_names")
     model = PhaseRecoveryMLP(*recovery_normalizers(training, observation_names), temperature=temperature,
-        use_act=use_act, action_routing=action_routing)
+        use_act=use_act, action_routing=action_routing, residual_prior=residual_prior)
     tensors = {partition: {name: torch.from_numpy(rows[name].astype(
         np.int64 if name == "expert_phase_id" else np.float32))
         for name in ("observations", "base_actions", "features", "target_actions", "expert_phase_id")}
@@ -209,6 +236,9 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     history_generator = torch.Generator().manual_seed(seed + 2)
     corrupt_action_history(tensors["train"]["observations"][:1], observation_names,
         noise=history_noise, dropout=history_dropout, generator=history_generator)
+    drop_approach_timers(tensors["train"]["observations"][:1], observation_names,
+        tensors["train"]["expert_phase_id"][:1], model.observation_mean,
+        probability=approach_timer_dropout, generator=history_generator)
     sampling = robot_episode_weights(training["robot_id"], training["episode_index"])
     pairs = training["consecutive_pairs"]
     pair_sampling = (robot_episode_weights(training["robot_id"][pairs[:, 0]],
@@ -242,6 +272,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         "phase_names": PHASE_NAMES, "phase_temperature": model.temperature,
         "phase_loss_weight": phase_weight, "expert_phase_is_runtime_input": False,
         "action_routing": model.action_routing,
+        "residual_prior": model.residual_prior,
+        "approach_timer_dropout": approach_timer_dropout,
         "history_action_noise_fraction": history_noise, "history_action_dropout": history_dropout,
         "history_augmentation_changes_measured_pose_or_rgb": False,
         "temporal_loss_weight": temporal_weight,
@@ -278,6 +310,9 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         batch = {name: values[indices] for name, values in tensors["train"].items()}
         batch["observations"] = corrupt_action_history(batch["observations"], observation_names,
             noise=history_noise, dropout=history_dropout, generator=history_generator)
+        batch["observations"] = drop_approach_timers(batch["observations"], observation_names,
+            batch["expert_phase_id"], model.observation_mean,
+            probability=approach_timer_dropout, generator=history_generator)
         loss, parts = phase_training_loss(model, batch["observations"], batch["base_actions"],
             batch["features"], batch["target_actions"], batch["expert_phase_id"],
             phase_weight=phase_weight, class_weights=class_weights_tensor)
@@ -318,7 +353,7 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     model.eval()
     metrics = evaluate(model, tensors["val"], data["val"]["robot_id"], **validation_options)
     head_hash = sha256_file(out / "head.pt")
-    identity = hashlib.sha256(f"{base_hash}:{head_hash}:predicted_phase_mixture:{use_act}:{model.action_routing}".encode()).hexdigest()
+    identity = hashlib.sha256(f"{base_hash}:{head_hash}:predicted_phase_mixture:{use_act}:{model.action_routing}:{model.residual_prior}".encode()).hexdigest()
     metadata = {"schema": report["schema"], "head_sha256": head_hash,
         "base_checkpoint_sha256": base_hash, "effective_policy_identifier": identity,
         "use_act": use_act, "observation_dim": model.observation_dim,
@@ -328,6 +363,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         "observation_names": report["observation_names"], "phase_names": PHASE_NAMES,
         "phase_temperature": model.temperature, "expert_phase_is_runtime_input": False,
         "action_routing": model.action_routing,
+        "residual_prior": model.residual_prior,
+        "approach_timer_dropout": approach_timer_dropout,
         "history_action_noise_fraction": history_noise, "history_action_dropout": history_dropout,
         "temporal_loss_weight": temporal_weight,
         "transition_loss_weight": transition_weight,
@@ -355,6 +392,8 @@ if __name__ == "__main__":
     parser.add_argument("--action-routing", choices=("soft", "hard"), default="soft")
     parser.add_argument("--history-noise", type=float, default=0.)
     parser.add_argument("--history-dropout", type=float, default=0.)
+    parser.add_argument("--approach-timer-dropout", type=float, default=0.)
+    parser.add_argument("--no-residual-prior", action="store_false", dest="residual_prior", default=True)
     parser.add_argument("--require-command-labels", action="store_true")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--use-act", action="store_true", dest="use_act", default=True)
@@ -366,4 +405,5 @@ if __name__ == "__main__":
           temporal_weight=args.temporal_weight, require_command_labels=args.require_command_labels,
           use_act=args.use_act, action_routing=args.action_routing,
           history_noise=args.history_noise, history_dropout=args.history_dropout,
-          transition_weight=args.transition_weight)
+          transition_weight=args.transition_weight, residual_prior=args.residual_prior,
+          approach_timer_dropout=args.approach_timer_dropout)

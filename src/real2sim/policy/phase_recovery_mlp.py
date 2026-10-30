@@ -27,7 +27,7 @@ class PhaseRecoveryMLP(nn.Module):
 
     def __init__(self, observation_mean, observation_std, feature_mean, feature_std,
                  *, hidden_sizes=(256, 128), temperature=.5, use_act=True,
-                 action_routing="soft"):
+                 action_routing="soft", residual_prior=True):
         super().__init__()
         observations, features = np.asarray(observation_mean), np.asarray(feature_mean)
         obs_std, feat_std = np.asarray(observation_std), np.asarray(feature_std)
@@ -44,6 +44,9 @@ class PhaseRecoveryMLP(nn.Module):
         self.hidden_sizes = tuple(int(n) for n in hidden_sizes)
         self.temperature = float(temperature)
         self.use_act = bool(use_act)
+        if type(residual_prior) is not bool:
+            raise ValueError("ACT residual prior must be a boolean")
+        self.residual_prior = residual_prior
         self.action_routing = action_routing
         for name, value in (("observation_mean", observations),
                             ("observation_std", np.maximum(obs_std, 1e-4)),
@@ -88,7 +91,8 @@ class PhaseRecoveryMLP(nn.Module):
             chosen = nn.functional.one_hot(phase_probabilities.argmax(-1), len(PHASE_NAMES))
             phase_probabilities = chosen.to(phase_probabilities.dtype) - phase_probabilities.detach() + phase_probabilities
         residuals = self.action_heads(encoded).reshape(*encoded.shape[:-1], len(PHASE_NAMES), 7)
-        phase_actions = (prior.unsqueeze(-2) + residuals) * self.action_scales
+        offset = prior if self.residual_prior else torch.zeros_like(prior)
+        phase_actions = (offset.unsqueeze(-2) + residuals) * self.action_scales
         mixed_action = (phase_probabilities.unsqueeze(-1) * phase_actions).sum(dim=-2)
         return mixed_action, masked_logits, phase_actions
 
@@ -136,7 +140,8 @@ class PhaseRecoveryMLPPolicy:
             state["feature_mean"].numpy(), state["feature_std"].numpy(),
             hidden_sizes=self.metadata["hidden_sizes"], temperature=self.metadata["phase_temperature"],
             use_act=self.metadata["use_act"],
-            action_routing=self.metadata.get("action_routing", "soft"))
+            action_routing=self.metadata.get("action_routing", "soft"),
+            residual_prior=self.metadata.get("residual_prior", True))
         self.model.load_state_dict(state, strict=True)
         if (self.model.observation_dim != self.metadata["observation_dim"]
                 or self.model.feature_dim != self.metadata["act_feature_dim"]):

@@ -124,7 +124,7 @@ def test_both_condition_heads_enter_matched_protocol(tmp_path):
 
 
 @pytest.mark.parametrize("failure", [None, "reset", "step"])
-@pytest.mark.parametrize("condition", ["learned", "no_act"])
+@pytest.mark.parametrize("condition", ["learned", "no_act", "hf_learned"])
 def test_custom_controller_releases_hooks_after_completion_or_abort(
         tmp_path, monkeypatch, failure, condition):
     class Controller:

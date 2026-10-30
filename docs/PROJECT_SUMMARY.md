@@ -9,8 +9,40 @@ checkpoints and superseded runs.
 ## Current result
 
 The goal is to retain a real-demonstration ACT and learn recovery that executes
-through native controllers on both SO-101 and Panda. The working simulation
-fallback currently uses RGB geometric planning.
+through native controllers on both SO-101 and Panda. Learned Panda recovery now
+completes native-start development tasks, and a separate prefix-adapted head
+runs after frozen ACT. Both arms supply training data. Robust SO-101 recovery
+and source-only transfer to Panda remain unresolved; RGB geometric recovery is
+the stronger established baseline.
+
+The latest single-protocol Panda comparison uses development seeds 12021,
+12022 and 12025–12032. All 60 trials share their ten reset fingerprints, use the
+same frozen ACT checkpoint and have zero aborts:
+
+| Controller | Complete tasks | Held lift trials | Learned head/data |
+| --- | ---: | ---: | --- |
+| Frozen ACT alone | 0/10 | 0/10 | Unchanged real-data checkpoint |
+| RGB geometric controller | 10/10 | 10/10 | Geometric actions |
+| Frozen ACT → RGB recovery | 10/10 | 10/10 | Geometric recovery after ACT |
+| Native-start MLP with ACT features | 2/10 | 9/10 | Joint-arm grasp-relative correction cohort |
+| Native-start MLP without ACT inputs | 10/10 | 10/10 | Joint-arm achieved-history DAgger cohort |
+| Frozen ACT → prefix-adapted MLP without ACT inputs | 5/10 | 9/10 | Joint-arm corrections plus Panda prefix-state data |
+
+Each `hf_learned` trial executes 50 frozen-ACT ticks and makes one latched
+handoff. Its learned head masks ACT features and proposals; ACT still supplies
+the executed prefix actions. The native-start and prefix-adapted heads are
+distinct artifacts. A separate matched comparison of the same prefix-adapted
+head scored 1/10 from native starts and 5/10 after ACT. The stronger native-start
+head scored 10/10. Observation geometry and correction data also differ across
+the selected ACT-feature/no-ACT heads, so this table cannot isolate a benefit
+from ACT features. These are development results from jointly trained arms;
+source-only transfer and reserved performance are not established. Exact heads,
+hashes and trial evidence are in the [learning progress
+report](../results/v2/recovery_learning_progress_20261030.json).
+
+The following table retains the historical 29 October benchmark and phase head.
+The later 30 October learned comparisons are development experiments, recorded
+separately in [learning progress](../results/v2/recovery_learning_progress_20261030.json).
 
 | Controller | SO-101 complete tasks | Panda complete tasks | Scope |
 | --- | ---: | ---: | --- |
@@ -241,7 +273,7 @@ Panda missed pickup. Fresh expert-only contract checks completed 2/2 per arm;
 no head was retrained. These smoke cases are not reliability estimates. See
 [engineering smoke](../results/v2/retention_representation_smoke_20261029.json).
 
-## Recovery integration work, 30 October
+## Initial recovery integration, 30 October
 
 `scripts/run_cross_embodiment_recovery.py` connects collection, phase/residual
 head training, ACT/no-ACT ablations and evaluation. `--matched-benchmark` runs
@@ -325,6 +357,96 @@ uv run python scripts/run_cross_embodiment_recovery.py \
   --out outputs/v2/recovery_pipeline_NEW --matched-benchmark --plan-only
 # Remove --plan-only to execute; add --train-robots so101 for source-only fitting.
 ```
+
+## Learning progress and frozen-prefix recovery, 30 October
+
+The initial 0/16 engineering cohort above predates the following corrections.
+The [learning progress report](../results/v2/recovery_learning_progress_20261030.json)
+records the new heads, data, development comparisons and protocol hashes.
+These heads use demonstrations/corrective data from both SO-101 and Panda;
+Panda task completion is therefore joint-arm training evidence, not source-only
+transfer of a head trained on SO-101 alone.
+
+The achieved-history contract records measured TCP motion and issued jaw intent,
+including when a request is ignored, backtracked or rejected. The old selected
+history fed unexecuted rotations back into the head: the [drift
+audit](../results/v2/recovery_history_drift_20261030.json) measured roughly
+46–129 mrad rotation-history error and 8–15 mm translation-history error in four
+failed development traces. Legacy selected-history artifacts retain their
+semantics; achieved-history packs have distinct observation names and cannot be
+silently mixed with them.
+
+Phase heads support hard routing through their own predicted component,
+supervised command-boundary losses and temporal action differences. Teacher
+phase labels appear only in the training loss. Optional history noise/dropout
+corrupts previous-action channels, while approach-timer dropout masks timers
+only during training approach/descent rows and preserves close/release dwell.
+`--no-residual-prior` keeps the frozen ACT feature and proposal inputs but learns
+the output action directly, removing compulsory addition of a poor ACT prior.
+No-ACT remains a separate control with both ACT inputs masked. These options are
+saved with the head; the [phase refinement
+audit](../results/v2/phase_learning_refinement_20261030.json) also retains failed
+candidates and shows why offline boundary accuracy alone is insufficient.
+
+Grasp-relative geometry subtracts the declared rotated TCP-to-grasp offset from
+the RGB-relative ball/bowl channels. This is a versioned 99-value observation
+transform, using no object truth or teacher phase. The optional task-event jaw
+clock stays zero until the first issued close, then retains normal time since
+close/open transitions; initial setup opening cannot become an episode clock.
+Neither option established reliable SO-101 recovery. A source-only grasp head
+completed 1/2 SO-101 development tasks, but each ACT/no-ACT variant completed
+0/2 on unseen Panda. Changing to the task-event clock also failed to resolve
+source-arm pickup. Native contact/seating, phase progression and source/target
+representation remain material limitations.
+
+The workflow now supports iterative DAgger. Each round queries a synchronized
+expert on the selected learner's visited states, aggregates immutable packs and
+refits both ACT/no-ACT controls on the same data. Expert execution probability,
+collecting learner, episode roles and history/geometry/clock contracts are
+explicit. Completed expert/learner mixtures are collection evidence, not learned
+task success. Development evaluation runs only after the final fit; frozen
+weights and collection arrays are checked across stages.
+
+`--act-prefix` and matched condition `hf_learned` execute raw frozen ACT first,
+then latch into learned recovery when the observable approach monitor triggers.
+The wrapper supplies no geometric actions. Handoff clears learner history and
+queued features, but inherits observed RGB references and their real ages.
+An occluded cached bowl is retained with an aged observation; it is neither
+discarded nor relabelled as freshly detected. This memory fix removed handoff
+aborts, but the changed pose/reference distribution still required new data.
+Six geometric-expert collection cases after a fixed 50-tick ACT prefix completed
+6/6; those are training/validation examples, not six learned successes.
+
+`--collection-act-prefix-steps 50` collects teacher or DAgger corrections from
+those actually executed post-ACT states. Prefix actions stay out of recovery
+labels, and RGB ages survive the recovery-local clock reset. Prefix and native
+packs may be deliberately aggregated when their observation contracts match.
+The prefix-adapted no-ACT head completed 5/10 handoff tasks in an earlier matched
+comparison, while the identical head used from native starts completed 1/10.
+This differs from the stronger native-start head and does not establish that
+adding ACT improves the strongest learned controller. Runtime versions are kept
+separate; development counts from different protocol hashes are not pooled.
+
+```sh
+# Learned recovery after frozen ACT; this retained head includes prefix-state data
+uv run python scripts/run_recovery_dagger.py evaluate --robot panda \
+  --head outputs/v2/recovery_prefix_adapt_noact_20261030 --act-prefix \
+  --seeds 12040 12041 --out outputs/v2/act_mlp_panda_NEW
+
+# Inspect an end-to-end warm-start collection/DAgger/handoff comparison
+uv run python scripts/run_cross_embodiment_recovery.py \
+  --history-mode achieved --action-routing hard --transition-weight .1 \
+  --dagger-iterations 1 --dagger-beta .5 --dagger-learner no_act \
+  --collection-act-prefix-steps 50 --frozen-prefix --prefix-recovery no_act \
+  --out outputs/v2/recovery_prefix_pipeline_NEW --matched-benchmark --plan-only
+```
+
+Remove `--plan-only` to execute. Pure learned/no-ACT comparisons remain in the
+same workflow. Native-start and prefix-adapted heads should be selected for
+their matching execution path. The latest complete unit/selected integration
+check passed 1,213 tests with three GPU/optional cases skipped; Ruff was clean.
+The new development experiments do not replace the historical reserved
+benchmark or establish hardware performance.
 
 ## Evaluation and reproducibility
 

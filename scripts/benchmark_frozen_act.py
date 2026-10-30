@@ -39,7 +39,8 @@ else:
     from scripts import evaluate_hf_act_panda_20261028 as transfer
     from scripts.evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
 
-CONDITIONS = ("raw", "rgb", "hf_rgb", "learned", "no_act")
+CONDITIONS = ("raw", "rgb", "hf_rgb", "learned", "no_act", "hf_learned")
+CUSTOM_CONDITIONS = ("learned", "no_act", "hf_learned")
 
 
 def digest_json(value):
@@ -63,6 +64,8 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
         "follower_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
         "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py")}
     paths.add(Path("src/real2sim/policy/source_recovery_frame.py"))
+    paths.add(Path("src/real2sim/policy/progress_geometry.py"))
+    paths.add(Path("src/real2sim/policy/frozen_prefix_recovery.py"))
     paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py")}
     paths |= {Path("src/real2sim") / name for name in ("config.py", "serialization.py", "artifacts.py")}
     paths |= set(Path(snapshot).glob("*.json")) | set(Path(snapshot).glob("*.safetensors"))
@@ -198,7 +201,7 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
     try:
         obs, info = shared.reset(seed, scenario)
         initial = initial_fingerprint(shared, info)
-        if condition in ("learned", "no_act"):
+        if condition in CUSTOM_CONDITIONS:
             if controller_factory is None:
                 raise ValueError("Learned conditions require a controller factory")
             controller = controller_factory(env=env, source=shared.source, robot=shared.robot,
@@ -216,7 +219,7 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
         with (directory / "ticks.jsonl").open("w") as stream:
             for tick in range(env.max_episode_steps):
                 t0 = time.perf_counter()
-                if condition in ("learned", "no_act"):
+                if condition in CUSTOM_CONDITIONS:
                     result = controller.step(obs, env)
                     uses_act = bool(result.detail.get("uses_act", condition == "learned"))
                     assisted = bool(result.detail.get("intervention", True))
@@ -253,8 +256,10 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                     allow_nan=False) + "\n")
                 if done or result.truncated:
                     break
-        if condition not in ("learned", "no_act"):
+        if condition not in CUSTOM_CONDITIONS:
             perception_log = geometric.perception_log
+        else:
+            trigger = getattr(controller, "trigger", None)
     except (RuntimeError, ValueError, OSError) as exc:
         abort = f"{type(exc).__name__}: {exc}"
     finally:
@@ -360,8 +365,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     # A single matched run can compare ACT-conditioned and no-ACT heads. Both
     # artifacts must enter the protocol, so changing either invalidates resume.
     heads = options.get("heads", {})
-    if not isinstance(heads, dict) or set(heads) - {"learned", "no_act"}:
-        raise ValueError("heads must map learned/no_act conditions to head directories")
+    if not isinstance(heads, dict) or set(heads) - set(CUSTOM_CONDITIONS):
+        raise ValueError("heads must map learned/no_act/hf_learned conditions to head directories")
     head_paths.extend(heads.values())
     for path in head_paths:
         if path:
@@ -394,7 +399,7 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         write_json(manifest, protocol, atomic=True)
     if plan_only:
         return protocol
-    if set(conditions) & {"learned", "no_act"} and factory is None:
+    if set(conditions) & set(CUSTOM_CONDITIONS) and factory is None:
         raise ValueError("Learned conditions require --controller-factory module:function")
     torch.set_num_threads(2)
     policy = NativeLeRobotACT(snapshot) if set(conditions) - {"rgb", "no_act"} else None

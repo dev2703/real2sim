@@ -41,6 +41,10 @@ def _achieved_history_name(name):
 
 ACHIEVED_OBSERVATION_NAMES = [_achieved_history_name(name) for name in OBSERVATION_NAMES]
 TRACKED_ACHIEVED_OBSERVATION_NAMES = [_achieved_history_name(name) for name in TRACKED_OBSERVATION_NAMES]
+TASK_EVENT_OBSERVATION_NAMES = [name.replace("seconds_since_issued_gripper_switch",
+    "seconds_since_task_gripper_event") for name in ACHIEVED_OBSERVATION_NAMES]
+TRACKED_TASK_EVENT_OBSERVATION_NAMES = [name.replace("seconds_since_issued_gripper_switch",
+    "seconds_since_task_gripper_event") for name in TRACKED_ACHIEVED_OBSERVATION_NAMES]
 
 
 def clip_common(action):
@@ -72,11 +76,16 @@ def soft_stop_seed(measured, limits, tolerance=.001):
 
 
 class RecoveryObservation:
-    def __init__(self, robot, hz, *, action_history="selected"):
+    def __init__(self, robot, hz, *, action_history="selected", gripper_clock="all_switches"):
         if action_history not in ("selected", "achieved"):
             raise ValueError("Recovery action history must be selected or achieved")
+        if gripper_clock not in ("all_switches", "task_events"):
+            raise ValueError("Recovery gripper clock must be all_switches or task_events")
+        if gripper_clock == "task_events" and action_history != "achieved":
+            raise ValueError("Task-event gripper clock requires achieved action history")
         self.robot, self.hz = robot, float(hz)
         self.action_history = action_history
+        self.gripper_clock = gripper_clock
         self.reset()
 
     def reset(self):
@@ -85,6 +94,7 @@ class RecoveryObservation:
         self.previous_action = np.zeros(7)
         self.previous_open = None
         self.gripper_switch_tick = 0
+        self.has_closed = False
 
     def selected_action(self, action, tick):
         if self.action_history != "selected":
@@ -108,6 +118,10 @@ class RecoveryObservation:
                 or not 0. <= action[6] <= 1.):
             raise ValueError("Recovery history requires six finite motions and a jaw fraction in 0..1")
         opened = bool(action[6] >= .5)
+        # Initial opening is setup rather than demonstrated task progress.
+        # Only an explicitly issued close starts the task-event clock; the
+        # zero-filled initial previous_action is not an executed command.
+        self.has_closed |= not opened
         if self.previous_open is None or opened != self.previous_open:
             self.gripper_switch_tick = tick
         self.previous_open = opened
@@ -120,12 +134,14 @@ class RecoveryObservation:
                     else (position - self.previous_position) * self.hz)
         self.previous_position = position.copy()
         last_seen = (0, 0) if last_seen_ticks is None else last_seen_ticks
+        gripper_elapsed = (0. if self.gripper_clock == "task_events" and not self.has_closed
+                           else (tick - self.gripper_switch_tick) / self.hz)
         frame = np.r_[position, rot6d_from_matrix(pose[:3, :3]), velocity,
             semantic_gripper(env, self.robot), np.asarray(ball) - position,
             np.asarray(bowl) - position, float(visibility[0]), float(visibility[1]),
             (tick - last_seen[0]) / self.hz, (tick - last_seen[1]) / self.hz,
             self.previous_action, float(self.robot == "so101"), float(self.robot == "panda"),
-            (tick - self.gripper_switch_tick) / self.hz]
+            gripper_elapsed]
         if frame.shape != (33,) or not np.isfinite(frame).all():
             raise ValueError("Recovery observation must contain 33 finite observable values")
         if not self.frames:
