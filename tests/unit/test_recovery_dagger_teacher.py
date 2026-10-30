@@ -335,3 +335,49 @@ def test_source_frame_rejects_heads_trained_in_another_schema():
     head = SimpleNamespace(metadata={"use_act": False, "training_robot_ids": [0, 1]})
     with pytest.raises(ValueError, match="SO-101-only"):
         dagger_module.LearnedRecoveryController(episode, head, recovery_frame="source")
+
+
+def test_achieved_history_controller_remembers_motion_and_issued_jaw_after_a_rejected_request(monkeypatch):
+    from real2sim.policy.common_recovery import TRACKED_ACHIEVED_OBSERVATION_NAMES
+
+    pose = np.eye(4)
+    observations = []
+
+    class References:
+        def __init__(self, _env):
+            self.ball, self.bowl = np.ones(3), np.ones(3) * 2
+            self.log = [{}]
+
+        def update(self, *_args, **_kwargs):
+            pass
+
+        def observation_metadata(self, tick):
+            return {"visibility": (True, True), "last_seen_ticks": (tick, tick)}
+
+    class Executor:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def step(self, _action):
+            pose[0, 3] += .001  # Residual measured motion despite a held command.
+            return SimpleNamespace(detail={
+                "requested_native": np.r_[np.zeros(7), .08],
+                "achieved_common_action": [.001, 0., 0., 0., 0., 0., 1.]})
+
+    def predict(observed, *_args):
+        observations.append(observed.copy())
+        return np.array([.03, 0., 0., 0., .2, 0., 0.])
+
+    monkeypatch.setattr(dagger_module, "RGBReferenceTracker", References)
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: pose.copy(), max_opening=.08,
+                          gripper_semantic=lambda: .8)
+    head = SimpleNamespace(metadata={"use_act": False,
+        "observation_names": TRACKED_ACHIEVED_OBSERVATION_NAMES}, predict=predict, head_sha256="head")
+    controller = dagger_module.LearnedRecoveryController(
+        SimpleNamespace(env=env, robot="panda", source=None), head)
+    first = controller.step({}, env).detail
+    controller.step({}, env)
+    assert first["history_mode"] == "achieved"
+    np.testing.assert_allclose(observations[1][-33 + 23:-33 + 30], [.001, 0., 0., 0., 0., 0., 1.])
+    assert observations[1][-1] == pytest.approx(.04)

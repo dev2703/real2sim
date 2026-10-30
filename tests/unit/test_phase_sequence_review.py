@@ -49,7 +49,9 @@ class LookupModel(torch.nn.Module):
 
     def forward(self, observations, base_actions, features):
         index = observations[:, 0].long()
-        return self.actions[index], self.logits[index], None
+        actions, logits = self.actions[index], self.logits[index]
+        components = actions[:, None, :].expand(-1, logits.shape[-1], -1)
+        return actions, logits, components
 
 
 def test_temporal_loss_keeps_order_for_permuted_noncontiguous_pairs():

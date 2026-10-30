@@ -26,7 +26,8 @@ class PhaseRecoveryMLP(nn.Module):
     """Predict phase logits and mix seven-value per-phase residual actions."""
 
     def __init__(self, observation_mean, observation_std, feature_mean, feature_std,
-                 *, hidden_sizes=(256, 128), temperature=.5, use_act=True):
+                 *, hidden_sizes=(256, 128), temperature=.5, use_act=True,
+                 action_routing="soft"):
         super().__init__()
         observations, features = np.asarray(observation_mean), np.asarray(feature_mean)
         obs_std, feat_std = np.asarray(observation_std), np.asarray(feature_std)
@@ -37,10 +38,13 @@ class PhaseRecoveryMLP(nn.Module):
             raise ValueError("Phase-recovery normalizers must be finite matching vectors")
         if not np.isfinite(temperature) or temperature <= 0:
             raise ValueError("Positive finite phase temperature required")
+        if action_routing not in ("soft", "hard"):
+            raise ValueError("Phase action routing must be soft or hard")
         self.observation_dim, self.feature_dim = len(observations), len(features)
         self.hidden_sizes = tuple(int(n) for n in hidden_sizes)
         self.temperature = float(temperature)
         self.use_act = bool(use_act)
+        self.action_routing = action_routing
         for name, value in (("observation_mean", observations),
                             ("observation_std", np.maximum(obs_std, 1e-4)),
                             ("feature_mean", features),
@@ -77,6 +81,12 @@ class PhaseRecoveryMLP(nn.Module):
         control_logits = raw_logits[..., :N_CONTROL_PHASES]
         masked_logits = torch.cat([control_logits, torch.full_like(raw_logits[..., N_CONTROL_PHASES:], -1e9)], dim=-1)
         phase_probabilities = torch.softmax(masked_logits / self.temperature, dim=-1)
+        if self.action_routing == "hard":
+            # Execute exactly one predicted component so incompatible jaw and
+            # motion phases are not averaged. The straight-through estimator
+            # retains phase-learning gradients from action error in training.
+            chosen = nn.functional.one_hot(phase_probabilities.argmax(-1), len(PHASE_NAMES))
+            phase_probabilities = chosen.to(phase_probabilities.dtype) - phase_probabilities.detach() + phase_probabilities
         residuals = self.action_heads(encoded).reshape(*encoded.shape[:-1], len(PHASE_NAMES), 7)
         phase_actions = (prior.unsqueeze(-2) + residuals) * self.action_scales
         mixed_action = (phase_probabilities.unsqueeze(-1) * phase_actions).sum(dim=-2)
@@ -125,7 +135,8 @@ class PhaseRecoveryMLPPolicy:
         self.model = PhaseRecoveryMLP(state["observation_mean"].numpy(), state["observation_std"].numpy(),
             state["feature_mean"].numpy(), state["feature_std"].numpy(),
             hidden_sizes=self.metadata["hidden_sizes"], temperature=self.metadata["phase_temperature"],
-            use_act=self.metadata["use_act"])
+            use_act=self.metadata["use_act"],
+            action_routing=self.metadata.get("action_routing", "soft"))
         self.model.load_state_dict(state, strict=True)
         if (self.model.observation_dim != self.metadata["observation_dim"]
                 or self.model.feature_dim != self.metadata["act_feature_dim"]):

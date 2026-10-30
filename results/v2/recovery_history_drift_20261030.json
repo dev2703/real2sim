@@ -1,0 +1,119 @@
+{
+  "schema": "recovery_action_history_drift_audit_v1",
+  "scope": "Causal robot pose feedback from already completed development traces, no runtime actions or simulator object truth",
+  "history_contract_before": "Previous selected action, including motions ignored or rejected by native execution",
+  "history_contract_after": "Opt-in versioned previous achieved robot pose delta with issued jaw intent; selected legacy behavior preserved",
+  "training_reference": {
+    "so101": {
+      "rows": 1434,
+      "selected_teacher_rotation_rms_rad": [
+        0.009629684500396252,
+        0.004465300124138594,
+        0.014361059293150902
+      ],
+      "source": "outputs/v2/cross_embodiment_fresh_dev1_20261030/collections/so101/train.npz",
+      "source_sha256": "250b43cf5ee978803e59cdc7856439cced851254b0833f333dea7c5ee425f1c7"
+    },
+    "panda": {
+      "rows": 1481,
+      "selected_teacher_rotation_rms_rad": [
+        0.004191153217107058,
+        0.002702075056731701,
+        0.008578656241297722
+      ],
+      "source": "outputs/v2/cross_embodiment_fresh_dev1_20261030/collections/panda/train.npz",
+      "source_sha256": "d0aa2a1ae87a987c19574d96df81e3646cc50fdb26ab364380daece20b5aebd5"
+    }
+  },
+  "development_traces": [
+    {
+      "robot": "panda",
+      "condition": "learned",
+      "trace": "outputs/v2/cross_embodiment_fresh_dev1_20261030/benchmark/panda/learned/seed_012011/attempt_0001/ticks.jsonl",
+      "trace_sha256": "3ce015f9c77953bd8e15afc27106e706a3c016ce423db9767b1f66223263d99e",
+      "consecutive_robot_pose_pairs": 749,
+      "selected_rotation_rms_rad": [
+        0.044915592418600964,
+        0.05288001713531713,
+        0.03923568112682361
+      ],
+      "achieved_rotation_rms_rad": [
+        0.0017734503276123216,
+        0.0017714586677999304,
+        0.0024041406201136904
+      ],
+      "rotation_history_error_rms_rad": 0.046309677080813925,
+      "translation_history_error_rms_mm": 10.37205971100266,
+      "rejected_native_ticks": 129,
+      "rejected_ticks_with_nonzero_selected_motion": 129,
+      "selected_rotation_over_50mrad_but_achieved_below_10mrad_ticks": 506
+    },
+    {
+      "robot": "panda",
+      "condition": "no_act",
+      "trace": "outputs/v2/cross_embodiment_fresh_dev1_20261030/benchmark/panda/no_act/seed_012011/attempt_0001/ticks.jsonl",
+      "trace_sha256": "c0e9da478d48d3530104e5285c784cb1e626ea8e4c4d7286a4a3c427e65fc94c",
+      "consecutive_robot_pose_pairs": 749,
+      "selected_rotation_rms_rad": [
+        0.05528311624111929,
+        0.04554860988876031,
+        0.06983891923685902
+      ],
+      "achieved_rotation_rms_rad": [
+        0.0009976831338728148,
+        0.0005905497286060391,
+        0.0007001547526177739
+      ],
+      "rotation_history_error_rms_rad": 0.05774254296864325,
+      "translation_history_error_rms_mm": 7.911204955603909,
+      "rejected_native_ticks": 380,
+      "rejected_ticks_with_nonzero_selected_motion": 380,
+      "selected_rotation_over_50mrad_but_achieved_below_10mrad_ticks": 516
+    },
+    {
+      "robot": "so101",
+      "condition": "learned",
+      "trace": "outputs/v2/cross_embodiment_fresh_dev1_20261030/benchmark/so101/learned/seed_012011/attempt_0001/ticks.jsonl",
+      "trace_sha256": "8a5832ad83a55fe533f5931f789427abad6801cbcf51ec89024f121e9641eb16",
+      "consecutive_robot_pose_pairs": 749,
+      "selected_rotation_rms_rad": [
+        0.14367154884332342,
+        0.06735961619355256,
+        0.1594063052003566
+      ],
+      "achieved_rotation_rms_rad": [
+        0.011979361204116365,
+        0.00444015142758527,
+        0.011159821593231098
+      ],
+      "rotation_history_error_rms_rad": 0.12932865052772996,
+      "translation_history_error_rms_mm": 14.777314380412996,
+      "rejected_native_ticks": 398,
+      "rejected_ticks_with_nonzero_selected_motion": 398,
+      "selected_rotation_over_50mrad_but_achieved_below_10mrad_ticks": 576
+    },
+    {
+      "robot": "so101",
+      "condition": "no_act",
+      "trace": "outputs/v2/cross_embodiment_fresh_dev1_20261030/benchmark/so101/no_act/seed_012011/attempt_0001/ticks.jsonl",
+      "trace_sha256": "1fb0ef5e8803e54adf2a10a5cfaf98a96ee5b1f949235f4612178e59875caf75",
+      "consecutive_robot_pose_pairs": 749,
+      "selected_rotation_rms_rad": [
+        0.06949507922948936,
+        0.05166536129141063,
+        0.15287159149080407
+      ],
+      "achieved_rotation_rms_rad": [
+        0.009792681352548441,
+        0.003842666766746223,
+        0.009361606610131813
+      ],
+      "rotation_history_error_rms_rad": 0.10121862524945051,
+      "translation_history_error_rms_mm": 14.035994295352324,
+      "rejected_native_ticks": 596,
+      "rejected_ticks_with_nonzero_selected_motion": 596,
+      "selected_rotation_over_50mrad_but_achieved_below_10mrad_ticks": 506
+    }
+  ],
+  "finding": "Panda top-down execution removes predicted rotations, while selected-history inputs retain them; rejected requests also remain in old history. Achieved feedback removes that artificial loop but does not itself teach recovery or establish success."
+}

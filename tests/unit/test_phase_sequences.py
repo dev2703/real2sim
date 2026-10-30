@@ -6,7 +6,12 @@ import numpy as np
 import pytest
 import torch
 
-from real2sim.policy.phase_sequences import consecutive_pairs, sequence_metrics, temporal_phase_loss
+from real2sim.policy.phase_sequences import (
+    consecutive_pairs,
+    phase_transition_loss,
+    sequence_metrics,
+    temporal_phase_loss,
+)
 from scripts.train_phase_recovery_mlp import load_phase_collections, train
 from tests.unit.test_phase_recovery_mlp import collection
 
@@ -60,6 +65,19 @@ def test_false_phase_switch_has_finite_training_gradient():
     loss.backward()
     assert torch.isfinite(model.logits.grad).all()
     assert model.logits.grad.abs().sum() > 0
+
+
+def test_boundary_supervision_learns_both_sides_without_a_monotonic_phase_rule():
+    network = FixedPredictions()
+    pairs = torch.tensor([[0, 1]])
+    correct = phase_transition_loss(network, payload([0, 1]), pairs)
+    retry = phase_transition_loss(network, payload([1, 0]), pairs)
+    assert correct < .001 and retry > 10
+    retry.backward()
+    assert torch.isfinite(network.logits.grad).all()
+    assert network.logits.grad.abs().sum() > 0
+    with pytest.raises(ValueError, match="actual phase boundaries"):
+        phase_transition_loss(network, payload([1, 1]), pairs)
 
 
 def test_metrics_distinguish_real_retry_from_unjustified_regression():

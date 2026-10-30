@@ -26,7 +26,7 @@ def executor(accept_distance):
     result.env = SimpleNamespace(ee_pose=lambda: np.eye(4), arm_qpos=lambda: np.zeros(7),
         max_opening=.08, gripper_opening=lambda: .08, step=step,
         limits=np.tile([-1., 1.], (7, 1)))
-    result.guard = SimpleNamespace(solve=solve)
+    result.guard = SimpleNamespace(solve=solve, forward=lambda *_args, **_kwargs: np.eye(4))
     return result, commands, targets
 
 
@@ -47,6 +47,48 @@ def test_failed_candidates_hold_the_arm_and_remain_rejections():
     assert len(targets) == 5 and result.ik_rejected
     assert result.detail["feasibility_fraction"] == 0.
     np.testing.assert_array_equal(commands[0], np.zeros(8))
+
+
+@pytest.mark.parametrize("accepted", [True, False])
+def test_feedback_distinguishes_requested_issued_applied_and_measured_motion(accepted):
+    from real2sim.panda.model import POINTING_DOWN
+
+    controller, _, _ = executor(.04 if accepted else 0.)
+    measured = np.eye(4)
+    measured[:3, :3] = POINTING_DOWN
+    controller.env.ee_pose = lambda: measured.copy()
+
+    def forward(q, **kwargs):
+        pose = np.eye(4)
+        pose[:3, :3] = POINTING_DOWN
+        pose[0, 3] = q[0]
+        return pose
+
+    def solve(target, seed, **kwargs):
+        q = np.zeros(7)
+        q[0] = target[0, 3]
+        return SimpleNamespace(accepted=accepted, reason="accepted" if accepted else "collision", qpos=q)
+
+    def step(command):
+        # Servo rate limiting and measured motion need not equal either the
+        # policy request or the native IK endpoint. Rejecting an arm request
+        # also cannot erase actual motion caused by tracking/contact dynamics.
+        measured[0, 3] = .001
+        applied = command.copy()
+        applied[0] = .004 if accepted else 0.
+        return {}, 0., False, False, {"control": {
+            "limit_clipped": [False] * 8, "applied": applied.tolist()}}
+
+    controller.guard = SimpleNamespace(forward=forward, solve=solve)
+    controller.env.step = step
+    detail = controller.step(np.array([.03, 0., 0., .2, 0., 0., .4])).detail
+    assert detail["requested_common_action"][3] == .2
+    assert detail["issued_common_action"][0] == (.03 if accepted else 0.)
+    assert detail["applied_common_action"][0] == (.004 if accepted else 0.)
+    assert detail["achieved_common_action"][0] == .001
+    assert detail["issued_common_action"][3:6] == [0., 0., 0.]
+    assert detail["achieved_common_action"][3:6] == [0., 0., 0.]
+    assert detail["achieved_common_action"][6] == .4
 
 
 def test_soft_stop_projection_only_accepts_small_measured_seed_error():

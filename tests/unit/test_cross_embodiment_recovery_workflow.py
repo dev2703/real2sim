@@ -155,6 +155,9 @@ def test_run_records_every_stage_and_enforces_offline_execution(tmp_path):
         path.write_text(json.dumps({"status": "complete", "runtime_source_changes": [],
                                     "summary": {"n": 1}, "train_episodes": [10000],
                                     "validation_episodes": [11000], "training_robot_ids": [0]}))
+        if stage["name"].startswith("collect_"):
+            for partition in ("train", "val"):
+                (path.parent / f"{partition}.npz").write_bytes(b"collection rows")
 
     report = run_plan(plan, runner=runner)
     assert report["status"] == "complete"
@@ -212,6 +215,9 @@ def test_actual_trainer_rows_are_checked_before_any_rollout(tmp_path, metadata, 
         path = Path(stage["report"])
         path.parent.mkdir(parents=True)
         path.write_text(json.dumps(artifact))
+        if stage["name"].startswith("collect_"):
+            for partition in ("train", "val"):
+                (path.parent / f"{partition}.npz").write_bytes(b"collection rows")
 
     with pytest.raises(RuntimeError, match=message):
         run_plan(plan, runner=runner)
@@ -219,3 +225,120 @@ def test_actual_trainer_rows_are_checked_before_any_rollout(tmp_path, metadata, 
     report = json.loads((Path(plan["output"]) / "workflow.json").read_text())
     assert report["status"] == "failed"
     assert report["stage_results"][-1]["name"] == "train_learned"
+
+
+def test_dagger_rounds_revisit_partitioned_layouts_and_share_aggregate_packs(tmp_path):
+    plan = build_plan(options(tmp_path, "--dagger-iterations", "2", "--dagger-beta", ".5", ".2",
+        "--dagger-learner", "no_act", "--history-mode", "achieved", "--matched-benchmark",
+        "--action-routing", "hard", "--history-noise", ".1", "--history-dropout", ".2",
+        "--transition-weight", ".3"))
+    assert len(plan["head_history"]) == 3
+    assert plan["dagger"]["expert_execution_probabilities"] == [.5, .2]
+    assert plan["dagger"]["collecting_learner"] == "no_act"
+    assert plan["stages"][-1]["name"] == "matched_development_benchmark"
+    assert sum(stage["name"].endswith("benchmark") for stage in plan["stages"]) == 1
+    for iteration in (1, 2):
+        collections = [stage for stage in plan["stages"]
+                       if stage["name"].startswith(f"collect_dagger_{iteration:04d}_")]
+        assert len(collections) == 2
+        for stage in collections:
+            command, descriptor = stage["command"], stage["dagger_collection"]
+            assert command[command.index("--head") + 1] == plan["head_history"][iteration - 1]["heads"]["no_act"]
+            assert descriptor["beta_teacher_execution"] == [.5, .2][iteration - 1]
+            assert descriptor["history_mode"] == "achieved"
+            assert descriptor["train_seeds"] == [10000, 10001, 10002, 10003]
+            assert descriptor["val_seeds"] == [11000, 11001]
+        fits = [stage for stage in plan["stages"]
+                if stage["name"].startswith(f"train_dagger_{iteration:04d}_")]
+        assert len(fits) == 2
+        for stage in fits:
+            command = stage["command"]
+            assert command[command.index("--data") + 1:command.index("--out")] == plan["head_history"][iteration]["collections"]
+            assert "--require-command-labels" in command
+            assert command[command.index("--action-routing") + 1] == "hard"
+        assert len(plan["head_history"][iteration]["collections"]) == 2 * (iteration + 1)
+    assert plan["heads"] == plan["head_history"][-1]["heads"]
+
+
+@pytest.mark.parametrize("extra, message", [
+    (["--dagger-iterations", "-1"], "nonnegative"),
+    (["--dagger-beta", ".5"], "positive --dagger-iterations"),
+    (["--dagger-iterations", "2", "--dagger-beta", ".5", ".3", ".2"], "one per iteration"),
+    (["--dagger-iterations", "1", "--dagger-beta", "nan"], "beta must be"),
+    (["--dagger-iterations", "1", "--dagger-train-seeds", "11000"], "roles must stay disjoint"),
+    (["--dagger-iterations", "1", "--dagger-val-seeds", "10000"], "roles must stay disjoint"),
+    (["--dagger-iterations", "1", "--dagger-train-seeds", "12000"], "roles must stay disjoint"),
+    (["--dagger-iterations", "1", "--dagger-val-seeds", "13000"], "Reserved"),
+    (["--dagger-iterations", "1", "--no-act", "--dagger-learner", "learned"], "one of the fitted"),
+])
+def test_invalid_dagger_schedule_or_seed_roles_fail_before_collection(tmp_path, extra, message):
+    with pytest.raises(ValueError, match=message):
+        build_plan(options(tmp_path, *extra))
+
+
+def test_reused_dagger_cohort_preserves_reference_and_history_contracts(tmp_path):
+    pack = collection(tmp_path, "so101", train=(15000,), val=(16000,))
+    manifest = pack / "manifest.json"
+    content = json.loads(manifest.read_text())
+    content.update(reference_mode="initial", history_mode="achieved",
+                   observation_names=["history_0_previous_achieved_tcp_dx_m"])
+    manifest.write_text(json.dumps(content))
+    with pytest.raises(ValueError, match="history contract"):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--dagger-iterations", "1"))
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                              "--dagger-iterations", "1", "--history-mode", "achieved"))
+    descriptor = next(stage["dagger_collection"] for stage in plan["stages"] if "dagger_collection" in stage)
+    assert descriptor["reference_mode"] == "initial"
+    assert descriptor["history_mode"] == "achieved"
+    with pytest.raises(ValueError, match="roles must stay disjoint"):
+        build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+                           "--dagger-iterations", "1", "--history-mode", "achieved",
+                           "--dagger-train-seeds", "16000"))
+
+
+def test_collection_array_change_after_planning_is_rejected_before_any_stage(tmp_path):
+    pack = collection(tmp_path, "so101")
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen")
+    (snapshot / "config.json").write_text("{}")
+    scene = tmp_path / "scene.yaml"
+    scene.write_text("scene")
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--collections", str(pack),
+        "--snapshot", str(snapshot), "--source-scene", str(scene)))
+    (pack / "train.npz").write_bytes(b"different rows under same manifest")
+    with pytest.raises(RuntimeError, match="Immutable collection changed"):
+        run_plan(plan, runner=lambda *_args, **_kwargs: pytest.fail("Started a stale training stage"))
+    assert not Path(plan["output"]).exists()
+
+
+def test_dagger_run_checks_declared_mix_and_pins_each_collection(tmp_path):
+    plan = executable_plan(tmp_path)
+    plan = build_plan(options(tmp_path, "--robots", "so101", "--skip-no-act-ablation",
+        "--snapshot", plan["snapshot"], "--source-scene", plan["source_scene"],
+        "--dagger-iterations", "1", "--dagger-beta", ".25"))
+    calls = []
+
+    def runner(command, **_kwargs):
+        stage = plan["stages"][len(calls)]
+        calls.append(command)
+        artifact = {"status": "complete", "runtime_source_changes": [],
+            "base_weights_frozen": True, "checkpoint_unchanged": True,
+            "train_episodes": [10000], "validation_episodes": [11000], "training_robot_ids": [0]}
+        if "dagger_collection" in stage:
+            expected = stage["dagger_collection"]
+            artifact.update({key: value for key, value in expected.items() if not key.endswith("_seeds")})
+            artifact["split"] = {"train": expected["train_seeds"], "val": expected["val_seeds"]}
+        path = Path(stage["report"])
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps(artifact))
+        if stage["name"].startswith("collect_"):
+            for partition in ("train", "val"):
+                (path.parent / f"{partition}.npz").write_bytes(b"collection rows")
+
+    report = run_plan(plan, runner=runner)
+    assert report["status"] == "complete"
+    collection_results = [stage for stage in report["stage_results"] if stage["name"].startswith("collect_")]
+    assert all(len(stage["collection_artifact_sha256"]) == 3 for stage in collection_results)
+    assert collection_results[1]["collection_execution"] == "expert_learner_mixture"

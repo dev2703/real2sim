@@ -57,3 +57,34 @@ def test_source_rotation_is_retained_as_native_grasp_point_motion():
         assert adapter.diagnostics()["source_orientation_is_measured"] is False
     finally:
         source.close()
+
+
+def test_post_step_feedback_projects_measured_pose_without_changing_source_memory():
+    from copy import deepcopy
+
+    from real2sim.geometry.so3 import delta_action
+
+    source = VirtualSource("configs/v2/sim_so101.waypoint_20261026.yaml")
+    try:
+        native = ObservedPanda(target_from_source(source, source.q))
+        adapter = SourceRecoveryFrame(native, source, source_offset=SOURCE_OFFSET)
+        adapter.update()
+        adapter.map_action(np.r_[.002, np.zeros(5), .4])
+        snapshot, mapping = adapter.source_pose.copy(), deepcopy(adapter.last_mapping)
+        q, command = source.q.copy(), source.last_target.copy()
+        next_q = q.copy()
+        next_q[0] += .01
+        native.pose = target_from_source(source, next_q)
+        projection = source.project_pose(native.pose)
+        expected = delta_action(snapshot, source.fk.fk_sim(projection.arm_qpos))
+        feedback = adapter.feedback_action(.4)
+        np.testing.assert_allclose(feedback[:6], expected, atol=1e-10)
+        assert feedback[6] == .4
+        np.testing.assert_array_equal(source.q, q)
+        np.testing.assert_array_equal(source.last_target, command)
+        assert adapter.last_mapping == mapping
+        assert adapter.diagnostics()["feedback_projection"]["accepted"]
+        with pytest.raises(ValueError, match="jaw"):
+            adapter.feedback_action(2.)
+    finally:
+        source.close()

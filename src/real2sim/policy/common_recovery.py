@@ -31,6 +31,18 @@ OBSERVATION_NAMES = [f"history_{j}_{name}" for j in range(3) for name in FRAME_N
 TRACKED_OBSERVATION_NAMES = [name.replace("initial_rgb_", "fresh_rgb_") for name in OBSERVATION_NAMES]
 
 
+def _achieved_history_name(name):
+    if "previous_gripper_open_fraction" in name:
+        return name.replace("previous_gripper_open_fraction", "previous_issued_gripper_open_fraction")
+    if "previous_" in name:
+        return name.replace("previous_", "previous_achieved_")
+    return name.replace("seconds_since_selected_gripper_switch", "seconds_since_issued_gripper_switch")
+
+
+ACHIEVED_OBSERVATION_NAMES = [_achieved_history_name(name) for name in OBSERVATION_NAMES]
+TRACKED_ACHIEVED_OBSERVATION_NAMES = [_achieved_history_name(name) for name in TRACKED_OBSERVATION_NAMES]
+
+
 def clip_common(action):
     action = np.asarray(action, dtype=np.float64)
     if action.shape != (7,) or not np.isfinite(action).all():
@@ -60,8 +72,11 @@ def soft_stop_seed(measured, limits, tolerance=.001):
 
 
 class RecoveryObservation:
-    def __init__(self, robot, hz):
+    def __init__(self, robot, hz, *, action_history="selected"):
+        if action_history not in ("selected", "achieved"):
+            raise ValueError("Recovery action history must be selected or achieved")
         self.robot, self.hz = robot, float(hz)
+        self.action_history = action_history
         self.reset()
 
     def reset(self):
@@ -72,11 +87,31 @@ class RecoveryObservation:
         self.gripper_switch_tick = 0
 
     def selected_action(self, action, tick):
+        if self.action_history != "selected":
+            raise ValueError("Achieved-history observations require executed_action feedback")
+        self._remember_action(action, tick)
+
+    def executed_action(self, action, tick):
+        """Remember measured TCP motion and issued jaw intent, without clipping.
+
+        A contact impulse or tracking response can exceed the requested action
+        cap. That remains observable feedback and must not be replaced by the
+        rejected/ignored proposal or silently clipped to its intended motion.
+        """
+        if self.action_history != "achieved":
+            raise ValueError("Selected-history observations require selected_action feedback")
+        self._remember_action(action, tick)
+
+    def _remember_action(self, action, tick):
+        action = np.asarray(action, float)
+        if (action.shape != (7,) or not np.isfinite(action).all()
+                or not 0. <= action[6] <= 1.):
+            raise ValueError("Recovery history requires six finite motions and a jaw fraction in 0..1")
         opened = bool(action[6] >= .5)
         if self.previous_open is None or opened != self.previous_open:
             self.gripper_switch_tick = tick
         self.previous_open = opened
-        self.previous_action = np.asarray(action, float).copy()
+        self.previous_action = action.copy()
 
     def encode(self, env, ball, bowl, tick, *, visibility=(True, True), last_seen_ticks=None):
         pose = env.ee_pose()
@@ -169,6 +204,15 @@ class CommonCartesianExecutor:
                       "command_margin_m": .001, "path_samples": checked}
 
     def native_to_common(self, native):
+        return clip_common(self.native_feedback_action(native))
+
+    def native_feedback_action(self, native, *, before_pose=None):
+        """FK of an issued/applied native command, separate from actual motion.
+
+        Unlike a learned action request, diagnostic command feedback is not
+        capped: clipping would hide a solver residual, branch change or servo
+        rate limit. Native acceptance checks remain unchanged upstream.
+        """
         native = np.asarray(native, float)
         if self.robot == "so101":
             target = self.guard.forward(native)
@@ -176,7 +220,8 @@ class CommonCartesianExecutor:
         else:
             target = self.guard.forward(native[:7], finger_opening=float(native[7]))
             grip = float(np.clip(native[7] / self.env.max_opening, 0., 1.))
-        return clip_common(np.r_[delta_action(self.env.ee_pose(), target), grip])
+        pose = self.env.ee_pose() if before_pose is None else before_pose
+        return np.r_[delta_action(pose, target), grip]
 
     def hf_to_common(self, raw):
         _, bounded = self.source.source_action(raw)
@@ -262,12 +307,20 @@ class CommonCartesianExecutor:
             command = np.r_[solved.qpos[:5], grip] if accepted else np.clip(current, *env.limits.T)
         else:
             command = np.r_[solved.qpos if accepted else current, grip]
+        issued_action = self.native_feedback_action(command, before_pose=current_pose)
         obs, _, _, truncated, info = env.step(command)
+        applied = info["control"].get("applied_radians" if self.robot == "so101" else "applied", command)
+        applied_action = self.native_feedback_action(applied, before_pose=current_pose)
+        achieved_action = np.r_[delta_action(current_pose, env.ee_pose()), issued_action[6]]
         executed = action.copy()
         executed[:6] = delta_action(current_pose, target) if accepted else 0.
         return ApplyResult(obs, info, truncated,
             float(np.mean(info["control"]["limit_clipped"])), ik_rejected=not accepted,
             detail={"common_action": executed.tolist(), "requested_common_action": action.tolist(),
+                    "issued_common_action": issued_action.tolist(),
+                    "applied_common_action": applied_action.tolist(),
+                    "achieved_common_action": achieved_action.tolist(),
+                    "achieved_action_semantics": "Measured pre/post TCP delta and issued native jaw intent; not clipped",
                     "feasibility_fraction": fraction, "feasibility_attempts": attempts,
                     "arm_joint_stop_command_margin_rad": .003,
                     "requires_virtual_source_mapping": getattr(self, "require_source_mapping", False),

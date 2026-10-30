@@ -32,7 +32,7 @@ def consecutive_pairs(collection_ids, robots, episodes, ticks):
     return np.asarray(pairs, dtype=np.int64).reshape(-1, 2)
 
 
-def temporal_phase_loss(model, tensors, pairs):
+def temporal_phase_loss(model, tensors, pairs, *, balance_transitions=False):
     """Encourage phase stability and supervised changes in common actions.
 
     This loss never forces a monotonic task sequence: retries, release changes,
@@ -55,9 +55,32 @@ def temporal_phase_loss(model, tensors, pairs):
     stability = divergence[same].mean() if same.any() else divergence.sum() * 0.
     predicted_change = (actions[:, 1] - actions[:, 0]) / model.action_scales
     labelled_change = (tensors["target_actions"][right] - tensors["target_actions"][left]) / model.action_scales
-    change_loss = F.smooth_l1_loss(predicted_change, labelled_change, beta=.1)
+    pair_error = F.smooth_l1_loss(predicted_change, labelled_change, beta=.1,
+                                reduction="none").mean(-1)
+    # When enabled, long dwell segments cannot dilute the comparatively rare
+    # action changes at a labelled transition. Real retry boundaries remain
+    # fully supervised, without a monotonic phase assumption.
+    change_loss = (.5 * (pair_error[same].mean() + pair_error[~same].mean())
+                   if balance_transitions and same.any() and (~same).any()
+                   else pair_error.mean())
     return stability + change_loss, {"phase_stability_loss": stability,
                                      "action_change_loss": change_loss}
+
+
+def phase_transition_loss(model, tensors, pairs):
+    """Supervise both sides of actual command-phase boundaries explicitly.
+
+    Labels enter only this training loss. Evaluation predicts from the same
+    observable input API; no phase graph or teacher state controls inference.
+    """
+    if pairs.ndim != 2 or pairs.shape[1] != 2 or not len(pairs):
+        raise ValueError("Transition supervision requires nonempty [pairs,2] indices")
+    phases = tensors["expert_phase_id"][pairs]
+    if torch.any(phases[:, 0] == phases[:, 1]):
+        raise ValueError("Transition supervision requires actual phase boundaries")
+    _, logits, _ = model(*(tensors[name][pairs.reshape(-1)] for name in
+                          ("observations", "base_actions", "features")))
+    return F.cross_entropy(logits / model.temperature, phases.reshape(-1))
 
 
 def sequence_metrics(predicted_phases, labelled_phases, pairs):

@@ -58,6 +58,7 @@ class SourceRecoveryFrame:
         self.observation_env = None
         self.source_pose = self.native_pose = None
         self.last_projection = self.last_mapping = None
+        self.last_feedback_projection = None
         self._projection_residual = None
 
     def update(self):
@@ -126,12 +127,33 @@ class SourceRecoveryFrame:
             "native_action_clipped": not np.allclose(requested, mapped, rtol=0., atol=1e-12)}
         return mapped
 
+    def feedback_action(self, issued_opening):
+        """Post-step robot feedback in the cached source observation schema.
+
+        Position comes from measured Panda feedback. Source orientation remains
+        the same explicitly unobserved causal-prior reconstruction used by the
+        next source observation. The pure projection does not update source
+        state, command memory or the mapping diagnostics from this tick.
+        """
+        self._require_snapshot()
+        if not np.isfinite(issued_opening) or not 0. <= issued_opening <= 1.:
+            raise ValueError("Issued jaw opening must be a finite fraction in 0..1")
+        projection = self.source.project_pose(self.env.ee_pose())
+        self.last_feedback_projection = deepcopy(projection.diagnostics())
+        if not projection.accepted:
+            error = RuntimeError("Post-step Panda feedback has no accepted virtual source representation")
+            error.projection = projection
+            raise error
+        pose = self.source.fk.fk_sim(projection.arm_qpos)
+        return np.r_[delta_action(self.source_pose, pose), issued_opening]
+
     def diagnostics(self):
         self._require_snapshot()
         return {"schema": self.schema, "encoded_robot_schema": "so101",
             "native_robot": "panda", "source_orientation_is_measured": False,
             "action_mapping": "source_grasp_displacement_anchored_on_measured_panda",
             "projection": deepcopy(self.last_projection),
+            "feedback_projection": deepcopy(self.last_feedback_projection),
             "projection_residual_task_m": self._projection_residual.tolist(),
             "projection_residual_norm_m": float(np.linalg.norm(self._projection_residual)),
             "source_tcp_pose": self.source_pose.tolist(),

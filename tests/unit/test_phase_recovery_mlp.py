@@ -8,13 +8,14 @@ import pytest
 import torch
 
 from real2sim.artifacts import sha256_file
+from real2sim.policy.common_recovery import ACTION_NAMES, OBSERVATION_NAMES
 from real2sim.policy.phase_recovery_mlp import (
     N_CONTROL_PHASES,
     PhaseRecoveryMLP,
     PhaseRecoveryMLPPolicy,
     phase_training_loss,
 )
-from scripts.train_phase_recovery_mlp import load_phase_collections, train
+from scripts.train_phase_recovery_mlp import corrupt_action_history, load_phase_collections, train
 
 
 def model():
@@ -68,6 +69,70 @@ def test_no_act_phase_head_cannot_use_action_or_decoder_inputs():
         torch.testing.assert_close(left, right, rtol=0, atol=0)
 
 
+def test_hard_routing_executes_one_predicted_component_without_losing_phase_gradient():
+    soft, hard = model(), model()
+    for network in (soft, hard):
+        network.use_act = False
+        torch.nn.init.zeros_(network.phase_head.weight)
+        with torch.no_grad():
+            network.phase_head.bias.fill_(-20.)
+            network.phase_head.bias[1:3] = torch.tensor([2., 1.9])
+            network.action_heads.bias.reshape(11, 7)[2, 6] = 1.
+    hard.load_state_dict(soft.state_dict())
+    hard.action_routing = "hard"
+    inputs = torch.randn(3, 6), torch.zeros(3, 7), torch.randn(3, 4)
+    soft_action, _, _ = soft(*inputs)
+    hard_action, logits, components = hard(*inputs)
+    assert torch.all(soft_action[:, 6] > .4)
+    torch.testing.assert_close(hard_action, components[:, 1], atol=1e-7, rtol=0.)
+    assert logits.argmax(-1).tolist() == [1, 1, 1]
+    targets = torch.zeros(3, 7)
+    targets[:, 6] = 1.
+    loss, _ = phase_training_loss(hard, *inputs, targets, torch.ones(3, dtype=torch.long),
+                                 phase_weight=0.)
+    loss.backward()
+    assert hard.phase_head.bias.grad.abs().sum() > 0
+    assert torch.isfinite(hard.phase_head.bias.grad).all()
+
+
+@pytest.mark.parametrize("history", ["selected", "achieved"])
+def test_history_corruption_preserves_pose_rgb_and_declared_action_bounds(history):
+    names = list(OBSERVATION_NAMES)
+    if history == "achieved":
+        names = [name.replace("_previous_", "_previous_achieved_")
+                 if any(name.endswith("_previous_" + action) for action in ACTION_NAMES[:6])
+                 else name.replace("_previous_gripper_open_fraction", "_previous_issued_gripper_open_fraction")
+                 for name in names]
+    observations = torch.zeros(128, len(names))
+    original = observations.clone()
+    generator = torch.Generator().manual_seed(23)
+    corrupted = corrupt_action_history(observations, names, noise=2., dropout=.5,
+                                       generator=generator)
+    torch.testing.assert_close(observations, original, atol=0, rtol=0)
+    history_columns = [index for index, name in enumerate(names) if "_previous_" in name]
+    remaining = [index for index in range(len(names)) if index not in history_columns]
+    torch.testing.assert_close(corrupted[:, remaining], original[:, remaining], atol=0, rtol=0)
+    for start in range(0, 21, 7):
+        values = corrupted[:, history_columns[start:start + 7]]
+        assert torch.all(values[:, :3].norm(dim=-1) <= .03000001)
+        assert torch.all(values[:, 3:6].norm(dim=-1) <= .3000001)
+        assert torch.all((values[:, 6] >= 0) & (values[:, 6] <= 1))
+        assert 0 < torch.all(values == 0, dim=-1).sum() < 128
+    repeated = corrupt_action_history(observations, names, noise=2., dropout=.5,
+        generator=torch.Generator().manual_seed(23))
+    torch.testing.assert_close(corrupted, repeated, atol=0, rtol=0)
+
+
+def test_history_corruption_requires_complete_named_frames():
+    observations = torch.zeros(4, 6)
+    with pytest.raises(ValueError, match="declared observation"):
+        corrupt_action_history(observations, None, noise=.1)
+    with pytest.raises(ValueError, match="complete"):
+        corrupt_action_history(observations, ["history_0_previous_tcp_dx_m"] * 6, noise=.1)
+    with pytest.raises(ValueError, match="dropout"):
+        corrupt_action_history(observations, None, dropout=1.)
+
+
 def collection(tmp_path, *, audit=True, terminal=False):
     checkpoint = tmp_path / "snapshot"
     checkpoint.mkdir()
@@ -118,14 +183,17 @@ def test_audit_phase_cannot_be_copied_into_the_observation_contract(tmp_path):
 
 
 @pytest.mark.parametrize("use_act", [True, False])
-def test_saved_phase_head_uses_training_only_stats_and_frozen_provenance(tmp_path, use_act):
+@pytest.mark.parametrize("action_routing", ["soft", "hard"])
+def test_saved_phase_head_uses_training_only_stats_and_frozen_provenance(tmp_path, use_act, action_routing):
     checkpoint, base_hash, pack = collection(tmp_path)
     before = sha256_file(checkpoint / "model.safetensors")
-    report = train([pack], tmp_path / "head", snapshot=checkpoint, steps=2, use_act=use_act)
+    report = train([pack], tmp_path / "head", snapshot=checkpoint, steps=2, use_act=use_act,
+                   action_routing=action_routing)
     assert report["status"] == "complete" and report["runtime_source_changes"] == []
     assert report["expert_phase_is_runtime_input"] is False
     policy = PhaseRecoveryMLPPolicy(tmp_path / "head", expected_base_sha256=base_hash)
     assert policy.model.use_act is use_act
+    assert policy.model.action_routing == action_routing
     with np.load(pack / "train.npz") as rows:
         np.testing.assert_allclose(policy.model.observation_mean.numpy(), rows["observations"].mean(0))
         output = policy.predict(rows["observations"][0], rows["base_actions"][0], rows["features"][0])

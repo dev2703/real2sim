@@ -9,8 +9,10 @@ from scipy.spatial.transform import Rotation
 from torch import nn
 
 from real2sim.policy.common_recovery import (
+    ACHIEVED_OBSERVATION_NAMES,
     FRAME_NAMES,
     OBSERVATION_NAMES,
+    TRACKED_ACHIEVED_OBSERVATION_NAMES,
     CommonCartesianExecutor,
     FrozenACTFeatures,
     RecoveryObservation,
@@ -98,6 +100,33 @@ def test_gripper_event_timer_uses_selected_action_history_and_reset_discards_it(
     assert current_frame(reset)["seconds_since_selected_gripper_switch"] == 0
     assert current_frame(reset)["previous_gripper_open_fraction"] == 0
     np.testing.assert_array_equal(reset[:33], reset[-33:])
+
+
+def test_achieved_history_uses_actual_motion_and_issued_jaw_with_distinct_contract():
+    encoder = RecoveryObservation("panda", 25., action_history="achieved")
+    env = MeasuredEnvironment("panda")
+    encoder.encode(env, [.05, .33, .02], [.26, .11, .018], 0)
+    # An ignored rotation or rejected translation proposal never reaches this
+    # history. Actual measured drift remains honest even beyond the action cap.
+    actual = np.array([.04, 0., 0., 0., 0., .001, 1.])
+    encoder.executed_action(actual, 0)
+    actual[:] = 99.
+    obs = encoder.encode(env, [.05, .33, .02], [.26, .11, .018], 1)
+    frame = dict(zip(ACHIEVED_OBSERVATION_NAMES[-33:], obs[-33:], strict=True))
+    assert frame["history_2_previous_achieved_tcp_dx_m"] == pytest.approx(.04)
+    assert frame["history_2_previous_achieved_world_drx_rad"] == 0.
+    assert frame["history_2_previous_achieved_world_drz_rad"] == pytest.approx(.001)
+    assert frame["history_2_previous_issued_gripper_open_fraction"] == 1.
+    assert frame["history_2_seconds_since_issued_gripper_switch"] == pytest.approx(.04)
+    encoder.executed_action(np.zeros(7), 1)
+    assert encoder.gripper_switch_tick == 1
+    assert len(ACHIEVED_OBSERVATION_NAMES) == len(TRACKED_ACHIEVED_OBSERVATION_NAMES) == 99
+    assert "fresh_rgb_" in TRACKED_ACHIEVED_OBSERVATION_NAMES[13]
+    assert not set(ACHIEVED_OBSERVATION_NAMES) == set(OBSERVATION_NAMES)
+    with pytest.raises(ValueError, match="executed_action"):
+        encoder.selected_action(np.zeros(7), 1)
+    with pytest.raises(ValueError, match="selected_action"):
+        RecoveryObservation("panda", 25.).executed_action(np.zeros(7), 0)
 
 
 def test_native_cartesian_action_uses_world_rotation_and_task_translation():
