@@ -4,7 +4,7 @@ The task objects (table top, black mat, ball, bowl), their placement and the ``i
 come from ``configs/task.yaml`` so the Panda sees the same task frame as the SO-101 scene
 (plan M5 step 1). ``configs/sim_panda.yaml`` holds simulator-only knobs.
 
-Frames (docs/architecture.md section 4.3):
+Frames (docs/PROJECT_SUMMARY.md):
 
 * ``world``  MuJoCo world, z up. The table top is at ``z = task.table.height``; the Panda base
   body ``link0`` is placed on it at ``(0, 0, table.height)`` with identity orientation, so the
@@ -32,11 +32,16 @@ from pathlib import Path
 
 import mujoco
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from real2sim.config import REPO_ROOT, load_yaml, project_path, sha256_file
+from real2sim.artifacts import sha256_file
+from real2sim.config import REPO_ROOT, load_yaml, project_path
+from real2sim.sim.model import MIN_WALL_BOXES as MIN_WALL_BOXES
+from real2sim.sim.model import _add_bowl as _add_bowl
+from real2sim.sim.model import _numbers as _numbers
+from real2sim.sim.model import bowl_dimensions as bowl_dimensions
 from real2sim.sim.model import camera_xyaxes as so101_camera_xyaxes
-from real2sim.sim.model import task_frame_offset as so101_task_frame_offset
+from real2sim.sim.model import task_frame_offset as task_frame_offset
 
 ROOT = REPO_ROOT
 DEFAULT_CONFIG = ROOT / "configs/sim_panda.yaml"
@@ -50,7 +55,6 @@ POINTING_DOWN = np.array([[0.0, 0.0, 1.0], [0.0, 1.0, 0.0], [-1.0, 0.0, 0.0]])
 BASE_BODY = "link0"
 HAND_BODY = "hand"
 FINGER_BODIES = ("left_finger", "right_finger")
-MIN_WALL_BOXES = 12
 
 
 def sha256_of(path: str | Path) -> str:
@@ -82,6 +86,10 @@ def task_frame_offset(task: dict) -> np.ndarray:
     ``base_z_offset`` above the table top, D-014). Shared so the two embodiments cannot drift."""
     return so101_task_frame_offset(task)
 
+        if asset.stat().st_size != row["bytes"] or sha256_file(asset) != row["sha256"]:
+            raise ValueError(f"asset hash mismatch: {asset}")
+    return next(r for r in rows if r["path"] == relative)
+
 
 def panda_base_world(task: dict) -> np.ndarray:
     """World position of the Panda base body: on the table top under the task origin.
@@ -93,63 +101,6 @@ def panda_base_world(task: dict) -> np.ndarray:
     if np.any(np.asarray(frame["xyz"], float) != 0) or np.any(np.asarray(frame["rpy"], float) != 0):
         raise ValueError("scene assembly assumes the identity T_task_so101base from task.yaml")
     return np.array([0.0, 0.0, float(task["table"]["height"])])
-
-
-def bowl_dimensions(task: dict, inner_depth: float | None = None) -> dict:
-    """Bowl geometry in metres; ``inner_depth`` overrides task.yaml for the depth sweep.
-
-    The floor thickness ``outer_height - inner_depth`` is kept when the depth is swept.
-    """
-    bowl = task["bowl"]
-    floor = float(bowl["outer_height"]) - float(bowl["inner_depth"])
-    depth = float(bowl["inner_depth"] if inner_depth is None else inner_depth)
-    dims = {
-        "rim_radius": float(bowl["inner_rim_radius"]),
-        "base_radius": float(bowl["base_diameter"]) / 2,
-        "wall": float(bowl["wall_thickness"]),
-        "floor": floor,
-        "depth": depth,
-        "height": floor + depth,
-        "wall_boxes": int(bowl["collision"]["wall_boxes"]),
-        "center_xy": [float(v) for v in bowl["center_task_xy"]],
-    }
-    if not (dims["floor"] > 0 and depth > 0 and dims["wall"] > 0
-            and 0 < dims["base_radius"] <= dims["rim_radius"]):
-        raise ValueError("invalid bowl dimensions in task.yaml")
-    if dims["wall_boxes"] < MIN_WALL_BOXES or bowl["collision"].get("base") != "cylinder":
-        raise ValueError("bowl collision must be >= 12 wall boxes over a base cylinder")
-    if bowl.get("static") is not True:
-        raise ValueError("dynamic bowl requires measured mass/inertia and a new decision")
-    return dims
-
-
-def _add_bowl(world: ET.Element, dims: dict, origin, contacts: dict) -> None:
-    """Static bowl: base cylinder plus ``wall_boxes`` tilted boxes forming a truncated cone.
-
-    The inner wall is a straight frustum from ``base_radius`` at the floor to ``rim_radius`` at
-    the rim; wall boxes run down to the table so the floor/wall junction has no gap. Geoms of
-    one static body do not collide with each other, so the overlaps are harmless.
-    """
-    body = ET.SubElement(world, "body", name="bowl", pos=_numbers(origin))
-    rgba = "0.85 0.86 0.9 1"
-    slope = (dims["rim_radius"] - dims["base_radius"]) / dims["depth"]
-    tilt = float(np.arctan(slope))  # wall tilt from vertical
-    r_low = dims["base_radius"] - slope * dims["floor"]
-    wall_len = float(np.hypot(dims["rim_radius"] - r_low, dims["height"]))
-    ET.SubElement(body, "geom", name="bowl_base", type="cylinder",
-                  size=_numbers([max(r_low, 0.0) + dims["wall"], dims["floor"] / 2]),
-                  pos=_numbers([0, 0, dims["floor"] / 2]), rgba=rgba, **contacts)
-    n = dims["wall_boxes"]
-    half_tangent = (dims["rim_radius"] + dims["wall"]) * np.tan(np.pi / n) * 1.02
-    mid_r = (r_low + dims["rim_radius"]) / 2 + dims["wall"] / 2 * np.cos(tilt)
-    mid_z = dims["height"] / 2 - dims["wall"] / 2 * np.sin(tilt)
-    for i in range(n):
-        angle = 2 * np.pi * i / n
-        x, y, z, w = (Rotation.from_euler("z", angle) * Rotation.from_euler("y", tilt)).as_quat()
-        ET.SubElement(body, "geom", name=f"bowl_wall_{i:02d}", type="box",
-                      size=_numbers([dims["wall"] / 2, half_tangent, wall_len / 2]),
-                      pos=_numbers([mid_r * np.cos(angle), mid_r * np.sin(angle), mid_z]),
-                      quat=_numbers([w, x, y, z]), rgba=rgba, **contacts)
 
 
 def scene_xml(config: dict, task: dict, *, bowl_inner_depth: float | None = None,

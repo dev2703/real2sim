@@ -201,13 +201,13 @@ def markdown(report):
         lines.append(f"| {row['episode']} / {row['frame']} | " + " | ".join(values) + " |")
     lines += ["", "Most shared lines agree within a few pixels; episode 26/frame 150 has an approximately 8.08 px median bottom disagreement. This is a boundary disagreement, not a pure segmentation-error measurement: visible contrast, stitching/shadow, occlusions and virtual edge definitions differ. The left measurements marked † retain their range limitation. Earlier shared camera/mat-pose failures therefore cannot be attributed solely to segmentation or solely to physical camera movement.", "",
         "## Physical registration gate", "",
-        "The stationary upper opening, side hole and foot offer nominal CAD heights of 69.6, 45.7 and 15.1 mm, but the [landmark review](v2_fixed_base_landmark_review_20261024.md) records zero verified physical identities. Repeated foot apertures, uncertain printed-part revision and unmeasured intrinsics/distortion still prevent an accepted multi-height camera/base fit. No joint-zero/gripper correction or corrected-label retraining follows from this diagnostic.", "",
+        "The stationary upper opening, side hole and foot offer nominal CAD heights of 69.6, 45.7 and 15.1 mm, but the landmark review (see `docs/PROJECT_SUMMARY.md`) records zero verified physical identities. Repeated foot apertures, uncertain printed-part revision and unmeasured intrinsics/distortion still prevent an accepted multi-height camera/base fit. No joint-zero/gripper correction or corrected-label retraining follows from this diagnostic.", "",
         "The next useful capture remains a short calibration-board sequence with independently measured board-to-base registration, arm-clear views of named base features, and a measured loaded hold/release. A board on the mat alone does not register the robot base.", "",
         "Reproduce the summary without rerunning tracking:", "", "```sh",
         ".venv/bin/python scripts/summarize_v2_fixed_landmark_tracks.py \\",
         "  --run outputs/v2/fixed_landmark_tracks_20261025 \\",
         "  --out results/v2/fixed_landmark_tracking_20261025.json \\",
-        "  --doc docs/v2_fixed_landmark_tracking_20261025.md", "```", ""]
+        "  --doc outputs/v2/fixed_landmark_tracking_NEXT/review.md", "```", ""]
     return "\n".join(lines)
 
 

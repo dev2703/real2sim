@@ -97,7 +97,7 @@ def run(data: Path, out: Path, device: str, *, resume: bool = False,
         raise FileExistsError(out)
     if resume and not out.is_dir():
         raise FileNotFoundError(out)
-    base = load_yaml(Path("outputs/v2/learning_screen_20261022/configs/L1_resnet_iphone.yaml"))
+    base = load_yaml(Path("configs/v2/three_episode_fit.yaml"))
     cfg = copy.deepcopy(base)
     cfg.update(name="three_episode_deterministic_capacity", data=str(data.resolve()))
     cfg["model"].update(use_vae=False, kl_weight=0., dropout=0., optimizer_weight_decay=0., optimizer_lr=3e-4)

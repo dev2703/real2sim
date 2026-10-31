@@ -17,9 +17,9 @@ import mujoco
 import numpy as np
 
 from real2sim.config import load_yaml, validate_camera_keys
-from real2sim.data.transforms import letterbox_rgb, to_chw_float
 from real2sim.geometry.so3 import rot6d_from_matrix
 from real2sim.geometry.so101_fk import JointMapping
+from real2sim.sim.base_env import PickPlaceEnv
 from real2sim.sim.model import (
     DEFAULT_CONFIG,
     bowl_dimensions,
@@ -43,7 +43,7 @@ def sim_from_real(mapping: JointMapping, q_real6: np.ndarray) -> np.ndarray:
     return np.concatenate([mapping.arm_real_to_sim_rad(q), [mapping.gripper_real_to_sim_rad(q[5])]])
 
 
-class So101PickPlaceEnv:
+class So101PickPlaceEnv(PickPlaceEnv):
     """Gym-style reset/step tuples; reward is zero (no benchmark definition at M2)."""
 
     def __init__(self, config_path: str | Path = DEFAULT_CONFIG, *, render_images: bool = True,
@@ -211,10 +211,6 @@ class So101PickPlaceEnv:
         return self.step(sim_from_real(self.mapping, target))
 
     # ------------------------------------------------------------------ state adapters
-    @property
-    def table_top(self) -> float:
-        return float(self.task["table"]["height"])
-
     def sim_state(self) -> np.ndarray:
         return self.data.qpos[self.qadr].astype(np.float64).copy()
 
@@ -246,34 +242,8 @@ class So101PickPlaceEnv:
         return np.concatenate([p, rot6d_from_matrix(T[:3, :3]), vel, [gripper]]).astype(np.float32)
 
     # ------------------------------------------------------------------ observation / info
-    def render(self, camera: str = "iphone") -> np.ndarray:
-        if self.renderer is None:
-            render = self.config["render"]
-            self.renderer = mujoco.Renderer(self.model, height=render["height"], width=render["width"])
-        self.renderer.update_scene(self.data, camera=camera)
-        return self.renderer.render().copy()
-
     def observation(self) -> dict:
-        result = {
-            # Native radians under a distinct key so they can never masquerade as dataset state.
-            self.config["observation"]["joint_key"]: self.sim_state().astype(np.float32),
-            self.config["observation"]["state_key"]: self.real_state(),
-        }
-        if self.render_images:
-            cfg = self.data_config["image"]
-            for key in self.camera_keys:
-                rgb, _ = letterbox_rgb(self.render(self.camera_bindings[key]), cfg["height"], cfg["width"], cfg["pad_value"])
-                result[key] = to_chw_float(rgb)
-        return result
-
-    def _contact_pairs(self) -> list[dict]:
-        pairs = []
-        for contact in self.data.contact[:self.data.ncon]:
-            a, b = int(contact.geom1), int(contact.geom2)
-            pairs.append({"geom1": self.model.geom(a).name or f"geom_{a}",
-                          "geom2": self.model.geom(b).name or f"geom_{b}",
-                          "distance_m": float(contact.dist)})
-        return pairs
+        return self._observation(self.real_state())
 
     def _robot_table_penetration(self) -> dict:
         """Robot (non-ball) geoms against the table: count and deepest penetration in metres."""
@@ -286,67 +256,12 @@ class So101PickPlaceEnv:
         return {"robot_table_contacts": count, "robot_table_penetration_m": deepest,
                 "tool_height_above_table_m": float(self.data.site_xpos[self.site_id][2] - self.table_top)}
 
-    def _ball_contacts(self) -> set[int]:
-        geoms = set()
-        for contact in self.data.contact[:self.data.ncon]:
-            a, b = int(contact.geom1), int(contact.geom2)
-            if a == self.ball_geom:
-                geoms.add(b)
-            elif b == self.ball_geom:
-                geoms.add(a)
-        return geoms
-
     def info(self) -> dict:
-        ball = self.data.xpos[self.ball_body].copy()
-        ball_v = self.data.qvel[self._ball_v:self._ball_v + 3].copy()
-        bowl = self.data.xpos[self.model.body("bowl").id].copy()
-        tool = self.data.site_xpos[self.site_id].copy()
-        radius = float(self.task["ball"]["radius"])
-        rest_z = getattr(self, "_ball_rest_center_z", self.table_top + radius)
-        rim_z = bowl[2] + self.bowl["height"]
-        floor_z = bowl[2] + self.bowl["floor"]
-        touching = self._ball_contacts()
-        from real2sim.sim.ball_support import support_contact_metrics
-
-        fixed, moving = (touching & self.gripper_geoms[n] for n in GRIPPER_BODIES)
-        above = ball[2] > rest_z + 0.01
-        ball_held = bool((fixed and moving) or ((fixed or moving) and above))
         metrics = {
-            "frame": "world (z up; table top at task.table.height); *_task = world - offset",
-            "qpos": self.data.qpos.tolist(), "qvel": self.data.qvel.tolist(),
-            "ctrl": self.data.ctrl.tolist(),
-            "ball_xyz": ball.tolist(), "bowl_xyz": bowl.tolist(), "tool_xyz": tool.tolist(),
-            "ball_xyz_task": (ball - self.offset).tolist(),
-            "bowl_xyz_task": (bowl - self.offset).tolist(),
-            "tool_xyz_task": (tool - self.offset).tolist(),
-            "ball_speed_mps": float(np.linalg.norm(ball_v)),
-            "ball_over_bowl": bool(np.linalg.norm(ball[:2] - bowl[:2]) < self.bowl["rim_radius"] and ball[2] >= floor_z),
-            "ball_in_bowl": bool(np.linalg.norm(ball[:2] - bowl[:2]) < self.bowl["rim_radius"]
-                                 and floor_z <= ball[2] <= rim_z + radius),
-            "ball_resting": bool(np.linalg.norm(ball_v) < 0.01),
-            "ball_held": ball_held,
-            "ball_touching_table": self.table_geom in touching,
-            "ee_ball_distance_m": float(np.linalg.norm(tool - ball)),
-            "ee_bowl_distance_m": float(np.linalg.norm(tool - bowl)),
-            "lifted": bool(ball[2] > rest_z + 0.03),
-            "contacts": self._contact_pairs(),
-            # Start-pose validity (D-014): penetration at reset and now; see reset().
+            **self._task_metrics(tuple(self.gripper_geoms[n] for n in GRIPPER_BODIES)),
             "start_pose": dict(self.start_pose),
             **self._robot_table_penetration(),
-            **support_contact_metrics(self.model, self.data, self.base_body),
         }
         return {"controller_source": "NATIVE_SIM_DIAGNOSTIC", "calibrated": False,
                 "time_s": float(self.data.time), "step": self.steps,
                 "privileged_metrics": metrics}
-
-    def close(self) -> None:
-        if self.renderer is not None:
-            self.renderer.close()
-            self.renderer = None
-        self._ready = False
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_):
-        self.close()

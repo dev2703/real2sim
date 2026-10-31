@@ -1,0 +1,2083 @@
+{
+  "schema": "recovery_learning_progress_v1",
+  "date": "2026-10-30",
+  "scope": "Fixed development simulation evidence; not a reserved benchmark or physical robot result",
+  "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+  "reserved_seeds_used": false,
+  "main_comparison": {
+    "name": "final_single_protocol",
+    "role": "Main comparison; all conditions share one protocol and fixed resets",
+    "report": {
+      "path": "outputs/v2/recovery_final_panda_matched_dev10_20261030/report.json",
+      "sha256": "ff4a5cbd4c84f14f5a1851ecd5972fce23063f329b0c9208a613cf942ac62344"
+    },
+    "protocol": {
+      "path": "outputs/v2/recovery_final_panda_matched_dev10_20261030/protocol.json",
+      "sha256": "5060a711cc64373163ba2d359a7ddf4b7f1362e6988edd557dd92483333cca27"
+    },
+    "protocol_id": "f71862dba10402a1f92ac8377f5f8e7a5060cde2811163b8801a9b7a9b8e386a",
+    "development_seeds": [
+      12021,
+      12022,
+      12025,
+      12026,
+      12027,
+      12028,
+      12029,
+      12030,
+      12031,
+      12032
+    ],
+    "conditions": {
+      "panda/raw": {
+        "n": 10,
+        "aborted": 0,
+        "pick_place_successes": 0,
+        "lifted": 0,
+        "delivered": 0,
+        "released": 0,
+        "pick_place_phase_failed_counts": {
+          "approach": 10,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 0,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_act_fraction": 1.0,
+        "mean_assistance_fraction": 0.0,
+        "mean_simulated_time_s": 30.0
+      },
+      "panda/rgb": {
+        "n": 10,
+        "aborted": 0,
+        "pick_place_successes": 10,
+        "lifted": 10,
+        "delivered": 10,
+        "released": 10,
+        "pick_place_phase_failed_counts": {
+          "approach": 0,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 10,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_act_fraction": 0.0,
+        "mean_assistance_fraction": 1.0,
+        "mean_simulated_time_s": 10.863999999999999
+      },
+      "panda/hf_rgb": {
+        "n": 10,
+        "aborted": 0,
+        "pick_place_successes": 10,
+        "lifted": 10,
+        "delivered": 10,
+        "released": 10,
+        "pick_place_phase_failed_counts": {
+          "approach": 0,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 10,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_act_fraction": 0.14773579880828872,
+        "mean_assistance_fraction": 0.8522642011917114,
+        "mean_simulated_time_s": 13.584
+      },
+      "panda/learned": {
+        "n": 10,
+        "aborted": 0,
+        "pick_place_successes": 2,
+        "lifted": 9,
+        "delivered": 2,
+        "released": 9,
+        "pick_place_phase_failed_counts": {
+          "approach": 1,
+          "grasp": 0,
+          "transport": 7,
+          "release": 0,
+          "none": 2,
+          "aborted": 0
+        },
+        "ik_rejections_total": 2852,
+        "mean_act_fraction": 1.0,
+        "mean_assistance_fraction": 1.0,
+        "mean_simulated_time_s": 26.208
+      },
+      "panda/no_act": {
+        "n": 10,
+        "aborted": 0,
+        "pick_place_successes": 10,
+        "lifted": 10,
+        "delivered": 10,
+        "released": 10,
+        "pick_place_phase_failed_counts": {
+          "approach": 0,
+          "grasp": 0,
+          "transport": 0,
+          "release": 0,
+          "none": 10,
+          "aborted": 0
+        },
+        "ik_rejections_total": 0,
+        "mean_act_fraction": 0.0,
+        "mean_assistance_fraction": 1.0,
+        "mean_simulated_time_s": 7.536
+      },
+      "panda/hf_learned": {
+        "n": 10,
+        "aborted": 0,
+        "pick_place_successes": 5,
+        "lifted": 9,
+        "delivered": 5,
+        "released": 9,
+        "pick_place_phase_failed_counts": {
+          "approach": 0,
+          "grasp": 1,
+          "transport": 4,
+          "release": 0,
+          "none": 5,
+          "aborted": 0
+        },
+        "ik_rejections_total": 423,
+        "mean_act_fraction": 0.13023866268245604,
+        "mean_assistance_fraction": 0.8697613373175439,
+        "mean_simulated_time_s": 20.164
+      }
+    },
+    "all_trial_and_trace_hashes_verified": true,
+    "matching_resets_verified": true,
+    "runtime_inputs_and_weights_unchanged": true
+  },
+  "main_heads": {
+    "learned": {
+      "metadata": {
+        "path": "outputs/v2/recovery_grasp_dagger2_20261030/iterations/iteration_0001/heads/learned/head.json",
+        "sha256": "f2b88703738da491ed10a3e9a765686d6c740822ce567a2afb7750b49b80d3ad"
+      },
+      "head_sha256": "86ff95364f8de983c9eca0ee113ff8079ca9224a1d632b9348cb5a8d844c2f73",
+      "use_act_features_and_proposal": true,
+      "training_robot_ids": [
+        0,
+        1
+      ],
+      "action_routing": "hard",
+      "output_residual_prior": false,
+      "best_step": 900,
+      "validation_balanced_action_mae": 0.051136177654735236
+    },
+    "no_act": {
+      "metadata": {
+        "path": "outputs/v2/recovery_achieved_dagger1_20261030/iterations/iteration_0001/heads/no_act/head.json",
+        "sha256": "d765dcc3e6494e2c10b1ff12b7ae1db6d69f7c6d4162edfa26ef879c5a549ed0"
+      },
+      "head_sha256": "eecc0bd97608209bd5ee26edbe83603086330ff8c4d243bbe18cdb64786b64f2",
+      "use_act_features_and_proposal": false,
+      "training_robot_ids": [
+        0,
+        1
+      ],
+      "action_routing": "hard",
+      "output_residual_prior": true,
+      "best_step": 3200,
+      "validation_balanced_action_mae": 0.0370372118062362
+    },
+    "hf_learned": {
+      "metadata": {
+        "path": "outputs/v2/recovery_prefix_adapt_noact_20261030/head.json",
+        "sha256": "d7929c695e758c01be57dfa85e1cb8ef741dcd23faf016fdde8c6a5af9adcd0f"
+      },
+      "head_sha256": "484e4e7d42e59d9d73c96ba6e10971f003139824e3a78a6876ca4a7d4c797697",
+      "use_act_features_and_proposal": false,
+      "training_robot_ids": [
+        0,
+        1
+      ],
+      "action_routing": "hard",
+      "output_residual_prior": true,
+      "best_step": 3800,
+      "validation_balanced_action_mae": 0.03108242790131497
+    }
+  },
+  "prefix_accounting": {
+    "trials": 10,
+    "raw_act_ticks_per_trial": 50,
+    "handoff_tick_per_trial": 50,
+    "interventions_per_trial": 1,
+    "recovery_inputs": "Measured robot/RGB history; ACT decoder features and proposal masked in selected fallback head",
+    "runtime_geometric_action_teacher": false,
+    "observed_reference_memory_inherited_with_actual_ages": true,
+    "stale_recovery_action_history_discarded": true
+  },
+  "prefix_training_validation": {
+    "manifest": {
+      "path": "outputs/v2/recovery_prefix_teacher_panda_20261030/manifest.json",
+      "sha256": "befb3fa59b95360647cbe2e5be422cfcdc3ccc1d6742dd7a4400511d0e341c06"
+    },
+    "teacher_trials": 6,
+    "complete_teacher_tasks": 6,
+    "supervised_rows": {
+      "train": 797,
+      "val": 390
+    },
+    "prefix_steps_per_trial": 50,
+    "prefix_actions_are_corrective_labels": false,
+    "maximum_first_corrective_tcp_error_against_last_prefix_state_m": 1.2993949138895289e-08,
+    "corrective_sequence_ticks_start_at_zero": true
+  },
+  "validation": {
+    "unit_and_selected_integration_tests_passed": 1213,
+    "skipped": 3,
+    "ruff": "passed",
+    "git_diff_check": "passed",
+    "standalone_prefix_evaluation": {
+      "path": "outputs/v2/recovery_prefix_adapt_standalone_smoke_20261030/report.json",
+      "sha256": "651de4b65494ad3d78dda04adadda1c94c0d4d33750cc1f5190a2ddfcd9b18cf"
+    }
+  },
+  "engineering_evidence": [
+    {
+      "path": "results/v2/phase_learning_refinement_20261030.json",
+      "sha256": "f62130f9a8d339653d6392104fbb61b5d8e33c7400d394be48fbd1509bac6f1b"
+    },
+    {
+      "path": "results/v2/recovery_history_drift_20261030.json",
+      "sha256": "f01923fdb51280966b915e407d35ff7688b7007c1b3d043411d68f39eac8dfd9"
+    },
+    {
+      "path": "results/v2/recovery_achieved_phase_audit_20261030.json",
+      "sha256": "20abd88b468961bffb6e06a4e8eb19ff7353e7f25d6f0a4ecae073b498bec679"
+    },
+    {
+      "path": "results/v2/phase_sequence_probe_20261030.json",
+      "sha256": "490e4421fd3b05802d596fb9fba2ff2d11bbdea490115247eb77b0598d1a6639"
+    },
+    {
+      "path": "results/v2/recovery_so101_grasp_endpoint_audit_20261030.json",
+      "sha256": "6a1c62bf4591d68f2bbf4bb937d4bfc798f180344015b9bba9a0b13a3ca4e721"
+    }
+  ],
+  "development_experiments": [
+    {
+      "name": "hard_phase_routing",
+      "role": "Development routing control",
+      "report": {
+        "path": "outputs/v2/recovery_phase_refine_hard_dev1_20261030/report.json",
+        "sha256": "4bc8bcb8ab2307f3cfff57e132db7227ecdb56d5c95dbfd2ec5190274cb95e7b"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_phase_refine_hard_dev1_20261030/protocol.json",
+        "sha256": "b75ad814e4263042d2539b9b9f4cf80e9bb00b2f5880ffbc50dbb30f441fa221"
+      },
+      "protocol_id": "ac1514cbf2bf25639296c2a1d513acfdf55ab0ce84c21f7b06d0283c85fa3338",
+      "development_seeds": [
+        12020
+      ],
+      "conditions": {
+        "so101/learned": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 506,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/no_act": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 632,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/learned": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 53,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/no_act": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 1,
+          "delivered": 0,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 1,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 388,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "boundary_loss",
+      "role": "Development boundary objective control",
+      "report": {
+        "path": "outputs/v2/recovery_phase_refine_boundary_dev1_20261030/report.json",
+        "sha256": "450fc4cf7f56e0819e028e3fd4759b1b5a26da292bd99c0c9b96029f3b8e5b00"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_phase_refine_boundary_dev1_20261030/protocol.json",
+        "sha256": "d235c7f81b1b928abf81217e77cd1534273a9c4ee58f4b813b8e03171997ec69"
+      },
+      "protocol_id": "fe2e3c8725947734a89d929943ef71f9a1f7775f8c39e61133557725c8bf387e",
+      "development_seeds": [
+        12020
+      ],
+      "conditions": {
+        "so101/no_act": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 364,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/no_act": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 581,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "achieved_history",
+      "role": "Same expert observations with measured-motion history",
+      "report": {
+        "path": "outputs/v2/recovery_achieved_soft_dev1_20261030/benchmark/report.json",
+        "sha256": "2b2dd06b182e964d9b4deecde8b602ef9e89827f08649780f031ac59999bdde7"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_achieved_soft_dev1_20261030/benchmark/protocol.json",
+        "sha256": "2968004e83cebc8c3853ee60011af72c24bebd5679e9bdd86d0a910fed1dd588"
+      },
+      "protocol_id": "31a6189804c6e95b99d9a65db96581bd2376ac85b4a4e6e67aa9c9678656f611",
+      "development_seeds": [
+        12020
+      ],
+      "conditions": {
+        "so101/raw": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/rgb": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.48
+        },
+        "so101/hf_rgb": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.20491803278688525,
+          "mean_assistance_fraction": 0.7950819672131147,
+          "mean_simulated_time_s": 9.76
+        },
+        "so101/learned": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/no_act": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 625,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/raw": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/rgb": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.44
+        },
+        "panda/hf_rgb": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.14619883040935672,
+          "mean_assistance_fraction": 0.8538011695906432,
+          "mean_simulated_time_s": 13.68
+        },
+        "panda/learned": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/no_act": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 14,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "first_dagger_cohort",
+      "role": "Actual learner-state correction data",
+      "report": {
+        "path": "outputs/v2/recovery_achieved_dagger1_20261030/benchmark/report.json",
+        "sha256": "65cb783fb7a4b55db4bd8dfab5b1d31efdf7ef8e30a99c4eca2a630ff9e9b92e"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_achieved_dagger1_20261030/benchmark/protocol.json",
+        "sha256": "2d9102dd1f00a4ac0c8734ab638f535b966654a136985759770934a70d004faf"
+      },
+      "protocol_id": "4f30f55a15ca2a0e3583ca565716c1d22e8779a02c1e5526820451b7c31ae2b3",
+      "development_seeds": [
+        12021,
+        12022
+      ],
+      "conditions": {
+        "so101/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.760000000000002
+        },
+        "so101/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.19723942609940556,
+          "mean_assistance_fraction": 0.8027605739005945,
+          "mean_simulated_time_s": 10.14
+        },
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 198,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 1299,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.5
+        },
+        "panda/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.14562572495364529,
+          "mean_assistance_fraction": 0.8543742750463548,
+          "mean_simulated_time_s": 13.76
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 2,
+          "delivered": 0,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 2,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 375,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 7.32
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "direct_act_output",
+      "role": "ACT inputs retained; forced output prior removed",
+      "report": {
+        "path": "outputs/v2/recovery_act_direct_dev2_20261030/report.json",
+        "sha256": "cea724a145e9235f39f021da0c1ce0929fa75dabd4df97389c83b832ecdd128a"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_act_direct_dev2_20261030/protocol.json",
+        "sha256": "9432308da7bc322391ec7b89124e39f337507934554571c099b93da77d19830d"
+      },
+      "protocol_id": "9a9ca086a914c0c69f8ee06e5ddc2a03f64e88ba5680670801cc8f50b1c2e3f8",
+      "development_seeds": [
+        12021,
+        12022
+      ],
+      "conditions": {
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 1,
+          "delivered": 0,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 1,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 797,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 2,
+          "delivered": 1,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 1,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 471,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 18.72
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "direct_act_approach_timer",
+      "role": "Training-only approach timer dropout",
+      "report": {
+        "path": "outputs/v2/recovery_act_direct_timer_dev2_20261030/report.json",
+        "sha256": "4b8d0834c71283c43a8576e9dbf2800965506537a5768624f202daf348f18417"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_act_direct_timer_dev2_20261030/protocol.json",
+        "sha256": "9e0f9428a5e072c5ada53865ecc102eddae85394c595a8c912dedecff8eac26b"
+      },
+      "protocol_id": "e0508360972f3ffa1d6bf749b8732be5fd57d6347d4bdcf5c1f204de316517a6",
+      "development_seeds": [
+        12021,
+        12022
+      ],
+      "conditions": {
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 651,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 20.34
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 1,
+          "delivered": 0,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 1,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 895,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "grasp_relative_inputs",
+      "role": "Explicit RGB-to-grasp progress; head action remains native-guarded common action",
+      "report": {
+        "path": "outputs/v2/recovery_grasp_initial_dev2_20261030/report.json",
+        "sha256": "a2dacd75e9a6e907dc805b9c202b1932b6d4ecf572c758b18c55c368beac6e89"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_grasp_initial_dev2_20261030/protocol.json",
+        "sha256": "c62eb0520b048222ae5dba6a456339b8350d6ade750c90502d093e36ebe45c03"
+      },
+      "protocol_id": "9a7b3e2037b45a78b372db7fcccde6728bd562cbfd6ad3a153c3e4947ab284cf",
+      "development_seeds": [
+        12021,
+        12022
+      ],
+      "conditions": {
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 955,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 504,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 19.740000000000002
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 2,
+          "delivered": 0,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 2,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 550,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 2,
+          "delivered": 1,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 1,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 5,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 18.72
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "additional_noact_correction_cohort",
+      "role": "No-ACT collecting learner; shared refit data",
+      "report": {
+        "path": "outputs/v2/recovery_grasp_dagger2_20261030/benchmark/report.json",
+        "sha256": "aa75264f752efa495d8fae0e8839d58e6167b0c697f17e708f811e89e72cd695"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_grasp_dagger2_20261030/benchmark/protocol.json",
+        "sha256": "4a7eec3c7bb6e88dc256d07fcbb59ae4e39fb23fdc8e82cbdcd4e6ba70127468"
+      },
+      "protocol_id": "3c38d1616fc00650835cf79e0bb9266fa23b656607622d8ba5138400275b25b0",
+      "development_seeds": [
+        12023,
+        12024
+      ],
+      "conditions": {
+        "so101/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.58
+        },
+        "so101/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.19923164846329694,
+          "mean_assistance_fraction": 0.800768351536703,
+          "mean_simulated_time_s": 10.04
+        },
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 1060,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 1,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 791,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 11.14
+        },
+        "panda/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.14352195041594595,
+          "mean_assistance_fraction": 0.856478049584054,
+          "mean_simulated_time_s": 13.94
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.8
+        },
+        "panda/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 7.140000000000001
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "source_only_training",
+      "role": "SO-101 training only; Panda evaluated in source schema",
+      "report": {
+        "path": "outputs/v2/recovery_grasp_sourceonly_dev2_20261030/benchmark/report.json",
+        "sha256": "5b1d9b95e85d3c8abf1167abf391fe4121ff1c0683746d6499e684217e4c6877"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_grasp_sourceonly_dev2_20261030/benchmark/protocol.json",
+        "sha256": "c535924c69d3b653cd495e4615210ff40fe9a59a90a45d6d8f6ef68a92395256"
+      },
+      "protocol_id": "ba1cd47380087c6d9547cc0a3f41d7574dc63c53e3eaed25f6e39c1fb65f81c6",
+      "development_seeds": [
+        12033,
+        12034
+      ],
+      "conditions": {
+        "so101/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 9.02
+        },
+        "so101/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.19055984668099193,
+          "mean_assistance_fraction": 0.8094401533190081,
+          "mean_simulated_time_s": 10.5
+        },
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 658,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 19.62
+        },
+        "so101/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 1270,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 11.120000000000001
+        },
+        "panda/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.15363259928477319,
+          "mean_assistance_fraction": 0.8463674007152269,
+          "mean_simulated_time_s": 13.06
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 28,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 485,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "task_event_clock",
+      "role": "Initial-open clock removed; close/release dwell retained",
+      "report": {
+        "path": "outputs/v2/recovery_task_events_dev2_20261030/benchmark/report.json",
+        "sha256": "a077e7908b99fb1150969521c733bf410f18c51497716d2ea4aa313392863347"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_task_events_dev2_20261030/benchmark/protocol.json",
+        "sha256": "29c6d2d1d489944c4c7002946d8ae566d84e8dc1dc99e78c25dde5a9c510d022"
+      },
+      "protocol_id": "2919a312c2893af5cc02c14dc343dc9416339d8d9189ddab9b12c5675ba6cefd",
+      "development_seeds": [
+        12035,
+        12036
+      ],
+      "conditions": {
+        "so101/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 8.68
+        },
+        "so101/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.20626432391138272,
+          "mean_assistance_fraction": 0.7937356760886173,
+          "mean_simulated_time_s": 9.719999999999999
+        },
+        "so101/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 860,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "so101/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 661,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/raw": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 11.059999999999999
+        },
+        "panda/hf_rgb": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 2,
+          "delivered": 2,
+          "released": 2,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.16129200095734608,
+          "mean_assistance_fraction": 0.838707999042654,
+          "mean_simulated_time_s": 12.399999999999999
+        },
+        "panda/learned": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 1,
+          "delivered": 1,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 660,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 20.2
+        },
+        "panda/no_act": {
+          "n": 2,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 1,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 2,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 93,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "handoff_before_memory_fix",
+      "role": "Retained engineering aborts; not pooled with corrected pipeline",
+      "report": {
+        "path": "outputs/v2/recovery_hf_mlp_panda_dev10_20261030/report.json",
+        "sha256": "5ee6f269b26da0197b525a12c04ba264fcd26d1fd877c298f8998de8f8e92047"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_hf_mlp_panda_dev10_20261030/protocol.json",
+        "sha256": "ed0fb534c8dc094327f35f78eae80e5cd96ac32a0f25aa7cb7d3fa6f6772cac6"
+      },
+      "protocol_id": "4cc6eb1b3cbd72133d58af15f1157daeb6009b6a2510ef34aecf9bafe9415f7f",
+      "development_seeds": [
+        12021,
+        12022,
+        12025,
+        12026,
+        12027,
+        12028,
+        12029,
+        12030,
+        12031,
+        12032
+      ],
+      "conditions": {
+        "panda/hf_learned": {
+          "n": 10,
+          "aborted": 10,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 10
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 2.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "handoff_memory_fixed_before_data_adaptation",
+      "role": "Retained post-prefix distribution failure",
+      "report": {
+        "path": "outputs/v2/recovery_hf_mlp_memory_smoke_20261030/report.json",
+        "sha256": "ecfe1c927f04141c348a73a91c0df0336149b641a42049015e57bd831891d676"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_hf_mlp_memory_smoke_20261030/protocol.json",
+        "sha256": "b167ddb3998008456e27b0d968294afc6d4e5f51bd42f549096f02a99b000da0"
+      },
+      "protocol_id": "bafaaf2c47a37f888e993dca77538e3dcf6effdadf488bc7544fba9b2d2f9a5d",
+      "development_seeds": [
+        12021
+      ],
+      "conditions": {
+        "panda/hf_learned": {
+          "n": 1,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.06666666666666667,
+          "mean_assistance_fraction": 0.9333333333333333,
+          "mean_simulated_time_s": 30.0
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "handoff_adapted_same_head_control",
+      "role": "Identical adapted head from home versus after executed ACT prefix",
+      "report": {
+        "path": "outputs/v2/recovery_prefix_adapt_matched_dev10_20261030/report.json",
+        "sha256": "b966d1586c3776448afb58d36ff20ffa5f834b3b6ab1b058a28fb12b0753803b"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_prefix_adapt_matched_dev10_20261030/protocol.json",
+        "sha256": "bb698a0a470865765e90e40f5fa02fd2170167a7ad9647a3238e2a55d1f320b3"
+      },
+      "protocol_id": "15e73d14ff975b7fa1c08bd38426d0561312bf974fb99f8950ee2c585e6cb131",
+      "development_seeds": [
+        12021,
+        12022,
+        12025,
+        12026,
+        12027,
+        12028,
+        12029,
+        12030,
+        12031,
+        12032
+      ],
+      "conditions": {
+        "panda/no_act": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 1,
+          "lifted": 2,
+          "delivered": 1,
+          "released": 5,
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 6,
+            "transport": 1,
+            "release": 0,
+            "none": 1,
+            "aborted": 0
+          },
+          "ik_rejections_total": 1423,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 27.815999999999995
+        },
+        "panda/hf_learned": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 5,
+          "lifted": 9,
+          "delivered": 5,
+          "released": 9,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 4,
+            "release": 0,
+            "none": 5,
+            "aborted": 0
+          },
+          "ik_rejections_total": 423,
+          "mean_act_fraction": 0.13023866268245604,
+          "mean_assistance_fraction": 0.8697613373175439,
+          "mean_simulated_time_s": 20.164
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    },
+    {
+      "name": "final_single_protocol",
+      "role": "Main comparison; all conditions share one protocol and fixed resets",
+      "report": {
+        "path": "outputs/v2/recovery_final_panda_matched_dev10_20261030/report.json",
+        "sha256": "ff4a5cbd4c84f14f5a1851ecd5972fce23063f329b0c9208a613cf942ac62344"
+      },
+      "protocol": {
+        "path": "outputs/v2/recovery_final_panda_matched_dev10_20261030/protocol.json",
+        "sha256": "5060a711cc64373163ba2d359a7ddf4b7f1362e6988edd557dd92483333cca27"
+      },
+      "protocol_id": "f71862dba10402a1f92ac8377f5f8e7a5060cde2811163b8801a9b7a9b8e386a",
+      "development_seeds": [
+        12021,
+        12022,
+        12025,
+        12026,
+        12027,
+        12028,
+        12029,
+        12030,
+        12031,
+        12032
+      ],
+      "conditions": {
+        "panda/raw": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 0,
+          "lifted": 0,
+          "delivered": 0,
+          "released": 0,
+          "pick_place_phase_failed_counts": {
+            "approach": 10,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 0,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 0.0,
+          "mean_simulated_time_s": 30.0
+        },
+        "panda/rgb": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 10,
+          "lifted": 10,
+          "delivered": 10,
+          "released": 10,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 10,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 10.863999999999999
+        },
+        "panda/hf_rgb": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 10,
+          "lifted": 10,
+          "delivered": 10,
+          "released": 10,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 10,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.14773579880828872,
+          "mean_assistance_fraction": 0.8522642011917114,
+          "mean_simulated_time_s": 13.584
+        },
+        "panda/learned": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 2,
+          "lifted": 9,
+          "delivered": 2,
+          "released": 9,
+          "pick_place_phase_failed_counts": {
+            "approach": 1,
+            "grasp": 0,
+            "transport": 7,
+            "release": 0,
+            "none": 2,
+            "aborted": 0
+          },
+          "ik_rejections_total": 2852,
+          "mean_act_fraction": 1.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 26.208
+        },
+        "panda/no_act": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 10,
+          "lifted": 10,
+          "delivered": 10,
+          "released": 10,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 10,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_act_fraction": 0.0,
+          "mean_assistance_fraction": 1.0,
+          "mean_simulated_time_s": 7.536
+        },
+        "panda/hf_learned": {
+          "n": 10,
+          "aborted": 0,
+          "pick_place_successes": 5,
+          "lifted": 9,
+          "delivered": 5,
+          "released": 9,
+          "pick_place_phase_failed_counts": {
+            "approach": 0,
+            "grasp": 1,
+            "transport": 4,
+            "release": 0,
+            "none": 5,
+            "aborted": 0
+          },
+          "ik_rejections_total": 423,
+          "mean_act_fraction": 0.13023866268245604,
+          "mean_assistance_fraction": 0.8697613373175439,
+          "mean_simulated_time_s": 20.164
+        }
+      },
+      "all_trial_and_trace_hashes_verified": true,
+      "matching_resets_verified": true,
+      "runtime_inputs_and_weights_unchanged": true
+    }
+  ],
+  "remaining_limits": [
+    "SO-101 still has wrong-direction learned requests and joint-limit stalls; isolated development success does not establish reliability.",
+    "SO-101-only heads did not transfer to Panda in the tested source-frame trials; current positive heads train on both embodiments.",
+    "Frozen ACT feature conditioning did not improve success over the best no-ACT learned recovery head.",
+    "The frozen-prefix head is adapted to its actual takeover-state distribution; its native-home results differ from the earlier no-ACT head.",
+    "Different training cohorts and development-selected candidates cannot be pooled into a reliability estimate or causal attribution to one feature.",
+    "Kinematic/collision gates and lighting were retained; physical camera, joint-neutral and jaw calibration remain unverified."
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "scoring_only_bowl_contour_diagnostic_v1",
+  "scope": "Diagnostic only; does not feed privileged targets to controller or alter contour thresholds",
+  "cases": {
+    "so101": {
+      "seed": 0,
+      "scoring_only_projected_bowl_center_px": [
+        153.57432098901887,
+        216.6181743356941
+      ],
+      "bowl_contains_contour_diagnostics": [
+        {
+          "area": 7093.5,
+          "convexity": 0.8252093997208003,
+          "box": [
+            84,
+            175,
+            133,
+            95
+          ],
+          "contains_scoring_bowl_center": true,
+          "reason": "nonconvex"
+        }
+      ]
+    },
+    "panda": {
+      "seed": 0,
+      "scoring_only_projected_bowl_center_px": [
+        153.57432098901887,
+        216.6181743356941
+      ],
+      "bowl_contains_contour_diagnostics": [
+        {
+          "area": 7060.0,
+          "convexity": 0.9854829704075935,
+          "box": [
+            90,
+            188,
+            127,
+            78
+          ],
+          "contains_scoring_bowl_center": true,
+          "fit": {
+            "center_plane_xy_m": [
+              0.26481795812329023,
+              0.10964682003942203
+            ],
+            "radius_m": 0.056722881740534095,
+            "diameter_m": 0.11344576348106819,
+            "circle_rms_m": 0.005270742794711623,
+            "second_moment_axis_ratio": 0.7002213918848668
+          },
+          "expected_radius_m": 0.052000000000000005,
+          "radius_ratio": 1.0908246488564248,
+          "error_limit_m": 0.0041600000000000005,
+          "reason": "circle_residual"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,327 @@
+{
+  "schema": "hf_alignment_factorial_audit_v1",
+  "status": "complete",
+  "report": "outputs/v2/hf_alignment_factorial_20261029_render/report.json",
+  "report_sha256": "cbd2598bb9f2225739498b24e93e8e58b328dfc10cb1546758fdc94cd31f4b15",
+  "cases": 18,
+  "excluded": 0,
+  "weights_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+  "lighting_changed": false,
+  "calibration_adopted": false,
+  "task_success_evaluated": false,
+  "summary": {
+    "recorded": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 2.857704220447275,
+      "mean_gripper_prefix_mae_percent": 3.826966942681207,
+      "mean_image_swap_joint_change_degree_percent": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "nominal": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 11.752306964960363,
+      "mean_gripper_prefix_mae_percent": 4.847409216562907,
+      "mean_image_swap_joint_change_degree_percent": [
+        4.502179229259491,
+        23.228925969865585,
+        11.780269887712267,
+        16.42729499604967,
+        4.718610089023909,
+        6.436010922325981
+      ]
+    },
+    "training_yaw": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 9.89213474402825,
+      "mean_gripper_prefix_mae_percent": 5.056067148844401,
+      "mean_image_swap_joint_change_degree_percent": [
+        5.0234367049402655,
+        20.572958024342856,
+        14.551549508836537,
+        4.458563645680745,
+        5.966620373394754,
+        6.259038480122886
+      ]
+    },
+    "nominal_wrist_only": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 4.400400601526102,
+      "mean_gripper_prefix_mae_percent": 5.01749078962538,
+      "mean_image_swap_joint_change_degree_percent": [
+        0.6562960280312432,
+        5.1387729008992515,
+        4.09531585905287,
+        4.149303086598714,
+        0.35803487731350797,
+        2.3084941652086046
+      ]
+    },
+    "nominal_global_only": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 8.566509586936899,
+      "mean_gripper_prefix_mae_percent": 3.8524222903781467,
+      "mean_image_swap_joint_change_degree_percent": [
+        2.1041464911566843,
+        18.76298315260145,
+        16.002014032999675,
+        4.110098859998916,
+        3.0874845617347293,
+        5.329583146837022
+      ]
+    },
+    "training_yaw_wrist_only": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 3.5792344167166283,
+      "mean_gripper_prefix_mae_percent": 4.7832761976453995,
+      "mean_image_swap_joint_change_degree_percent": [
+        0.47566400898827443,
+        1.9870969878302682,
+        3.593499183654785,
+        1.942319170633952,
+        0.30448479851086935,
+        1.5833557976616754
+      ]
+    },
+    "training_yaw_global_only": {
+      "cases": 18,
+      "mean_five_arm_joint_prefix_mae_degrees": 8.15297818319665,
+      "mean_gripper_prefix_mae_percent": 4.288080554538303,
+      "mean_image_swap_joint_change_degree_percent": [
+        2.509516213999854,
+        13.068187650044756,
+        17.146664301554363,
+        4.908321136898465,
+        4.189605512552792,
+        5.392790285746256
+      ]
+    }
+  },
+  "camera_swap_summary": {
+    "nominal": {
+      "cases": 18,
+      "effects": {
+        "wrist_at_recorded_global": {
+          "mean_signed_joint_effect_degree_percent": [
+            0.366667193836636,
+            -5.102274322509765,
+            3.8109140714009606,
+            -4.149303086598714,
+            0.12548462450504302,
+            0.40094856686062275
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            0.6562960280312432,
+            5.1387729008992515,
+            4.09531585905287,
+            4.149303086598714,
+            0.35803487731350797,
+            2.3084941652086046
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 2.8795445503791175,
+          "gripper_mean_abs_effect_percent": 2.308494165208604
+        },
+        "wrist_at_rendered_global": {
+          "mean_signed_joint_effect_degree_percent": [
+            3.9215293712086146,
+            -5.016918404897054,
+            6.803744305504693,
+            -18.478359529707166,
+            1.711987599068218,
+            -3.07177955839369
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            3.9307703587743967,
+            10.726762019263374,
+            8.39595670700073,
+            18.478359529707166,
+            1.8009652379486296,
+            5.134100076887344
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 8.66656277053886,
+          "gripper_mean_abs_effect_percent": 5.134100076887343
+        },
+        "global_at_recorded_wrist": {
+          "mean_signed_joint_effect_degree_percent": [
+            0.48867370287577316,
+            17.11405940585666,
+            -15.785131475660538,
+            2.0510645336574975,
+            2.99308825135231,
+            -0.6552551693386501
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            2.1041464911566843,
+            18.76298315260145,
+            16.002014032999675,
+            4.110098859998916,
+            3.0874845617347293,
+            5.329583146837022
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 8.81334541969829,
+          "gripper_mean_abs_effect_percent": 5.329583146837022
+        },
+        "global_at_rendered_wrist": {
+          "mean_signed_joint_effect_degree_percent": [
+            4.043535880247752,
+            17.199415323469378,
+            -12.7923012415568,
+            -12.277991909450954,
+            4.579591225915485,
+            -4.127983294592963
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            4.21202017598682,
+            23.975400850507953,
+            14.072193823920353,
+            12.277991909450954,
+            4.605387109518052,
+            6.687664106157091
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 11.828598773876825,
+          "gripper_mean_abs_effect_percent": 6.68766410615709
+        },
+        "two_camera_interaction": {
+          "mean_signed_joint_effect_degree_percent": [
+            3.554862177371979,
+            0.0853559176127115,
+            2.9928302341037325,
+            -14.329056443108454,
+            1.5865029745631747,
+            -3.4727281252543127
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            3.555920332007938,
+            8.879070038265652,
+            5.535999700758193,
+            14.329056443108454,
+            1.5961969428592258,
+            4.336006938086616
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 6.779248691399892,
+          "gripper_mean_abs_effect_percent": 4.336006938086616
+        }
+      }
+    },
+    "training_yaw": {
+      "cases": 18,
+      "effects": {
+        "wrist_at_recorded_global": {
+          "mean_signed_joint_effect_degree_percent": [
+            0.4113450500700209,
+            -1.2487957318623861,
+            3.1655914306640627,
+            -1.9122580846150719,
+            0.0940968718793657,
+            0.5932601081000435
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            0.47566400898827443,
+            1.9870969878302682,
+            3.593499183654785,
+            1.942319170633952,
+            0.30448479851086935,
+            1.5833557976616754
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 1.6606128299236298,
+          "gripper_mean_abs_effect_percent": 1.5833557976616754
+        },
+        "wrist_at_rendered_global": {
+          "mean_signed_joint_effect_degree_percent": [
+            2.759329216678937,
+            4.0596265898810495,
+            3.8275271945529505,
+            -5.19043140411377,
+            1.7503365423944264,
+            -1.3828357696533202
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            2.824612499276797,
+            9.39793833626641,
+            6.140589057074653,
+            5.250814119974773,
+            1.889328968524933,
+            3.353269873725043
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 5.100656596223513,
+          "gripper_mean_abs_effect_percent": 3.3532698737250435
+        },
+        "global_at_recorded_wrist": {
+          "mean_signed_joint_effect_degree_percent": [
+            2.2564038448863557,
+            7.664225705464681,
+            -17.146664301554363,
+            3.5619678391350638,
+            4.189605512552792,
+            -3.250423537360297
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            2.509516213999854,
+            13.068187650044756,
+            17.146664301554363,
+            4.908321136898465,
+            4.189605512552792,
+            5.392790285746256
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 8.364458963010044,
+          "gripper_mean_abs_effect_percent": 5.392790285746256
+        },
+        "global_at_rendered_wrist": {
+          "mean_signed_joint_effect_degree_percent": [
+            4.6043880114952715,
+            12.972648027208116,
+            -16.484728537665475,
+            0.28379451963636626,
+            5.845845183067852,
+            -5.2265194151136605
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            4.6178471005625195,
+            21.049277284410266,
+            16.953963661193846,
+            4.337127505408393,
+            5.845845183067852,
+            6.689886283874511
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 10.560812146928576,
+          "gripper_mean_abs_effect_percent": 6.689886283874512
+        },
+        "two_camera_interaction": {
+          "mean_signed_joint_effect_degree_percent": [
+            2.3479841666089163,
+            5.308422321743436,
+            0.6619357638888891,
+            -3.278173319498698,
+            1.6562396705150606,
+            -1.9760958777533635
+          ],
+          "mean_abs_joint_effect_degree_percent": [
+            2.429766947362158,
+            9.452082294887965,
+            4.826376469930012,
+            3.727693939208985,
+            1.6933405141035716,
+            3.173761876424153
+          ],
+          "five_arm_joint_mean_abs_effect_degrees": 4.425852033098539,
+          "gripper_mean_abs_effect_percent": 3.1737618764241535
+        }
+      }
+    }
+  },
+  "prior_18_anchor_metrics_exactly_reproduced": true,
+  "all_saved_image_hashes_verified": true,
+  "all_exact_prediction_metrics_recomputed": true,
+  "all_factorial_effects_recomputed_from_exact_output_chunks": true,
+  "all_artifact_sha256_verified": true,
+  "checkpoint_unchanged": true,
+  "runtime_source_changes": [],
+  "max_abs_container_minus_source_row_time_s": 1.9073486257070726e-07,
+  "physical_capture_synchronization_verified": false,
+  "interpretation": "Image swaps have a large nonadditive interaction; wrist effects depend on global input. These fixed-joint interventions vary optical pose, scene layout and appearance jointly and identify no unique physical camera correction. Independent measured optical/base calibration is still required."
+}

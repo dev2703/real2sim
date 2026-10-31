@@ -447,10 +447,16 @@ class AbsolutePoseActionAdapter:
 
 
 class ChunkExecutor:
-    """Open-loop execution of ``n_action_steps`` actions per policy call; re-observes afterwards."""
+    """Execute queued chunks or ensemble predictions aligned to the same control tick.
+
+    Ensembling replans every tick and uses only the checkpoint's supervised prefix.
+    The simulator clock does not advance during inference; host timings therefore
+    describe simulation throughput, not physical camera-to-motor latency.
+    """
 
     def __init__(self, policy, normalizer, obs_adapter: ObservationAdapter, action_adapter,
-                 n_action_steps: int | None = None):
+                 n_action_steps: int | None = None, *, temporal_ensemble_coeff: float | None = None,
+                 supervised_prefix_steps: int | None = None):
         self.policy = policy
         self.normalizer = normalizer
         self.obs_adapter = obs_adapter
@@ -459,10 +465,26 @@ class ChunkExecutor:
         n = int(policy.config.n_action_steps) if n_action_steps is None else int(n_action_steps)
         if n < 1 or n > int(policy.config.chunk_size):
             raise ValueError("n_action_steps must be in [1, chunk_size]")
+        from real2sim.policy.temporal_ensemble import BoundedTemporalEnsembler
+
+        coefficient = (getattr(policy.config, "temporal_ensemble_coeff", None)
+                       if temporal_ensemble_coeff is None else temporal_ensemble_coeff)
+        # Reuse strict horizon validation even for ordinary queue execution.
+        validated = BoundedTemporalEnsembler(int(policy.config.chunk_size),
+            0. if coefficient is None else coefficient, supervised_prefix_steps)
+        if n > validated.horizon:
+            raise ValueError("n_action_steps exceeds the checkpoint's supervised prefix")
+        if coefficient is not None and n != 1:
+            raise ValueError("temporal ensembling requires n_action_steps=1")
+        self.ensemble = validated if coefficient is not None else None
+        self.temporal_ensemble_coeff = coefficient
+        self.supervised_prefix_steps = validated.horizon
         self.n_action_steps = n
         self.queue: list[np.ndarray] = []
         self.latencies_ms: list[float] = []
+        self.control_step_latencies_ms: list[float] = []
         self.n_policy_calls = 0
+        self.tick = 0
 
     def reset(self) -> None:
         self.policy.reset()
@@ -471,7 +493,11 @@ class ChunkExecutor:
             self.action_adapter.reset()
         self.queue.clear()
         self.latencies_ms.clear()
+        self.control_step_latencies_ms.clear()
         self.n_policy_calls = 0
+        self.tick = 0
+        if self.ensemble is not None:
+            self.ensemble.reset()
 
     def _infer(self, obs: dict, env) -> list[np.ndarray]:
         t0 = time.perf_counter()
@@ -481,21 +507,43 @@ class ChunkExecutor:
         raw = self.normalizer.unaction(chunk).detach().cpu().numpy()
         self.latencies_ms.append((time.perf_counter() - t0) * 1000.0)
         self.n_policy_calls += 1
-        if raw.ndim != 3 or raw.shape[0] != 1 or raw.shape[2] != self.action_adapter.dim:
+        if (raw.ndim != 3 or raw.shape != (1, int(self.policy.config.chunk_size),
+                                         self.action_adapter.dim)):
             raise ContractError(f"policy chunk shape {raw.shape} does not match adapter dim")
+        if not np.isfinite(raw).all():
+            raise ContractError("policy chunk must contain only finite predictions")
+        if self.ensemble is not None:
+            self.ensemble.add_chunk(raw[0], start_tick=self.tick)
+            return [self.ensemble.action_at(tick=self.tick)]
         return [raw[0, i].astype(np.float64) for i in range(self.n_action_steps)]
 
     def step(self, obs: dict, env) -> ApplyResult:
+        started = time.perf_counter()
+        inferred = not self.queue
         if not self.queue:
             self.queue = self._infer(obs, env)
         # p_k of this tick becomes p_{k-1} of the next one, regardless of whether we inferred.
         self.obs_adapter.advance_tick(env)
         action = self.queue.pop(0)
+        apply_started = time.perf_counter()
         if getattr(self.action_adapter, "needs_obs", False):
             result = self.action_adapter.apply(action, obs)
         else:
             result = self.action_adapter.apply(action)
+        finished = time.perf_counter()
+        elapsed = (finished - started) * 1000.
+        self.control_step_latencies_ms.append(elapsed)
         result.detail["action"] = action.tolist()
+        result.detail["execution_tick"] = self.tick
+        result.detail["timing"] = {
+            "policy_call_ms": self.latencies_ms[-1] if inferred else 0.,
+            "action_apply_and_next_observation_ms": (finished - apply_started) * 1000.,
+            "control_step_ms": elapsed,
+            "scope": "host simulation step; includes next observation rendering, excludes physical acquisition/application timestamps",
+        }
+        if self.ensemble is not None:
+            result.detail["temporal_ensemble"] = self.ensemble.last_selection.copy()
+        self.tick += 1
         return result
 
 

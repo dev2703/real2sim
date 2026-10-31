@@ -1,0 +1,865 @@
+{
+  "schema": "cross_embodiment_recovery_engineering_v1",
+  "date": "2026-10-30",
+  "scope": "Development smoke experiments and code validation; not a reserved benchmark or hardware result",
+  "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+  "reserved_seeds_used": false,
+  "validation": {
+    "final_unit_and_selected_integration_tests_passed": 1089,
+    "additional_source_frame_integration_tests_passed": 1,
+    "skipped": 3,
+    "ruff": "passed",
+    "git_diff_check": "passed",
+    "all_matched_trial_and_trace_hashes_verified": true
+  },
+  "projection_performance": {
+    "path": "results/v2/virtual_source_projection_performance_20261030.json",
+    "sha256": "71144431fc0d08c58d6a7cfcf9ef03268d957bd097c2f12a073603cab817665b"
+  },
+  "initial_head_training": {
+    "path": "results/v2/recovery_head_training_20261030.json",
+    "sha256": "9a50846f0c4508c214ada709b4e6e44df13d67cf039522aea9755127d04aa3d3"
+  },
+  "initial_failure_analysis": {
+    "path": "results/v2/recovery_failure_analysis_20261030.json",
+    "sha256": "88a9aec492b607bcaefb25ef40ba7127cd11d8fd581a1c377cec3c1cfac130e0"
+  },
+  "fresh_teacher_collection": [
+    {
+      "robot": "so101",
+      "manifest": {
+        "path": "outputs/v2/cross_embodiment_fresh_dev1_20261030/collections/so101/manifest.json",
+        "sha256": "46cc7da674938b54d8ded6771a0c2d87d40124a0a7abe2b41b305f2053fe6996"
+      },
+      "split": {
+        "train": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007
+        ],
+        "val": [
+          11000,
+          11001
+        ],
+        "evaluation": [
+          13000,
+          13001,
+          13002,
+          13003,
+          13004,
+          13005,
+          13006,
+          13007,
+          13008,
+          13009,
+          13010,
+          13011,
+          13012,
+          13013,
+          13014,
+          13015,
+          13016,
+          13017,
+          13018,
+          13019,
+          13020,
+          13021,
+          13022,
+          13023,
+          13024,
+          13025,
+          13026,
+          13027,
+          13028,
+          13029,
+          13030,
+          13031,
+          13032,
+          13033,
+          13034,
+          13035,
+          13036,
+          13037,
+          13038,
+          13039,
+          13040,
+          13041,
+          13042,
+          13043,
+          13044,
+          13045,
+          13046,
+          13047,
+          13048,
+          13049,
+          13050,
+          13051,
+          13052,
+          13053,
+          13054,
+          13055,
+          13056,
+          13057,
+          13058,
+          13059,
+          13060,
+          13061,
+          13062,
+          13063,
+          13064,
+          13065,
+          13066,
+          13067,
+          13068,
+          13069,
+          13070,
+          13071,
+          13072,
+          13073,
+          13074,
+          13075,
+          13076,
+          13077,
+          13078,
+          13079,
+          13080,
+          13081,
+          13082,
+          13083,
+          13084,
+          13085,
+          13086,
+          13087,
+          13088,
+          13089,
+          13090,
+          13091,
+          13092,
+          13093,
+          13094,
+          13095,
+          13096,
+          13097,
+          13098,
+          13099
+        ]
+      },
+      "supervised_rows": {
+        "train": 1434,
+        "val": 359
+      },
+      "successful_teacher_rollouts": 10,
+      "total_teacher_rollouts": 10
+    },
+    {
+      "robot": "panda",
+      "manifest": {
+        "path": "outputs/v2/cross_embodiment_fresh_dev1_20261030/collections/panda/manifest.json",
+        "sha256": "c0f20874eae2776b34dfc02a27b2f4fc730c53d7c5d019e2be8eb0fd6dcd7457"
+      },
+      "split": {
+        "train": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007
+        ],
+        "val": [
+          11000,
+          11001
+        ],
+        "evaluation": [
+          13000,
+          13001,
+          13002,
+          13003,
+          13004,
+          13005,
+          13006,
+          13007,
+          13008,
+          13009,
+          13010,
+          13011,
+          13012,
+          13013,
+          13014,
+          13015,
+          13016,
+          13017,
+          13018,
+          13019,
+          13020,
+          13021,
+          13022,
+          13023,
+          13024,
+          13025,
+          13026,
+          13027,
+          13028,
+          13029,
+          13030,
+          13031,
+          13032,
+          13033,
+          13034,
+          13035,
+          13036,
+          13037,
+          13038,
+          13039,
+          13040,
+          13041,
+          13042,
+          13043,
+          13044,
+          13045,
+          13046,
+          13047,
+          13048,
+          13049,
+          13050,
+          13051,
+          13052,
+          13053,
+          13054,
+          13055,
+          13056,
+          13057,
+          13058,
+          13059,
+          13060,
+          13061,
+          13062,
+          13063,
+          13064,
+          13065,
+          13066,
+          13067,
+          13068,
+          13069,
+          13070,
+          13071,
+          13072,
+          13073,
+          13074,
+          13075,
+          13076,
+          13077,
+          13078,
+          13079,
+          13080,
+          13081,
+          13082,
+          13083,
+          13084,
+          13085,
+          13086,
+          13087,
+          13088,
+          13089,
+          13090,
+          13091,
+          13092,
+          13093,
+          13094,
+          13095,
+          13096,
+          13097,
+          13098,
+          13099
+        ]
+      },
+      "supervised_rows": {
+        "train": 1481,
+        "val": 367
+      },
+      "successful_teacher_rollouts": 10,
+      "total_teacher_rollouts": 10
+    }
+  ],
+  "new_head_validation": [
+    {
+      "cohort": "cross_embodiment_fresh_dev1_20261030",
+      "variant": "learned",
+      "metadata": {
+        "path": "outputs/v2/cross_embodiment_fresh_dev1_20261030/heads/learned/head.json",
+        "sha256": "9a36e5100852e5b7afa2b5662eee7859c6510bacfdb0f62a1bc15bd0f9426bdc"
+      },
+      "head_sha256": "e3450eb9a2af2037c3fa6e521013d5a8f00acede0cb79147583ce1b60af41fd4",
+      "training_robot_ids": [
+        0,
+        1
+      ],
+      "best_step": 3500,
+      "balanced_validation_action_mae": 0.019819665745647714,
+      "translation_validation_mae_mm": 0.798521101474762
+    },
+    {
+      "cohort": "cross_embodiment_fresh_dev1_20261030",
+      "variant": "no_act",
+      "metadata": {
+        "path": "outputs/v2/cross_embodiment_fresh_dev1_20261030/heads/no_act/head.json",
+        "sha256": "47c7ea89b63b5051b9745362b396ff97e646937c6665e1a1531942bc07260a97"
+      },
+      "head_sha256": "9095a09c6ea45fdd296df3a4a8ed537c8515ca532f17b0d56293455d56e5cd2d",
+      "training_robot_ids": [
+        0,
+        1
+      ],
+      "best_step": 3600,
+      "balanced_validation_action_mae": 0.006285681007450418,
+      "translation_validation_mae_mm": 0.2924470901489258
+    },
+    {
+      "cohort": "cross_embodiment_sourceframe_dev1_20261030",
+      "variant": "learned",
+      "metadata": {
+        "path": "outputs/v2/cross_embodiment_sourceframe_dev1_20261030/heads/learned/head.json",
+        "sha256": "03d14d1a8f68323e12aaa9b1c85d2b4def45602b50283093fb169bde87c4cf24"
+      },
+      "head_sha256": "17bf47b8006c38e0ae9035179478f9fbfe3b209788101dff2c137a0f77032f8e",
+      "training_robot_ids": [
+        0
+      ],
+      "best_step": 3700,
+      "balanced_validation_action_mae": 0.018323839355876684,
+      "translation_validation_mae_mm": 0.6491396427154541
+    },
+    {
+      "cohort": "cross_embodiment_sourceframe_dev1_20261030",
+      "variant": "no_act",
+      "metadata": {
+        "path": "outputs/v2/cross_embodiment_sourceframe_dev1_20261030/heads/no_act/head.json",
+        "sha256": "9a6131946172ca9be49e5bb06acde32745184da043625faca919cbdc7546dceb"
+      },
+      "head_sha256": "dc326b40e2b728e9c2197a721df6da3962c64cb9ceca409982f8125bd4636abb",
+      "training_robot_ids": [
+        0
+      ],
+      "best_step": 3600,
+      "balanced_validation_action_mae": 0.004137941468087491,
+      "translation_validation_mae_mm": 0.18404260277748108
+    }
+  ],
+  "matched_experiments": [
+    {
+      "name": "corrected_mixed_head_smoke",
+      "report": {
+        "path": "outputs/v2/cross_embodiment_matched_dev1_20261030/report.json",
+        "sha256": "b43629236d80d163c0ae23c2b321540d27702ea429bf7143292f069592cb05ec"
+      },
+      "protocol": {
+        "path": "outputs/v2/cross_embodiment_matched_dev1_20261030/protocol.json",
+        "sha256": "2f253508985a5cc3e23e88314b21a02878976b32ddb529ab3970ce25610ff437"
+      },
+      "training_robots": [
+        "so101",
+        "panda"
+      ],
+      "development_seeds": [
+        12010
+      ],
+      "matched_initial_states_verified": true,
+      "frozen_weights_and_lighting_unchanged": true,
+      "head_options": {
+        "heads": {
+          "learned": "outputs/v2/recovery_phase_corrected_act_20261030",
+          "no_act": "outputs/v2/recovery_phase_corrected_noact_20261030"
+        },
+        "snapshot": ".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "condition": "raw",
+          "seed": 12010,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "rgb",
+          "seed": 12010,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "hf_rgb",
+          "seed": 12010,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "learned",
+          "seed": 12010,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "no_act",
+          "seed": 12010,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 659,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "raw",
+          "seed": 12010,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "rgb",
+          "seed": 12010,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "hf_rgb",
+          "seed": 12010,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "learned",
+          "seed": 12010,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "grasp",
+          "ik_rejections": 218,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "no_act",
+          "seed": 12010,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "grasp",
+          "ik_rejections": 473,
+          "abort": null
+        }
+      ]
+    },
+    {
+      "name": "fresh_teacher_workflow",
+      "report": {
+        "path": "outputs/v2/cross_embodiment_fresh_dev1_20261030/benchmark/report.json",
+        "sha256": "0d7ac0ad2258db8d9fe577dc3074d14d5325b8a7a08ad853660a9c0cf9f51ebe"
+      },
+      "protocol": {
+        "path": "outputs/v2/cross_embodiment_fresh_dev1_20261030/benchmark/protocol.json",
+        "sha256": "d0dfbd6e5786a3d56a9f0e95a7662f01c789c8982a1724d45a88191a88a1b107"
+      },
+      "training_robots": [
+        "so101",
+        "panda"
+      ],
+      "development_seeds": [
+        12011
+      ],
+      "matched_initial_states_verified": true,
+      "frozen_weights_and_lighting_unchanged": true,
+      "head_options": {
+        "heads": {
+          "learned": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_fresh_dev1_20261030/heads/learned",
+          "no_act": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_fresh_dev1_20261030/heads/no_act"
+        },
+        "snapshot": "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "condition": "raw",
+          "seed": 12011,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "rgb",
+          "seed": 12011,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "hf_rgb",
+          "seed": 12011,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "learned",
+          "seed": 12011,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 399,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "no_act",
+          "seed": 12011,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "grasp",
+          "ik_rejections": 597,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "raw",
+          "seed": 12011,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "rgb",
+          "seed": 12011,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "hf_rgb",
+          "seed": 12011,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "learned",
+          "seed": 12011,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "grasp",
+          "ik_rejections": 130,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "no_act",
+          "seed": 12011,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 381,
+          "abort": null
+        }
+      ]
+    },
+    {
+      "name": "source_frame_workflow",
+      "report": {
+        "path": "outputs/v2/cross_embodiment_sourceframe_dev1_20261030/benchmark/report.json",
+        "sha256": "73f01c7748032c6a12ab6f3e030a22705e236dae986c81c97860eabdbcdecce1"
+      },
+      "protocol": {
+        "path": "outputs/v2/cross_embodiment_sourceframe_dev1_20261030/benchmark/protocol.json",
+        "sha256": "9504d2571080c5f524325083869551bb911e1c01eba00f155da7fdb5345043c8"
+      },
+      "training_robots": [
+        "so101"
+      ],
+      "development_seeds": [
+        12012
+      ],
+      "matched_initial_states_verified": true,
+      "frozen_weights_and_lighting_unchanged": true,
+      "head_options": {
+        "heads": {
+          "learned": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_sourceframe_dev1_20261030/heads/learned",
+          "no_act": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/cross_embodiment_sourceframe_dev1_20261030/heads/no_act"
+        },
+        "recovery_frame": "source",
+        "snapshot": "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "condition": "raw",
+          "seed": 12012,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "rgb",
+          "seed": 12012,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "hf_rgb",
+          "seed": 12012,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "learned",
+          "seed": 12012,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 313,
+          "abort": null
+        },
+        {
+          "robot": "so101",
+          "condition": "no_act",
+          "seed": 12012,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 257,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "raw",
+          "seed": 12012,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "rgb",
+          "seed": 12012,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "hf_rgb",
+          "seed": 12012,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "learned",
+          "seed": 12012,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 0,
+          "abort": null
+        },
+        {
+          "robot": "panda",
+          "condition": "no_act",
+          "seed": 12012,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ik_rejections": 364,
+          "abort": null
+        }
+      ]
+    }
+  ],
+  "source_only_native_frame": {
+    "workflow": {
+      "path": "outputs/v2/cross_embodiment_sourceonly_dev1_20261030/workflow.json",
+      "sha256": "9be2df179f3e901be746ce38ac3f2eae8d0cd49101411682fcd95d9634aa7c95"
+    },
+    "trials": [
+      {
+        "robot": "so101",
+        "seed": 12010,
+        "pick_place_success": false,
+        "lifted": false,
+        "phase_failed": "approach",
+        "ik_rejections": 0,
+        "abort": null,
+        "use_act": true
+      },
+      {
+        "robot": "so101",
+        "seed": 12010,
+        "pick_place_success": false,
+        "lifted": false,
+        "phase_failed": "approach",
+        "ik_rejections": 612,
+        "abort": null,
+        "use_act": false
+      },
+      {
+        "robot": "panda",
+        "seed": 12010,
+        "pick_place_success": false,
+        "lifted": false,
+        "phase_failed": "approach",
+        "ik_rejections": 0,
+        "abort": null,
+        "use_act": true
+      },
+      {
+        "robot": "panda",
+        "seed": 12010,
+        "pick_place_success": false,
+        "lifted": false,
+        "phase_failed": "approach",
+        "ik_rejections": 0,
+        "abort": null,
+        "use_act": false
+      }
+    ]
+  },
+  "learned_rollout_totals": {
+    "n": 16,
+    "complete_tasks": 0,
+    "held_lift_trials": 0,
+    "aborted": 0
+  },
+  "outcome": "Pipeline integration, frozen checkpoint execution, and native guard behavior validated. Reliable learned cross-embodiment task completion was not achieved.",
+  "remaining_bottlenecks": [
+    "Learned phase transitions advance after missed pickup or stall without physical progress.",
+    "Small offline action error does not keep autonomous rollouts in the demonstrated feasible state distribution.",
+    "Source rotation is unobservable on Panda; source-frame mapping preserves point motion but retains a causal orientation prior.",
+    "Target images and continuous observation/action history remain shifted across embodiments."
+  ]
+}

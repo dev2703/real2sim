@@ -11,7 +11,7 @@ Labels are mandatory: ``controller_source = ORACLE_GEOMETRY_DIAGNOSTIC``, captio
 ``ORACLE (privileged GT, scripted)``. Never ``LEARNED_ACT``.
 
 Grasp orientation (documented choice). FK (``So101FK.fk_real``) of the 12 held-ball states in
-``results/audit/camera_fit/report.json`` (the ``docs/calibration.md`` hold episodes) puts the
+``results/audit/camera_fit/report.json`` (the ``docs/PROJECT_SUMMARY.md`` hold episodes) puts the
 gripper-frame x axis (finger direction, tips at x = 0) 45-76 deg away from straight down, pointing
 radially away from the base, with the jaw-opening axis (site z) pointing up: the fixed jaw under
 the ball, the moving jaw closing from above. In the simulated model that orientation cannot grasp a
@@ -53,6 +53,7 @@ from real2sim.config import json_default, load_yaml, project_path
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import IPHONE_KEY, ApplyResult
+from real2sim.serialization import json_default as _json_default
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
 

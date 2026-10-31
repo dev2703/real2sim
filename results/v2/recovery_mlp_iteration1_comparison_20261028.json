@@ -1,0 +1,517 @@
+{
+  "schema": "recovery_mlp_iteration1_dagger_comparison_20261028_v1",
+  "status": "complete",
+  "training_iterations": [
+    0,
+    1
+  ],
+  "development_seeds": [
+    12000,
+    12001
+  ],
+  "base_weights_frozen": true,
+  "lighting_changed": false,
+  "runtime_geometric_teacher": false,
+  "reserved_evaluation_used": false,
+  "executor_change_confounds_iteration0_comparison": true,
+  "executor_change": "Magnitude-only Cartesian backtracking plus numerical soft-stop seed handling; original hard native pose/workspace/contact/path thresholds retained",
+  "collection": {
+    "so101": {
+      "manifest": "outputs/v2/recovery_mlp_iteration1_so101_20261028/manifest.json",
+      "manifest_sha256": "2e9956fb42853a9826139da22c18f1c91f668f9a1d9e7c4e9a3934fc72f4f465",
+      "summary": {
+        "n": 14,
+        "aborted": 1,
+        "successes": 8,
+        "success_rate": 0.5714285714285714,
+        "pick_place_successes": 8,
+        "pick_place_success_rate": 0.5714285714285714,
+        "lifted": 9,
+        "delivered": 8,
+        "released": 9,
+        "rolled_out": 0,
+        "ball_escaped_table": 1,
+        "phase_failed_counts": {
+          "approach": 2,
+          "grasp": 2,
+          "transport": 1,
+          "release": 0,
+          "none": 8,
+          "aborted": 1
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 2,
+          "grasp": 2,
+          "transport": 1,
+          "release": 0,
+          "none": 8,
+          "aborted": 1
+        },
+        "ik_rejections_total": 1396,
+        "mean_latency_ms": null,
+        "max_action_saturation": 0.1667
+      },
+      "supervised_rows": {
+        "train": 3714,
+        "val": 398
+      },
+      "learner_executed_ticks": 3180,
+      "all_executed_ticks": 6458,
+      "beta_teacher": 0.5,
+      "collection_is_not_learner_only_evaluation": true,
+      "runtime_source_changes": [],
+      "aborts": [
+        {
+          "seed": 10018,
+          "abort": "ValueError: SO101 measured arm exceeds soft-stop seed tolerance"
+        }
+      ]
+    },
+    "panda": {
+      "manifest": "outputs/v2/recovery_mlp_iteration1_panda_20261028/manifest.json",
+      "manifest_sha256": "c5a49ee132b48474f8a6efdc9d2abdb708bc57d97d06214efce3964d1aa48787",
+      "summary": {
+        "n": 14,
+        "aborted": 0,
+        "successes": 7,
+        "success_rate": 0.5,
+        "pick_place_successes": 7,
+        "pick_place_success_rate": 0.5,
+        "lifted": 13,
+        "delivered": 7,
+        "released": 13,
+        "rolled_out": 0,
+        "ball_escaped_table": 6,
+        "phase_failed_counts": {
+          "approach": 0,
+          "grasp": 1,
+          "transport": 6,
+          "release": 0,
+          "none": 7,
+          "aborted": 0
+        },
+        "pick_place_phase_failed_counts": {
+          "approach": 0,
+          "grasp": 1,
+          "transport": 6,
+          "release": 0,
+          "none": 7,
+          "aborted": 0
+        },
+        "ik_rejections_total": 14,
+        "mean_latency_ms": null,
+        "max_action_saturation": 0.0
+      },
+      "supervised_rows": {
+        "train": 3808,
+        "val": 1035
+      },
+      "learner_executed_ticks": 3307,
+      "all_executed_ticks": 6642,
+      "beta_teacher": 0.5,
+      "collection_is_not_learner_only_evaluation": true,
+      "runtime_source_changes": [],
+      "aborts": []
+    }
+  },
+  "conditions": {
+    "act": {
+      "head_directory": "outputs/v2/recovery_mlp_iteration1_act_20261028",
+      "head_metadata_sha256": "8cce2b5d089f6c00dd9f0990546415dba6359f8e7e0af0b0b8fde8a4216a17ec",
+      "head_sha256": "f5e68973e0a9b87c1bdb9a01f06910bce75c6918bff75bcac593747a8f73f13d",
+      "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "use_act": true,
+      "train_rows": 12500,
+      "validation_rows": 3127,
+      "best_step": 3500,
+      "offline_validation": {
+        "step": 3500,
+        "training_loss": 0.004811490420252085,
+        "mean_absolute_normalized_error": 0.04449726268649101,
+        "translation_mae_mm": 2.0642764568328857,
+        "rotation_mae_rad": 0.004125545732676983,
+        "gripper_mae_fraction": 0.06379769742488861,
+        "per_robot_mae_normalized": {
+          "0": 0.021826239302754402,
+          "1": 0.061878375709056854
+        }
+      },
+      "offline_validation_scope": "Held-out episodes from expert and learner-mixture distributions; differs from iteration0-only validation distribution",
+      "train_runtime_source_changes": [],
+      "robots": {
+        "so101": {
+          "report": "outputs/v2/recovery_mlp_iteration1_act_so101_dev2_20261028/report.json",
+          "report_sha256": "3f34cfb9cd370b9c4b8d3472a8362af0c9633ac6cf47ee269cdca5385ce52360",
+          "summary": {
+            "n": 2,
+            "aborted": 1,
+            "successes": 1,
+            "success_rate": 0.5,
+            "pick_place_successes": 1,
+            "pick_place_success_rate": 0.5,
+            "lifted": 2,
+            "delivered": 1,
+            "released": 2,
+            "rolled_out": 0,
+            "ball_escaped_table": 0,
+            "phase_failed_counts": {
+              "approach": 0,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 1,
+              "aborted": 1
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 0,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 1,
+              "aborted": 1
+            },
+            "ik_rejections_total": 0,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.0
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": true,
+              "phase_failed": "none",
+              "lifted": true,
+              "min_ee_ball_distance_m": 0.01651,
+              "ik_rejections": 0,
+              "act_policy_calls": 25,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration1_act_so101_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_act_so101_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 249
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 249
+              },
+              "held_ticks": 80
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "aborted",
+              "lifted": true,
+              "min_ee_ball_distance_m": 0.0214,
+              "ik_rejections": 0,
+              "act_policy_calls": 17,
+              "abort": "ValueError: Measured joint exceeds soft-stop seed tolerance",
+              "trace": "outputs/v2/recovery_mlp_iteration1_act_so101_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_act_so101_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 169
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 169
+              },
+              "held_ticks": 48
+            }
+          ]
+        },
+        "panda": {
+          "report": "outputs/v2/recovery_mlp_iteration1_act_panda_dev2_20261028/report.json",
+          "report_sha256": "96898881dd56a907f4c537ed231937c2e1c77ba351cfb9ec9c084941c565b174",
+          "summary": {
+            "n": 2,
+            "aborted": 0,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 0,
+            "delivered": 0,
+            "released": 1,
+            "rolled_out": 0,
+            "ball_escaped_table": 0,
+            "phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "ik_rejections_total": 812,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.0
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "grasp",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.01188,
+              "ik_rejections": 392,
+              "act_policy_calls": 75,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration1_act_panda_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_act_panda_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 358,
+                "outside_workspace": 392
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 348,
+                "0.5": 2,
+                "0.25": 4,
+                "0.125": 2,
+                "0.0625": 2,
+                "0.0": 392
+              },
+              "held_ticks": 52
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.07243,
+              "ik_rejections": 420,
+              "act_policy_calls": 75,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration1_act_panda_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_act_panda_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 330,
+                "outside_workspace": 420
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 320,
+                "0.5": 1,
+                "0.25": 5,
+                "0.125": 2,
+                "0.0625": 2,
+                "0.0": 420
+              },
+              "held_ticks": 0
+            }
+          ]
+        }
+      }
+    },
+    "noact": {
+      "head_directory": "outputs/v2/recovery_mlp_iteration1_noact_20261028",
+      "head_metadata_sha256": "b990c6ea8fb8ca852072058ceaa0ce35bea1043891b68721dbd0666d2580ff4f",
+      "head_sha256": "6c701e016b4d5e5a36956481e71d7227a1e810ef5670c223a3ecb2fcf202cfb3",
+      "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+      "use_act": false,
+      "train_rows": 12500,
+      "validation_rows": 3127,
+      "best_step": 4200,
+      "offline_validation": {
+        "step": 4200,
+        "training_loss": 0.004884754307568073,
+        "mean_absolute_normalized_error": 0.037703998386859894,
+        "translation_mae_mm": 1.7947105169296265,
+        "rotation_mae_rad": 0.0027235408779233694,
+        "gripper_mae_fraction": 0.05722152441740036,
+        "per_robot_mae_normalized": {
+          "0": 0.01406037900596857,
+          "1": 0.05583077296614647
+        }
+      },
+      "offline_validation_scope": "Held-out episodes from expert and learner-mixture distributions; differs from iteration0-only validation distribution",
+      "train_runtime_source_changes": [],
+      "robots": {
+        "so101": {
+          "report": "outputs/v2/recovery_mlp_iteration1_noact_so101_dev2_20261028/report.json",
+          "report_sha256": "7229d0f9a42daead818d7d2040b3176873ebf7bd38f680f592bce0314d65a4c7",
+          "summary": {
+            "n": 2,
+            "aborted": 2,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 2,
+            "delivered": 0,
+            "released": 1,
+            "rolled_out": 0,
+            "ball_escaped_table": 0,
+            "phase_failed_counts": {
+              "approach": 0,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 2
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 0,
+              "grasp": 0,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 2
+            },
+            "ik_rejections_total": 0,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.1667
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "aborted",
+              "lifted": true,
+              "min_ee_ball_distance_m": 0.01766,
+              "ik_rejections": 0,
+              "act_policy_calls": 0,
+              "abort": "ValueError: Measured joint exceeds soft-stop seed tolerance",
+              "trace": "outputs/v2/recovery_mlp_iteration1_noact_so101_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_noact_so101_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 133
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 123,
+                "0.5": 1,
+                "0.25": 1,
+                "0.125": 6,
+                "0.0625": 2
+              },
+              "held_ticks": 46
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "aborted",
+              "lifted": true,
+              "min_ee_ball_distance_m": 0.01988,
+              "ik_rejections": 0,
+              "act_policy_calls": 0,
+              "abort": "ValueError: Measured joint exceeds soft-stop seed tolerance",
+              "trace": "outputs/v2/recovery_mlp_iteration1_noact_so101_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_noact_so101_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 129
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 127,
+                "0.5": 2
+              },
+              "held_ticks": 47
+            }
+          ]
+        },
+        "panda": {
+          "report": "outputs/v2/recovery_mlp_iteration1_noact_panda_dev2_20261028/report.json",
+          "report_sha256": "052fefe04d5326632da5fdd1d30e4fb9efcd61a1f607b967f2460a3b474dc3c1",
+          "summary": {
+            "n": 2,
+            "aborted": 0,
+            "successes": 0,
+            "success_rate": 0.0,
+            "pick_place_successes": 0,
+            "pick_place_success_rate": 0.0,
+            "lifted": 0,
+            "delivered": 0,
+            "released": 1,
+            "rolled_out": 0,
+            "ball_escaped_table": 1,
+            "phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "pick_place_phase_failed_counts": {
+              "approach": 1,
+              "grasp": 1,
+              "transport": 0,
+              "release": 0,
+              "none": 0,
+              "aborted": 0
+            },
+            "ik_rejections_total": 752,
+            "mean_latency_ms": null,
+            "max_action_saturation": 0.125
+          },
+          "runtime_source_changes": [],
+          "checkpoint_unchanged": true,
+          "trials": [
+            {
+              "seed": 12000,
+              "pick_place_success": false,
+              "phase_failed": "grasp",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.03023,
+              "ik_rejections": 336,
+              "act_policy_calls": 0,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration1_noact_panda_dev2_20261028/seed_12000/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_noact_panda_dev2_20261028/seed_12000/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 414,
+                "outside_workspace": 336
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 372,
+                "0.5": 34,
+                "0.25": 3,
+                "0.125": 3,
+                "0.0625": 2,
+                "0.0": 336
+              },
+              "held_ticks": 1
+            },
+            {
+              "seed": 12001,
+              "pick_place_success": false,
+              "phase_failed": "approach",
+              "lifted": false,
+              "min_ee_ball_distance_m": 0.06312,
+              "ik_rejections": 416,
+              "act_policy_calls": 0,
+              "abort": null,
+              "trace": "outputs/v2/recovery_mlp_iteration1_noact_panda_dev2_20261028/seed_12001/ticks.jsonl",
+              "video_path": "outputs/v2/recovery_mlp_iteration1_noact_panda_dev2_20261028/seed_12001/rollout.mp4",
+              "ik_reason_counts": {
+                "accepted": 334,
+                "outside_workspace": 416
+              },
+              "feasibility_fraction_counts": {
+                "1.0": 326,
+                "0.5": 2,
+                "0.25": 2,
+                "0.125": 1,
+                "0.0625": 3,
+                "0.0": 416
+              },
+              "held_ticks": 0
+            }
+          ]
+        }
+      }
+    }
+  },
+  "video_validation": {
+    "fully_decoded": 8,
+    "failures": []
+  },
+  "interpretation": "The ACT-assisted MLP achieves1/2developmentplacements onSO101; its othertrialandbothnoACTSO101trialsabortafterheldliftatmeasuredsoftstops. Bothheadscomplete0/2Pandatasks. DAggerandnumericalexecutionbothchanged sinceiteration0, so causalDaggerbenefitcannotbeisolatedbythiscomparison. Currentlearnedresultisbelowthe60percentbotharmtarget."
+}

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import math
 import sys
@@ -20,36 +19,23 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from real2sim.artifacts import sha256_file as digest
 from real2sim.config import REPO_ROOT, load_yaml
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
+from real2sim.serialization import json_default
+from real2sim.serialization import write_json as _write_json
 from real2sim.sim.contact_solver import contact_solver_settings
 
 SOURCE = "RGB_WAYPOINT_CONTROLLER"
 DEFAULT_CONFIGS = {
-    "so101": Path("outputs/v2/inference_sim_smoke_20261023/sim.yaml"),
-    "panda": Path("configs/sim_panda.yaml"),
+    "so101": Path("configs/v2/sim_so101.waypoint_20261026.yaml"),
+    "panda": Path("configs/v2/sim_panda.waypoint_20261026.yaml"),
 }
 
 
-def json_default(value):
-    if isinstance(value, np.ndarray):
-        return value.tolist()
-    if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, Path):
-        return str(value)
-    raise TypeError(type(value).__name__)
-
-
 def write_json(path, value):
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, indent=2, default=json_default, allow_nan=False) + "\n")
-    temporary.replace(path)
-
-
-def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    _write_json(path, value, atomic=True)
 
 
 def project_path(path):
@@ -73,6 +59,15 @@ def save_picture(path, obs, key):
     bgr = policy_view_to_bgr(obs[key], 1)
     if not cv2.imwrite(str(path), bgr):
         raise OSError(f"could not write image: {path}")
+
+
+def table_penetration(metrics):
+    """Use the same measured robot/table quantity across the two env schemas."""
+    if "robot_table_penetration_m" in metrics:
+        return float(metrics["robot_table_penetration_m"])
+    from real2sim.panda.retarget import classify_contacts
+
+    return float(classify_contacts(metrics["contacts"])["robot_table_penetration_m"])
 
 
 def run(*, robot, config, seeds, out, video=False, settle_start=False):
@@ -117,7 +112,7 @@ def run(*, robot, config, seeds, out, video=False, settle_start=False):
         "reset_protocol": ("explicit SO-101 settled start, then reset with settled joints"
                            if settle_start else "configured initial pose; no replacement or clipping"),
         "scoring": "Unchanged TrialTracker held lift, release over bowl and resting placement; full configured horizon.",
-        "limitations": "RGB geometric strategy in the configured simulator. Camera projection and object dimensions are supplied scene parameters, not new physical calibration. This run does not train or evaluate ACT weights.",
+        "limitations": "RGB geometric goals in the configured simulator. Camera projection, object dimensions and static collision geometry (including bowl pose) are supplied scene parameters, not new physical calibration. Carry orientation is flexible for the five-DOF SO-101; ball-waypoint error must satisfy the native position tolerance. This run does not train or evaluate ACT weights.",
         "source_sha256_before": hashes, "trials": [],
     }
     write_json(out / "report.json", report)
@@ -182,7 +177,8 @@ def run(*, robot, config, seeds, out, video=False, settle_start=False):
                                                 ("release", tracker.released and not released_before)):
                                 if event and first_event[name] is None:
                                     first_event[name] = {"tick": tick, "time_s": tick / env.control_hz}
-                            max_table = max(max_table, float(pm["robot_table_penetration_m"]))
+                            penetration = table_penetration(pm)
+                            max_table = max(max_table, penetration)
                             max_support = max(max_support, float(pm.get("robot_support_penetration_m", 0)))
                             record = {
                                 "tick": tick, "time_s": tick / env.control_hz,
@@ -190,13 +186,13 @@ def run(*, robot, config, seeds, out, video=False, settle_start=False):
                                 "control": result.info["control"],
                                 "readback_before": before, "readback_after": env.sim_state(),
                                 "readback_units": ("six native joint radians" if robot == "so101"
-                                                   else "seven native arm radians plus total finger opening metres"),
+                                                   else "nine readbacks: seven native arm radians plus two individual finger slide positions in metres"),
                                 "ik_rejected": result.ik_rejected, "saturation": result.saturation,
                                 "control_and_render_ms": durations[-1],
                                 "scoring_only": {name: pm[name] for name in (
                                     "ball_xyz_task", "tool_xyz_task", "ee_ball_distance_m",
-                                    "ball_held", "lifted", "ball_in_bowl", "ball_resting",
-                                    "robot_table_penetration_m")},
+                                    "ball_held", "lifted", "ball_in_bowl", "ball_resting")},
+                                "robot_table_penetration_m": penetration,
                                 "robot_support_penetration_m": pm.get("robot_support_penetration_m", 0),
                             }
                             trace.write(json.dumps(record, default=json_default, allow_nan=False) + "\n")

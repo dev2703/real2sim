@@ -1,0 +1,976 @@
+{
+  "schema": "frozen_generalization_saved_image_frontend_diagnostic_20261027_v1",
+  "status": "complete",
+  "image_selection": "Same predeclared seed10000; existing saved initial perception frames only",
+  "simulator_steps": 0,
+  "policy_calls": 0,
+  "new_rollouts": 0,
+  "thresholds_or_policy_changed": false,
+  "results": [
+    {
+      "robot": "so101",
+      "condition": "nominal",
+      "seed": 10000,
+      "saved_image": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/frozen_generalization_20261027/nominal/so101/seed_10000/perception.png",
+      "ball_radius_assumption_m": 0.03234028443627313,
+      "actual_physical_radius_m_scoring_only": 0.03234028443627313,
+      "detections": {
+        "ball": {
+          "center_task": [
+            0.3365713135389806,
+            0.2174746685603004,
+            0.020340284436273122
+          ],
+          "pixel_center": [
+            398.8711189860194,
+            107.30168677926206
+          ],
+          "area_px": 2258.0,
+          "fit_error_m": 0.0005056704006558842,
+          "confidence": 0.7040349403759865
+        },
+        "bowl": {
+          "center_task": [
+            0.29084479933206364,
+            -0.035996494922822184,
+            0.017999999999999988
+          ],
+          "pixel_center": [
+            392.6504319455384,
+            236.2477876908116
+          ],
+          "area_px": 5778.0,
+          "fit_error_m": 0.0033750739983915605,
+          "confidence": 0.4257816790419852
+        }
+      },
+      "ball_mask_pixels": 2335,
+      "bowl_mask_pixels": 27042,
+      "ball_mask_contours": [
+        {
+          "area_px": 2258.0,
+          "point_count": 152,
+          "bounds_xy": [
+            [
+              372,
+              80
+            ],
+            [
+              426,
+              134
+            ]
+          ],
+          "hull_fill_ratio": 0.9832353581537122,
+          "rejections": []
+        }
+      ],
+      "bowl_mask_contours": [
+        {
+          "area_px": 20323.0,
+          "point_count": 572,
+          "bounds_xy": [
+            [
+              398,
+              0
+            ],
+            [
+              604,
+              124
+            ]
+          ],
+          "hull_fill_ratio": 0.9773257351703576,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 5778.0,
+          "point_count": 254,
+          "bounds_xy": [
+            [
+              340,
+              202
+            ],
+            [
+              446,
+              276
+            ]
+          ],
+          "hull_fill_ratio": 0.9856704196519959,
+          "rejections": []
+        }
+      ],
+      "ball_candidates": [
+        {
+          "area_px": 2258.0,
+          "fit_success": true,
+          "fit_rms_m": 0.0005056704006558842,
+          "maximum_fit_rms_m": 0.0015,
+          "area_ratio": 0.9862812788422405,
+          "fit_xy": [
+            0.3365713135389806,
+            0.2174746685603004
+          ],
+          "rejections": []
+        }
+      ],
+      "bowl_candidates": [
+        {
+          "area_px": 5778.0,
+          "radius_ratio": 1.0434292969845613,
+          "fit_rms_m": 0.0033750739983915605,
+          "maximum_fit_rms_m": 0.0041600000000000005,
+          "axis_ratio": 0.7832709433542194,
+          "rejections": []
+        }
+      ]
+    },
+    {
+      "robot": "panda",
+      "condition": "nominal",
+      "seed": 10000,
+      "saved_image": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/frozen_generalization_20261027/nominal/panda/seed_10000/perception.png",
+      "ball_radius_assumption_m": 0.03234028443627313,
+      "actual_physical_radius_m_scoring_only": 0.03234028443627313,
+      "detections": {
+        "ball": {
+          "center_task": [
+            0.33673752035784665,
+            0.21766329817069555,
+            0.020340284436273122
+          ],
+          "pixel_center": [
+            398.98184268731706,
+            107.2359314667626
+          ],
+          "area_px": 2245.0,
+          "fit_error_m": 0.0005963520894902915,
+          "confidence": 0.6591400536953363
+        },
+        "bowl": {
+          "center_task": [
+            0.29092465693862263,
+            -0.03597718809206711,
+            0.017999999999999988
+          ],
+          "pixel_center": [
+            392.7285969917508,
+            236.24096693726653
+          ],
+          "area_px": 5763.0,
+          "fit_error_m": 0.0033704137685302477,
+          "confidence": 0.4267156572686111
+        }
+      },
+      "ball_mask_pixels": 10165,
+      "bowl_mask_pixels": 19209,
+      "ball_mask_contours": [
+        {
+          "area_px": 4930.0,
+          "point_count": 320,
+          "bounds_xy": [
+            [
+              0,
+              296
+            ],
+            [
+              123,
+              359
+            ]
+          ],
+          "hull_fill_ratio": 0.9086720117961479,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 2584.5,
+          "point_count": 209,
+          "bounds_xy": [
+            [
+              0,
+              102
+            ],
+            [
+              94,
+              144
+            ]
+          ],
+          "hull_fill_ratio": 0.9295090811005214,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 2245.0,
+          "point_count": 152,
+          "bounds_xy": [
+            [
+              373,
+              81
+            ],
+            [
+              426,
+              134
+            ]
+          ],
+          "hull_fill_ratio": 0.9868131868131869,
+          "rejections": []
+        },
+        {
+          "area_px": 33.0,
+          "point_count": 56,
+          "bounds_xy": [
+            [
+              78,
+              330
+            ],
+            [
+              106,
+              355
+            ]
+          ],
+          "hull_fill_ratio": 0.7333333333333333,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        }
+      ],
+      "bowl_mask_contours": [
+        {
+          "area_px": 12957.0,
+          "point_count": 700,
+          "bounds_xy": [
+            [
+              146,
+              0
+            ],
+            [
+              386,
+              99
+            ]
+          ],
+          "hull_fill_ratio": 0.6670613673805601,
+          "rejections": [
+            "clipped_at_image_border",
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 5763.0,
+          "point_count": 254,
+          "bounds_xy": [
+            [
+              341,
+              202
+            ],
+            [
+              446,
+              276
+            ]
+          ],
+          "hull_fill_ratio": 0.9853808668889459,
+          "rejections": []
+        }
+      ],
+      "ball_candidates": [
+        {
+          "area_px": 2245.0,
+          "fit_success": true,
+          "fit_rms_m": 0.0005963520894902915,
+          "maximum_fit_rms_m": 0.0015,
+          "area_ratio": 0.9809329377898774,
+          "fit_xy": [
+            0.33673752035784665,
+            0.21766329817069555
+          ],
+          "rejections": []
+        }
+      ],
+      "bowl_candidates": [
+        {
+          "area_px": 5763.0,
+          "radius_ratio": 1.0423124747447368,
+          "fit_rms_m": 0.0033704137685302477,
+          "maximum_fit_rms_m": 0.0041600000000000005,
+          "axis_ratio": 0.782431285078962,
+          "rejections": []
+        }
+      ]
+    },
+    {
+      "robot": "so101",
+      "condition": "lighting_bright",
+      "seed": 10000,
+      "saved_image": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/frozen_generalization_20261027_variations/lighting_bright/so101/seed_10000/perception.png",
+      "ball_radius_assumption_m": 0.03234028443627313,
+      "actual_physical_radius_m_scoring_only": 0.03234028443627313,
+      "detections": {
+        "ball": {
+          "center_task": [
+            0.33664197235365545,
+            0.2175101064620485,
+            0.020340284436273122
+          ],
+          "pixel_center": [
+            398.92394051135255,
+            107.29223376628804
+          ],
+          "area_px": 2254.0,
+          "fit_error_m": 0.0005462064453757806,
+          "confidence": 0.684100687709697
+        },
+        "bowl": null
+      },
+      "ball_mask_pixels": 2331,
+      "bowl_mask_pixels": 154379,
+      "ball_mask_contours": [
+        {
+          "area_px": 2254.0,
+          "point_count": 152,
+          "bounds_xy": [
+            [
+              372,
+              80
+            ],
+            [
+              426,
+              134
+            ]
+          ],
+          "hull_fill_ratio": 0.9825632083696599,
+          "rejections": []
+        }
+      ],
+      "bowl_mask_contours": [
+        {
+          "area_px": 144534.0,
+          "point_count": 3062,
+          "bounds_xy": [
+            [
+              0,
+              0
+            ],
+            [
+              639,
+              359
+            ]
+          ],
+          "hull_fill_ratio": 0.682614198813617,
+          "rejections": [
+            "area_over_20percent_image",
+            "clipped_at_image_border",
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 2855.5,
+          "point_count": 607,
+          "bounds_xy": [
+            [
+              16,
+              39
+            ],
+            [
+              166,
+              93
+            ]
+          ],
+          "hull_fill_ratio": 0.5688813626855265,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 2150.5,
+          "point_count": 321,
+          "bounds_xy": [
+            [
+              172,
+              90
+            ],
+            [
+              227,
+              204
+            ]
+          ],
+          "hull_fill_ratio": 0.5224732750242954,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 858.0,
+          "point_count": 214,
+          "bounds_xy": [
+            [
+              56,
+              213
+            ],
+            [
+              151,
+              233
+            ]
+          ],
+          "hull_fill_ratio": 0.7640249332146037,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 601.5,
+          "point_count": 211,
+          "bounds_xy": [
+            [
+              78,
+              107
+            ],
+            [
+              173,
+              122
+            ]
+          ],
+          "hull_fill_ratio": 0.625585023400936,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 353.0,
+          "point_count": 132,
+          "bounds_xy": [
+            [
+              100,
+              136
+            ],
+            [
+              147,
+              153
+            ]
+          ],
+          "hull_fill_ratio": 0.6506912442396313,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 126.5,
+          "point_count": 49,
+          "bounds_xy": [
+            [
+              145,
+              164
+            ],
+            [
+              154,
+              181
+            ]
+          ],
+          "hull_fill_ratio": 0.9166666666666666,
+          "rejections": []
+        },
+        {
+          "area_px": 124.5,
+          "point_count": 67,
+          "bounds_xy": [
+            [
+              60,
+              138
+            ],
+            [
+              79,
+              153
+            ]
+          ],
+          "hull_fill_ratio": 0.6117936117936118,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 101.0,
+          "point_count": 62,
+          "bounds_xy": [
+            [
+              208,
+              61
+            ],
+            [
+              217,
+              88
+            ]
+          ],
+          "hull_fill_ratio": 0.637223974763407,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 91.5,
+          "point_count": 43,
+          "bounds_xy": [
+            [
+              178,
+              62
+            ],
+            [
+              195,
+              70
+            ]
+          ],
+          "hull_fill_ratio": 0.8433179723502304,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 37.0,
+          "point_count": 68,
+          "bounds_xy": [
+            [
+              285,
+              131
+            ],
+            [
+              317,
+              144
+            ]
+          ],
+          "hull_fill_ratio": 0.46540880503144655,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        }
+      ],
+      "ball_candidates": [
+        {
+          "area_px": 2254.0,
+          "fit_success": true,
+          "fit_rms_m": 0.0005462064453757806,
+          "maximum_fit_rms_m": 0.0015,
+          "area_ratio": 0.9846071619763493,
+          "fit_xy": [
+            0.33664197235365545,
+            0.2175101064620485
+          ],
+          "rejections": []
+        }
+      ],
+      "bowl_candidates": [
+        {
+          "area_px": 126.5,
+          "radius_ratio": 0.20960005596722225,
+          "fit_rms_m": 0.0038936950817313434,
+          "maximum_fit_rms_m": 0.0041600000000000005,
+          "axis_ratio": 0.33740898506368927,
+          "rejections": [
+            "circle_radius_ratio",
+            "circle_axis_ratio"
+          ]
+        }
+      ]
+    },
+    {
+      "robot": "panda",
+      "condition": "lighting_bright",
+      "seed": 10000,
+      "saved_image": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/frozen_generalization_20261027_variations/lighting_bright/panda/seed_10000/perception.png",
+      "ball_radius_assumption_m": 0.03234028443627313,
+      "actual_physical_radius_m_scoring_only": 0.03234028443627313,
+      "detections": {
+        "ball": null,
+        "bowl": {
+          "center_task": [
+            0.2908891514581356,
+            -0.03611198777941828,
+            0.017999999999999988
+          ],
+          "pixel_center": [
+            392.7133496670318,
+            236.32490446039347
+          ],
+          "area_px": 5789.0,
+          "fit_error_m": 0.0034047525204950134,
+          "confidence": 0.422459433671843
+        }
+      },
+      "ball_mask_pixels": 36306,
+      "bowl_mask_pixels": 45283,
+      "ball_mask_contours": [
+        {
+          "area_px": 35759.0,
+          "point_count": 1030,
+          "bounds_xy": [
+            [
+              357,
+              48
+            ],
+            [
+              639,
+              359
+            ]
+          ],
+          "hull_fill_ratio": 0.6996888880192538,
+          "rejections": [
+            "clipped_at_image_border",
+            "nonconvex_hull_fill_under0.90"
+          ]
+        }
+      ],
+      "bowl_mask_contours": [
+        {
+          "area_px": 13140.5,
+          "point_count": 703,
+          "bounds_xy": [
+            [
+              146,
+              0
+            ],
+            [
+              387,
+              100
+            ]
+          ],
+          "hull_fill_ratio": 0.6709985446932366,
+          "rejections": [
+            "clipped_at_image_border",
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 13095.5,
+          "point_count": 523,
+          "bounds_xy": [
+            [
+              0,
+              47
+            ],
+            [
+              208,
+              144
+            ]
+          ],
+          "hull_fill_ratio": 0.9088416961621208,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 11896.5,
+          "point_count": 715,
+          "bounds_xy": [
+            [
+              0,
+              277
+            ],
+            [
+              291,
+              359
+            ]
+          ],
+          "hull_fill_ratio": 0.6882158972578966,
+          "rejections": [
+            "clipped_at_image_border",
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 5789.0,
+          "point_count": 254,
+          "bounds_xy": [
+            [
+              340,
+              202
+            ],
+            [
+              446,
+              276
+            ]
+          ],
+          "hull_fill_ratio": 0.9854455698357307,
+          "rejections": []
+        }
+      ],
+      "ball_candidates": [],
+      "bowl_candidates": [
+        {
+          "area_px": 5789.0,
+          "radius_ratio": 1.0441589477281543,
+          "fit_rms_m": 0.0034047525204950134,
+          "maximum_fit_rms_m": 0.0041600000000000005,
+          "axis_ratio": 0.7864702968060278,
+          "rejections": []
+        }
+      ]
+    },
+    {
+      "robot": "so101",
+      "condition": "ball_small",
+      "seed": 10000,
+      "saved_image": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/frozen_generalization_20261027_variations/ball_small/so101/seed_10000/perception.png",
+      "ball_radius_assumption_m": 0.03234028443627313,
+      "actual_physical_radius_m_scoring_only": 0.030723270214459475,
+      "detections": {
+        "ball": null,
+        "bowl": {
+          "center_task": [
+            0.29084479933206364,
+            -0.035996494922822184,
+            0.017999999999999988
+          ],
+          "pixel_center": [
+            392.6504319455384,
+            236.2477876908116
+          ],
+          "area_px": 5778.0,
+          "fit_error_m": 0.0033750739983915605,
+          "confidence": 0.4257816790419852
+        }
+      },
+      "ball_mask_pixels": 2111,
+      "bowl_mask_pixels": 27152,
+      "ball_mask_contours": [
+        {
+          "area_px": 2038.0,
+          "point_count": 144,
+          "bounds_xy": [
+            [
+              373,
+              83
+            ],
+            [
+              424,
+              134
+            ]
+          ],
+          "hull_fill_ratio": 0.9859700048379294,
+          "rejections": []
+        }
+      ],
+      "bowl_mask_contours": [
+        {
+          "area_px": 20432.0,
+          "point_count": 574,
+          "bounds_xy": [
+            [
+              397,
+              0
+            ],
+            [
+              604,
+              124
+            ]
+          ],
+          "hull_fill_ratio": 0.9789894827627512,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 5778.0,
+          "point_count": 254,
+          "bounds_xy": [
+            [
+              340,
+              202
+            ],
+            [
+              446,
+              276
+            ]
+          ],
+          "hull_fill_ratio": 0.9856704196519959,
+          "rejections": []
+        }
+      ],
+      "ball_candidates": [
+        {
+          "area_px": 2038.0,
+          "fit_success": true,
+          "fit_rms_m": 0.0020413083960851455,
+          "maximum_fit_rms_m": 0.0015,
+          "area_ratio": 0.8863235860633638,
+          "fit_xy": [
+            0.33583919923532507,
+            0.21478316007624035
+          ],
+          "rejections": [
+            "sphere_tangent_rms"
+          ]
+        }
+      ],
+      "bowl_candidates": [
+        {
+          "area_px": 5778.0,
+          "radius_ratio": 1.0434292969845613,
+          "fit_rms_m": 0.0033750739983915605,
+          "maximum_fit_rms_m": 0.0041600000000000005,
+          "axis_ratio": 0.7832709433542194,
+          "rejections": []
+        }
+      ]
+    },
+    {
+      "robot": "panda",
+      "condition": "ball_small",
+      "seed": 10000,
+      "saved_image": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/frozen_generalization_20261027_variations/ball_small/panda/seed_10000/perception.png",
+      "ball_radius_assumption_m": 0.03234028443627313,
+      "actual_physical_radius_m_scoring_only": 0.030723270214459475,
+      "detections": {
+        "ball": null,
+        "bowl": {
+          "center_task": [
+            0.29092465693862263,
+            -0.03597718809206711,
+            0.017999999999999988
+          ],
+          "pixel_center": [
+            392.7285969917508,
+            236.24096693726653
+          ],
+          "area_px": 5763.0,
+          "fit_error_m": 0.0033704137685302477,
+          "confidence": 0.4267156572686111
+        }
+      },
+      "ball_mask_pixels": 9938,
+      "bowl_mask_pixels": 19209,
+      "ball_mask_contours": [
+        {
+          "area_px": 4930.0,
+          "point_count": 320,
+          "bounds_xy": [
+            [
+              0,
+              296
+            ],
+            [
+              123,
+              359
+            ]
+          ],
+          "hull_fill_ratio": 0.9086720117961479,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 2584.5,
+          "point_count": 209,
+          "bounds_xy": [
+            [
+              0,
+              102
+            ],
+            [
+              94,
+              144
+            ]
+          ],
+          "hull_fill_ratio": 0.9295090811005214,
+          "rejections": [
+            "clipped_at_image_border"
+          ]
+        },
+        {
+          "area_px": 2022.0,
+          "point_count": 144,
+          "bounds_xy": [
+            [
+              374,
+              83
+            ],
+            [
+              424,
+              134
+            ]
+          ],
+          "hull_fill_ratio": 0.9863414634146341,
+          "rejections": []
+        },
+        {
+          "area_px": 33.0,
+          "point_count": 56,
+          "bounds_xy": [
+            [
+              78,
+              330
+            ],
+            [
+              106,
+              355
+            ]
+          ],
+          "hull_fill_ratio": 0.7333333333333333,
+          "rejections": [
+            "nonconvex_hull_fill_under0.90"
+          ]
+        }
+      ],
+      "bowl_mask_contours": [
+        {
+          "area_px": 12957.0,
+          "point_count": 700,
+          "bounds_xy": [
+            [
+              146,
+              0
+            ],
+            [
+              386,
+              99
+            ]
+          ],
+          "hull_fill_ratio": 0.6670613673805601,
+          "rejections": [
+            "clipped_at_image_border",
+            "nonconvex_hull_fill_under0.90"
+          ]
+        },
+        {
+          "area_px": 5763.0,
+          "point_count": 254,
+          "bounds_xy": [
+            [
+              341,
+              202
+            ],
+            [
+              446,
+              276
+            ]
+          ],
+          "hull_fill_ratio": 0.9853808668889459,
+          "rejections": []
+        }
+      ],
+      "ball_candidates": [
+        {
+          "area_px": 2022.0,
+          "fit_success": true,
+          "fit_rms_m": 0.0021610576283084995,
+          "maximum_fit_rms_m": 0.0015,
+          "area_ratio": 0.8799068652773882,
+          "fit_xy": [
+            0.33601586897826174,
+            0.21515065360123323
+          ],
+          "rejections": [
+            "sphere_tangent_rms"
+          ]
+        }
+      ],
+      "bowl_candidates": [
+        {
+          "area_px": 5763.0,
+          "radius_ratio": 1.0423124747447368,
+          "fit_rms_m": 0.0033704137685302477,
+          "maximum_fit_rms_m": 0.0041600000000000005,
+          "axis_ratio": 0.782431285078962,
+          "rejections": []
+        }
+      ]
+    }
+  ]
+}

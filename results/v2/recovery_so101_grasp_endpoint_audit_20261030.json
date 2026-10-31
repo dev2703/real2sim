@@ -1,0 +1,140 @@
+{
+  "schema": "so101_requested_grasp_endpoint_audit_v1",
+  "scope": "Read-only reconstruction of accepted SO-101 commands from existing development traces; no physical or task-reliability claim",
+  "method": "Reconstruct pre-step TCP from causal99D observation; requested backtracked target from legacy common_action; issued-FK endpoint from issued_common_action; compare pose+rotation@declared tool offset. Achieved_common_action separately measures servo tracking after physics.",
+  "declared_tool_to_grasp_offset_m": [
+    -0.01,
+    0.0,
+    0.03
+  ],
+  "unchanged_native_tolerances": {
+    "tcp_position_m": 0.003,
+    "orientation_rad": 0.35
+  },
+  "accepted_commands_total": 2378,
+  "grasp_endpoint_errors_over_3mm_total": 0,
+  "maximum_grasp_endpoint_error_mm": 2.8667594779459367,
+  "conclusion": "The theoretical31.6mm offset times0.35rad orientation tolerance can permit~11mm point error, but that error is absent in these traces. No additional grasp-point IK projection was implemented; it would not repair a learned wrong-way task request.",
+  "separate_tracking_limit": "Actual per-tick movement can lag the issued native endpoint because of unchanged joint-rate/servo dynamics. This is distinct from an accepted IK endpoint point residual and remains visible in achieved-motion history.",
+  "concrete_wrong_way_example": {
+    "cohort": "recovery_achieved_dagger1_20261030",
+    "condition": "no_act",
+    "robot": "so101",
+    "seed": 12021,
+    "tick": 45,
+    "declared_rgb_grasp_error_task_x_mm": 41.9,
+    "head_requested_task_x_mm": -29.9,
+    "first_rejected_tick": 51,
+    "inference": "The ball requires positiveX correction while the head requests negativeX; a robot-only projection cannot invent the missing corrective direction."
+  },
+  "traces": [
+    {
+      "trace": "outputs/v2/recovery_achieved_dagger1_20261030/benchmark/so101/learned/seed_012021/attempt_0001/ticks.jsonl",
+      "trace_sha256": "8d0a993ebffc04a0179206fc2194d990495e9cff9f0e773d6670faa75ce21e71",
+      "condition": "learned",
+      "seed": 12021,
+      "accepted_commands": 750,
+      "tcp_endpoint_error_max_mm": 0.20231887421489106,
+      "orientation_endpoint_error_max_rad": 0.10046605242402178,
+      "grasp_endpoint_error_mm": {
+        "p50": 0.344724097248541,
+        "p95": 0.867832678243272,
+        "max": 1.4874017299403797
+      },
+      "grasp_endpoint_errors_over_3mm": 0,
+      "first_100_ticks_grasp_endpoint_error_max_mm": 0.2574233230769423,
+      "first_100_ticks_actual_tracking_error_max_mm": 17.612504639540827,
+      "worst_grasp_endpoint_tick": 180
+    },
+    {
+      "trace": "outputs/v2/recovery_achieved_dagger1_20261030/benchmark/so101/learned/seed_012022/attempt_0001/ticks.jsonl",
+      "trace_sha256": "a31fc1452ec2f35bfe704fcb3483f029051b26f242ccc78188e2bb50332ae31a",
+      "condition": "learned",
+      "seed": 12022,
+      "accepted_commands": 552,
+      "tcp_endpoint_error_max_mm": 0.31009951675240527,
+      "orientation_endpoint_error_max_rad": 0.14489329774181064,
+      "grasp_endpoint_error_mm": {
+        "p50": 0.21637587451089463,
+        "p95": 0.65543688230857,
+        "max": 1.5896863871488518
+      },
+      "grasp_endpoint_errors_over_3mm": 0,
+      "first_100_ticks_grasp_endpoint_error_max_mm": 0.49017467166114836,
+      "first_100_ticks_actual_tracking_error_max_mm": 19.992411636707246,
+      "worst_grasp_endpoint_tick": 520
+    },
+    {
+      "trace": "outputs/v2/recovery_achieved_dagger1_20261030/benchmark/so101/no_act/seed_012021/attempt_0001/ticks.jsonl",
+      "trace_sha256": "05c8af55d03a48cd92e86eeca84d3218b2883cff4ef593f088d6beef2ced8398",
+      "condition": "no_act",
+      "seed": 12021,
+      "accepted_commands": 110,
+      "tcp_endpoint_error_max_mm": 0.05581037739313684,
+      "orientation_endpoint_error_max_rad": 0.039963906213224466,
+      "grasp_endpoint_error_mm": {
+        "p50": 0.07369611884424596,
+        "p95": 0.5076134328917433,
+        "max": 0.5907250274141912
+      },
+      "grasp_endpoint_errors_over_3mm": 0,
+      "first_100_ticks_grasp_endpoint_error_max_mm": 0.5670164242338254,
+      "first_100_ticks_actual_tracking_error_max_mm": 19.821693520510202,
+      "worst_grasp_endpoint_tick": 355
+    },
+    {
+      "trace": "outputs/v2/recovery_achieved_dagger1_20261030/benchmark/so101/no_act/seed_012022/attempt_0001/ticks.jsonl",
+      "trace_sha256": "77d7ee72b5d763d87feae95039631380ef2dc417a04fc22c0204d13f96114818",
+      "condition": "no_act",
+      "seed": 12022,
+      "accepted_commands": 91,
+      "tcp_endpoint_error_max_mm": 0.03236342289093108,
+      "orientation_endpoint_error_max_rad": 0.03555680214834969,
+      "grasp_endpoint_error_mm": {
+        "p50": 0.06372550050746348,
+        "p95": 0.24039037916863712,
+        "max": 0.3829876410541251
+      },
+      "grasp_endpoint_errors_over_3mm": 0,
+      "first_100_ticks_grasp_endpoint_error_max_mm": 0.20217901357084117,
+      "first_100_ticks_actual_tracking_error_max_mm": 17.72878390329216,
+      "worst_grasp_endpoint_tick": 321
+    },
+    {
+      "trace": "outputs/v2/recovery_achieved_soft_dev1_20261030/benchmark/so101/learned/seed_012020/attempt_0001/ticks.jsonl",
+      "trace_sha256": "f256f09eeae013d4782178b02193bdacf514e23f7f451f9f809030dd77a95680",
+      "condition": "learned",
+      "seed": 12020,
+      "accepted_commands": 750,
+      "tcp_endpoint_error_max_mm": 0.28833922469132917,
+      "orientation_endpoint_error_max_rad": 0.12980745059349805,
+      "grasp_endpoint_error_mm": {
+        "p50": 0.3433653771482701,
+        "p95": 1.1058914523679517,
+        "max": 2.8667594779459367
+      },
+      "grasp_endpoint_errors_over_3mm": 0,
+      "first_100_ticks_grasp_endpoint_error_max_mm": 1.341721912698997,
+      "first_100_ticks_actual_tracking_error_max_mm": 27.990151297472565,
+      "worst_grasp_endpoint_tick": 195
+    },
+    {
+      "trace": "outputs/v2/recovery_achieved_soft_dev1_20261030/benchmark/so101/no_act/seed_012020/attempt_0001/ticks.jsonl",
+      "trace_sha256": "f9e930fae5a99765908e7e7347bd2b6f004326d88e6afe3bc045c52aa54a8e76",
+      "condition": "no_act",
+      "seed": 12020,
+      "accepted_commands": 125,
+      "tcp_endpoint_error_max_mm": 0.017680748875106116,
+      "orientation_endpoint_error_max_rad": 0.02205408424483408,
+      "grasp_endpoint_error_mm": {
+        "p50": 0.03369087537686989,
+        "p95": 0.17902446515798792,
+        "max": 0.36151137053102017
+      },
+      "grasp_endpoint_errors_over_3mm": 0,
+      "first_100_ticks_grasp_endpoint_error_max_mm": 0.25885178561126804,
+      "first_100_ticks_actual_tracking_error_max_mm": 20.322417289241343,
+      "worst_grasp_endpoint_tick": 100
+    }
+  ]
+}

@@ -1,0 +1,1220 @@
+{
+  "schema": "tracked_rgb_recovery_development_comparison_v1",
+  "audit_date": "2026-10-29",
+  "status": "complete",
+  "seeds": [
+    12000,
+    12001
+  ],
+  "scope": "Two development episodes per arm per candidate; not a reserved evaluation or a reliability estimate.",
+  "base_checkpoint_sha256": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+  "lighting_changed": false,
+  "no_runtime_geometric_teacher": true,
+  "training_collection": {
+    "outputs/v2/recovery_mlp_tracked0_so101_20261028/train.npz": "943ecc76c37d1f9858977e1dd20ca09151dc837206fc30668a302ced287502ff",
+    "outputs/v2/recovery_mlp_tracked0_panda_20261028/train.npz": "0c7c318768bc0906692a688c7b7e7623f0d176f4a49e8db77beb01aa805663dd",
+    "outputs/v2/recovery_mlp_tracked0_so101_20261028/manifest.json": "b1b5a954c8621f99ffbe2af314f4bafbc8c42064d46babcbb011fa32bbd9e86a",
+    "outputs/v2/recovery_mlp_tracked0_so101_20261028/val.npz": "070ddd332ebe75ecc5f652d80c293c2e4f2652fe6d406782147f9a818e120a00",
+    "outputs/v2/recovery_mlp_tracked0_panda_20261028/manifest.json": "588078d0aeed89176261d888cd7f3cc02add22b172cfdfd51fa6255630f08a44",
+    "outputs/v2/recovery_mlp_tracked0_panda_20261028/val.npz": "09740e02caf0cc42ff80338998069a0cf709798b9167c7d1c25742915dc0148e"
+  },
+  "latest_gripper_clock_training_range_s": [
+    0.0,
+    3.359999895095825
+  ],
+  "source_sets": {
+    "fb4beec76483b783d91e1dd4c8dd4cc187d875e568a8b4c0157b67d425d668cf": {
+      "/Users/deveshvyas/Downloads/real2sim/outputs/v2/recovery_mlp_tracked0_act_20261028/head.json": "54c636b757d5bd524c232b96bcbc473b75e343562e3d337d47074018985c4458",
+      "/Users/deveshvyas/Downloads/real2sim/outputs/v2/recovery_mlp_tracked0_act_20261028/head.pt": "3b0f8dcacca27b44a9f513e94c7ff6f4679a0be96ca887ce068b5b4f5f00f492"
+    },
+    "fd0fb9dd01e8fab1540a03d820344e1fb6a0189c86f3c3988708b12ae60eae1f": {
+      "/Users/deveshvyas/Downloads/real2sim/outputs/v2/recovery_mlp_tracked0_noact_20261028/head.json": "0182ba29c55fe26639029e3cce033f2b6856e5cfe0dfa650653edde39969594d",
+      "/Users/deveshvyas/Downloads/real2sim/outputs/v2/recovery_mlp_tracked0_noact_20261028/head.pt": "e14dc66ae0f4a161ef837f7f27bcf63def19c99c4fdbbc9c99c0e19933277828"
+    },
+    "935a6630854a5e556d004b92581eec46571d84205fa195520f880975ab38dd2b": {
+      "/Users/deveshvyas/Downloads/real2sim/outputs/v2/recovery_mlp_tracked0_phase_20261028/head.json": "b5ad9034144f139b3bf10693379f911399e0393525cf416901b7013a54f6a796",
+      "/Users/deveshvyas/Downloads/real2sim/outputs/v2/recovery_mlp_tracked0_phase_20261028/head.pt": "ff9f1daa8bac23f0ee18c01847dfc1979eab331dc03452db8d0a6eed626b7dcd"
+    }
+  },
+  "models": {
+    "act": {
+      "directory": "outputs/v2/recovery_mlp_tracked0_act_20261028",
+      "head_sha256": "3b0f8dcacca27b44a9f513e94c7ff6f4679a0be96ca887ce068b5b4f5f00f492",
+      "metadata_sha256": "54c636b757d5bd524c232b96bcbc473b75e343562e3d337d47074018985c4458",
+      "training_report_sha256": "5d61f40abe08e960e8ed380453b45badca4b023ddb8c3797ba744e48dc865ff2",
+      "best_step": 1500,
+      "validation_metrics": {
+        "mean_absolute_normalized_error": 0.02216748334467411,
+        "translation_mae_mm": 0.9149503111839294,
+        "rotation_mae_rad": 0.0030971404630690813,
+        "gripper_mae_fraction": 0.03270595148205757,
+        "per_robot_mae_normalized": {
+          "0": 0.023763438686728477,
+          "1": 0.020642459392547607
+        }
+      },
+      "train_rows": 2121,
+      "validation_rows": 704,
+      "generated_config_sha256": {
+        "outputs/v2/recovery_mlp_tracked0_act_so101_dev2_20261029/setup/source/sim.yaml": "6c95fabc03982ca597fa9f58924eb7309685098c940d37e1a22ec55b88b9628b",
+        "outputs/v2/recovery_mlp_tracked0_act_panda_dev2_20261029/setup/sim_panda.yaml": "f5f308ce7e06e2618d4d90a0eb48d92a46623e6a2c0f1b7cabd5f28d5901f66c"
+      }
+    },
+    "noact": {
+      "directory": "outputs/v2/recovery_mlp_tracked0_noact_20261028",
+      "head_sha256": "e14dc66ae0f4a161ef837f7f27bcf63def19c99c4fdbbc9c99c0e19933277828",
+      "metadata_sha256": "0182ba29c55fe26639029e3cce033f2b6856e5cfe0dfa650653edde39969594d",
+      "training_report_sha256": "ae93c3dfb6ddd7cde8701f10300ca1fc72969312229f3227c0cb3993cce7dc56",
+      "best_step": 4800,
+      "validation_metrics": {
+        "mean_absolute_normalized_error": 0.01101621799170971,
+        "translation_mae_mm": 0.475228488445282,
+        "rotation_mae_rad": 0.0006658231723122299,
+        "gripper_mae_fraction": 0.02293243817985058,
+        "per_robot_mae_normalized": {
+          "0": 0.010043814778327942,
+          "1": 0.011945401318371296
+        }
+      },
+      "train_rows": 2121,
+      "validation_rows": 704,
+      "generated_config_sha256": {
+        "outputs/v2/recovery_mlp_tracked0_noact_so101_dev2_20261029/setup/source/sim.yaml": "e8644c21ac53a0942984adc31c081ab3015fe55026992020cb48e68b8f40cd5d",
+        "outputs/v2/recovery_mlp_tracked0_noact_panda_dev2_20261029/setup/sim_panda.yaml": "223fef889328f6c4629a0ce91196c7963f46639d26171e4c96dc1434ad93a8f4"
+      }
+    },
+    "phase": {
+      "directory": "outputs/v2/recovery_mlp_tracked0_phase_20261028",
+      "head_sha256": "ff9f1daa8bac23f0ee18c01847dfc1979eab331dc03452db8d0a6eed626b7dcd",
+      "metadata_sha256": "b5ad9034144f139b3bf10693379f911399e0393525cf416901b7013a54f6a796",
+      "training_report_sha256": "60a9bf82fe6232248fbef3a0862b0aa58afc26c77002903758e2e549d58924b1",
+      "best_step": 3300,
+      "validation_metrics": {
+        "mean_absolute_normalized_error": 0.02597513713327992,
+        "robot_balanced_mae_normalized": 0.026007885363320687,
+        "per_robot_mae_normalized": {
+          "0": 0.027448807485114628,
+          "1": 0.02456696324152675
+        },
+        "translation_mae_mm": 1.074666142463684,
+        "rotation_mae_rad": 0.004786533769220114,
+        "gripper_mae_fraction": 0.026494015008211136,
+        "phase_accuracy": 0.9644886363636364,
+        "phase_confusion": [
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            197,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            66,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            70,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            4,
+            60,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            144,
+            5,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            16,
+            2,
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            74,
+            6,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            52,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "train_rows": 2121,
+      "validation_rows": 704,
+      "generated_config_sha256": {
+        "outputs/v2/recovery_mlp_tracked0_phase_so101_dev2_20261029/setup/source/sim.yaml": "d83c6b8ce0e4ae31dad735ca1546afd30b0eca8b497811605a074a7ba439e022",
+        "outputs/v2/recovery_mlp_tracked0_phase_panda_dev2_20261029/setup/sim_panda.yaml": "0b6ac93d1751808298ada9ad128de8754e930911b508eb9ff67c8411051f720d"
+      }
+    }
+  },
+  "evaluations": [
+    {
+      "candidate": "act",
+      "robot": "so101",
+      "report": "outputs/v2/recovery_mlp_tracked0_act_so101_dev2_20261029/report.json",
+      "report_sha256": "e792229ac480994328a37b814998a292b3740501deeb702f692544778f691f00",
+      "source_set_id": "fb4beec76483b783d91e1dd4c8dd4cc187d875e568a8b4c0157b67d425d668cf",
+      "runtime_source_changes": [],
+      "n": 2,
+      "successes": 0,
+      "aborted": 0,
+      "trials": [
+        {
+          "seed": 12000,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.12428,
+          "ticks": 750,
+          "ik_rejections": 693,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_act_so101_dev2_20261029/seed_12000/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_act_so101_dev2_20261029/seed_12000/ticks.jsonl",
+          "trace_sha256": "9380196d14533035c8ff11b91c68ef1d8b02fbc36976d81c9e082ed3ff0f649a",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 57,
+            "command_joint_stop_margin": 693
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 57,
+            "residual_rejected": 1359,
+            "command_joint_stop_margin": 1967,
+            "outside_workspace": 30,
+            "collision": 114
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 5.52,
+            "max_normalized_z": 4.871773283048174,
+            "ticks_above_abs_10_training_std": 0
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 749,
+            "max_reference_error_to_previous_measured_ball_m": 0.0033067383952098822,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.1,
+                -0.45
+              ],
+              "xy_max": [
+                0.55,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 749,
+              "max_reference_error_to_previous_measured_ball_m": 0.0033067383952098822,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "c9338ed40efa2c1835b10959f147085eded30619b7efbdfad7875532dc18df4c",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        },
+        {
+          "seed": 12001,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.10217,
+          "ticks": 750,
+          "ik_rejections": 682,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_act_so101_dev2_20261029/seed_12001/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_act_so101_dev2_20261029/seed_12001/ticks.jsonl",
+          "trace_sha256": "86d6cfd18ad7f4ff7770df1e7f58c7438cc182cfa890772d468da0fe4d32e2a2",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 68,
+            "command_joint_stop_margin": 682
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 68,
+            "collision": 3,
+            "path_collision": 1,
+            "residual_rejected": 1366,
+            "command_joint_stop_margin": 2048
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 28.08,
+            "max_normalized_z": 31.07981658371591,
+            "ticks_above_abs_10_training_std": 454
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 749,
+            "max_reference_error_to_previous_measured_ball_m": 0.003380886391147794,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.1,
+                -0.45
+              ],
+              "xy_max": [
+                0.55,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 749,
+              "max_reference_error_to_previous_measured_ball_m": 0.003380886391147794,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "fddc535757b32e6a6b7ecfdf5f206cb30c4499f9c687bb7b358d7575f382bc28",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        }
+      ]
+    },
+    {
+      "candidate": "act",
+      "robot": "panda",
+      "report": "outputs/v2/recovery_mlp_tracked0_act_panda_dev2_20261029/report.json",
+      "report_sha256": "b82449497e3318ec22d08066d2d611e6ee3c2749a8547d337ff7e5fa79b4a5f3",
+      "source_set_id": "fb4beec76483b783d91e1dd4c8dd4cc187d875e568a8b4c0157b67d425d668cf",
+      "runtime_source_changes": [],
+      "n": 2,
+      "successes": 0,
+      "aborted": 0,
+      "trials": [
+        {
+          "seed": 12000,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.03287,
+          "ticks": 750,
+          "ik_rejections": 610,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_act_panda_dev2_20261029/seed_12000/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_act_panda_dev2_20261029/seed_12000/ticks.jsonl",
+          "trace_sha256": "380c8f37dd77a4b0fad6a593da85a3be2d1359e5a8c2d43b4e9d44ad962988e1",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 140,
+            "outside_workspace": 610
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 140,
+            "outside_workspace": 3082
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 29.96,
+            "max_normalized_z": 33.263820192104895,
+            "ticks_above_abs_10_training_std": 501
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 749,
+            "max_reference_error_to_previous_measured_ball_m": 0.4209862280161554,
+            "ticks_reference_error_over_20mm": 482,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.013157298658086791,
+                -0.45
+              ],
+              "xy_max": [
+                0.7,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 653,
+              "max_reference_error_to_previous_measured_ball_m": 0.3529012270393739,
+              "ticks_reference_error_over_20mm": 386
+            }
+          },
+          "video_integrity": {
+            "sha256": "aa90bb421196091cb18516c522cb430cb9df5035d00b4db2d04ae2fc9aee9e3b",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        },
+        {
+          "seed": 12001,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": true,
+          "min_ee_ball_distance_m": 0.04141,
+          "ticks": 750,
+          "ik_rejections": 604,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_act_panda_dev2_20261029/seed_12001/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_act_panda_dev2_20261029/seed_12001/ticks.jsonl",
+          "trace_sha256": "5d63b1ea930236f3a51f16adb49213208552d2e7bdb2a79f20ea234cc890132e",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 146,
+            "outside_workspace": 604
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 146,
+            "outside_workspace": 3044
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 29.96,
+            "max_normalized_z": 33.263820192104895,
+            "ticks_above_abs_10_training_std": 501
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 416,
+            "max_reference_error_to_previous_measured_ball_m": 0.12678784633248866,
+            "ticks_reference_error_over_20mm": 107,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.013157298658086791,
+                -0.45
+              ],
+              "xy_max": [
+                0.7,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 410,
+              "max_reference_error_to_previous_measured_ball_m": 0.11385644601367982,
+              "ticks_reference_error_over_20mm": 101
+            }
+          },
+          "video_integrity": {
+            "sha256": "53389e7ea4bdb8ffc90579c21e167fcd890098745b3bb3a8564338096fa2033e",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        }
+      ]
+    },
+    {
+      "candidate": "noact",
+      "robot": "so101",
+      "report": "outputs/v2/recovery_mlp_tracked0_noact_so101_dev2_20261029/report.json",
+      "report_sha256": "0339d340a34f1b07b55fdbaf52f96d3522456032c458c8e81a7fcbcb3268848a",
+      "source_set_id": "fd0fb9dd01e8fab1540a03d820344e1fb6a0189c86f3c3988708b12ae60eae1f",
+      "runtime_source_changes": [],
+      "n": 2,
+      "successes": 1,
+      "aborted": 0,
+      "trials": [
+        {
+          "seed": 12000,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.03074,
+          "ticks": 750,
+          "ik_rejections": 108,
+          "abort": null,
+          "act_policy_calls": 0,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_noact_so101_dev2_20261029/seed_12000/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_noact_so101_dev2_20261029/seed_12000/ticks.jsonl",
+          "trace_sha256": "87007ded0ff82951bd6c028c48f58a177a97b5af73a58886209abf0f0522a791",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 642,
+            "collision": 13,
+            "path_collision": 95
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 642,
+            "collision": 1694,
+            "outside_workspace": 889,
+            "path_collision": 95
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 26.12,
+            "max_normalized_z": 28.8028766515657,
+            "ticks_above_abs_10_training_std": 405
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 747,
+            "max_reference_error_to_previous_measured_ball_m": 0.11307787180493685,
+            "ticks_reference_error_over_20mm": 19,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.1,
+                -0.45
+              ],
+              "xy_max": [
+                0.55,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 747,
+              "max_reference_error_to_previous_measured_ball_m": 0.11307787180493685,
+              "ticks_reference_error_over_20mm": 19
+            }
+          },
+          "video_integrity": {
+            "sha256": "88c5731214eeba1aaa853afc4cebe4c0069321fd55e8653d0d44a873bb2e6288",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        },
+        {
+          "seed": 12001,
+          "pick_place_success": true,
+          "lifted": true,
+          "delivered": true,
+          "released": true,
+          "phase_failed": "none",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.01387,
+          "ticks": 255,
+          "ik_rejections": 35,
+          "abort": null,
+          "act_policy_calls": 0,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_noact_so101_dev2_20261029/seed_12001/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_noact_so101_dev2_20261029/seed_12001/ticks.jsonl",
+          "trace_sha256": "960cfcd5f5ed5728d7ffce9cce916911f8381ec50e96e9afa3c15c253125950e",
+          "trace_lines": 255,
+          "final_ik_reason_counts": {
+            "accepted": 220,
+            "command_joint_stop_margin": 35
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 220,
+            "collision": 19,
+            "command_joint_stop_margin": 158,
+            "residual_rejected": 37
+          },
+          "ball_held_ticks": 75,
+          "max_consecutive_ball_held_ticks": 75,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 3.24,
+            "max_normalized_z": 2.2230880558530313,
+            "ticks_above_abs_10_training_std": 0
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 83,
+            "max_reference_error_to_previous_measured_ball_m": 0.008578932956890313,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.1,
+                -0.45
+              ],
+              "xy_max": [
+                0.55,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 83,
+              "max_reference_error_to_previous_measured_ball_m": 0.008578932956890313,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "819de6d79b9130a518fa706a9b534323de05ea3ba5345ad1d843ec0c3d45c0d8",
+            "frames": 255,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        }
+      ]
+    },
+    {
+      "candidate": "noact",
+      "robot": "panda",
+      "report": "outputs/v2/recovery_mlp_tracked0_noact_panda_dev2_20261029/report.json",
+      "report_sha256": "228ce77ce085294862c24a4e317901f0a88316bb2c55955f6e7224a9eaea6a6a",
+      "source_set_id": "fd0fb9dd01e8fab1540a03d820344e1fb6a0189c86f3c3988708b12ae60eae1f",
+      "runtime_source_changes": [],
+      "n": 2,
+      "successes": 0,
+      "aborted": 0,
+      "trials": [
+        {
+          "seed": 12000,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": true,
+          "phase_failed": "grasp",
+          "ball_escaped_table": true,
+          "min_ee_ball_distance_m": 0.01665,
+          "ticks": 750,
+          "ik_rejections": 120,
+          "abort": null,
+          "act_policy_calls": 0,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_noact_panda_dev2_20261029/seed_12000/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_noact_panda_dev2_20261029/seed_12000/ticks.jsonl",
+          "trace_sha256": "b97adc54ff5a342fa08b139edd49be8b4431c85396196ffeca4edecdec1f7cbc",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 630,
+            "outside_workspace": 6,
+            "command_joint_stop_margin": 114
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 630,
+            "outside_workspace": 86,
+            "command_joint_stop_margin": 361,
+            "joint_limit": 238,
+            "residual_rejected": 50
+          },
+          "ball_held_ticks": 1,
+          "max_consecutive_ball_held_ticks": 1,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 10.04,
+            "max_normalized_z": 10.122675575557844,
+            "ticks_above_abs_10_training_std": 3
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 384,
+            "max_reference_error_to_previous_measured_ball_m": 0.4223516713041794,
+            "ticks_reference_error_over_20mm": 117,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.013157298658086791,
+                -0.45
+              ],
+              "xy_max": [
+                0.7,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 287,
+              "max_reference_error_to_previous_measured_ball_m": 0.06481337881885028,
+              "ticks_reference_error_over_20mm": 20
+            }
+          },
+          "video_integrity": {
+            "sha256": "48185a344522599c7ecb9ac1174eca241f2f702d15c8d7c3f42504653fe11f49",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        },
+        {
+          "seed": 12001,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.05112,
+          "ticks": 750,
+          "ik_rejections": 206,
+          "abort": null,
+          "act_policy_calls": 0,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_noact_panda_dev2_20261029/seed_12001/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_noact_panda_dev2_20261029/seed_12001/ticks.jsonl",
+          "trace_sha256": "5b4642ca4d1df1ac0413696982508cf00a4cc1c71cc04c6e8a5e35a06d62a4bf",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 544,
+            "command_joint_stop_margin": 154,
+            "outside_workspace": 52
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 544,
+            "command_joint_stop_margin": 776,
+            "outside_workspace": 340,
+            "joint_limit": 1
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {},
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 12.24,
+            "max_normalized_z": 12.678424478991756,
+            "ticks_above_abs_10_training_std": 58
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 749,
+            "max_reference_error_to_previous_measured_ball_m": 0.007109687871681624,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.013157298658086791,
+                -0.45
+              ],
+              "xy_max": [
+                0.7,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 731,
+              "max_reference_error_to_previous_measured_ball_m": 0.0035786233501125613,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "f3ba2ee5fcd44184673b7df9668ad4548721cd53d8ae4900dd721e49d55adc2d",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        }
+      ]
+    },
+    {
+      "candidate": "phase",
+      "robot": "so101",
+      "report": "outputs/v2/recovery_mlp_tracked0_phase_so101_dev2_20261029/report.json",
+      "report_sha256": "c239658427aa80a6fc4160bd6e58a39f16b8d62fe448cca458cffeed671bebac",
+      "source_set_id": "935a6630854a5e556d004b92581eec46571d84205fa195520f880975ab38dd2b",
+      "runtime_source_changes": [],
+      "n": 2,
+      "successes": 0,
+      "aborted": 0,
+      "trials": [
+        {
+          "seed": 12000,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.04734,
+          "ticks": 750,
+          "ik_rejections": 462,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_phase_so101_dev2_20261029/seed_12000/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_phase_so101_dev2_20261029/seed_12000/ticks.jsonl",
+          "trace_sha256": "d847f3440acbd74a0336a41377cacb0c6140f3381ca86c616e602c5ca11086a9",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 288,
+            "command_joint_stop_margin": 462
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 288,
+            "command_joint_stop_margin": 1097,
+            "residual_rejected": 1276
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {
+            "PRE_GRASP": 81,
+            "DESCEND": 4,
+            "CLOSE": 6,
+            "LIFT": 41,
+            "TRANSPORT": 37,
+            "RELEASE": 34,
+            "RETREAT": 522,
+            "LOWER": 25
+          },
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 18.4,
+            "max_normalized_z": 19.834521408606705,
+            "ticks_above_abs_10_training_std": 212
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 749,
+            "max_reference_error_to_previous_measured_ball_m": 0.0033067383952098822,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.1,
+                -0.45
+              ],
+              "xy_max": [
+                0.55,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 749,
+              "max_reference_error_to_previous_measured_ball_m": 0.0033067383952098822,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "58b1947ea5cb8ec0a03c704a7751881265b3bc6064eed7440b3685c4a3f2506b",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        },
+        {
+          "seed": 12001,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": false,
+          "min_ee_ball_distance_m": 0.04173,
+          "ticks": 750,
+          "ik_rejections": 362,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_phase_so101_dev2_20261029/seed_12001/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_phase_so101_dev2_20261029/seed_12001/ticks.jsonl",
+          "trace_sha256": "a7fd46080233366fcb1da388327922de0544423c4abd89a87da27933e32c1642",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 388,
+            "command_joint_stop_margin": 362
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 388,
+            "command_joint_stop_margin": 1050,
+            "collision": 1,
+            "residual_rejected": 812
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {
+            "PRE_GRASP": 86,
+            "DESCEND": 8,
+            "CLOSE": 10,
+            "LIFT": 101,
+            "TRANSPORT": 55,
+            "RELEASE": 36,
+            "LOWER": 25,
+            "RETREAT": 429
+          },
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 15.12,
+            "max_normalized_z": 16.024132134396147,
+            "ticks_above_abs_10_training_std": 130
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 749,
+            "max_reference_error_to_previous_measured_ball_m": 0.003380886391147794,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.1,
+                -0.45
+              ],
+              "xy_max": [
+                0.55,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 749,
+              "max_reference_error_to_previous_measured_ball_m": 0.003380886391147794,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "d26481556acacf0ffaf6c7f7505317d4ac9d22e733528ce61f5f402d4793f705",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        }
+      ]
+    },
+    {
+      "candidate": "phase",
+      "robot": "panda",
+      "report": "outputs/v2/recovery_mlp_tracked0_phase_panda_dev2_20261029/report.json",
+      "report_sha256": "44542a1cc4261eafbb9939f52e2a296a7e6cf1913599d5a72cf58f341dc87b60",
+      "source_set_id": "935a6630854a5e556d004b92581eec46571d84205fa195520f880975ab38dd2b",
+      "runtime_source_changes": [],
+      "n": 2,
+      "successes": 0,
+      "aborted": 0,
+      "trials": [
+        {
+          "seed": 12000,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "grasp",
+          "ball_escaped_table": true,
+          "min_ee_ball_distance_m": 0.02805,
+          "ticks": 750,
+          "ik_rejections": 0,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_phase_panda_dev2_20261029/seed_12000/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_phase_panda_dev2_20261029/seed_12000/ticks.jsonl",
+          "trace_sha256": "314c8405fdc35926dfab249810c64b6878bb1057178fd948f34de81387853bf4",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 750
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 750,
+            "collision": 1,
+            "outside_workspace": 29
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {
+            "PRE_GRASP": 181,
+            "DESCEND": 21,
+            "TRANSPORT": 229,
+            "RELEASE": 61,
+            "CLOSE": 8,
+            "LIFT": 151,
+            "LOWER": 85,
+            "RETREAT": 14
+          },
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 3.04,
+            "max_normalized_z": 1.9907472464499483,
+            "ticks_above_abs_10_training_std": 0
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 376,
+            "max_reference_error_to_previous_measured_ball_m": 0.5466764243807826,
+            "ticks_reference_error_over_20mm": 196,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.013157298658086791,
+                -0.45
+              ],
+              "xy_max": [
+                0.7,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 314,
+              "max_reference_error_to_previous_measured_ball_m": 0.38457241168288386,
+              "ticks_reference_error_over_20mm": 134
+            }
+          },
+          "video_integrity": {
+            "sha256": "6b5098bf40bb72712ea52b1ace3b5a33e66bfc8b8b1596279ad08f8663772321",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        },
+        {
+          "seed": 12001,
+          "pick_place_success": false,
+          "lifted": false,
+          "delivered": false,
+          "released": false,
+          "phase_failed": "approach",
+          "ball_escaped_table": true,
+          "min_ee_ball_distance_m": 0.05683,
+          "ticks": 750,
+          "ik_rejections": 85,
+          "abort": null,
+          "act_policy_calls": 75,
+          "video_path": "outputs/v2/recovery_mlp_tracked0_phase_panda_dev2_20261029/seed_12001/rollout.mp4",
+          "trace": "outputs/v2/recovery_mlp_tracked0_phase_panda_dev2_20261029/seed_12001/ticks.jsonl",
+          "trace_sha256": "63811daa6ac7b428af5a7327c4df2d3e88b17d930f255d309cba168a280f67ce",
+          "trace_lines": 750,
+          "final_ik_reason_counts": {
+            "accepted": 665,
+            "outside_workspace": 85
+          },
+          "feasibility_attempt_reason_counts": {
+            "accepted": 665,
+            "outside_workspace": 510,
+            "collision": 6
+          },
+          "ball_held_ticks": 0,
+          "max_consecutive_ball_held_ticks": 0,
+          "inferred_phase_ticks": {
+            "PRE_GRASP": 351,
+            "DESCEND": 38,
+            "CLOSE": 5,
+            "LIFT": 21,
+            "RELEASE": 55,
+            "TRANSPORT": 85,
+            "RETREAT": 11,
+            "LOWER": 184
+          },
+          "inferred_phase_held_ticks": {},
+          "gripper_clock": {
+            "max_elapsed_s": 5.32,
+            "max_normalized_z": 4.639432473645092,
+            "ticks_above_abs_10_training_std": 0
+          },
+          "reference_audit": {
+            "eligible_free_on_table_ticks": 138,
+            "max_reference_error_to_previous_measured_ball_m": 0.016503142239996126,
+            "ticks_reference_error_over_20mm": 0,
+            "within_detector_xy_workspace": {
+              "xy_min": [
+                -0.013157298658086791,
+                -0.45
+              ],
+              "xy_max": [
+                0.7,
+                0.45
+              ],
+              "eligible_free_on_table_ticks": 134,
+              "max_reference_error_to_previous_measured_ball_m": 0.010458476490669496,
+              "ticks_reference_error_over_20mm": 0
+            }
+          },
+          "video_integrity": {
+            "sha256": "ee80948e869533a25c6a5d7f8f5161f3963f3aa072f480f371b1b0ffea9db135",
+            "frames": 750,
+            "fps": 25.0,
+            "width": 640,
+            "height": 360,
+            "final_frame_decoded": true
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "RGB visibility, observation age and full observation/ACT feature tensors were not saved in these evaluation traces; their normalized extrapolation cannot be reconstructed.",
+    "Reconstructed gripper-clock statistics follow the causal selected-command threshold; other normalized input extrapolation was not measured.",
+    "The tracker fits confident sphere detections to the declared table support plane; a remembered reference is not evidence of a current carried object.",
+    "The tracked0 auxiliary phase labels used post-step teacher phase; boundary labels can be one phase ahead of the command. Later collection corrects this without modifying these immutable packs.",
+    "Generic and phase heads differ in both architecture and normalization (phase clamps normalized inputs to +/-10); the comparison does not isolate phase supervision alone.",
+    "The no-ACT ablation removes both the ACT prior and decoder features; these tests do not isolate their separate causal effects.",
+    "RGB reference errors use the previous post-step scoring ball position to align with the next pre-step perception call; privileged positions are audit-only. Large all-table errors can include balls outside the detector workspace; the report separates in-workspace errors."
+  ],
+  "findings": [
+    "Generic ACT-conditioned recovery completed 0/2 per arm. SO101 final IK rejected 1375/1500 ticks at the command stop margin; Panda rejected 1214/1500 ticks outside workspace. These are predicted-action feasibility failures, not aborted episodes.",
+    "No-ACT recovery completed 1/2 SO101 and 0/2 Panda tasks. The SO101 success held the ball for 75 ticks and completed in 255 ticks; the failed SO101 trial never held it.",
+    "Phase-supervised recovery completed 0/2 per arm. Panda seed12000 accepted all 750 IK requests but never held or lifted the ball, while predicting TRANSPORT for 229, LIFT for 151, LOWER for 85 and RELEASE for 61 ticks. Physical grasp confirmation is missing even when IK is feasible.",
+    "The successful SO101 no-ACT trial stayed within the training gripper-clock range. Several failed generic trials reached >10 training standard deviations in that clock; generic inputs are unclamped. This supports a covariate-shift bottleneck but is not an intervention establishing causation."
+  ],
+  "shared_runtime_source_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/franka_emika_panda/panda.xml": "96ad67da03710f17f798c9478fd9e9efdf24a3bf8359f05e456dd9fb158ea273",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/manifest.json": "7432b4e1f304fcc375bbfe323d9e71cdfe69ae238880287b926bfba74f345983",
+    "/Users/deveshvyas/Downloads/real2sim/assets/menagerie/robotstudio_so101/so101.xml": "982c02c027ec0c62d3459d0a6eb00dfb7dc13a451992e72ce99addc71f209805",
+    "/Users/deveshvyas/Downloads/real2sim/configs/data.yaml": "92ad4dbdeb0d037c5ba72c3ee2d6ca54f606467d52e0a8dccfd7b443c649f8c9",
+    "/Users/deveshvyas/Downloads/real2sim/configs/v2/data.waypoint_20261026.yaml": "d6782e3bf93de33770d5d2a3a72f5a56381a154f3bb7a358f3cef73b5b2d80ff",
+    "/Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml": "6a0180df6e2c0d584763ce9f328558145ad802a63fc542938cee0389b8871804",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/benchmark_frozen_act.py": "9ce9ecfc1652566ed219d79f82eb09f653d1d78e8363485676613f3b519d79fe",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/diag_v2_learned_panda_retarget_20261027.py": "9088180069704419b322a6d581baaa7c122156adee19dccb62dac54add400ae4",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/evaluate_hf_act_20261027.py": "3d04f6ec8b26b965719c55209ea7b0173dff5da832175a8eedbfcb1629379ecb",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/evaluate_hf_act_panda_20261028.py": "96514ae933b2718a9abf4a5c5780e9646f8d3c51e623c161c480b0cabdbc5e79",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/run_recovery_dagger.py": "8bce8bfac4d6d09bed41d9fb5041daa84be546ad2005dc62e54f31244986c1f2",
+    "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/blobs/1156655427dab223c835ac4a49e9f199478e2689": "4c82d0d5fbc07f004f123522bde8f0b4fbd20a16e5a1bc0590f39645daee0132",
+    "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/blobs/a07d78b910655ce580e839affa6eb97a0c5674b2": "86c4323f7ade6e0396894276e2996cd4cdd2cf3915a9d93bc59ecde7265953f4",
+    "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/blobs/89/894e9c6cfa1d65e193ade92474451f967bc64ca22a31894a491697ddf2aba765": "5dab91076d1e3b274674a888f522ce5fdddaf69ddd05c1adf3bce1742b99f65c",
+    "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/blobs/9ccb342474cecbf2bdbb034d27169a351ad96d2a": "648b415125a183dfd6cbc47c1dc04ab3f2d912654ef22a12ca5e8b93d7d85cdd",
+    "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/blobs/b1/b1b9907d7b519cd608ddeb80812d182859f9e5f4c4bc8a363cb91804e779bca5": "d57b5db1a84a935e4630536d5ab8f82986044597f9c1a15a9184f2c5f28d817d",
+    "/Users/deveshvyas/Downloads/real2sim/.cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/blobs/2e29986c15aa47c136d4f993735e101aef46453b": "9c6ddaf1fcfb3ecd7f9c79ab3441858ddc91bad73c28aa7131448f62916a2105",
+    "/Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml": "364a7292b8559c08bb6b25b07834f64d5c78da7b1e10d3167bcef16bf9c2d9a4",
+    "/Users/deveshvyas/Downloads/real2sim/physical_measurements.md": "8a31d789968eef7543df6ab177ff9f60f820300b1a25ef766bf3894fc116273b",
+    "/Users/deveshvyas/Downloads/real2sim/scripts/evaluate_hf_recovery.py": "edd63a176f90ba93e76686cc4f828dcf51036e69423e7088bb0aa2fe884e0b18",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/artifacts.py": "d9148566b3e47d41767937cf2796fd9225f7fe6a2003a51c10bb5924979b1ab0",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/config.py": "8b113777aa547df82052a77b86ed11aaf82b175ecf55492414d7a32d6705d6e5",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/evaluation/metrics.py": "44a2a3971f87e3690b18d9e63b1ac1da33aba58dd0eedcfd7968dc131a4ae710",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/evaluation/video.py": "7a10fa5399fdea290cfc87ac58cdfb9896f10d642568c58214107881b3b674dd",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/__init__.py": "0d3da53e932f928b2e48e7fa016ec65bee6e97f14fda2ae0f669e94971b4c0a8",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/checkerboard.py": "44acacba609c18845437d283c6611d5bb9a1e6bb75d96d464c342920cb0d1248",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/image_measurements.py": "629d281d6afbb2552ff80d679fd2b9932d8caa95e7042499ebb9edb372f1ccda",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/planar_camera.py": "54c7a89aae76f2d03898a25efe0d51dd0625f738323a5cc35670d31dce52a9ce",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/registration.py": "3cc8b2948b9889fb10618beaefb2bbecd86d349789f11616b30b0ee050741412",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so101_fk.py": "0a918095d5794309e4a68e60b3b485fa3aeda029201eff5ee861e7f541051395",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/geometry/so3.py": "bd39987bdc6c85bdd39c102896543e254c69ed57b446435d4fff841f2e9dd758",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/__init__.py": "98d9a84aefe82d03647857bc3012a9c3054bb636a118567bdbd94f738f8b877f",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/adapter.py": "fb2756cf56245813b8eb0475af84a3371c1cdfddda0d43b8712109a72335edf3",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/env.py": "30014ec1d3803730c35b8390858e5f11633f08bc3524bc59f50a05b21c4a4d49",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/model.py": "e87dab907b187bd37806c1f23a97488b02c841c030de8bf3a8c533fefd10df79",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/retarget.py": "9ba107ff07a4a9d0af7da14cfcf76ff5ae231db65866ae37b162e5597178a7d4",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/validate_ik.py": "fdbb80259ccafb7dbfdd39ec14dddab3816d3c39512046484dcfb954f8705137",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/panda/workspace.py": "f4e7618860e200888c4318356f19adef9b8e983a870d61174609b1e7a1c92c40",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/adapters.py": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/common_recovery.py": "2d117757dc71309bc63c141019125c51d6b7e329d097b7647affaea13f509199",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/follower_joint.py": "74f04cf7110cf914c55217c40c57987e88f2a68cd0e13a90bc897bdafddef55a",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/hf_recovery.py": "88d0b4dffe1f0db5252ae700ba5fd01d293ea9d16fa2a7c14fe379c943ea3d76",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/native_lerobot_act.py": "d55a997f33f0a920b0d85d3ca26cef5186c5fb2d007166982ec53f60facadd43",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/phase_recovery_mlp.py": "1e4f7ff5d16a4ff7872c5100be94c1f96344121bdb2c63f4e1d73069dfe7580b",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/recovery_mlp.py": "c511e6b092c526258394399713265e7d11dc64a5063fc1f8f7024d2f93237494",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/rgb_reference_tracker.py": "bff623e1b720878e3edf128a8732dffc180a105e73a0462aae69d30d1f1ccd07",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/visual_targets.py": "1611fd074697089dab8de109469b8a3bfe968f1842621ba906c575454165eec0",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/policy/visual_waypoint.py": "0d0092ace2a7607011b07ce27bda90237af8b208048feafba9ff97093a13661d",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/serialization.py": "e084156a04328c7aef3b2684bb723a231a1dba7e4aad87ee56a11f5a66309a43",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/__init__.py": "a386ab89d84ce49e09c678d149806f5a602e5aff12dab7ee58724ae2bafd2c32",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/ball_support.py": "b6a6d869daff5eb716c61bc1746c23348b423a4e34f2a9f382e51a0a40b810ef",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/base_env.py": "b5cc9ce8a8e899c3cc27de8871afeef79ac9435d3d41a2bb708c163af383d9ee",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/camera_fit.py": "9a03fb7d8fb2dfa79249d024061e4166d40156abba53b3c379b859041ad3dc5b",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/cameras.py": "0c0ea3f954ac8fa8d20f305d93c4553f70362525925d96f924e57aa2ce507bb4",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/contact_solver.py": "3375b0f6c6aa3aae30eba82c77a725a9b5dbbe7dc6358b638f8d8d1d2debef06",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/env.py": "0a3b3b32c4cceb9b576eb6d20767e06cec98e29290d388820619ed375e8e3940",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/follower_response.py": "69b80f2e9a3959e45d97757d9f9bda533206349ad02479cca644160f8e4a3410",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/kinematics.py": "3b211879ea4127f67913036eb333a1928f13bebe58f4788067f466a963f4d106",
+    "/Users/deveshvyas/Downloads/real2sim/src/real2sim/sim/model.py": "f001f747f78e003a3ccc581b582026a288dbe4a9bf41a799e52520013bddcbab"
+  },
+  "source_set_contract": "Each exact source map is shared_runtime_source_sha256 merged with source_sets[source_set_id]; source_set_id is SHA256 of sorted-key JSON of that full map.",
+  "visual_spot_checks": [
+    {
+      "candidate": "phase",
+      "robot": "panda",
+      "seed": 12000,
+      "frame": 100,
+      "observation": "Ball is beside the outside of a jaw near the table, rather than contained between the fingers; agrees with zero held/lifted ticks."
+    },
+    {
+      "candidate": "noact",
+      "robot": "so101",
+      "seed": 12001,
+      "frame": 254,
+      "observation": "Ball rests in the observed bowl after the gripper has retreated; agrees with complete-task scoring."
+    }
+  ]
+}

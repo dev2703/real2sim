@@ -1,0 +1,135 @@
+{
+  "schema": "observable_jaw_feedback_retrospective_replay_v1",
+  "date": "2026-10-29",
+  "scope": "Post-hoc diagnostics on previously inspected development traces. Thresholds are engineering assumptions; this is not an independent detector-validation cohort or a new closed-loop evaluation.",
+  "source_report": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/report.json",
+  "source_report_sha256": "4144e0a951d0bce4a7593522e6eb0df0b524d02857f7e27fa264f3cefd3589ab",
+  "monitor_source": "src/real2sim/policy/grasp_feedback.py",
+  "monitor_source_sha256": "fce09ca766830fec5f0648781e9bda361e20bbdab6b866e0492d9ef4dee6625d",
+  "monitor_config": {
+    "hz": 25.0,
+    "empty_opening": 0.08,
+    "resistance_opening": 0.18,
+    "settle_s": 0.2,
+    "minimum_lift_m": 0.02,
+    "loss_dwell_s": 0.08,
+    "free_ball_separation_m": 0.06,
+    "narrowing_warning": 0.12
+  },
+  "inputs": "Only latest saved causal recovery frame TCP xyz, measured semantic opening, and previous selected jaw command. Historical traces do not separately record issued semantic jaw commands. No RGB or scoring fields enter monitor.update.",
+  "selected_vs_issued_limitation": "For Panda, the common executor issues selected gripper intent even when its arm move is rejected. SO101 traces would require separate issued-command reconstruction and are excluded.",
+  "scoring_only": "Existing task success, lifted and held flags are read only after each feedback update to label diagnostic associations. No scorer signal enters the monitor.",
+  "unchanged_closed_loop_trials": true,
+  "new_closed_loop_trials": 0,
+  "summary": {
+    "trials": 8,
+    "successful_trials": 2,
+    "failures_with_narrowing_warning": 6,
+    "successes_with_narrowing_warning": 0,
+    "never_held_trials_with_candidate": 1
+  },
+  "limitations": [
+    "A jaw obstruction can produce a candidate without a held ball; seed12008 demonstrates this.",
+    "A narrowing warning can indicate seating/slip and cannot verify a dropped object.",
+    "An empty-jaw loss signal can occur well after physical loss.",
+    "Both successful trials intentionally release after transport; that release is not treated as a retention failure."
+  ],
+  "trials": [
+    {
+      "seed": 12002,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12002/ticks.jsonl",
+      "trace_sha256": "239ce72f902804bf0b19e52fe049627271ef15c77833a56a82bbf5c771c7bf5b",
+      "pick_place_success": true,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 108,
+      "first_narrowing_warning_tick": null,
+      "first_empty_loss_tick": null,
+      "first_post_lift_truth_loss_tick": 170
+    },
+    {
+      "seed": 12003,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12003/ticks.jsonl",
+      "trace_sha256": "fd3794a2bbd9595b8a8ad53903c12bb79616334c03e5f05d2541da5a4f2625e3",
+      "pick_place_success": false,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 132,
+      "first_narrowing_warning_tick": 229,
+      "first_empty_loss_tick": 237,
+      "first_post_lift_truth_loss_tick": 229
+    },
+    {
+      "seed": 12004,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12004/ticks.jsonl",
+      "trace_sha256": "9b2ac6ea0b8f19186d8842556a791a1c50f94cd04e85a332a50001377e7c7146",
+      "pick_place_success": true,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 86,
+      "first_narrowing_warning_tick": null,
+      "first_empty_loss_tick": null,
+      "first_post_lift_truth_loss_tick": 149
+    },
+    {
+      "seed": 12005,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12005/ticks.jsonl",
+      "trace_sha256": "a50452442c31dfbfe8697db7ff6ac0e9574cf278ee209d50dc279100476ea60a",
+      "pick_place_success": false,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 111,
+      "first_narrowing_warning_tick": 173,
+      "first_empty_loss_tick": 180,
+      "first_post_lift_truth_loss_tick": 173
+    },
+    {
+      "seed": 12006,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12006/ticks.jsonl",
+      "trace_sha256": "bb0efa1d14f32a0bfebd1e75fdbb18ba960217893af177fdf1193e854e0b253e",
+      "pick_place_success": false,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 148,
+      "first_narrowing_warning_tick": 235,
+      "first_empty_loss_tick": 391,
+      "first_post_lift_truth_loss_tick": 235
+    },
+    {
+      "seed": 12007,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12007/ticks.jsonl",
+      "trace_sha256": "6ab387224528f33198a25b6a355d4c2a19af77603ea705ea0cf7c725bdc6d15a",
+      "pick_place_success": false,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 170,
+      "first_narrowing_warning_tick": 234,
+      "first_empty_loss_tick": 241,
+      "first_post_lift_truth_loss_tick": 233
+    },
+    {
+      "seed": 12008,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12008/ticks.jsonl",
+      "trace_sha256": "0b28b655f52a88058a9123701e3bc4cdd5ff8660392b34abd1a93cce017df675",
+      "pick_place_success": false,
+      "scoring_only_lifted_any": false,
+      "scoring_only_held_any": false,
+      "first_candidate_tick": 165,
+      "first_narrowing_warning_tick": 168,
+      "first_empty_loss_tick": null,
+      "first_post_lift_truth_loss_tick": null
+    },
+    {
+      "seed": 12009,
+      "trace": "outputs/v2/recovery_mlp_tracked1_phase_panda_dev8_20261029/seed_12009/ticks.jsonl",
+      "trace_sha256": "851ecfa77d63303b71beaa4f7572a96b08b1672b34a492ac821def409935fa6c",
+      "pick_place_success": false,
+      "scoring_only_lifted_any": true,
+      "scoring_only_held_any": true,
+      "first_candidate_tick": 143,
+      "first_narrowing_warning_tick": 205,
+      "first_empty_loss_tick": 212,
+      "first_post_lift_truth_loss_tick": 204
+    }
+  ]
+}

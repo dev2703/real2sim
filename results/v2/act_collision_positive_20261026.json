@@ -1,0 +1,238 @@
+{
+  "schema": "act_collision_and_image_domain_20261026_positive_v1",
+  "physical_calibration_accepted": false,
+  "reserved_episodes_used": [],
+  "learned_task_success_claimed": false,
+  "source_sha256_before": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/diag_v2_act_collision_positive_20261026.py": "8369759a9452b94d736cf1d10a11856fc1da1857b25556389b321166f3930b7d",
+    "outputs/v2/inference_sim_smoke_20261023/sim.yaml": "971040ecb90172defc1a3ad1538d247fee9333f9399b3ac21d3359e0c9756f6d",
+    "outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/model.safetensors": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+    "src/real2sim/policy/adapters.py": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+    "src/real2sim/sim/kinematics.py": "3b211879ea4127f67913036eb333a1928f13bebe58f4788067f466a963f4d106"
+  },
+  "current_pose_rollout": {
+    "execution_semantics_ablation": "current_pose replaces saved accepted_target at runtime only",
+    "checkpoint_contract_modified": false,
+    "seed": 0,
+    "ticks": 375,
+    "success": false,
+    "held": false,
+    "lifted": false,
+    "phase_failed": "approach",
+    "closest_tool_ball_mm": 227.61673683707912,
+    "reasons": {
+      "accepted": 375
+    },
+    "max_requested_step_m": 0.024
+  },
+  "source_sha256_after": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/diag_v2_act_collision_positive_20261026.py": "8369759a9452b94d736cf1d10a11856fc1da1857b25556389b321166f3930b7d",
+    "outputs/v2/inference_sim_smoke_20261023/sim.yaml": "971040ecb90172defc1a3ad1538d247fee9333f9399b3ac21d3359e0c9756f6d",
+    "outputs/v2/three_episode_history4_20261026/training/checkpoints/002000/model.safetensors": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+    "src/real2sim/policy/adapters.py": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+    "src/real2sim/sim/kinematics.py": "3b211879ea4127f67913036eb333a1928f13bebe58f4788067f466a963f4d106"
+  },
+  "runtime_source_changes": [],
+  "full_report": "outputs/v2/act_collision_positive_20261026/report.json",
+  "full_report_sha256": "74eeda59da75780fa88668e907cc525feb9e484c66894f2bdf4e0a2060c72342",
+  "collision_modes": {
+    "queue2": {
+      "trace_sha256": "93993efd85585747db519d38d7f396a401863a01e0bee415c014aa15f7b89a8e",
+      "reasons": {
+        "accepted": 49,
+        "collision": 326
+      },
+      "candidate_contacts_beyond_gate": {
+        "gripper/world": 326
+      },
+      "initial_tool_task_m": [
+        0.19103546007207578,
+        0.005779604854951829,
+        0.04040224282375393
+      ],
+      "final_tool_task_m": [
+        0.22182935636299547,
+        0.015600018635156957,
+        0.005314881976483665
+      ],
+      "final_ball_scoring_only_m": [
+        0.35273098696389027,
+        0.22845816659973406,
+        0.02139224458047362
+      ],
+      "final_horizontal_tool_ball_error_mm": 249.88763084411144,
+      "max_requested_feedback_mm": 2.96109409059572,
+      "first_rejection": {
+        "tick": 50,
+        "replayed_reason": "collision",
+        "original_reason": "collision",
+        "contacts_beyond_gate": [
+          {
+            "bodies": [
+              "gripper",
+              "world"
+            ],
+            "penetration_mm": 2.621745468558312,
+            "position_task_m": [
+              0.2050580324406314,
+              0.016807987284152184,
+              -0.013310872734279111
+            ]
+          }
+        ]
+      },
+      "candidate_penetration_min_mm": 2.111496267507951,
+      "candidate_penetration_max_mm": 2.621745468558312,
+      "first_rejected_tick": 50,
+      "tool_translation_before_stall_mm": [
+        30.53157963081943,
+        9.784264410561633,
+        -35.810081310960754
+      ],
+      "remaining_horizontal_ball_error_at_stall_mm": 250.05591954304268
+    },
+    "queue1": {
+      "trace_sha256": "650d4fd615acfd26c2994aae3bb9ea9626894dea8308dd902934dafbea91cbec",
+      "reasons": {
+        "accepted": 56,
+        "collision": 319
+      },
+      "candidate_contacts_beyond_gate": {
+        "gripper/world": 319
+      },
+      "initial_tool_task_m": [
+        0.19103546007207578,
+        0.005779604854951829,
+        0.04040224282375393
+      ],
+      "final_tool_task_m": [
+        0.2315676463267567,
+        0.020605317092943453,
+        0.0046426578355673875
+      ],
+      "final_ball_scoring_only_m": [
+        0.35273098696389027,
+        0.22845816659973406,
+        0.02139224458047362
+      ],
+      "final_horizontal_tool_ball_error_mm": 240.5896135797275,
+      "max_requested_feedback_mm": 3.8065016609946682,
+      "first_rejection": {
+        "tick": 56,
+        "replayed_reason": "collision",
+        "original_reason": "collision",
+        "contacts_beyond_gate": [
+          {
+            "bodies": [
+              "gripper",
+              "world"
+            ],
+            "penetration_mm": 2.0297466464561653,
+            "position_task_m": [
+              0.21371724296348982,
+              0.021513648511438662,
+              -0.013014873323228149
+            ]
+          }
+        ]
+      },
+      "candidate_penetration_min_mm": 2.0297466464561653,
+      "candidate_penetration_max_mm": 2.378263797236602,
+      "first_rejected_tick": 56,
+      "tool_translation_before_stall_mm": [
+        39.92905476341735,
+        14.715957695053794,
+        -36.39322215928531
+      ],
+      "remaining_horizontal_ball_error_at_stall_mm": 240.98862715435317
+    },
+    "ensemble_0p01": {
+      "trace_sha256": "b6aab30f90d483285e9994b6ca22fb86c72b9c5b39f4c28a8f1e4ed305d50b11",
+      "reasons": {
+        "accepted": 46,
+        "collision": 329
+      },
+      "candidate_contacts_beyond_gate": {
+        "gripper/world": 329
+      },
+      "initial_tool_task_m": [
+        0.19103546007207578,
+        0.005779604854951829,
+        0.04040224282375393
+      ],
+      "final_tool_task_m": [
+        0.2305321277554388,
+        0.021319267686802985,
+        0.005314148989234768
+      ],
+      "final_ball_scoring_only_m": [
+        0.35273098696389027,
+        0.22845816659973406,
+        0.02139224458047362
+      ],
+      "final_horizontal_tool_ball_error_mm": 240.49757719093225,
+      "max_requested_feedback_mm": 3.2937366968013957,
+      "first_rejection": {
+        "tick": 47,
+        "replayed_reason": "collision",
+        "original_reason": "collision",
+        "contacts_beyond_gate": [
+          {
+            "bodies": [
+              "gripper",
+              "world"
+            ],
+            "penetration_mm": 2.59721066133467,
+            "position_task_m": [
+              0.21422343796103488,
+              0.02260838161115264,
+              -0.01329860533066718
+            ]
+          }
+        ]
+      },
+      "candidate_penetration_min_mm": 2.2012574195355854,
+      "candidate_penetration_max_mm": 2.59721066133467,
+      "first_rejected_tick": 47,
+      "tool_translation_before_stall_mm": [
+        39.22585061085768,
+        15.496269817750694,
+        -35.768609980132425
+      ],
+      "remaining_horizontal_ball_error_at_stall_mm": 240.67264841792903
+    }
+  },
+  "paired_image_domain_probe": {
+    "episode": 9,
+    "source_frame_range": [
+      100,
+      198
+    ],
+    "rows": 50,
+    "native_invalid_rows_excluded_without_clipping": [],
+    "same_recorded_causal_state_history_for_both_images": true,
+    "simulated_objects": "original provisional seeded scene; real object locations/camera calibration are not established",
+    "scope": "teacher-forced image-domain intervention; not a causal counterfactual task label or closed-loop result",
+    "summary": {
+      "recorded_images": {
+        "translation_error_mean_mm": 3.368971824645996,
+        "translation_error_p95_mm": 6.474853038787842,
+        "positive_moving_direction_fraction": 0.9148936170212766,
+        "moving_rows": 47
+      },
+      "simulated_images": {
+        "translation_error_mean_mm": 2.837519884109497,
+        "translation_error_p95_mm": 6.493511199951172,
+        "positive_moving_direction_fraction": 0.9148936170212766,
+        "moving_rows": 47
+      }
+    },
+    "history_manifest_sha256": "bca6b31c12cc317e447a77867ff2be48d78e5306399d2374f2e393addc2c214f"
+  },
+  "interpretation": {
+    "collision": "Every replayed rejected target penetrates the fixed gripper against the table; not base self-collision. These are configured-scene probes, not physical collision evidence.",
+    "reference": "Current-pose ablation removes collision rejection on this seed but still fails approach; repeated accepted-target rejections aggravate an already wrong approach trajectory.",
+    "appearance": "Paired recorded-history image swap does not support blaming rendered images alone in this50-row development sample; simulated-image translation error is lower here.",
+    "next": "Compare object-relative goal/action representation or use staged geometric demonstrations as simulation training data. Keep pure learned and assisted success separate; do not loosen contact limits to chase this trajectory."
+  }
+}

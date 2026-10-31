@@ -1,0 +1,244 @@
+{
+  "schema": "history4_capacity_comparison_20261026_v1",
+  "complete": true,
+  "training_episodes": [
+    11,
+    8,
+    23
+  ],
+  "scheduled_examples": 32000,
+  "updates": 2000,
+  "checkpoint": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training/checkpoints/002000",
+  "checkpoint_sha256": "c6ee5facfcd8d4240af56cca395074848cf89d33777fd680c0eea637fe77fd3b",
+  "gate": {
+    "version": "three_episode_movement_and_drift_v2",
+    "pass": false,
+    "expected_training_episodes": [
+      11,
+      8,
+      23
+    ],
+    "episode_coverage_pass": true,
+    "per_episode": {
+      "8": {
+        "translation_mean_mm": 1.6806113719940186,
+        "gripper_mae_fraction": 0.009045211598277092,
+        "pass": false,
+        "checks": {
+          "translation_fit": false,
+          "gripper_fit": true,
+          "movement_vector_error_mean_vs_hold": true,
+          "stationary_drift_summed_error_per_run_mean_vs_hold": false,
+          "stationary_drift_summed_error_per_run_max_vs_hold": false,
+          "movement_vector_error_mean_vs_persistence": true,
+          "stationary_drift_summed_error_per_run_mean_vs_persistence": true,
+          "stationary_drift_summed_error_per_run_max_vs_persistence": true
+        },
+        "comparisons": {
+          "hold": {
+            "vector_error_mean": {
+              "model": 2.058265209197998,
+              "baseline": 5.862186908721924,
+              "pass": true
+            },
+            "summed_error_per_run_mean": {
+              "model": 1.4903225253025691,
+              "baseline": 0.08545764187971751,
+              "pass": false
+            },
+            "summed_error_per_run_max": {
+              "model": 7.86539363861084,
+              "baseline": 0.36279168725013733,
+              "pass": false
+            }
+          },
+          "persistence": {
+            "vector_error_mean": {
+              "model": 2.058265209197998,
+              "baseline": 3.102585554122925,
+              "pass": true
+            },
+            "summed_error_per_run_mean": {
+              "model": 1.4903225253025691,
+              "baseline": 2.7364678104718525,
+              "pass": true
+            },
+            "summed_error_per_run_max": {
+              "model": 7.86539363861084,
+              "baseline": 15.639028549194336,
+              "pass": true
+            }
+          }
+        }
+      },
+      "11": {
+        "translation_mean_mm": 1.8892234563827515,
+        "gripper_mae_fraction": 0.006948377471417189,
+        "pass": false,
+        "checks": {
+          "translation_fit": false,
+          "gripper_fit": true,
+          "movement_vector_error_mean_vs_hold": true,
+          "stationary_drift_summed_error_per_run_mean_vs_hold": false,
+          "stationary_drift_summed_error_per_run_max_vs_hold": false,
+          "movement_vector_error_mean_vs_persistence": true,
+          "stationary_drift_summed_error_per_run_mean_vs_persistence": true,
+          "stationary_drift_summed_error_per_run_max_vs_persistence": true
+        },
+        "comparisons": {
+          "hold": {
+            "vector_error_mean": {
+              "model": 2.2500030994415283,
+              "baseline": 8.394247055053711,
+              "pass": true
+            },
+            "summed_error_per_run_mean": {
+              "model": 1.6713732205904448,
+              "baseline": 0.15742448445122975,
+              "pass": false
+            },
+            "summed_error_per_run_max": {
+              "model": 5.144801139831543,
+              "baseline": 0.48999667167663574,
+              "pass": false
+            }
+          },
+          "persistence": {
+            "vector_error_mean": {
+              "model": 2.2500030994415283,
+              "baseline": 3.5829060077667236,
+              "pass": true
+            },
+            "summed_error_per_run_mean": {
+              "model": 1.6713732205904448,
+              "baseline": 3.1906364376728353,
+              "pass": true
+            },
+            "summed_error_per_run_max": {
+              "model": 5.144801139831543,
+              "baseline": 13.773247718811035,
+              "pass": true
+            }
+          }
+        }
+      },
+      "23": {
+        "translation_mean_mm": 1.9150625467300415,
+        "gripper_mae_fraction": 0.00619834940880537,
+        "pass": false,
+        "checks": {
+          "translation_fit": false,
+          "gripper_fit": true,
+          "movement_vector_error_mean_vs_hold": true,
+          "stationary_drift_summed_error_per_run_mean_vs_hold": false,
+          "stationary_drift_summed_error_per_run_max_vs_hold": false,
+          "movement_vector_error_mean_vs_persistence": true,
+          "stationary_drift_summed_error_per_run_mean_vs_persistence": true,
+          "stationary_drift_summed_error_per_run_max_vs_persistence": true
+        },
+        "comparisons": {
+          "hold": {
+            "vector_error_mean": {
+              "model": 2.3951451778411865,
+              "baseline": 7.004050254821777,
+              "pass": true
+            },
+            "summed_error_per_run_mean": {
+              "model": 0.7065879880235746,
+              "baseline": 0.07124400024230663,
+              "pass": false
+            },
+            "summed_error_per_run_max": {
+              "model": 1.9747620820999146,
+              "baseline": 0.36250630021095276,
+              "pass": false
+            }
+          },
+          "persistence": {
+            "vector_error_mean": {
+              "model": 2.3951451778411865,
+              "baseline": 3.862560749053955,
+              "pass": true
+            },
+            "summed_error_per_run_mean": {
+              "model": 0.7065879880235746,
+              "baseline": 2.1938236011908603,
+              "pass": true
+            },
+            "summed_error_per_run_max": {
+              "model": 1.9747620820999146,
+              "baseline": 6.162473678588867,
+              "pass": true
+            }
+          }
+        }
+      }
+    },
+    "thresholds": {
+      "translation_mean_mm_below": 1.0,
+      "gripper_mae_fraction_below": 0.03
+    },
+    "baseline_rule": "Each episode must improve both hold and persistence on moving-vector error and mean/max stationary-run summed error. Exact zero-error ties pass; missing movement or stationary strata fail. Stationary predicted step is descriptive, since hold is identically zero."
+  },
+  "history4": {
+    "model": {
+      "translation_mean_mm": 1.8369081020355225,
+      "gripper_mae": 0.007303134072571993,
+      "moving_error_mm": 2.2447822093963623,
+      "stationary_mean_run_error_mm": 1.2992276485736778,
+      "stationary_max_run_error_mm": 7.86539363861084
+    },
+    "hold": {
+      "translation_mean_mm": 5.676342010498047,
+      "gripper_mae": 0.02291320264339447,
+      "moving_error_mm": 7.183223724365234,
+      "stationary_mean_run_error_mm": 0.10376963241979843,
+      "stationary_max_run_error_mm": 0.48999667167663574
+    },
+    "persistence": {
+      "translation_mean_mm": 2.9216973781585693,
+      "gripper_mae": 0.02291320264339447,
+      "moving_error_mm": 3.5408387184143066,
+      "stationary_mean_run_error_mm": 2.7084145771294104,
+      "stationary_max_run_error_mm": 15.639028549194336
+    }
+  },
+  "prefix2_baseline": {
+    "model": {
+      "translation_mean_mm": 1.8952839374542236,
+      "gripper_mae": 0.007181813474744558,
+      "moving_error_mm": 2.316333055496216,
+      "stationary_mean_run_error_mm": 1.272377469190737,
+      "stationary_max_run_error_mm": 8.539168357849121
+    },
+    "hold": {
+      "translation_mean_mm": 5.676342010498047,
+      "gripper_mae": 0.02291320264339447,
+      "moving_error_mm": 7.183223724365234,
+      "stationary_mean_run_error_mm": 0.10376963241979843,
+      "stationary_max_run_error_mm": 0.48999667167663574
+    },
+    "persistence": {
+      "translation_mean_mm": 2.9216973781585693,
+      "gripper_mae": 0.02291320264339447,
+      "moving_error_mm": 3.5408387184143066,
+      "stationary_mean_run_error_mm": 2.7084145771294104,
+      "stationary_max_run_error_mm": 15.639028549194336
+    }
+  },
+  "baseline_audit": "outputs/v2/three_episode_prefix2_20261025/training_motion_002000.json",
+  "history4_audit": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/three_episode_history4_20261026/training_motion_002000.json",
+  "original_training_report": "outputs/v2/three_episode_history4_20261026/report.json",
+  "runtime_only_dependency_changes": {
+    "src/real2sim/policy/adapters.py": {
+      "training_sha256": "4034c497ac2d777a340a00205b75303829391035f0ca1082a994eebbe8340595",
+      "current_runtime_sha256": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+      "original_source_snapshot": "outputs/v2/three_episode_history4_20261026/training_source_snapshot/src/real2sim/policy/adapters.py",
+      "scope": "Executor-only change after training dependency snapshot; policy/train/data computation unchanged."
+    }
+  },
+  "physical_calibration_accepted": false,
+  "learned_task_success_established": false,
+  "reserved_episodes_used": [],
+  "scope": "Matched training-fit comparison using original provisional FK. Closed-loop execution is scored separately."
+}

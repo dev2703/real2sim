@@ -23,6 +23,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from real2sim.artifacts import sha256_file as sha256
 from real2sim.config import REPO_ROOT
 from real2sim.geometry.registration import fit_camera_registration, fit_joint_zero_offsets
 from real2sim.geometry.so101_fk import ARM_JOINTS, DEFAULT_MJCF
@@ -252,16 +253,9 @@ def fit_document(document, mode):
     return report
 
 
-def sha256(path):
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
-
-
 def dependency_hashes(mode):
-    files = [Path(__file__).resolve(), REPO_ROOT / "src/real2sim/geometry/registration.py"]
+    files = [Path(__file__).resolve(), REPO_ROOT / "src/real2sim/artifacts.py",
+             REPO_ROOT / "src/real2sim/geometry/registration.py"]
     if mode == "joint-zero":
         files.append(REPO_ROOT / "src/real2sim/geometry/so101_fk.py")
         # Conservatively include the whole pinned native model asset directory.

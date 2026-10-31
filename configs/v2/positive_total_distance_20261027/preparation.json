@@ -1,0 +1,59 @@
+{
+  "schema": "positive_camera_total_distance_candidate_v1",
+  "physical_calibration_accepted": false,
+  "source_sha256": {
+    "/Users/deveshvyas/Downloads/real2sim/scripts/prepare_v2_positive_total_distance_20261027.py": "cfd7765ac73fdb7a60d6f74dd078839b38d1ff46af2e61ea1c888f478935df3d",
+    "configs/v2/task.scalar_measured_20261026.yaml": "ca4c222acfaceca7f23eb71b565e79281d4cf67809f3c6e65f8f848c87887bd1",
+    "configs/v2/measurements.operator_20261026.json": "bb6401bfff000137d6d8384b6d9b8d9e75967347a542326f799ef5c0b02e288b",
+    "configs/v2/sim_so101.waypoint_20261026.yaml": "950381e293e22e337addd6251b153517914192695a7d8c438a2c3e40de2c209a",
+    "configs/v2/sim_panda.waypoint_20261026.yaml": "4e6fdb5536bf60a510dc0126f777713e7f3093a79f2952244752c1afe2e65d5b"
+  },
+  "files_sha256": {
+    "operator_clarification.json": "ec6f90e4fa5a57c60977b64f98d28d1e38e51b998f6ad435ac27f1209e945d68",
+    "task.yaml": "0c4d5026fadd50f1485e6a5902d644928603096bb11a88d3188446fd45e0ca17",
+    "sim_panda.yaml": "bbe99a29f15b304e4c34c89cca03392b8cfd0462964eedc719c8a2009d2df80a",
+    "sim_so101.yaml": "8c2fa167c628d75ecec1697810e78c2765012d7cd0b55deb16e9892b8e38dc14"
+  },
+  "ball_xy_task_m": [
+    0.0508,
+    0.3302
+  ],
+  "bowl_xy_task_m": [
+    0.2563108824761005,
+    0.1051037601737995
+  ],
+  "camera_position_task_m": [
+    0.8254999999999999,
+    0.4445,
+    0.3944
+  ],
+  "ball_bowl_distance_m": 0.30479999999999996,
+  "working_assumptions": {
+    "camera_minus_ball_xy_signs": [
+      1,
+      1
+    ],
+    "ball_bowl_measurement_kind": "total planar centre-to-centre distance assumed; not x-only",
+    "bowl_direction_method": "prior image-derived relative layout rotated by new-minus-old base/ball bearing",
+    "inferred_layout_yaw_rad": 0.8959483352277918,
+    "bowl_unit_direction_xy": [
+      0.6742483020869441,
+      -0.7385047238392406
+    ],
+    "source_old_ball_xy": [
+      0.3557,
+      0.2047
+    ],
+    "source_old_bowl_xy": [
+      0.318,
+      -0.035
+    ],
+    "operator_axes_assumed_task_axes": true,
+    "base_reference_assumed_task_origin_xy": true,
+    "camera_identity": "global observation.images.iphone",
+    "camera_rotation": "roll-free look-at nominal ball/bowl midpoint; not measured",
+    "mat_center": "nominal ball/bowl midpoint; not measured",
+    "intrinsics": "previous provisional focal length/principal point retained",
+    "independently_verified_registration": false
+  }
+}

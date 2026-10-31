@@ -1,0 +1,1120 @@
+{
+  "schema": "fixed_rgb_waypoint_generalization_20261026_v1",
+  "controller_source": "RGB_WAYPOINT_CONTROLLER",
+  "learned_policy": false,
+  "frozen_act_transfer_demonstrated": false,
+  "physical_calibration_accepted": false,
+  "seeds": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "protocol": "Unchanged controller and configured starts; paired same seeded ball positions; second set shifts bowl -x,+x,-y,+y by30mm in repeating declared schedule. Known static collision map updated by environment reset. No controller tuning between runs.",
+  "robots": {
+    "so101": {
+      "unshifted": {
+        "full_report": "outputs/v2/rgb_waypoint_so101_20261026_generalization/report.json",
+        "full_report_sha256": "27b6dd53065eeff068c1037c1b22f356fab2427566fe82de8fffab085a12b8bc",
+        "summary": {
+          "n": 10,
+          "aborted": 0,
+          "successes": 8,
+          "success_rate": 0.8,
+          "pick_place_successes": 8,
+          "pick_place_success_rate": 0.8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 18.624817375227448,
+          "max_action_saturation": 0.1667
+        },
+        "stage_counts": {
+          "acquired_rgb_targets": 10,
+          "grasp_planned": 8,
+          "held": 8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "pick_place_success": 8
+        },
+        "control_hz": 12.5,
+        "runtime_source_changes": [],
+        "max_robot_table_penetration_m": 0.0005298694840691899,
+        "trials": [
+          {
+            "seed": 10,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "No collision-free grasp branch satisfies native IK gates",
+            "abort": null,
+            "ticks": 375,
+            "ik_calls": 31,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_010/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_010/ticks.jsonl"
+          },
+          {
+            "seed": 11,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 102,
+            "ik_calls": 49,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_011/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_011/ticks.jsonl"
+          },
+          {
+            "seed": 12,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 103,
+            "ik_calls": 42,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_012/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_012/ticks.jsonl"
+          },
+          {
+            "seed": 13,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 110,
+            "ik_calls": 44,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_013/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_013/ticks.jsonl"
+          },
+          {
+            "seed": 14,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 109,
+            "ik_calls": 46,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_014/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_014/ticks.jsonl"
+          },
+          {
+            "seed": 15,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 116,
+            "ik_calls": 49,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_015/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_015/ticks.jsonl"
+          },
+          {
+            "seed": 16,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 105,
+            "ik_calls": 47,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_016/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_016/ticks.jsonl"
+          },
+          {
+            "seed": 17,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "No collision-free grasp branch satisfies native IK gates",
+            "abort": null,
+            "ticks": 375,
+            "ik_calls": 32,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_017/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_017/ticks.jsonl"
+          },
+          {
+            "seed": 18,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 102,
+            "ik_calls": 51,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_018/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_018/ticks.jsonl"
+          },
+          {
+            "seed": 19,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 103,
+            "ik_calls": 44,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_019/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization/seed_019/ticks.jsonl"
+          }
+        ]
+      },
+      "bowl_shift_30mm": {
+        "full_report": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/report.json",
+        "full_report_sha256": "1bf3d287e5e927e1e7e3479d8de2538598dea9607265d1323d8b97447ae6955c",
+        "summary": {
+          "n": 10,
+          "aborted": 0,
+          "successes": 8,
+          "success_rate": 0.8,
+          "pick_place_successes": 8,
+          "pick_place_success_rate": 0.8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 20.186726211406626,
+          "max_action_saturation": 0.1667
+        },
+        "stage_counts": {
+          "acquired_rgb_targets": 10,
+          "grasp_planned": 8,
+          "held": 8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "pick_place_success": 8
+        },
+        "control_hz": 12.5,
+        "runtime_source_changes": [],
+        "max_robot_table_penetration_m": 0.0005298694840691899,
+        "trials": [
+          {
+            "seed": 10,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "No collision-free grasp branch satisfies native IK gates",
+            "abort": null,
+            "ticks": 375,
+            "ik_calls": 31,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_010/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_010/ticks.jsonl"
+          },
+          {
+            "seed": 11,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 100,
+            "ik_calls": 49,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_011/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_011/ticks.jsonl"
+          },
+          {
+            "seed": 12,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 102,
+            "ik_calls": 42,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_012/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_012/ticks.jsonl"
+          },
+          {
+            "seed": 13,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 120,
+            "ik_calls": 44,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_013/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_013/ticks.jsonl"
+          },
+          {
+            "seed": 14,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 110,
+            "ik_calls": 46,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_014/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_014/ticks.jsonl"
+          },
+          {
+            "seed": 15,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 108,
+            "ik_calls": 49,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_015/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_015/ticks.jsonl"
+          },
+          {
+            "seed": 16,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 109,
+            "ik_calls": 47,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_016/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_016/ticks.jsonl"
+          },
+          {
+            "seed": 17,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "No collision-free grasp branch satisfies native IK gates",
+            "abort": null,
+            "ticks": 375,
+            "ik_calls": 32,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_017/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_017/ticks.jsonl"
+          },
+          {
+            "seed": 18,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 109,
+            "ik_calls": 51,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_018/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_018/ticks.jsonl"
+          },
+          {
+            "seed": 19,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 105,
+            "ik_calls": 44,
+            "video_path": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_019/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/seed_019/ticks.jsonl"
+          }
+        ],
+        "scenario_protocol": "outputs/v2/rgb_waypoint_so101_20261026_generalization_bowl/scenario_protocol.json",
+        "scenario_protocol_sha256": "a2241b87530d42602648ddec94c57af15ed7cd30536dc9e8d3a86a40c58dba7a"
+      },
+      "paired_layout_checks": {
+        "same_initial_native_readbacks_and_seeded_ball_positions": true,
+        "pairs": [
+          {
+            "seed": 10,
+            "actual_bowl_shift_xy_m": [
+              -0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.02975619725541423,
+              0.0001111090251697186
+            ],
+            "detected_shift_error_m": 0.00026792721724697084,
+            "unshifted_success": false,
+            "shifted_success": false
+          },
+          {
+            "seed": 11,
+            "actual_bowl_shift_xy_m": [
+              0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.029591776620799426,
+              -0.00015835526486243645
+            ],
+            "detected_shift_error_m": 0.000437861527466806,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 12,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              -0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.0002587547928448175,
+              -0.02941330025469671
+            ],
+            "detected_shift_error_m": 0.0006412258837251556,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 13,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.00019899450371196892,
+              0.02937685250448173
+            ],
+            "detected_shift_error_m": 0.0006541495346465248,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 14,
+            "actual_bowl_shift_xy_m": [
+              -0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.02975619725541423,
+              0.0001111090251697186
+            ],
+            "detected_shift_error_m": 0.00026792721724697084,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 15,
+            "actual_bowl_shift_xy_m": [
+              0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.029591776620799426,
+              -0.00015835526486243645
+            ],
+            "detected_shift_error_m": 0.000437861527466806,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 16,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              -0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.0002587547928448175,
+              -0.02941330025469671
+            ],
+            "detected_shift_error_m": 0.0006412258837251556,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 17,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.00019899450371196892,
+              0.02937685250448173
+            ],
+            "detected_shift_error_m": 0.0006541495346465248,
+            "unshifted_success": false,
+            "shifted_success": false
+          },
+          {
+            "seed": 18,
+            "actual_bowl_shift_xy_m": [
+              -0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.02975619725541423,
+              0.0001111090251697186
+            ],
+            "detected_shift_error_m": 0.00026792721724697084,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 19,
+            "actual_bowl_shift_xy_m": [
+              0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.029591776620799426,
+              -0.00015835526486243645
+            ],
+            "detected_shift_error_m": 0.000437861527466806,
+            "unshifted_success": true,
+            "shifted_success": true
+          }
+        ]
+      }
+    },
+    "panda": {
+      "unshifted": {
+        "full_report": "outputs/v2/rgb_waypoint_panda_20261026_generalization/report.json",
+        "full_report_sha256": "b17e77a361637cbece39919e1de70576ebaff491556eb885c088fc46479e06fd",
+        "summary": {
+          "n": 10,
+          "aborted": 0,
+          "successes": 8,
+          "success_rate": 0.8,
+          "pick_place_successes": 8,
+          "pick_place_success_rate": 0.8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 14.04018354921745,
+          "max_action_saturation": 0.0
+        },
+        "stage_counts": {
+          "acquired_rgb_targets": 8,
+          "grasp_planned": 8,
+          "held": 8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "pick_place_success": 8
+        },
+        "control_hz": 10.0,
+        "runtime_source_changes": [],
+        "max_robot_table_penetration_m": 0.0,
+        "trials": [
+          {
+            "seed": 10,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 79,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_010/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_010/ticks.jsonl"
+          },
+          {
+            "seed": 11,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 77,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_011/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_011/ticks.jsonl"
+          },
+          {
+            "seed": 12,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 76,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_012/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_012/ticks.jsonl"
+          },
+          {
+            "seed": 13,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 75,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_013/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_013/ticks.jsonl"
+          },
+          {
+            "seed": 14,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "RGB ball/bowl detection unavailable",
+            "abort": null,
+            "ticks": 300,
+            "ik_calls": 0,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_014/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_014/ticks.jsonl"
+          },
+          {
+            "seed": 15,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 75,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_015/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_015/ticks.jsonl"
+          },
+          {
+            "seed": 16,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "RGB ball/bowl detection unavailable",
+            "abort": null,
+            "ticks": 300,
+            "ik_calls": 0,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_016/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_016/ticks.jsonl"
+          },
+          {
+            "seed": 17,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 78,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_017/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_017/ticks.jsonl"
+          },
+          {
+            "seed": 18,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 75,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_018/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_018/ticks.jsonl"
+          },
+          {
+            "seed": 19,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 76,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_019/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization/seed_019/ticks.jsonl"
+          }
+        ]
+      },
+      "bowl_shift_30mm": {
+        "full_report": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/report.json",
+        "full_report_sha256": "03c295ec307ad1f713af6678ee6808e622d70da53c6716517ead2f05703b0d81",
+        "summary": {
+          "n": 10,
+          "aborted": 0,
+          "successes": 8,
+          "success_rate": 0.8,
+          "pick_place_successes": 8,
+          "pick_place_success_rate": 0.8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "rolled_out": 0,
+          "ball_escaped_table": 0,
+          "phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "pick_place_phase_failed_counts": {
+            "approach": 2,
+            "grasp": 0,
+            "transport": 0,
+            "release": 0,
+            "none": 8,
+            "aborted": 0
+          },
+          "ik_rejections_total": 0,
+          "mean_latency_ms": 15.408964186185063,
+          "max_action_saturation": 0.0
+        },
+        "stage_counts": {
+          "acquired_rgb_targets": 8,
+          "grasp_planned": 8,
+          "held": 8,
+          "lifted": 8,
+          "delivered": 8,
+          "released": 8,
+          "pick_place_success": 8
+        },
+        "control_hz": 10.0,
+        "runtime_source_changes": [],
+        "max_robot_table_penetration_m": 0.0,
+        "trials": [
+          {
+            "seed": 10,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 80,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_010/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_010/ticks.jsonl"
+          },
+          {
+            "seed": 11,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 77,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_011/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_011/ticks.jsonl"
+          },
+          {
+            "seed": 12,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 77,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_012/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_012/ticks.jsonl"
+          },
+          {
+            "seed": 13,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 73,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_013/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_013/ticks.jsonl"
+          },
+          {
+            "seed": 14,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "RGB ball/bowl detection unavailable",
+            "abort": null,
+            "ticks": 300,
+            "ik_calls": 0,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_014/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_014/ticks.jsonl"
+          },
+          {
+            "seed": 15,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 74,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_015/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_015/ticks.jsonl"
+          },
+          {
+            "seed": 16,
+            "pick_place_success": false,
+            "held_ever": false,
+            "lifted": false,
+            "delivered": false,
+            "released": false,
+            "phase_failed": "approach",
+            "controller_failure": "RGB ball/bowl detection unavailable",
+            "abort": null,
+            "ticks": 300,
+            "ik_calls": 0,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_016/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_016/ticks.jsonl"
+          },
+          {
+            "seed": 17,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 77,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_017/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_017/ticks.jsonl"
+          },
+          {
+            "seed": 18,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 75,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_018/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_018/ticks.jsonl"
+          },
+          {
+            "seed": 19,
+            "pick_place_success": true,
+            "held_ever": true,
+            "lifted": true,
+            "delivered": true,
+            "released": true,
+            "phase_failed": "none",
+            "controller_failure": null,
+            "abort": null,
+            "ticks": 75,
+            "ik_calls": 6,
+            "video_path": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_019/rollout.mp4",
+            "trace": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/seed_019/ticks.jsonl"
+          }
+        ],
+        "scenario_protocol": "outputs/v2/rgb_waypoint_panda_20261026_generalization_bowl/scenario_protocol.json",
+        "scenario_protocol_sha256": "68c9ccae585641de5a16c6bc38e6dacf232854323cbb630b32a57c2c37de9853"
+      },
+      "paired_layout_checks": {
+        "same_initial_native_readbacks_and_seeded_ball_positions": true,
+        "pairs": [
+          {
+            "seed": 10,
+            "actual_bowl_shift_xy_m": [
+              -0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.029734277113799112,
+              0.00010669660051561974
+            ],
+            "detected_shift_error_m": 0.0002863438786014191,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 11,
+            "actual_bowl_shift_xy_m": [
+              0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.029605221892190392,
+              -0.00019810547411960866
+            ],
+            "detected_shift_error_m": 0.0004416962002121669,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 12,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              -0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.00025813325215667815,
+              -0.029555342184609867
+            ],
+            "detected_shift_error_m": 0.000514153040112093,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 13,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.00020984659109363202,
+              0.029413351990397414
+            ],
+            "detected_shift_error_m": 0.0006230501416132512,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 14,
+            "actual_bowl_shift_xy_m": [
+              -0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.029734277113799112,
+              0.00010669660051561974
+            ],
+            "detected_shift_error_m": 0.0002863438786014191,
+            "unshifted_success": false,
+            "shifted_success": false
+          },
+          {
+            "seed": 15,
+            "actual_bowl_shift_xy_m": [
+              0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.029605221892190392,
+              -0.00019810547411960866
+            ],
+            "detected_shift_error_m": 0.0004416962002121669,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 16,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              -0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.00025813325215667815,
+              -0.029555342184609867
+            ],
+            "detected_shift_error_m": 0.000514153040112093,
+            "unshifted_success": false,
+            "shifted_success": false
+          },
+          {
+            "seed": 17,
+            "actual_bowl_shift_xy_m": [
+              0.0,
+              0.03
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.00020984659109363202,
+              0.029413351990397414
+            ],
+            "detected_shift_error_m": 0.0006230501416132512,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 18,
+            "actual_bowl_shift_xy_m": [
+              -0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              -0.029734277113799112,
+              0.00010669660051561974
+            ],
+            "detected_shift_error_m": 0.0002863438786014191,
+            "unshifted_success": true,
+            "shifted_success": true
+          },
+          {
+            "seed": 19,
+            "actual_bowl_shift_xy_m": [
+              0.02999999999999997,
+              0.0
+            ],
+            "detected_bowl_shift_xy_m": [
+              0.029605221892190392,
+              -0.00019810547411960866
+            ],
+            "detected_shift_error_m": 0.0004416962002121669,
+            "unshifted_success": true,
+            "shifted_success": true
+          }
+        ]
+      }
+    }
+  }
+}

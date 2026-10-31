@@ -89,7 +89,8 @@ def test_matched_observed_layout_preserves_predeclared_height_and_camera(ablatio
 
 def test_real_scene_preserves_fk_but_production_guard_stays_closed(ablation, tasks, tmp_path):
     original, candidate = tasks
-    reference_path = Path("outputs/v2/inference_sim_smoke_20261023/sim.yaml")
+    fixtures = Path(__file__).resolve().parents[1] / "fixtures/geometry_ablation"
+    reference_path = fixtures / "sim.yaml"
     task_path = tmp_path / "task.yaml"
     task_path.write_text(yaml.safe_dump(candidate))
     config = load_yaml(reference_path)
@@ -97,9 +98,7 @@ def test_real_scene_preserves_fk_but_production_guard_stays_closed(ablation, tas
     config["ik"]["workspace_min"][2] = -.0024
     config_path = tmp_path / "sim.yaml"
     config_path.write_text(yaml.safe_dump(config))
-    contract = json.loads(Path(
-        "outputs/v2/learning_screen_20261022/runs/L1_resnet_iphone/attempt-001/"
-        "checkpoints/004000/real2sim_contract.json").read_text())
+    contract = json.loads((fixtures / "real2sim_contract.json").read_text())
     saved_contract = copy.deepcopy(contract)
     with closing(So101PickPlaceEnv(reference_path, render_images=False)) as reference:
         with closing(So101PickPlaceEnv(config_path, render_images=False)) as env:

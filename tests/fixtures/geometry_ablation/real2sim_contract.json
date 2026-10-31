@@ -1,0 +1,214 @@
+{
+  "camera_keys": [
+    "observation.images.iphone"
+  ],
+  "image_shape_chw": [
+    3,
+    192,
+    256
+  ],
+  "letterbox": {
+    "src_w": 1280,
+    "src_h": 720,
+    "dst_w": 256,
+    "dst_h": 192,
+    "scale": 0.2,
+    "resized_w": 256,
+    "resized_h": 144,
+    "pad_left": 0,
+    "pad_top": 24
+  },
+  "state_names": [
+    "ee_x",
+    "ee_y",
+    "ee_z",
+    "ee_rot6d_0",
+    "ee_rot6d_1",
+    "ee_rot6d_2",
+    "ee_rot6d_3",
+    "ee_rot6d_4",
+    "ee_rot6d_5",
+    "ee_vx",
+    "ee_vy",
+    "ee_vz",
+    "gripper_obs"
+  ],
+  "action_names": [
+    "dx",
+    "dy",
+    "dz",
+    "d_rx",
+    "d_ry",
+    "d_rz",
+    "gripper_target"
+  ],
+  "label_semantics": "Next achieved provisional FK pose minus current observed provisional FK pose in SO101 base axes; recorded current gripper command",
+  "policy_hz": 12.5,
+  "source": {
+    "repo_id": "local/so101_act_pickplace_v2",
+    "revision": "local-content-addressed-v2",
+    "root": "/Users/deveshvyas/.cache/huggingface/lerobot/local/so101_act_pickplace_v2",
+    "codebase_version": "v3.0",
+    "fps": 25.0
+  },
+  "split": {
+    "version": "v2_conditions_v2",
+    "seed": 0,
+    "train": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      11,
+      12,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      32,
+      34,
+      35,
+      38,
+      39
+    ],
+    "val": [
+      9,
+      13,
+      22,
+      31,
+      36,
+      37
+    ],
+    "reserved": [
+      1,
+      10,
+      19,
+      21,
+      33,
+      40
+    ],
+    "excluded": [],
+    "condition_counts": {
+      "baseline": [
+        24,
+        4,
+        4
+      ],
+      "ball_shift": [
+        2,
+        1,
+        1
+      ],
+      "bowl_shift": [
+        3,
+        1,
+        1
+      ]
+    },
+    "annotations_sha256": "c17d13a5d0f106f8a43d2f6326838296a272b489d8c117c578235ad7b4e1ff97",
+    "conditions": {
+      "0": "baseline",
+      "1": "baseline",
+      "2": "baseline",
+      "3": "baseline",
+      "4": "baseline",
+      "5": "baseline",
+      "6": "ball_shift",
+      "7": "baseline",
+      "8": "ball_shift",
+      "9": "ball_shift",
+      "10": "ball_shift",
+      "11": "baseline",
+      "12": "baseline",
+      "13": "baseline",
+      "14": "baseline",
+      "15": "baseline",
+      "16": "baseline",
+      "17": "baseline",
+      "18": "baseline",
+      "19": "baseline",
+      "20": "baseline",
+      "21": "bowl_shift",
+      "22": "bowl_shift",
+      "23": "bowl_shift",
+      "24": "bowl_shift",
+      "25": "bowl_shift",
+      "26": "baseline",
+      "27": "baseline",
+      "28": "baseline",
+      "29": "baseline",
+      "30": "baseline",
+      "31": "baseline",
+      "32": "baseline",
+      "33": "baseline",
+      "34": "baseline",
+      "35": "baseline",
+      "36": "baseline",
+      "37": "baseline",
+      "38": "baseline",
+      "39": "baseline",
+      "40": "baseline"
+    },
+    "sha256": "d27beffc5d398a250e0fa891f2a8ac5a19f9c9384a41d06943f4233ace1205f6"
+  },
+  "derived_files_sha256": {
+    "arrays.npz": "01c1e8b1026415ee3ffa7b9136755b51a9326fd8b5bd4523a4da1f782c3cd08f",
+    "stats.json": "d26ca816d810244c57232429add70fd398bfa8b3a8902f6d45fcc6c5b826acff",
+    "images_iphone.npy": "f72f21f37cc6fec41c577c91521fd9ff34ef84f7c299299f3ac653324501b7aa"
+  },
+  "prepare_version": "v3",
+  "source_manifest_sha256": "6d17584827cbae8e3ca9df085bc0dfe9ba6b667236650c18e0594b1bbbe8dbbf",
+  "contract_version": "so101_v2_12p5_exploratory_provisional_geometry_v1",
+  "action_representation": "cartesian",
+  "controller_semantics": "accepted_target",
+  "calibration_sha256": "5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237",
+  "camera_transforms": {
+    "camera_iphone": {
+      "key": "observation.images.iphone",
+      "width": 1280,
+      "height": 720,
+      "fovy_deg": 22.79,
+      "intrinsics_px": {
+        "fx": 1786.0,
+        "fy": 1786.0,
+        "cx": 640.0,
+        "cy": 360.0
+      },
+      "extrinsics_provenance": "Historical provisional camera from configs/task.yaml; unverified. Offline training uses recorded images directly.",
+      "approx_position_task": [
+        0.0905,
+        -0.7043,
+        0.5214
+      ],
+      "look_at_task": [
+        0.2292,
+        0.0609,
+        0.0116
+      ],
+      "xyaxes_task": [
+        0.98589,
+        -0.08109,
+        0.14642,
+        -0.07603,
+        0.56236,
+        0.82339
+      ]
+    }
+  },
+  "timing_basis": "nominal source row clock; physical acquisition intervals unavailable",
+  "transfer_shared_task_sha256": "2ac202d1ee740097e471fac515efce31e85b4aa2ea6bd846c5aa287175025257"
+}

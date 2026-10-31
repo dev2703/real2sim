@@ -1,0 +1,430 @@
+{
+  "schema": "operator_measurement_application_audit_v1",
+  "measurement_file_present": true,
+  "measurement_source": "physical_measurements.md",
+  "measurement_source_sha256": "8a31d789968eef7543df6ab177ff9f60f820300b1a25ef766bf3894fc116273b",
+  "reported_relative_uncertainty": 0.05,
+  "reported_setup": {
+    "camera from ball": {
+      "source_text": "camera from ball: (30.5, 4.5, 16)",
+      "source_inches": [
+        30.5,
+        4.5,
+        16.0
+      ],
+      "value_m": [
+        0.7746999999999999,
+        0.1143,
+        0.4064
+      ],
+      "interval_m": [
+        [
+          0.735965,
+          0.8134349999999999
+        ],
+        [
+          0.108585,
+          0.120015
+        ],
+        [
+          0.38608,
+          0.42672
+        ]
+      ]
+    },
+    "ball & bowl": {
+      "source_text": "ball & bowl: 12 inches",
+      "source_inches": [
+        12.0
+      ],
+      "value_m": [
+        0.30479999999999996
+      ],
+      "interval_m": [
+        [
+          0.28956,
+          0.32003999999999994
+        ]
+      ]
+    },
+    "ball from robot base": {
+      "source_text": "Ball from robot base: (2,13)",
+      "source_inches": [
+        2.0,
+        13.0
+      ],
+      "value_m": [
+        0.0508,
+        0.3302
+      ],
+      "interval_m": [
+        [
+          0.04826,
+          0.05334
+        ],
+        [
+          0.31368999999999997,
+          0.34671
+        ]
+      ]
+    },
+    "mat": {
+      "source_text": "mat: (16,12)",
+      "source_inches": [
+        16.0,
+        12.0
+      ],
+      "value_m": [
+        0.4064,
+        0.30479999999999996
+      ],
+      "interval_m": [
+        [
+          0.38608,
+          0.42672
+        ],
+        [
+          0.28956,
+          0.32003999999999994
+        ]
+      ]
+    },
+    "bowl": {
+      "source_text": "Bowl: 4.5 diameter",
+      "source_inches": [
+        4.5
+      ],
+      "value_m": [
+        0.1143
+      ],
+      "interval_m": [
+        [
+          0.108585,
+          0.120015
+        ]
+      ]
+    },
+    "ball": {
+      "source_text": "Ball: 8 circumference",
+      "source_inches": [
+        8.0
+      ],
+      "value_m": [
+        0.2032
+      ],
+      "interval_m": [
+        [
+          0.19304,
+          0.21336
+        ]
+      ]
+    }
+  },
+  "missing_measurement_file": false,
+  "simulation_requires_new_capture": false,
+  "unmeasured_quantities": [
+    "Global camera optical orientation, focal lengths, principal point and lens distortion.",
+    "Wrist camera optical pose relative to its link and its lens intrinsics.",
+    "Robot joint neutral offsets relative to the nominal CAD model.",
+    "Loaded gripper opening, contact response and TCP location.",
+    "Bowl diameter inner/outer convention, support height and exact bowl bearing."
+  ],
+  "scenes": [
+    {
+      "robot": "so101",
+      "sim_config": "configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml",
+      "task_config": "/Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml",
+      "source_hash_matches_task": true,
+      "applied_fields_declared": [
+        "ball.radius",
+        "ball.start_region.center_task_xy",
+        "bowl.center_task_xy total distance with image-derived bearing prior",
+        "bowl.inner_rim_radius inferred from outer4.5in",
+        "table.mat.size_xy",
+        "camera_iphone.approx_position_task"
+      ],
+      "comparisons": {
+        "ball_radius": {
+          "configured_m": [
+            0.03234028443627313
+          ],
+          "reported_central_m": [
+            0.03234028443627313
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Circumference divided by 2*pi."
+        },
+        "base_ball_planar_distance": {
+          "configured_m": [
+            0.334084839524334
+          ],
+          "reported_central_m": [
+            0.334084839524334
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Rotation invariant; assumes the same base reference point."
+        },
+        "ball_bowl_total_distance": {
+          "configured_m": [
+            0.30479999999999996
+          ],
+          "reported_central_m": [
+            0.30479999999999996
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Uses total centre-to-centre planar distance; bearing remains a prior."
+        },
+        "mat_side_lengths_sorted": {
+          "configured_m": [
+            0.30479999999999996,
+            0.4064
+          ],
+          "reported_central_m": [
+            0.30479999999999996,
+            0.4064
+          ],
+          "difference_mm": [
+            0.0,
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Lengths compared without assuming operator-to-CAD axis alignment."
+        },
+        "camera_height_above_table": {
+          "configured_m": [
+            0.4064
+          ],
+          "reported_central_m": [
+            0.4064
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Operator clarified Z above tabletop; accounts for task/base origin height."
+        },
+        "camera_ball_horizontal_distance": {
+          "configured_m": [
+            0.7830865724809741
+          ],
+          "reported_central_m": [
+            0.7830865724809741
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Rotation invariant; camera identity is assumed to be global iPhone."
+        },
+        "bowl_diameter_if_outer": {
+          "configured_m": [
+            0.1143
+          ],
+          "reported_central_m": [
+            0.1143
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Conditional on 4.5-inch measurement describing the outer diameter."
+        }
+      },
+      "all_reported_scalars_within_bound": true,
+      "lighting_config_unchanged": true,
+      "lighting_reference": "/Users/deveshvyas/Downloads/real2sim/configs/v2/sim_so101.waypoint_20261026.yaml",
+      "lighting": {
+        "headlight_ambient": [
+          0.45,
+          0.45,
+          0.45
+        ],
+        "headlight_diffuse": [
+          0.45,
+          0.45,
+          0.45
+        ],
+        "headlight_specular": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "sun_diffuse": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "shadows": true
+      },
+      "joint_mapping": {
+        "sign": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "offset_deg": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "provenance": "PROVISIONAL-STANDARD; physical signs and zeros remain unverified"
+      },
+      "geometry_status": "all_reported_scalars_positive_axes_provisional_before_image_fit_20261028",
+      "source_sha256": {
+        "configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml": "364a7292b8559c08bb6b25b07834f64d5c78da7b1e10d3167bcef16bf9c2d9a4",
+        "/Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml": "6a0180df6e2c0d584763ce9f328558145ad802a63fc542938cee0389b8871804",
+        "/Users/deveshvyas/Downloads/real2sim/configs/v2/sim_so101.waypoint_20261026.yaml": "950381e293e22e337addd6251b153517914192695a7d8c438a2c3e40de2c209a"
+      }
+    },
+    {
+      "robot": "panda",
+      "sim_config": "configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml",
+      "task_config": "/Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml",
+      "source_hash_matches_task": true,
+      "applied_fields_declared": [
+        "ball.radius",
+        "ball.start_region.center_task_xy",
+        "bowl.center_task_xy total distance with image-derived bearing prior",
+        "bowl.inner_rim_radius inferred from outer4.5in",
+        "table.mat.size_xy",
+        "camera_iphone.approx_position_task"
+      ],
+      "comparisons": {
+        "ball_radius": {
+          "configured_m": [
+            0.03234028443627313
+          ],
+          "reported_central_m": [
+            0.03234028443627313
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Circumference divided by 2*pi."
+        },
+        "base_ball_planar_distance": {
+          "configured_m": [
+            0.334084839524334
+          ],
+          "reported_central_m": [
+            0.334084839524334
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Rotation invariant; assumes the same base reference point."
+        },
+        "ball_bowl_total_distance": {
+          "configured_m": [
+            0.30479999999999996
+          ],
+          "reported_central_m": [
+            0.30479999999999996
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Uses total centre-to-centre planar distance; bearing remains a prior."
+        },
+        "mat_side_lengths_sorted": {
+          "configured_m": [
+            0.30479999999999996,
+            0.4064
+          ],
+          "reported_central_m": [
+            0.30479999999999996,
+            0.4064
+          ],
+          "difference_mm": [
+            0.0,
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Lengths compared without assuming operator-to-CAD axis alignment."
+        },
+        "camera_height_above_table": {
+          "configured_m": [
+            0.4064
+          ],
+          "reported_central_m": [
+            0.4064
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Operator clarified Z above tabletop; accounts for task/base origin height."
+        },
+        "camera_ball_horizontal_distance": {
+          "configured_m": [
+            0.7830865724809741
+          ],
+          "reported_central_m": [
+            0.7830865724809741
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Rotation invariant; camera identity is assumed to be global iPhone."
+        },
+        "bowl_diameter_if_outer": {
+          "configured_m": [
+            0.1143
+          ],
+          "reported_central_m": [
+            0.1143
+          ],
+          "difference_mm": [
+            0.0
+          ],
+          "within_reported_bound": true,
+          "interpretation": "Conditional on 4.5-inch measurement describing the outer diameter."
+        }
+      },
+      "all_reported_scalars_within_bound": true,
+      "lighting_config_unchanged": true,
+      "lighting_reference": "/Users/deveshvyas/Downloads/real2sim/configs/v2/sim_panda.waypoint_20261026.yaml",
+      "lighting": null,
+      "joint_mapping": {
+        "sign": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "offset_deg": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "provenance": "PROVISIONAL-STANDARD; physical signs and zeros remain unverified"
+      },
+      "geometry_status": "all_reported_scalars_positive_axes_provisional_before_image_fit_20261028",
+      "source_sha256": {
+        "configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml": "73066f4b976f526369a1e72819f5c0bb49c79e4bdc967d32e98bffbc75965660",
+        "/Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml": "6a0180df6e2c0d584763ce9f328558145ad802a63fc542938cee0389b8871804",
+        "/Users/deveshvyas/Downloads/real2sim/configs/v2/sim_panda.waypoint_20261026.yaml": "4e6fdb5536bf60a510dc0126f777713e7f3093a79f2952244752c1afe2e65d5b"
+      }
+    }
+  ]
+}

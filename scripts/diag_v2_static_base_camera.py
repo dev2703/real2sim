@@ -7,7 +7,6 @@ soft-mat geometry and the assumed pinhole model prevent automatic adoption.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -18,6 +17,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from scipy.spatial import cKDTree
 
+from real2sim.artifacts import sha256_file as sha256
 from real2sim.config import load_yaml
 from real2sim.geometry.planar_camera import backproject_to_plane, fit_planar_camera
 
@@ -26,10 +26,6 @@ SOURCE = ROOT / "outputs/v2/iphone_stability_20261021/report.json"
 MAT = ROOT / "results/v2/mat_camera_initialization_20261022.json"
 MODEL = ROOT / "assets/menagerie/robotstudio_so101/so101.xml"
 ROI = np.array([[227, 338], [275, 334], [318, 345], [323, 370], [244, 388], [221, 375.]])
-
-
-def sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def summarize(errors):
@@ -425,7 +421,7 @@ def run(output):
         "software_versions": {"opencv": cv2.__version__, "mujoco": mujoco.__version__,
                               "numpy": np.__version__},
         "provenance_sha256": {str(p.relative_to(ROOT)): sha256(p)
-                              for p in (Path(__file__).resolve(), SOURCE, MAT, MODEL, split_path, task_path,
+                              for p in (Path(__file__).resolve(), ROOT / "src/real2sim/artifacts.py", SOURCE, MAT, MODEL, split_path, task_path,
                                         MODEL.parent / "assets/base_so101_v2.stl")},
     }
     (output / "report.json").write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")

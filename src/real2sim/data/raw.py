@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 from real2sim.config import sha256_file as sha256_file  # re-export for existing call sites
+from real2sim.artifacts import sha256_file as sha256_file
 
 SUPPORTED_CODEBASE_VERSIONS = ("v3.0",)
 

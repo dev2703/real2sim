@@ -1,0 +1,128 @@
+provenance_default: PROVISIONAL-STANDARD
+geometry_status: operator_ball_size_updated_camera_base_jaw_registration_unverified
+physical_calibration_accepted: false
+source_task: configs/v2/task.exploratory_20261022.yaml
+source_task_sha256: 5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237
+table:
+  height: 0.737
+  mat:
+    size_xy:
+    - 0.305
+    - 0.406
+    center_task_xy:
+    - 0.235
+    - 0.044
+frames:
+  T_task_so101base:
+    xyz:
+    - 0.0
+    - 0.0
+    - 0.0
+    rpy:
+    - 0.0
+    - 0.0
+    - 0.0
+ball:
+  radius: 0.03234028443627313
+  mass: 0.058
+  friction:
+    nominal: 0.6
+    sweep:
+    - 0.4
+    - 0.9
+  inertia: thin_shell
+  restitution_nominal: 0.75
+  start_region:
+    center_task_xy:
+    - 0.3557
+    - 0.2047
+    radius: 0.03
+    provenance: Existing provisional task geometry; see configs/task.yaml
+  radius_interval_m:
+  - 0.030723270214459475
+  - 0.03395729865808679
+  radius_provenance: OPERATOR-MEASURED circumference 8 in; physical_measurements.md;
+    +-5%; radius=C/(2*pi)
+bowl:
+  inner_rim_radius: 0.05
+  inner_depth: 0.0254
+  wall_thickness: 0.002
+  outer_height: 0.03
+  base_diameter: 0.06
+  mass: 0.3
+  static: true
+  center_task_xy:
+  - 0.318
+  - -0.035
+  center_provenance: Existing provisional task geometry; see configs/task.yaml
+  collision:
+    wall_boxes: 20
+    base: cylinder
+  depth_sweep:
+  - 0.0254
+  - 0.045
+  - 0.06
+camera_iphone:
+  key: observation.images.iphone
+  width: 1280
+  height: 720
+  fovy_deg: 22.79
+  intrinsics_px:
+    fx: 1786.0
+    fy: 1786.0
+    cx: 640.0
+    cy: 360.0
+  extrinsics_provenance: Historical provisional camera from configs/task.yaml; unverified.
+    Offline training uses recorded images directly.
+  approx_position_task:
+  - 0.0905
+  - -0.7043
+  - 0.5214
+  look_at_task:
+  - 0.2292
+  - 0.0609
+  - 0.0116
+  xyaxes_task:
+  - 0.98589
+  - -0.08109
+  - 0.14642
+  - -0.07603
+  - 0.56236
+  - 0.82339
+robot_so101:
+  base_z_offset: 0.012
+  joint_names:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_flex
+  - wrist_flex
+  - wrist_roll
+  real_to_sim:
+    sign:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    offset_deg:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    provenance: PROVISIONAL-STANDARD; physical signs and zeros remain unverified
+  gripper:
+    real_unit: percent
+    closed_at: 0
+    sim_range_rad:
+    - -0.1745
+    - 1.7454
+episode:
+  success_hold_s: 1.0
+  timeout_s: 30.0
+operator_measurements:
+  source: physical_measurements.md
+  sha256: 8a31d789968eef7543df6ab177ff9f60f820300b1a25ef766bf3894fc116273b
+  applied_fields:
+  - ball.radius
+  relative_uncertainty: 0.05

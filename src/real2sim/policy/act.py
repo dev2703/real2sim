@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from importlib import import_module
 from pathlib import Path
 
 import torch
@@ -33,6 +34,18 @@ ACT_FIELDS = (
     "optimizer_weight_decay",
     "temporal_ensemble_coeff",
 )
+ACT_POLICY_TYPES = {
+    "act_dinov2": ("dinov2_act", "DinoACTPolicy"),
+    "act_clip": ("clip_act", "ClipACTPolicy"),
+    "act_experiment": ("attention", "ExperimentACTPolicy"),
+}
+
+
+def _policy_class(checkpoint_type):
+    if entry := ACT_POLICY_TYPES.get(checkpoint_type):
+        module, name = entry
+        return getattr(import_module(f"real2sim.policy.{module}"), name)
+    return ACTPolicy
 
 
 def build_act_config(model_cfg: dict, manifest: dict, device: str) -> ACTConfig:
@@ -79,14 +92,10 @@ def build_act_config(model_cfg: dict, manifest: dict, device: str) -> ACTConfig:
 
 
 def build_policy(config, *, initialize_backbone=True):
-    if config.vision_backbone == "clip":
-        from real2sim.policy.clip_act import ClipACTPolicy
-
-        return ClipACTPolicy(config, initialize_backbone=initialize_backbone)
-    if config.vision_backbone == "dinov2":
-        from real2sim.policy.dinov2_act import DinoACTPolicy
-
-        return DinoACTPolicy(config, initialize_backbone=initialize_backbone)
+    if config.vision_backbone in {"clip", "dinov2"}:
+        return _policy_class(f"act_{config.vision_backbone}")(
+            config, initialize_backbone=initialize_backbone,
+        )
     from real2sim.policy.attention import ExperimentACTConfig, ExperimentACTPolicy
 
     if isinstance(config, ExperimentACTConfig):
@@ -134,19 +143,18 @@ def save_checkpoint(
                 "calibration_sha256", "camera_transforms", "timing_basis", "transfer_shared_task_sha256"):
         if key in manifest:
             contract[key] = manifest[key]
-    if policy.config.vision_backbone == "dinov2":
-        contract["vision_encoder"] = {
-            "kind": "dinov2_spatial_patches", "model_id": policy.config.dinov2_model_id,
-            "revision": policy.config.dinov2_revision,
-            "trainable_final_blocks": policy.config.dinov2_trainable_blocks,
-            "preprocessing": "existing ImageNet normalization; right/bottom replicate-pad to patch multiple; no crop",
+    backbone = policy.config.vision_backbone
+    if backbone in {"dinov2", "clip"}:
+        preprocessing = {
+            "dinov2": "existing ImageNet normalization; right/bottom replicate-pad to patch multiple; no crop",
+            "clip": "ImageNet-to-CLIP normalization; replicate-pad to patch multiple; interpolated positions; no crop",
         }
-    elif policy.config.vision_backbone == "clip":
         contract["vision_encoder"] = {
-            "kind": "clip_spatial_patches", "model_id": policy.config.clip_model_id,
-            "revision": policy.config.clip_revision,
-            "trainable_final_blocks": policy.config.clip_trainable_blocks,
-            "preprocessing": "ImageNet-to-CLIP normalization; replicate-pad to patch multiple; interpolated positions; no crop",
+            "kind": f"{backbone}_spatial_patches",
+            "model_id": getattr(policy.config, f"{backbone}_model_id"),
+            "revision": getattr(policy.config, f"{backbone}_revision"),
+            "trainable_final_blocks": getattr(policy.config, f"{backbone}_trainable_blocks"),
+            "preprocessing": preprocessing[backbone],
         }
     if run_info.get("paired_images"):
         contract["training_provenance"] = {
@@ -171,19 +179,7 @@ def load_checkpoint(path: str | Path, device: str = "cpu") -> tuple[ACTPolicy, N
         from real2sim.policy.flow_matching import load_flow_checkpoint
 
         return load_flow_checkpoint(path, device)
-    policy_class = ACTPolicy
-    if config_json.get("type") == "act_dinov2":
-        from real2sim.policy.dinov2_act import DinoACTPolicy
-
-        policy_class = DinoACTPolicy
-    elif config_json.get("type") == "act_clip":
-        from real2sim.policy.clip_act import ClipACTPolicy
-
-        policy_class = ClipACTPolicy
-    elif config_json.get("type") == "act_experiment":
-        from real2sim.policy.attention import ExperimentACTPolicy
-
-        policy_class = ExperimentACTPolicy
+    policy_class = _policy_class(config_json.get("type"))
     policy = policy_class.from_pretrained(str(path), strict=True, local_files_only=True)
     policy.to(device)
     policy.eval()
