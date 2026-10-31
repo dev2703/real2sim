@@ -7,32 +7,7 @@ Frozen ACT can hand over to a separately trained MLP. Native-start recovery and
 post-ACT recovery use different head artifacts because their starting states
 differ. Both arms supply training data; source-only transfer remains unresolved.
 
-The historical reserved simulation benchmark remains ACT alone 0/100 per arm,
-RGB alone and ACT followed by RGB recovery each 100/100. Current learned-head
-development comparisons and their exact artifacts are recorded in the
-[learning progress report](results/v2/recovery_learning_progress_20261030.json).
 
-The latest Panda comparison uses one protocol and ten development layouts:
-
-| Controller | Complete tasks |
-| --- | ---: |
-| Frozen ACT alone | 0/10 |
-| RGB geometric recovery | 10/10 |
-| Frozen ACT → RGB recovery | 10/10 |
-| Native-start MLP with ACT features | 2/10 |
-| Native-start MLP without ACT inputs | 10/10 |
-| Frozen ACT → prefix-adapted MLP without ACT inputs | 5/10 |
-
-All 60 trials had matched resets and zero aborts. Each learned handoff followed
-50 frozen-ACT ticks. The native-start and prefix-adapted MLPs are different
-heads; a separate same-head comparison scored 1/10 from native starts versus
-5/10 after ACT. Head settings and correction data also differ, so these results
-do not isolate a benefit from ACT features. Both arms supplied training data;
-this is development evidence rather than source-only transfer or a reserved test.
-
-[Project summary](docs/PROJECT_SUMMARY.md) contains the architecture, data/control
-contracts, results, experiment history, remaining problems and commands.
-[Physical measurements](physical_measurements.md) retain the operator's inputs.
 
 ```sh
 uv sync --locked                      # Python 3.12; pinned dependencies in uv.lock
