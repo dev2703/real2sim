@@ -59,12 +59,4 @@ The native runner uses the pinned `latest/` checkpoint and its saved processors.
 Simulation results do not establish physical robot performance or calibrated
 camera registration.
 
-Additional v3 sources: [varied demonstrations](https://huggingface.co/datasets/bottowork/so101_pickplace_v3_varied),
-[ACT](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle),
-and [SmolVLA](https://huggingface.co/bottowork/smolvla_so101_pickplace_v3_varied).
-Their pinned revisions and camera contracts are recorded in the
-[project summary](docs/PROJECT_SUMMARY.md#data-and-control-contracts).
-These models require explicit integration and evaluation before becoming runner defaults.
 
-The [cleanup record](docs/PROJECT_SUMMARY.md#cleanup-and-retained-artifacts)
-explains which historical files were removed and how to recover them from Git.
