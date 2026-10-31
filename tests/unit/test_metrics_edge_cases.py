@@ -129,6 +129,34 @@ def test_aborted_trial_is_its_own_phase_and_counted():
     assert s["aborted"] == 1 and s["phase_failed_counts"]["aborted"] == 1 and s["phase_failed_counts"]["approach"] == 1
 
 
+def successful_pick_place():
+    return run([
+        {"held": True, "lifted": True, "in_bowl": True},
+        *[{"in_bowl": True, "resting": True}] * 3,
+    ])
+
+
+def test_abort_after_latched_success_is_not_a_successful_trial():
+    t = successful_pick_place()
+    assert t.success and t.pick_place_success
+    row = t.row(abort="video write failed", **_static())
+    assert row["success"] is False
+    assert row["pick_place_success"] is False
+    assert row["phase_failed"] == row["pick_place_phase_failed"] == "aborted"
+    assert t.success and t.pick_place_success  # preserve the physical evidence on the tracker
+
+
+def test_summary_excludes_aborted_success_flags_but_keeps_attempt_in_denominator():
+    completed = successful_pick_place().row(**_static())
+    aborted = {**completed, "abort": "video write failed", "phase_failed": "aborted",
+               "pick_place_phase_failed": "aborted"}
+    failed = run([{"dist": 0.2}]).row(**_static())
+    summary = summarize([completed, aborted, failed])
+    assert summary["n"] == 3 and summary["aborted"] == 1
+    assert summary["successes"] == summary["pick_place_successes"] == 1
+    assert summary["success_rate"] == summary["pick_place_success_rate"] == pytest.approx(1 / 3)
+
+
 def test_row_missing_static_column_raises():
     with pytest.raises(KeyError):
         run([{"dist": 0.2}]).row(experiment_id="x")
