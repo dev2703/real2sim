@@ -87,10 +87,7 @@ def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=No
         scene, out / "task.yaml", out / "data.yaml",
         Path("src/real2sim/policy/native_lerobot_act.py"),
         Path("src/real2sim/policy/follower_joint.py"),
-        *[snapshot / name for name in ("config.json", "experiment.json", "model.safetensors",
-            "policy_preprocessor.json", "policy_postprocessor.json",
-            "policy_preprocessor_step_3_normalizer_processor.safetensors",
-            "policy_postprocessor_step_0_unnormalizer_processor.safetensors")]]
+        *Path(snapshot).glob("*.json"), *Path(snapshot).glob("*.safetensors")]
     hashes = {str(path): file_sha256(path) for path in files}
     report = {"schema": "native_hf_act_20261027_v1", "status": "running",
         **checkpoint.checkpoint_identity,
@@ -99,7 +96,7 @@ def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=No
         "checkpoint_execution_steps": checkpoint.config.n_action_steps,
         "image_shape_chw": checkpoint.scene_contract["image_shape_chw"], "camera_order": checkpoint.camera_keys,
         "state_and_action": "five arm joint degrees plus gripper percent; absolute servo commands",
-        "policy_hz": 25., "fps_basis": "25Hz source v2 recording metadata; not separately pinned in model experiment.json",
+        "policy_hz": 25., "fps_basis": checkpoint.scene_contract["timing_basis"],
         "image_processing": "native checkpoint-sized RGB /255, then saved native processor exactly once; no repository letterbox",
         "native_scene_contract": checkpoint.scene_contract,
         "policy_call_latency_scope": "state observation, camera rendering, native preprocessing, ACT and postprocessing",
@@ -120,7 +117,8 @@ def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=No
             directory.mkdir()
             env.reset(seed=seed)
             checkpoint.reset()
-            tracker = TrialTracker(success_hold_ticks=math.ceil(env.control_hz), approach_distance_m=.03,
+            tracker = TrialTracker(success_hold_ticks=math.ceil(
+                env.task["episode"]["success_hold_s"] * env.control_hz), approach_distance_m=.03,
                 table_top_z=env.table_top, ball_radius_m=env.task["ball"]["radius"])
             queue, latencies, reasons, abort = [], [], {}, None
             saturations = 0

@@ -9,6 +9,12 @@ evidence describe the original runs.
 
 ## Current result
 
+The [1 November codebase audit](CODEBASE_AUDIT_20261101.md) adds fresh matched v2
+simulation checks: frozen ACT 0/5 on each arm; RGB and ACT→RGB 5/5 each. All 30
+new trials retain verified local traces. The historical 100-seed-per-arm reports
+below remain summary evidence: only three of 300 trial/trace pairs per arm are
+retained locally. The new audit tool explicitly marks their coverage incomplete.
+
 The goal is to retain a real-demonstration ACT and learn recovery that executes
 through native controllers on both SO-101 and Panda. Learned Panda recovery now
 completes native-start development tasks, and a separate prefix-adapted head
@@ -130,13 +136,14 @@ The additional v3 sources supplied on 1 November have these pinned revisions:
 | [Varied SmolVLA](https://huggingface.co/bottowork/smolvla_so101_pickplace_v3_varied) | `44078ea11c3f6fd6a62c354e1153d46eedac2355` | [Model config](https://huggingface.co/bottowork/smolvla_so101_pickplace_v3_varied/blob/44078ea11c3f6fd6a62c354e1153d46eedac2355/config.json): SmolVLA, six state/action values, chunk 50/execute 50, camera aliases and an empty-camera input; saved processors and tokenizer included |
 
 These metadata checks establish resource identity and schema. Existing runners
-still evaluate the native ACT checkpoint described above. Integrating v3 ACT
-requires mapping the simulated wrist stream to its `wrist` key and verifying its
-saved processors; its [training provenance](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle/blob/076452e6024c778a2bffabe99ecf33776de141e1/run_provenance.json)
+default to the native v2 ACT checkpoint described above. The 1 November audit
+adds checkpoint-derived `top`/`wrist` camera mapping, image dimensions and identity
+to the native runners and matched benchmark. V3 still needs an actual load of its
+saved processors and weights; its [training provenance](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle/blob/076452e6024c778a2bffabe99ecf33776de141e1/run_provenance.json)
 records LeRobot 0.6.2, while this environment pins 0.6.1. SmolVLA needs a policy
 adapter for its camera/language preprocessing; `NativeLeRobotACT` accepts ACT
 checkpoints. V3 inference, task performance and camera registration have not been
-validated by this cleanup.
+validated by the schema tests.
 
 Five arm channels use degrees; gripper is percent with 0 closed. Recorded raw
 actions are leader/requested targets, not established sent commands or achieved

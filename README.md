@@ -7,6 +7,13 @@ Frozen ACT can hand over to a separately trained MLP. Native-start recovery and
 post-ACT recovery use different head artifacts because their starting states
 differ. Both arms supply training data; source-only transfer remains unresolved.
 
+The [1 November codebase audit](docs/CODEBASE_AUDIT_20261101.md) ranks the current
+bottlenecks and records the first fixes. Fresh matched simulation trials score
+frozen v2 ACT alone **0/5 on each arm**, versus **5/5 each** with RGB geometric
+recovery. The audit preserves this distinction and verifies all 30 trial traces.
+Native runners now support checkpoint-declared `top`/`wrist` camera schemas;
+actual v3 weights and task performance still need validation.
+
 
 
 ```sh
@@ -30,6 +37,10 @@ uv run python scripts/evaluate_hf_act.py --robot so101 \
 # Matched resets: raw ACT, RGB alone, ACT + RGB recovery
 uv run python scripts/benchmark_frozen_act.py --robots so101 \
   --out outputs/v2/benchmark_so101_NEW --plan-only
+
+# Verify a completed matched report against its retained trial/trace evidence
+uv run python scripts/audit_frozen_act_results.py \
+  outputs/v2/benchmark_so101_NEW/report.json
 
 # Frozen ACT followed by a head trained on post-prefix states
 uv run python scripts/run_recovery_dagger.py evaluate --robot panda \

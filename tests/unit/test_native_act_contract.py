@@ -1,9 +1,13 @@
 """Native runner contracts retain checkpoint camera roles and honest identity."""
 
+import json
 from types import SimpleNamespace
 
 import pytest
+import torch
+import yaml
 
+from real2sim.artifacts import sha256_file
 from real2sim.config import load_yaml
 from real2sim.policy.native_lerobot_act import (
     native_checkpoint_identity,
@@ -82,3 +86,53 @@ def test_local_checkpoint_config_repo_is_reported_without_inventing_revision(tmp
     identity = native_checkpoint_identity(tmp_path / "my-checkpoint", model)
     assert identity["repo_id"] == model.repo_id and identity["revision"] is None
     assert identity["checkpoint_identity_basis"] == "checkpoint_config"
+
+
+@pytest.mark.parametrize("robot", ["so101", "panda"])
+def test_standalone_runners_honor_custom_hold_and_saved_processor_artifact_names(
+        tmp_path, monkeypatch, robot):
+    from scripts import evaluate_hf_act_20261027 as so101
+    from scripts import evaluate_hf_act_panda_20261028 as panda
+
+    runner = so101 if robot == "so101" else panda
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "config.json").write_text("{}")
+    (snapshot / "model.safetensors").write_bytes(b"test frozen weights")
+    processor = snapshot / "policy_preprocessor_step_7_saved_stats.safetensors"
+    processor.write_bytes(b"test saved processor state")
+    model = config()
+    checkpoint = SimpleNamespace(config=model, scene_contract=native_scene_contract(model),
+        checkpoint_identity=native_checkpoint_identity(snapshot, model),
+        camera_keys=list(model.image_features), weights_sha256=sha256_file(snapshot / "model.safetensors"),
+        policy=torch.nn.Linear(1, 1), reset=lambda: None)
+    monkeypatch.setattr(runner, "NativeLeRobotACT", lambda path: checkpoint)
+
+    scene = load_yaml("configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml")
+    task = load_yaml(scene["task_config"])
+    task["episode"]["success_hold_s"] = .12
+    task_path = tmp_path / "custom_task.yaml"
+    task_path.write_text(yaml.safe_dump(task))
+    scene["task_config"] = str(task_path)
+    scene_path = tmp_path / "custom_scene.yaml"
+    scene_path.write_text(yaml.safe_dump(scene))
+
+    class TrackerReached(Exception):
+        """Stop before rendering or inference, after the real scene has reset."""
+
+    captured = {}
+
+    def capture_tracker(**kwargs):
+        captured.update(kwargs)
+        raise TrackerReached
+
+    monkeypatch.setattr(runner, "TrialTracker", capture_tracker)
+    out = tmp_path / "evaluation"
+    with pytest.raises(TrackerReached):
+        runner.run(snapshot, out, [71], video=False, source_scene=scene_path)
+
+    assert captured["success_hold_ticks"] == 3  # .12 seconds at the native 25 Hz
+    report = json.loads((out / "report.json").read_text())
+    assert report["source_sha256_before"][str(processor)] == sha256_file(processor)
+    assert not (snapshot / "experiment.json").exists()
+    assert not (snapshot / "policy_preprocessor_step_3_normalizer_processor.safetensors").exists()

@@ -222,7 +222,8 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                 source.last_target = source.q.copy()
                 _, initial_info = env.reset(seed=seed, scenario={"joint_positions": start, "gripper_opening": initial_width})
                 checkpoint.reset()
-                tracker = TrialTracker(success_hold_ticks=math.ceil(env.control_hz), approach_distance_m=.03,
+                tracker = TrialTracker(success_hold_ticks=math.ceil(
+                    env.task["episode"]["success_hold_s"] * env.control_hz), approach_distance_m=.03,
                     table_top_z=env.table_top, ball_radius_m=env.task["ball"]["radius"])
                 queue, latencies, reasons, abort, errors = [], [], {}, None, []
                 video_shape = tuple(checkpoint.scene_contract["image_shape_chw"][1:])
