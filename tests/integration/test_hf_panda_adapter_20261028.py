@@ -9,15 +9,21 @@ from scripts import evaluate_hf_act_panda_20261028 as transfer
 pytestmark = pytest.mark.integration
 
 
-def test_external_wrist_mount_is_rigid_and_different_from_global_view(tmp_path):
-    source_scene, task = transfer.prepare_source(tmp_path, (0.,) * 5)
+@pytest.mark.parametrize("wrist_key", ["top", "wrist"])
+def test_external_wrist_mount_is_rigid_and_different_from_global_view(tmp_path, wrist_key):
+    key = f"observation.images.{wrist_key}"
+    contract = {"camera_keys": [key, "observation.images.iphone"],
+        "wrist_key": key, "image_shape_chw": [3, 360, 640]}
+    source_scene, task = transfer.prepare_source(tmp_path, (0.,) * 5, native_contract=contract)
     source = transfer.retarget.VirtualSource(source_scene)
     try:
         scene, record = transfer.prepare_panda(tmp_path, source, task, -.15)
         with PandaPickPlaceEnv(scene, render_images=False) as env:
             start, width = transfer.panda_start(env, source, -.15)
             env.reset(seed=100, scenario={"joint_positions": start, "gripper_opening": width})
-            wrist = env.model.camera(env.camera_bindings["observation.images.top"]).id
+            assert env.camera_keys == contract["camera_keys"]
+            assert env.config["render"] == {"width": 640, "height": 360}
+            wrist = env.model.camera(env.camera_bindings[f"observation.images.{wrist_key}"]).id
             global_camera = env.model.camera("iphone").id
             hand = env.model.body("hand").id
             np.testing.assert_allclose(record["panda_hand_relative_position_m"], [.08, 0., 0.])
@@ -50,3 +56,21 @@ def test_joint_registration_changes_raw_state_without_moving_native_start(tmp_pa
         np.testing.assert_array_equal(source.source.sim_state(), source.source.initial_qpos)
     finally:
         source.close()
+
+
+@pytest.mark.parametrize("robot", ["so101", "panda"])
+def test_matched_benchmark_preserves_v3_wrist_contract_on_both_arms(tmp_path, robot):
+    from scripts.benchmark_frozen_act import SharedEpisode
+
+    contract = {"camera_keys": ["observation.images.wrist", "observation.images.iphone"],
+        "wrist_key": "observation.images.wrist", "image_shape_chw": [3, 180, 320]}
+    shared = SharedEpisode(robot, tmp_path / robot, native_contract=contract)
+    try:
+        shared.reset(seed=17000)
+        assert shared.env.camera_keys == contract["camera_keys"]
+        assert shared.env.config["render"] == {"height": 180, "width": 320}
+        for key in contract["camera_keys"]:
+            assert shared.env.model.camera(shared.env.camera_bindings[key]).id >= 0
+        assert shared.source.source.task["additional_cameras"][0]["key"] == contract["wrist_key"]
+    finally:
+        shared.close()

@@ -79,11 +79,12 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
 class SharedEpisode:
     """Identical embodiment setup for every compared control condition."""
 
-    def __init__(self, robot, directory, source_scene=MEASURED_SCENE):
+    def __init__(self, robot, directory, source_scene=MEASURED_SCENE, *, native_contract=None):
         directory.mkdir(parents=True)
         self.robot = robot
         scene, task = transfer.prepare_source(directory, (0.,) * 5,
-            source_scene=source_scene, initial_gripper_percent=1.2)
+            source_scene=source_scene, initial_gripper_percent=1.2,
+            native_contract=native_contract)
         self.source = transfer.retarget.VirtualSource(scene)
         self.env = self.source.source
         self.start = self.opening = None
@@ -410,7 +411,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
             parent = out / robot / condition
             parent.mkdir(parents=True, exist_ok=True)
             setup = parent / "setups" / f"setup_{time.time_ns()}"
-            shared = SharedEpisode(robot, setup, source_scene)
+            shared = SharedEpisode(robot, setup, source_scene,
+                                   native_contract=getattr(policy, "scene_contract", None))
             try:
                 if model_effects:
                     from scripts.prepare_fixed_lighting_robustness import apply_model_condition

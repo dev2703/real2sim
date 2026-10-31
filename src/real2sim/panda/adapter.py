@@ -104,7 +104,8 @@ class PandaIK:
         if finger_opening is not None:
             for name in ("finger_joint1", "finger_joint2"):
                 self.data.qpos[self.model.jnt_qposadr[self.model.joint(name).id]] = finger_opening / 2
-        mujoco.mj_forward(self.model, self.data)
+        # Keep contacts/Jacobians current without solving dynamics for each IK probe.
+        mujoco.mj_fwdPosition(self.model, self.data)
         return make_T(self.data.site_xmat[self.site].reshape(3, 3),
                       self.data.site_xpos[self.site] - self.task_origin)
 

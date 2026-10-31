@@ -1,7 +1,7 @@
 """Panda scene, environment and 7-D adapter tests (plan M5 steps 1-2, gate G5 smoke).
 
-Numbers measured here (IK residuals, containment, settling) are written to
-``results/metrics/panda_ik/`` so docs can cite them. No policy claim is made.
+Diagnostic measurements stay in pytest's temporary directory. Publish retained
+evidence through an explicit diagnostic run. No policy claim is made.
 """
 
 import json
@@ -32,6 +32,12 @@ TASK = load_yaml(ROOT / SIM["task_config"])
 DEPTHS = [float(d) for d in TASK["bowl"]["depth_sweep"]]
 IMAGE_KEY = TASK["camera_iphone"]["key"]
 MEASUREMENTS = ROOT / "results/metrics/panda_ik/scene_measurements.json"
+
+
+@pytest.fixture(autouse=True)
+def isolated_diagnostics(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), "MEASUREMENTS", tmp_path / "scene_measurements.json")
+    monkeypatch.setitem(globals(), "DEFAULT_OUT", tmp_path / "ik_validation.json")
 
 
 def record(key: str, value) -> None:

@@ -42,14 +42,20 @@ def write_json(path, value):
     _write_json(path, value, atomic=True)
 
 
-def prepare_scene(out, source=Path("configs/v2/sim_so101.waypoint_20261026.yaml")):
+def prepare_scene(out, source=Path("configs/v2/sim_so101.waypoint_20261026.yaml"), *,
+                  native_contract=None):
     config = load_yaml(source)
     task = load_yaml(project_path(config["task_config"]))
     data = load_yaml(project_path(config["data_config"]))
-    task["additional_cameras"] = [nominal_so101_wrist_camera(project_path(config["model"]))]
-    data.update(camera_keys=["observation.images.top", "observation.images.iphone"],
+    contract = native_contract or {"camera_keys": ["observation.images.top", "observation.images.iphone"],
+        "wrist_key": "observation.images.top", "image_shape_chw": [3, 360, 640]}
+    wrist = nominal_so101_wrist_camera(project_path(config["model"]))
+    wrist["key"] = contract["wrist_key"]
+    task["additional_cameras"] = [wrist]
+    data.update(camera_keys=list(contract["camera_keys"]),
                 policy_hz=25., excluded_cameras=[])
-    config.update(control_hz=25., render={"width": 640, "height": 360})
+    _, height, width = contract["image_shape_chw"]
+    config.update(control_hz=25., render={"width": width, "height": height})
     config["task_config"] = str((out / "task.yaml").resolve())
     config["data_config"] = str((out / "data.yaml").resolve())
     data["task_config"] = config["task_config"]
@@ -76,7 +82,7 @@ def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=No
     if not 1 <= n <= checkpoint.config.chunk_size:
         raise ValueError("execution prefix must fit saved chunk")
     source_scene = Path(source_scene or "configs/v2/sim_so101.waypoint_20261026.yaml")
-    scene = prepare_scene(out, source_scene)
+    scene = prepare_scene(out, source_scene, native_contract=checkpoint.scene_contract)
     files = [Path(__file__), Path("src/real2sim/artifacts.py"), Path("src/real2sim/serialization.py"),
         scene, out / "task.yaml", out / "data.yaml",
         Path("src/real2sim/policy/native_lerobot_act.py"),
@@ -87,14 +93,16 @@ def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=No
             "policy_postprocessor_step_0_unnormalizer_processor.safetensors")]]
     hashes = {str(path): file_sha256(path) for path in files}
     report = {"schema": "native_hf_act_20261027_v1", "status": "running",
-        "repo_id": REPO, "revision": REVISION, "snapshot": str(snapshot),
+        **checkpoint.checkpoint_identity,
         "source_scene": str(source_scene), "source_scene_sha256": file_sha256(source_scene),
         "weights_sha256": checkpoint.weights_sha256, "execution_steps": n,
         "checkpoint_execution_steps": checkpoint.config.n_action_steps,
-        "image_shape_chw": [3, 360, 640], "camera_order": checkpoint.camera_keys,
+        "image_shape_chw": checkpoint.scene_contract["image_shape_chw"], "camera_order": checkpoint.camera_keys,
         "state_and_action": "five arm joint degrees plus gripper percent; absolute servo commands",
         "policy_hz": 25., "fps_basis": "25Hz source v2 recording metadata; not separately pinned in model experiment.json",
-        "image_processing": "native RGB640x360 /255, then saved native processor exactly once; no repository letterbox",
+        "image_processing": "native checkpoint-sized RGB /255, then saved native processor exactly once; no repository letterbox",
+        "native_scene_contract": checkpoint.scene_contract,
+        "policy_call_latency_scope": "state observation, camera rendering, native preprocessing, ACT and postprocessing",
         "runtime_overrides": {"device": "cpu", "temporary_pretrained_backbone_initialization": None},
         "gripper_only_saturation": True, "arm_limits_collision_and_path_gates_unchanged": True,
         "physical_calibration_accepted": False, "wrist_camera": "pinned nominal CAD optical transform; not physically verified",
@@ -117,7 +125,8 @@ def run(snapshot, out, seeds, execute_steps=None, video=True, *, source_scene=No
             queue, latencies, reasons, abort = [], [], {}, None
             saturations = 0
             first_image = None
-            writer = CaptionedVideo(directory / "rollout.mp4", 25., (360, 640)) if video else None
+            video_shape = tuple(checkpoint.scene_contract["image_shape_chw"][1:])
+            writer = CaptionedVideo(directory / "rollout.mp4", 25., video_shape) if video else None
             try:
                 with (directory / "ticks.jsonl").open("w") as handle:
                     for tick in range(env.max_episode_steps):

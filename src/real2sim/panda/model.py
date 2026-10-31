@@ -33,7 +33,6 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from real2sim.config import REPO_ROOT, load_yaml, project_path, sha256_file
 from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
 from real2sim.sim.model import MIN_WALL_BOXES as MIN_WALL_BOXES
@@ -72,24 +71,9 @@ def verify_panda_assets(manifest_path: str | Path, model_path: str | Path) -> di
         raise ValueError(f"manifest has no rows for {relative}")
     for row in rows:
         asset = manifest_file.parent / row["path"]
-        payload = asset.read_bytes()
-        if len(payload) != row["bytes"] or sha256_file(asset) != row["sha256"]:
-            raise ValueError(f"asset hash mismatch: {asset}")
-    return next(r for r in rows if r["path"] == relative)
-
-def _numbers(values) -> str:
-    return " ".join(f"{float(v):.12g}" for v in values)
-
-
-def task_frame_offset(task: dict) -> np.ndarray:
-    """``p_world = p_task + offset``: the SAME task frame as the SO-101 scene (the SO-101 base,
-    ``base_z_offset`` above the table top, D-014). Shared so the two embodiments cannot drift."""
-    return so101_task_frame_offset(task)
-
         if asset.stat().st_size != row["bytes"] or sha256_file(asset) != row["sha256"]:
             raise ValueError(f"asset hash mismatch: {asset}")
     return next(r for r in rows if r["path"] == relative)
-
 
 def panda_base_world(task: dict) -> np.ndarray:
     """World position of the Panda base body: on the table top under the task origin.

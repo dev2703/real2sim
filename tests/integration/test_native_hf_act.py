@@ -35,6 +35,8 @@ def test_native_saved_state_and_image_normalization_are_applied_once(native):
 
 
 def test_native_prediction_preserves_weights_and_rejects_missing_camera(native):
+    assert not native.policy.training
+    assert all(not parameter.requires_grad for parameter in native.policy.parameters())
     images = {key: np.zeros((360, 640, 3), np.uint8) for key in native.camera_keys}
     before = file_sha256(SNAPSHOT / "model.safetensors")
     prediction = native.predict_action_chunk(np.zeros(6), images)

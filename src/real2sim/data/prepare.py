@@ -27,7 +27,6 @@ from pathlib import Path
 
 import numpy as np
 
-from real2sim.config import load_yaml, sha256_file, validate_camera_keys
 from real2sim.artifacts import sha256_file as _sha256
 from real2sim.config import load_yaml, validate_camera_keys
 from real2sim.data.labels import (
@@ -44,10 +43,6 @@ from real2sim.data.split import make_episode_split
 from real2sim.data.transforms import letterbox_rgb
 
 PREPARE_VERSION = "v2"
-
-
-def _sha256(path: Path) -> str:
-    return sha256_file(path)
 
 
 def compute_stats(x: np.ndarray) -> dict:

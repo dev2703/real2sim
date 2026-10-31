@@ -51,10 +51,13 @@ def save_rgb(path, image):
         raise OSError(f"Could not write image {path}")
 
 
-def prepare_source(out, joint_offsets_deg, *, source_scene=None, initial_gripper_percent=None):
+def prepare_source(out, joint_offsets_deg, *, source_scene=None, initial_gripper_percent=None,
+                   native_contract=None):
     directory = out / "source"
     directory.mkdir()
-    scene = native.prepare_scene(directory, source=source_scene or Path("configs/v2/sim_so101.waypoint_20261026.yaml"))
+    scene = native.prepare_scene(directory,
+        source=source_scene or Path("configs/v2/sim_so101.waypoint_20261026.yaml"),
+        native_contract=native_contract)
     cfg, task = load_yaml(scene), load_yaml(directory / "task.yaml")
     task["robot_so101"]["real_to_sim"]["offset_deg"] = [float(value) for value in joint_offsets_deg]
     # Retain the native physical start under an explicitly changed registration;
@@ -84,7 +87,8 @@ def panda_start(env, source, base_dx):
 def camera_mount_at_start(env, source, mode="external_hand"):
     """Express the source initial wrist optics in Panda's live hand coordinates."""
     source.source.reset(seed=0)
-    camera_name = source.source.camera_bindings["observation.images.top"]
+    wrist_key = source.source.task["additional_cameras"][0]["key"]
+    camera_name = source.source.camera_bindings[wrist_key]
     camera = source.source.model.camera(camera_name).id
     source_camera_R = source.source.data.cam_xmat[camera].reshape(3, 3)
     source_camera_p_task = source.source.data.cam_xpos[camera] - source.source.offset
@@ -124,6 +128,7 @@ def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand", pa
             if task.get("operator_measurements") else "configs/v2/sim_panda.waypoint_20261026.yaml")
     cfg = register_measured_task_workspace(load_yaml(panda_scene), task)
     cfg["control_hz"] = 25.
+    cfg["render"] = copy.deepcopy(source.source.config["render"])
     data = load_yaml("configs/v2/data.waypoint_20261026.yaml")
     data.update(policy_hz=25., camera_keys=["observation.images.iphone"], excluded_cameras=[])
     panda_task = copy.deepcopy(task)
@@ -137,7 +142,7 @@ def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand", pa
         env.reset(seed=0, scenario={"joint_positions": start, "gripper_opening": width})
         camera, provenance = camera_mount_at_start(env, source, wrist_mount)
     panda_task["additional_cameras"] = [camera]
-    data["camera_keys"] = ["observation.images.top", "observation.images.iphone"]
+    data["camera_keys"] = list(source.source.camera_keys)
     paths["panda_task.yaml"].write_text(yaml.safe_dump(panda_task, sort_keys=False))
     paths["panda_data.yaml"].write_text(yaml.safe_dump(data, sort_keys=False))
     return paths["sim_panda.yaml"], provenance
@@ -162,7 +167,7 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
     if not 1 <= execute_steps <= checkpoint.config.chunk_size:
         raise ValueError("Execution prefix must fit native saved chunk")
     source_scene, task = prepare_source(out, joint_offsets_deg, source_scene=source_scene,
-        initial_gripper_percent=initial_gripper_percent)
+        initial_gripper_percent=initial_gripper_percent, native_contract=checkpoint.scene_contract)
     source = retarget.VirtualSource(source_scene, panda_offset=np.array([-seat_mm / 1000., 0., 0.]),
         projection_prior=projection_prior)
     try:
@@ -181,9 +186,11 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                 Path("src/real2sim/policy/local_hf_head.py")]
         hashes = {str(path.resolve()): sha256_file(path) for path in files}
         report = {"schema": "native_hf_act_panda_20261028_v1", "status": "running",
-            "repo_id": native.REPO, "revision": native.REVISION, "snapshot": str(snapshot),
+            **checkpoint.checkpoint_identity,
             "weights_sha256": checkpoint.weights_sha256, "execution_steps": execute_steps,
             "policy_hz": 25., "horizon_s": 30., "camera_order": checkpoint.camera_keys,
+            "native_scene_contract": checkpoint.scene_contract,
+            "policy_call_latency_scope": "source state projection, camera rendering, native preprocessing, ACT and postprocessing",
             "actual_panda_images": True, "saved_native_processors_used_once": True,
             "semantic_act_used": False, "source_actions": "Actual frozen pretrained HF ACT, absolute SO-101 joint degrees plus gripper percent",
             "source_state_projection": "Live Panda grasp-point position to virtual SO-101 position-only IK; explicitly declared measured-jaw readback projection",
@@ -218,13 +225,15 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                 tracker = TrialTracker(success_hold_ticks=math.ceil(env.control_hz), approach_distance_m=.03,
                     table_top_z=env.table_top, ball_radius_m=env.task["ball"]["radius"])
                 queue, latencies, reasons, abort, errors = [], [], {}, None, []
-                writer = CaptionedVideo(directory / "rollout.mp4", env.control_hz, (360, 640)) if video else None
+                video_shape = tuple(checkpoint.scene_contract["image_shape_chw"][1:])
+                writer = CaptionedVideo(directory / "rollout.mp4", env.control_hz, video_shape) if video else None
                 wall_start = time.perf_counter()
                 with (directory / "ticks.jsonl").open("w") as handle:
                     try:
                         for tick in range(env.max_episode_steps):
                             infer_ms, state, image_hashes, error = 0., None, None, None
                             if not queue:
+                                t0 = time.perf_counter()
                                 state, error = source.source_state(env)
                                 if gripper_readback == "endpoint":
                                     state[5] = float(np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.)
@@ -233,14 +242,13 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                                     raise ValueError("Unknown gripper readback projection")
                                 errors.append(error)
                                 images = {key: env.render(env.camera_bindings[key]) for key in checkpoint.camera_keys}
+                                actions = checkpoint.predict_action_chunk(state, images)
+                                infer_ms = (time.perf_counter() - t0) * 1000
+                                latencies.append(infer_ms)
                                 if tick == 0:
                                     for key, image in images.items():
                                         save_rgb(directory / (key.rsplit(".", 1)[-1] + "_initial.png"), image)
                                 image_hashes = {key: hashlib.sha256(image.tobytes()).hexdigest() for key, image in images.items()}
-                                t0 = time.perf_counter()
-                                actions = checkpoint.predict_action_chunk(state, images)
-                                infer_ms = (time.perf_counter() - t0) * 1000
-                                latencies.append(infer_ms)
                                 queue = list(actions[:execute_steps])
                             action = queue.pop(0)
                             raw_source, bounded_source = source.source_action(action)

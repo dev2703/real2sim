@@ -53,7 +53,6 @@ from real2sim.config import json_default, load_yaml, project_path
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import IPHONE_KEY, ApplyResult
-from real2sim.serialization import json_default as _json_default
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
 

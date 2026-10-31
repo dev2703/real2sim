@@ -111,7 +111,10 @@ class NativeKinematics:
         if qpos.shape != (6,) or not np.all(np.isfinite(qpos)):
             raise ValueError("FK expects six finite native joint radians")
         self.data.qpos[self.qadr] = qpos
-        mujoco.mj_forward(self.model, self.data)
+        # FK, Jacobians and static penetration probes need only the position stage.
+        # It includes collision detection; solving velocity/force dynamics for every
+        # IK and sampled-path candidate is unnecessary on this independent MjData.
+        mujoco.mj_fwdPosition(self.model, self.data)
         pose = np.eye(4)
         pose[:3, 3] = self.data.site_xpos[self.site] - self.base_pos
         pose[:3, :3] = self.data.site_xmat[self.site].reshape(3, 3)
