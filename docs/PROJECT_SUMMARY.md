@@ -1,10 +1,11 @@
 # Real2Sim-RaC project summary
 
-Consolidated through 30 October 2026. This replaces the dated reports and
-duplicated runbooks previously in `docs/`; their full text remains in Git history.
-Compact evidence remains under `results/`. Historical output paths inside that
-evidence record provenance; cleanup may remove bulk videos, intermediate
-checkpoints and superseded runs.
+Experimental findings are consolidated through 30 October 2026; cleanup and v3
+source metadata were reviewed on 1 November 2026. This replaces the dated reports
+and duplicated runbooks previously in `docs/`; their full text remains in Git
+history. Runtime inputs and trial records remain under `results/`. Historical
+report links point to their retained Git revision. Paths and hashes inside older
+evidence describe the original runs.
 
 ## Current result
 
@@ -38,11 +39,11 @@ the selected ACT-feature/no-ACT heads, so this table cannot isolate a benefit
 from ACT features. These are development results from jointly trained arms;
 source-only transfer and reserved performance are not established. Exact heads,
 hashes and trial evidence are in the [learning progress
-report](../results/v2/recovery_learning_progress_20261030.json).
+report](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_learning_progress_20261030.json).
 
 The following table retains the historical 29 October benchmark and phase head.
 The later 30 October learned comparisons are development experiments, recorded
-separately in [learning progress](../results/v2/recovery_learning_progress_20261030.json).
+separately in [learning progress](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_learning_progress_20261030.json).
 
 | Controller | SO-101 complete tasks | Panda complete tasks | Scope |
 | --- | ---: | ---: | --- |
@@ -51,7 +52,7 @@ separately in [learning progress](../results/v2/recovery_learning_progress_20261
 | Frozen ACT followed by RGB recovery | 100/100 | 100/100 | Identical resets; takeover in every trial |
 | Frozen ACT + learned phase MLP | 3/10 | 3/10 | Development seeds 12000–12009 |
 
-The [600-trial audit](../results/v2/matched_benchmark_100_20261029.json) checked
+The [600-trial audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/matched_benchmark_100_20261029.json) checked
 reset fingerprints, row/trace hashes and runtime inputs. Raw ACT failed approach;
 every assisted trial switched at tick 50 (2 seconds). Mean simulated completion
 time for RGB alone was 9.058/10.868 seconds on SO-101/Panda, versus
@@ -63,7 +64,7 @@ The phase head calls no geometric teacher for evaluation actions. Its first two
 development seeds helped compare candidates; eight further fixed seeds scored
 2/8 per arm. The combined 3/10 is descriptive development evidence, below the
 60% target, rather than an independent reserved benchmark. See the
-[20-trial audit](../results/v2/recovery_mlp_tracked1_phase_dev10_20261029.json).
+[20-trial audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_mlp_tracked1_phase_dev10_20261029.json).
 The user's reported 4/5 hardware result is separate evidence; these simulated
 failures do not establish that the real checkpoint is poor.
 
@@ -120,6 +121,23 @@ configuration requests 40,000 updates. Its own 35-train/six-validation split
 (seed 42) overlaps the exploratory reserved partition, so historical reserved
 claims do not transfer to this checkpoint.
 
+The additional v3 sources supplied on 1 November have these pinned revisions:
+
+| Resource | Revision | Published metadata |
+| --- | --- | --- |
+| [Varied demonstrations](https://huggingface.co/datasets/bottowork/so101_pickplace_v3_varied) | `973cd7eae486242bacf9761b8200887038f1425e` | [Dataset info](https://huggingface.co/datasets/bottowork/so101_pickplace_v3_varied/blob/973cd7eae486242bacf9761b8200887038f1425e/meta/info.json): 30 episodes, 19,083 frames, 25 Hz; `wrist` and `iphone` videos at 1280×720; six state/action channels |
+| [Varied ACT](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle) | `076452e6024c778a2bffabe99ecf33776de141e1` | [Model config](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle/blob/076452e6024c778a2bffabe99ecf33776de141e1/config.json): `observation.images.wrist` then `observation.images.iphone`, 640×360 RGB, six state/action values, chunk 50/execute 10 |
+| [Varied SmolVLA](https://huggingface.co/bottowork/smolvla_so101_pickplace_v3_varied) | `44078ea11c3f6fd6a62c354e1153d46eedac2355` | [Model config](https://huggingface.co/bottowork/smolvla_so101_pickplace_v3_varied/blob/44078ea11c3f6fd6a62c354e1153d46eedac2355/config.json): SmolVLA, six state/action values, chunk 50/execute 50, camera aliases and an empty-camera input; saved processors and tokenizer included |
+
+These metadata checks establish resource identity and schema. Existing runners
+still evaluate the native ACT checkpoint described above. Integrating v3 ACT
+requires mapping the simulated wrist stream to its `wrist` key and verifying its
+saved processors; its [training provenance](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle/blob/076452e6024c778a2bffabe99ecf33776de141e1/run_provenance.json)
+records LeRobot 0.6.2, while this environment pins 0.6.1. SmolVLA needs a policy
+adapter for its camera/language preprocessing; `NativeLeRobotACT` accepts ACT
+checkpoints. V3 inference, task performance and camera registration have not been
+validated by this cleanup.
+
 Five arm channels use degrees; gripper is percent with 0 closed. Recorded raw
 actions are leader/requested targets, not established sent commands or achieved
 follower motion. Encoder-lattice checks support degrees without identifying
@@ -149,7 +167,7 @@ defaults are not the native uploaded ACT contract.
 
 The operator's [inch measurements](../physical_measurements.md) are present and
 applied with estimated ±5% uncertainty. The
-[application audit](../results/v2/measurement_application_reaudit_20261028.json)
+[application audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/measurement_application_reaudit_20261028.json)
 checks the current source hash and both arms' scenes.
 
 | Quantity | Current measured-scalar interpretation |
@@ -185,8 +203,8 @@ RGB inputs and ACT chunks. Five-arm-joint prefix MAE is 2.858° for recorded vie
 global-view substitution causes more error than the wrist, with substantial
 two-view interactions (6.779° nominal/4.426° yaw). Pose, layout and appearance
 change together, so no physical correction is adopted. See
-[camera ablation](../results/v2/hf_alignment_camera_ablation_20261028.json) and
-[factorial audit](../results/v2/hf_alignment_factorial_20261029.json).
+[camera ablation](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/hf_alignment_camera_ablation_20261028.json) and
+[factorial audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/hf_alignment_factorial_20261029.json).
 
 A prepared physical session has no completed calibration captures. Its ruler/
 paper route uses 12 individually measured crosses on a rigid target, six tilted
@@ -220,7 +238,7 @@ endpoint margin inside the unchanged 3 mm feedback tolerance. Magnitude
 backtracking provides no task goal. Out-of-tolerance measured feedback raises
 a structured error instead of supplying fictitious source joints.
 
-The [fixed-lighting RGB pilot](../results/v2/fixed_lighting_rgb_robustness_pilot_20261028.json)
+The [fixed-lighting RGB pilot](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/fixed_lighting_rgb_robustness_pilot_20261028.json)
 completed 42/42 tasks: two arms × seven conditions × three seeds, including wider
 layouts, ±5% radius and sliding friction ×⅔/×1.5. The frontend knows the varied
 radius; this small scene-aware geometric pilot does not establish tolerance to
@@ -258,7 +276,7 @@ keep their recorded semantics. The first intervention gate saw only
 correction-positive rows and always recovers. It needs genuine ACT-sufficient
 negatives to learn when intervention can end.
 
-The [retention audit](../results/v2/recovery_retention_audit_20261029.json) finds
+The [retention audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_retention_audit_20261029.json) finds
 five Panda losses after genuine lift with selected jaws ≤10% open. Ball descent
 relative to TCP over 0.4 seconds is 16–21 mm, compatible with slip without
 isolating seating, friction or motion as its cause. SO-101 sometimes regresses
@@ -271,7 +289,7 @@ and bounded retries without teacher actions or object ground truth. It remains
 experimental: final known-failure-seed checks completed one SO-101 task while
 Panda missed pickup. Fresh expert-only contract checks completed 2/2 per arm;
 no head was retrained. These smoke cases are not reliability estimates. See
-[engineering smoke](../results/v2/retention_representation_smoke_20261029.json).
+[engineering smoke](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/retention_representation_smoke_20261029.json).
 
 ## Initial recovery integration, 30 October
 
@@ -304,17 +322,17 @@ acceptance threshold. Five alternating 40-pose batches measured a median
 1.729× local speedup, identical acceptance decisions and a maximum position
 residual difference of 1.08e-9 m. This is a kinematic microbenchmark, not a
 physical latency result. See the [reproducible projection
-measurement](../results/v2/virtual_source_projection_performance_20261030.json).
+measurement](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/virtual_source_projection_performance_20261030.json).
 
 Two corrected-label development heads trained on 2,591 training and 1,863
 validation rows with unchanged ACT weights. Equal robot/episode action MAE was
 0.07958 with ACT and 0.05255 without ACT. The [training
-evidence](../results/v2/recovery_head_training_20261030.json) retains commands,
+evidence](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_head_training_20261030.json) retains commands,
 hashes and phase-transition metrics. On development reset 12010, both heads
 completed 0/1 tasks on each arm; RGB and ACT+RGB each completed 1/1 per arm.
 Source-only ACT/no-ACT heads also completed 0/1 per arm. No learned trial aborted
 or achieved a held lift. These smoke trials establish workflow execution, not
-reliable transfer. The [causal trace analysis](../results/v2/recovery_failure_analysis_20261030.json)
+reliable transfer. The [causal trace analysis](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_failure_analysis_20261030.json)
 identifies phase advancement after missed pickup, repeated native-limit holds
 and continuous observation/history shift on the unseen arm. Fixed binary scales
 and input clipping do not resolve that shift.
@@ -345,7 +363,7 @@ used one reset per arm: raw ACT completed 0/6 tasks, RGB and ACT+RGB each 6/6.
 All 30 matched trial/trace hashes, reset fingerprints, unchanged weights and
 lighting were verified. These small, different training cohorts do not support
 a model ranking or a reliability estimate. The [aggregate engineering
-report](../results/v2/cross_embodiment_recovery_20261030.json) records artifacts,
+report](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/cross_embodiment_recovery_20261030.json) records artifacts,
 head metrics, trial outcomes and the remaining bottlenecks. Final validation
 passed 1,089 unit/selected integration checks plus the new source-frame
 integration check; three GPU/optional-payload cases skipped. Ruff and whitespace
@@ -361,7 +379,7 @@ uv run python scripts/run_cross_embodiment_recovery.py \
 ## Learning progress and frozen-prefix recovery, 30 October
 
 The initial 0/16 engineering cohort above predates the following corrections.
-The [learning progress report](../results/v2/recovery_learning_progress_20261030.json)
+The [learning progress report](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_learning_progress_20261030.json)
 records the new heads, data, development comparisons and protocol hashes.
 These heads use demonstrations/corrective data from both SO-101 and Panda;
 Panda task completion is therefore joint-arm training evidence, not source-only
@@ -370,7 +388,7 @@ transfer of a head trained on SO-101 alone.
 The achieved-history contract records measured TCP motion and issued jaw intent,
 including when a request is ignored, backtracked or rejected. The old selected
 history fed unexecuted rotations back into the head: the [drift
-audit](../results/v2/recovery_history_drift_20261030.json) measured roughly
+audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/recovery_history_drift_20261030.json) measured roughly
 46–129 mrad rotation-history error and 8–15 mm translation-history error in four
 failed development traces. Legacy selected-history artifacts retain their
 semantics; achieved-history packs have distinct observation names and cannot be
@@ -385,7 +403,7 @@ only during training approach/descent rows and preserves close/release dwell.
 the output action directly, removing compulsory addition of a poor ACT prior.
 No-ACT remains a separate control with both ACT inputs masked. These options are
 saved with the head; the [phase refinement
-audit](../results/v2/phase_learning_refinement_20261030.json) also retains failed
+audit](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/v2/phase_learning_refinement_20261030.json) also retains failed
 candidates and shows why offline boundary accuracy alone is insufficient.
 
 Grasp-relative geometry subtracts the declared rotated TCP-to-grasp offset from
@@ -477,38 +495,54 @@ execution.
 
 ## Cleanup and retained artifacts
 
-The [cleanup manifest](../results/cleanup_manifest.json) records deleted paths,
-retained dependencies and final size/check results. Documentation was consolidated
-from 65 files into this one summary; 35 historical scripts and 13 superseded
-configurations were removed. Reusable source modules remain because they support
-tested features and retained workflows.
+The 1 November 2026 cleanup removed 165 tracked files (12.30 MB):
 
-`outputs/v2/` was reduced from 270 to 28 groups: recent recovery heads/packs and
-development evidence, necessary camera/calibration metadata, benchmark summaries,
-and small dependencies of legacy training workflows. Six representative benchmark
-trials and four phase-head videos remain. Compact result JSONs retain the full
-aggregate outcomes and recorded hashes; the complete 600-trial trace collection
-is no longer present. Pruned historical benchmark directories cannot pass a full
-resume-integrity check; rerun into a new output directory.
+| Directory | Before | Retained | Removed |
+| --- | ---: | ---: | ---: |
+| `results/` | 184 | 37 | 147 (79.9%) |
+| `configs/` | 60 | 42 | 18 (30%) |
 
-Superseded `.cache/v2_*` derived groups were removed. The duplicate v1 Cartesian
-image array now uses a relative symlink to the identical joint image array,
-preserving existing loader paths. Hugging Face caches, three required v1
-checkpoint families, original raw datasets and robot assets remain. Derived data
-and ignored outputs can be regenerated with their retained workflows; deleted
-historical tracked docs/scripts can be recovered from Git. Cleanup did not create
-another bulk archive. Historical experiment-specific training/evaluation must
-regenerate its removed data/checkpoints before execution; ignored artifacts are
-not recoverable from Git.
+Removed files were historical generated reports and unused configuration
+snapshots, capture plans and templates. Dependency review covered executable
+reads, script defaults, nested scene/task/data configs, fixed splits, test
+fixtures, trial aggregation, and metadata in retained local outputs/caches.
+Source modules, scripts and tests implement distinct supported behavior; the
+review found no safe wholesale deletions in those directories. Assets and the
+three-file collector integration supply runtime models and recording support.
 
-Cleanup validation passed 1,007 unit checks with four skips and three graphics
-checks deselected after baseline macOS CoreGraphics failures. One skip reflects
-an optional historical experiment payload that was pruned; the other three are
-backend-specific. Another 54 selected simulation/inference integration checks
-and four checkpoint/contract checks passed, including Cartesian inference from
-the shared image array. Validation covered selected integration workflows;
-the entire integration suite was not executed. Core CLI help, lint and whitespace
-checks passed.
+The retained results include dataset splits, camera fits and hand annotations,
+legacy replay scenes, camera/support candidates, generalization/screen inputs,
+all 13 trial CSVs and the Panda measurement report that tests merge. Keeping
+these inputs preserves existing default commands and historical trial aggregation.
+
+Historical reports and removed snapshots remain available at the
+[pre-cleanup revision](https://github.com/dev2703/real2sim/tree/76d7e611a5d43215b26b29dd976d838d1aaeb4f7).
+Documentation links to removed files point directly to that revision. A local
+copy can also be read without restoring the entire old tree:
+
+```sh
+git show 76d7e611a5d43215b26b29dd976d838d1aaeb4f7:results/v2/recovery_learning_progress_20261030.json
+```
+
+New generated files under `results/` are ignored; use `outputs/` for new runs.
+Existing tracked runtime inputs remain versioned. Historical hashes and paths
+inside retained reports describe the executed source/configuration and may name
+files available only in Git history.
+
+Earlier cleanup already removed bulk diagnostic outputs, intermediate checkpoints
+and historical benchmark traces. Raw datasets, Hugging Face caches, retained
+recovery heads, robot meshes and calibration metadata remain available. The v1
+Cartesian image cache shares its identical joint image array through a relative
+symlink. Historical experiments may need their derived data regenerated; pruned
+benchmark directories cannot pass full resume-integrity checks. Use a fresh output
+directory when rerunning them. The earlier cleanup details are retained in its
+[manifest](https://github.com/dev2703/real2sim/blob/76d7e611a5d43215b26b29dd976d838d1aaeb4f7/results/cleanup_manifest.json).
+
+Cleanup validation passed all 1,211 unit checks with three expected skips (CUDA
+and an optional historical experiment), plus 42 selected simulation/inference
+integration checks. All 1,454 tests still collect with identical test IDs. Lint,
+whitespace, retained-input hashes and local documentation links also passed.
+The full integration suite was not executed.
 
 ## Essential commands
 
