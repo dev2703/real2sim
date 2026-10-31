@@ -38,6 +38,7 @@ from pathlib import Path
 
 import numpy as np
 
+from real2sim.config import json_default, load_yaml, project_path, sha256_file
 from real2sim.artifacts import sha256_file as sha256_file
 from real2sim.config import load_yaml
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
@@ -58,7 +59,6 @@ from real2sim.serialization import json_default as _json_default
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
-from real2sim.sim.model import project_path
 
 ROBOTS = ("so101", "panda")
 CONTROLLER_SOURCES = {"learned": "LEARNED_ACT", "hold": "HOLD_POSE"}
@@ -383,7 +383,7 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
                      "system": platform.system()},
         "wall_s_total": round(time.perf_counter() - t_start, 2),
     }
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=_json_default) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=json_default) + "\n")
     print(f"successes {summary['summary']['successes']}/{n_trials} -> {out}", flush=True)
     return summary
 
