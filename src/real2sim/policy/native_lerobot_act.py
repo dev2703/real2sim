@@ -14,8 +14,51 @@ import torch
 from lerobot.configs.policies import PreTrainedConfig
 from lerobot.policies.act.modeling_act import ACTPolicy
 from lerobot.policies.factory import make_pre_post_processors
+from lerobot.utils.constants import OBS_ENV_STATE, OBS_STATE
 
 from real2sim.artifacts import sha256_file as file_sha256
+
+
+def vectorized_act_actions(model, batch, camera_keys, position_cache):
+    """Equivalent frozen ACT inference without making one Python tensor per visual token.
+
+    The upstream path unbinds each feature map into hundreds of tensors and
+    stacks them again. Concatenating intact sequences preserves camera/token
+    order. Spatial positional embeddings depend only on feature-map geometry,
+    device and dtype, so reuse them across observations. No image or learned
+    feature is cached, and the saved processors still run for every observation.
+    """
+    if model.training:
+        raise ValueError("vectorized ACT is for frozen evaluation only")
+    config = model.config
+    state = batch[OBS_STATE]
+    batch_size = state.shape[0]
+    latent = torch.zeros((batch_size, config.latent_dim), dtype=torch.float32,
+                         device=state.device)
+    tokens = [model.encoder_latent_input_proj(latent).unsqueeze(0)]
+    positions = [model.encoder_1d_feature_pos_embed.weight.unsqueeze(1)]
+    if config.robot_state_feature:
+        tokens.append(model.encoder_robot_state_input_proj(state).unsqueeze(0))
+    if config.env_state_feature:
+        tokens.append(model.encoder_env_state_input_proj(batch[OBS_ENV_STATE]).unsqueeze(0))
+    for key in camera_keys:
+        features = model.backbone(batch[key])["feature_map"]
+        cache_key = (tuple(features.shape[-2:]), features.device, features.dtype)
+        if cache_key not in position_cache:
+            position_cache[cache_key] = model.encoder_cam_feat_pos_embed(features).to(
+                dtype=features.dtype)
+        spatial_positions = position_cache[cache_key]
+        projected = model.encoder_img_feat_input_proj(features)
+        tokens.append(projected.flatten(2).permute(2, 0, 1))
+        positions.append(spatial_positions.flatten(2).permute(2, 0, 1))
+    tokens = torch.cat(tokens, dim=0)
+    positions = torch.cat(positions, dim=0)
+    encoded = model.encoder(tokens, pos_embed=positions)
+    decoder_input = torch.zeros((config.chunk_size, batch_size, config.dim_model),
+                                dtype=positions.dtype, device=positions.device)
+    decoded = model.decoder(decoder_input, encoded, encoder_pos_embed=positions,
+                            decoder_pos_embed=model.decoder_pos_embed.weight.unsqueeze(1))
+    return model.action_head(decoded.transpose(0, 1))
 
 
 def native_scene_contract(config) -> dict:
@@ -66,8 +109,13 @@ def native_checkpoint_identity(path, config) -> dict:
 class NativeLeRobotACT:
     """Frozen ACT, raw observations, and native saved preprocessing/postprocessing."""
 
-    def __init__(self, path, *, device="cpu"):
+    def __init__(self, path, *, device="cpu", inference_backend="legacy"):
+        if inference_backend not in ("legacy", "vectorized"):
+            raise ValueError("inference_backend must be legacy or vectorized")
         self.path = Path(path)
+        self.inference_backend = inference_backend
+        self.runtime_options = {"device": device, "inference_backend": inference_backend}
+        self._position_cache = {}
         self.config = PreTrainedConfig.from_pretrained(self.path, local_files_only=True)
         if self.config.type != "act":
             raise ValueError("requires native ACT checkpoint")
@@ -110,7 +158,14 @@ class NativeLeRobotACT:
 
     @torch.inference_mode()
     def predict_action_chunk(self, state, images):
-        output = self.postprocessor(self.policy.predict_action_chunk(self.batch(state, images)))
+        batch = self.batch(state, images)
+        if self.inference_backend == "vectorized":
+            self.policy.eval()
+            prediction = vectorized_act_actions(self.policy.model, batch, self.camera_keys,
+                                                self._position_cache)
+        else:
+            prediction = self.policy.predict_action_chunk(batch)
+        output = self.postprocessor(prediction)
         actions = output.detach().cpu().numpy()
         expected = (1, self.config.chunk_size, self.config.output_features["action"].shape[0])
         if actions.shape != expected or not np.isfinite(actions).all():

@@ -79,11 +79,12 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
 class SharedEpisode:
     """Identical embodiment setup for every compared control condition."""
 
-    def __init__(self, robot, directory, source_scene=MEASURED_SCENE, *, native_contract=None):
+    def __init__(self, robot, directory, source_scene=MEASURED_SCENE, *, native_contract=None,
+                 initial_gripper_percent=1.2):
         directory.mkdir(parents=True)
         self.robot = robot
         scene, task = transfer.prepare_source(directory, (0.,) * 5,
-            source_scene=source_scene, initial_gripper_percent=1.2,
+            source_scene=source_scene, initial_gripper_percent=initial_gripper_percent,
             native_contract=native_contract)
         self.source = transfer.retarget.VirtualSource(scene)
         self.env = self.source.source
@@ -120,10 +121,13 @@ class SharedEpisode:
 
 
 class FrozenDriver:
-    def __init__(self, shared, policy):
+    def __init__(self, shared, policy, execute_steps=None):
         self.env, self.source, self.robot = shared.env, shared.source, shared.robot
         self.policy = policy
         self.guard = shared.guard
+        self.execute_steps = policy.config.n_action_steps if execute_steps is None else execute_steps
+        if type(self.execute_steps) is not int or not 1 <= self.execute_steps <= policy.config.chunk_size:
+            raise ValueError("execution prefix must be an integer within the saved action chunk")
         self.reset()
 
     def reset(self):
@@ -140,10 +144,11 @@ class FrozenDriver:
             if self.robot == "panda":
                 raw_state[5] = np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.
             images = {key: env.render(env.camera_bindings[key]) for key in self.policy.camera_keys}
-            self.queue = list(self.policy.predict_action_chunk(raw_state, images)[:self.policy.config.n_action_steps])
+            self.queue = list(self.policy.predict_action_chunk(raw_state, images)[:self.execute_steps])
             inference_ms = (time.perf_counter() - t0) * 1000
             self.inference_ms.append(inference_ms)
         raw = self.queue.pop(0)
+        source_rejection = None
         if self.robot == "so101":
             _, bounded = transfer.native.saturate_gripper_only(raw, env)
             current = env.sim_state()
@@ -152,24 +157,33 @@ class FrozenDriver:
                 env.data.ctrl[env.actuator_ids], bounded, env.max_velocity / env.control_hz, samples=17)
             command = bounded if accepted else current
         else:
-            _, bounded = self.source.source_action(raw)
-            desired = transfer.retarget.target_from_source(self.source, bounded)
-            observed = env.ee_pose()
-            delta = desired[:3, 3] - observed[:3, 3]
-            distance = np.linalg.norm(delta)
-            if distance > .024:
-                desired[:3, 3] = observed[:3, 3] + delta * .024 / distance
-            width = transfer.retarget.panda_opening_from_percent(raw[5], env.max_opening)
-            solved = self.guard.solve(desired, env.arm_qpos(),
-                finger_opening=max(width, env.gripper_opening()))
-            accepted, reason = solved.accepted, solved.reason
-            command = np.r_[solved.qpos if accepted else env.arm_qpos(), width]
+            try:
+                _, bounded = self.source.source_action(raw)
+            except transfer.retarget.VirtualSourceCommandError as exc:
+                # Match the SO-101 hard-rejection contract: preserve measured
+                # arm and jaw positions without inventing a feasible ACT target.
+                accepted, reason = False, "source_target_native_limits"
+                source_rejection = exc.diagnostics()
+                command = np.r_[env.arm_qpos(), env.gripper_opening()]
+            else:
+                desired = transfer.retarget.target_from_source(self.source, bounded)
+                observed = env.ee_pose()
+                delta = desired[:3, 3] - observed[:3, 3]
+                distance = np.linalg.norm(delta)
+                if distance > .024:
+                    desired[:3, 3] = observed[:3, 3] + delta * .024 / distance
+                width = transfer.retarget.panda_opening_from_percent(raw[5], env.max_opening)
+                solved = self.guard.solve(desired, env.arm_qpos(),
+                    finger_opening=max(width, env.gripper_opening()))
+                accepted, reason = solved.accepted, solved.reason
+                command = np.r_[solved.qpos if accepted else env.arm_qpos(), width]
         observed, _, _, truncated, info = env.step(command)
         return ApplyResult(observed, info, truncated,
             float(np.mean(info["control"]["limit_clipped"])), ik_rejected=not accepted,
             detail={"uses_act": True, "intervention": False, "raw_hf_action": raw,
                     "native_input": raw_state, "inference_ms": inference_ms,
-                    "guard_reason": reason, "requested_native": command})
+                    "guard_reason": reason, "requested_native": command,
+                    "source_command_rejection": source_rejection})
 
 
 def initial_fingerprint(shared, info):
@@ -184,7 +198,7 @@ def initial_fingerprint(shared, info):
 
 
 def run_episode(shared, condition, seed, directory, policy=None, *, scenario=None,
-                controller_factory=None, options=None):
+                controller_factory=None, options=None, execute_steps=None):
     """Custom controllers use reset()/step(obs, env)->ApplyResult, with no scorer input."""
     env = shared.env
     tracker = TrialTracker(success_hold_ticks=math.ceil(
@@ -216,7 +230,7 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
             acquired = geometric._acquire() if condition == "hf_rgb" else False
             initial_ball = geometric.ball.copy() if acquired else None
             monitor = ApproachMonitor(env.control_hz)
-            frozen = FrozenDriver(shared, policy) if condition != "rgb" else None
+            frozen = FrozenDriver(shared, policy, execute_steps) if condition != "rgb" else None
         with (directory / "ticks.jsonl").open("w") as stream:
             for tick in range(env.max_episode_steps):
                 t0 = time.perf_counter()
@@ -335,13 +349,28 @@ def aggregate(rows):
 
 def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         source_scene=MEASURED_SCENE, plan_only=False, scenario_plan=None,
-        scenario_condition="nominal", controller_factory=None, controller_options=None):
+        scenario_condition="nominal", controller_factory=None, controller_options=None,
+        execute_steps=None, initial_gripper_percent=1.2):
     if not seeds or len(set(seeds)) != len(seeds) or any(s < 0 for s in seeds):
         raise ValueError("Supply unique nonnegative trial seeds")
     if not robots or not set(robots) <= {"so101", "panda"} or len(set(robots)) != len(robots):
         raise ValueError("Supply unique supported robots")
     if not conditions or not set(conditions) <= set(CONDITIONS) or len(set(conditions)) != len(conditions):
         raise ValueError("Supply unique supported conditions")
+    if initial_gripper_percent is not None and (
+            not np.isfinite(initial_gripper_percent) or not 0 <= initial_gripper_percent <= 100):
+        raise ValueError("initial gripper must be a finite percentage in [0, 100]")
+    checkpoint_config_path = Path(snapshot) / "config.json"
+    checkpoint_config = json.loads(checkpoint_config_path.read_text()) if checkpoint_config_path.is_file() else {}
+    chunk_size = checkpoint_config.get("chunk_size")
+    checkpoint_execution_steps = checkpoint_config.get("n_action_steps")
+    execution_steps = checkpoint_execution_steps if execute_steps is None else execute_steps
+    if execute_steps is not None:
+        if set(conditions) & set(CUSTOM_CONDITIONS):
+            raise ValueError("execution prefix override is supported only for raw/rgb/hf_rgb conditions")
+        if (type(execute_steps) is not int or type(chunk_size) is not int
+                or not 1 <= execute_steps <= chunk_size):
+            raise ValueError("execution prefix must be an integer within the saved action chunk")
     scenarios, model_effects = {}, {}
     extra_paths = []
     if scenario_plan:
@@ -382,7 +411,13 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         "checkpoint_sha256": sha256_file(Path(snapshot) / "model.safetensors"),
         "source_scene": str(source_scene), "scenario_plan": str(scenario_plan) if scenario_plan else None,
         "scenario_condition": scenario_condition, "scenarios": scenarios, "model_effects": model_effects,
-        "control_hz": 25., "initial_source_gripper_percent": 1.2,
+        "control_hz": 25., "initial_source_gripper_percent": initial_gripper_percent,
+        "initial_gripper_basis": ("configured source joint state" if initial_gripper_percent is None
+                                  else "explicit reset override"),
+        "act_chunk_size": chunk_size, "act_execution_steps": execution_steps,
+        "checkpoint_execution_steps": checkpoint_execution_steps,
+        "execution_steps_overridden": execute_steps is not None,
+        "timing_model": "25 Hz simulated control; synchronous inference pauses physics",
         "panda_base_dx_task_m": -.15, "lighting_varies": False,
         "score": "Configured held lift, release and success_hold_s resting placement within configured horizon",
         "controller_factory": controller_factory, "controller_options": options,
@@ -412,7 +447,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
             parent.mkdir(parents=True, exist_ok=True)
             setup = parent / "setups" / f"setup_{time.time_ns()}"
             shared = SharedEpisode(robot, setup, source_scene,
-                                   native_contract=getattr(policy, "scene_contract", None))
+                                   native_contract=getattr(policy, "scene_contract", None),
+                                   initial_gripper_percent=initial_gripper_percent)
             try:
                 if model_effects:
                     from scripts.prepare_fixed_lighting_robustness import apply_model_condition
@@ -429,7 +465,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
                         attempt = trial_root / f"attempt_{max(attempts, default=0) + 1:04d}"
                         before_lighting = lighting(shared.env)
                         row = run_episode(shared, condition, seed, attempt, policy,
-                            scenario=scenarios.get(str(seed)), controller_factory=factory, options=options)
+                            scenario=scenarios.get(str(seed)), controller_factory=factory, options=options,
+                            execute_steps=execution_steps)
                         after = {p: sha256_file(Path(p)) for p in hashes}
                         changed = [p for p in hashes if hashes[p] != after[p]]
                         trial = {"status": "complete", "protocol_id": protocol_id,
@@ -469,6 +506,13 @@ def main():
     parser.add_argument("--seeds", nargs="+", type=int, default=list(range(13000, 13100)))
     parser.add_argument("--snapshot", type=Path, default=transfer.native.SNAPSHOT)
     parser.add_argument("--source-scene", type=Path, default=MEASURED_SCENE)
+    parser.add_argument("--execute-steps", type=int,
+                        help="Actions executed per ACT call; defaults to saved n_action_steps. Use 50 to execute a full 50-action chunk.")
+    gripper = parser.add_mutually_exclusive_group()
+    gripper.add_argument("--initial-gripper-percent", type=float, default=1.2,
+                         help="Explicit source jaw override (legacy matched protocol defaults to 1.2 percent).")
+    gripper.add_argument("--configured-gripper", action="store_true",
+                         help="Keep the scene's configured jaw so its arm and jaw reset belong to the same source pose.")
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--scenario-plan", type=Path)
     parser.add_argument("--scenario-condition", default="nominal")
@@ -478,7 +522,8 @@ def main():
     run(args.out, args.robots, args.conditions, args.seeds, snapshot=args.snapshot,
         source_scene=args.source_scene, plan_only=args.plan_only, scenario_plan=args.scenario_plan,
         scenario_condition=args.scenario_condition, controller_factory=args.controller_factory,
-        controller_options=args.controller_options)
+        controller_options=args.controller_options, execute_steps=args.execute_steps,
+        initial_gripper_percent=None if args.configured_gripper else args.initial_gripper_percent)
 
 
 if __name__ == "__main__":

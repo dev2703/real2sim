@@ -7,14 +7,6 @@ Frozen ACT can hand over to a separately trained MLP. Native-start recovery and
 post-ACT recovery use different head artifacts because their starting states
 differ. Both arms supply training data; source-only transfer remains unresolved.
 
-The [1 November codebase audit](docs/CODEBASE_AUDIT_20261101.md) ranks the current
-bottlenecks and records the first fixes. Fresh matched simulation trials score
-frozen v2 ACT alone **0/5 on each arm**, versus **5/5 each** with RGB geometric
-recovery. The audit preserves this distinction and verifies all 30 trial traces.
-Native runners now support checkpoint-declared `top`/`wrist` camera schemas;
-actual v3 weights and task performance still need validation.
-
-
 
 ```sh
 uv sync --locked                      # Python 3.12; pinned dependencies in uv.lock
@@ -66,8 +58,6 @@ learned recovery on both arms remain unresolved.
 
 Sources: [demonstrations](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v2)
 and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16).
-The native runner uses the pinned `latest/` checkpoint and its saved processors.
-Simulation results do not establish physical robot performance or calibrated
-camera registration.
+
 
 

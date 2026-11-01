@@ -74,6 +74,37 @@ class VirtualSourceProjectionError(RuntimeError):
                          f"{projection.error_m:.6f}m")
 
 
+class VirtualSourceCommandError(RuntimeError):
+    """A finite policy command violates the source arm's unchanged native limits.
+
+    Native controllers may reject this individual command and hold measured
+    joints. Observation/projection errors remain fatal because they cannot
+    supply a validated policy input.
+    """
+
+    def __init__(self, action, requested, bounded, limits, joint_names):
+        self.action = np.asarray(action, float).copy()
+        self.requested = np.asarray(requested, float).copy()
+        self.bounded = np.asarray(bounded, float).copy()
+        self.limits = np.asarray(limits, float).copy()
+        self.joint_names = tuple(joint_names)
+        self.violating_indices = np.flatnonzero(
+            (self.bounded[:5] < self.limits[:5, 0])
+            | (self.bounded[:5] > self.limits[:5, 1]))
+        super().__init__("Learned source arm command exceeds unchanged SO-101 limits")
+
+    def diagnostics(self):
+        return {
+            "reason": "source_target_native_limits",
+            "raw_hf_action_degree_percent": self.action.tolist(),
+            "requested_source_native_rad": self.requested.tolist(),
+            "gripper_bounded_source_native_rad": self.bounded.tolist(),
+            "source_arm_limits_rad": self.limits[:5].tolist(),
+            "violating_arm_joint_indices": self.violating_indices.tolist(),
+            "violating_arm_joint_names": [self.joint_names[i] for i in self.violating_indices],
+        }
+
+
 def validate_learned_trace(trace_path, checkpoint_sha256):
     """Pin a trace to a matching frozen, unassisted learned-source evaluation."""
     report_path = trace_path.parent.parent / "report.json"
@@ -213,7 +244,8 @@ class VirtualSource:
     def source_action(self, action):
         requested, bounded = bound_gripper_command(self.mapping, self.limits, action)
         if np.any(bounded[:5] < self.limits[:5, 0]) or np.any(bounded[:5] > self.limits[:5, 1]):
-            raise RuntimeError("Learned source arm command exceeds unchanged SO-101 limits")
+            raise VirtualSourceCommandError(action, requested, bounded, self.limits,
+                                            self.source.config["joint_names"])
         self.last_target = bounded.copy()
         return requested, bounded
 

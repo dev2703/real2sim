@@ -5,6 +5,12 @@ contracts, evaluation evidence, kinematics hot paths, training/data loading,
 and regression checks. Priorities reflect effect on trustworthy task completion
 before throughput. This is a simulation audit; no physical robot was commanded.
 
+Follow-up: [25 Hz / full 50-action execution check](ACT_CHUNK50_CHECK_20261101.md)
+compares executing ten versus all 50 predicted actions. Both score 0/5 on each
+arm; full-chunk execution reduces inference calls but exposes two Panda
+source-limit aborts. The original audit results below use the saved ten-action
+execution setting.
+
 ## Priority queue
 
 | Priority | Bottleneck / evidence | Status and next action |
