@@ -29,6 +29,7 @@ import numpy as np
 from real2sim.data.labels import ACTION_NAMES
 from real2sim.geometry.so3 import (
     apply_delta,
+    clamp_delta6,
     delta_action,
     is_rotation,
     log_so3,
@@ -245,14 +246,7 @@ class PandaCartesianActionAdapter:
 
     @staticmethod
     def clamp(delta6: np.ndarray, max_translation: float, max_rotation: float):
-        d = np.array(delta6, dtype=float)
-        tn, rn = np.linalg.norm(d[:3]), np.linalg.norm(d[3:])
-        t_clamped, r_clamped = tn > max_translation, rn > max_rotation
-        if t_clamped:
-            d[:3] *= max_translation / tn
-        if r_clamped:
-            d[3:] *= max_rotation / rn
-        return d, bool(t_clamped), bool(r_clamped)
+        return clamp_delta6(delta6, max_translation, max_rotation)
 
     def gripper_opening_m(self, g: float) -> float:
         """Semantic target in [0,1] -> total finger opening in metres (0 closed, 1 fully open)."""
