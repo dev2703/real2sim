@@ -36,7 +36,8 @@ BALL_HSV = {
     # policy.visual_grounding BallImageFeatures defaults
     "grounding_v1": BallHsvWindow(
         "grounding_v1", hue_min=24, hue_max=44, saturation_min=90, value_min=85),
-    # policy.visual_targets.locate_objects yellow/green gate before silhouette fit
+    # policy.visual_targets.locate_objects yellow/green gate before silhouette fit.
+    # Keep hue_min above warm wood background band (20--24) to avoid border-joined masks.
     "metric_targets": BallHsvWindow(
-        "metric_targets", hue_min=20, hue_max=50, saturation_min=75, value_min=30),
+        "metric_targets", hue_min=25, hue_max=50, saturation_min=75, value_min=30),
 }

@@ -164,7 +164,8 @@ class ScreenRunner:
             raise ValueError("learning screen requires --defer-geometry-checks for unmet gates: " +
                              "; ".join(failures))
         sources = [self.args.matrix, self.args.task, Path(__file__),
-                   REPO / "scripts/train_flow_head.py", REPO / "src/real2sim/experiments/v2.py",
+                   REPO / "src/real2sim/serialization.py",
+                   REPO / "scripts/train_flow_head.py", REPO / "src/real2sim/experiments/v2.py", REPO / "src/real2sim/artifacts.py",
                    *sorted((REPO / "src/real2sim/policy").glob("*.py")),
                    *sorted((REPO / "src/real2sim/geometry").glob("*.py"))]
         if self.args.evidence:

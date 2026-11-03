@@ -1,13 +1,13 @@
 """Matched controls must preserve source arrays and share a geometry-consistent reference."""
 
 import copy
-import importlib
 import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
+from real2sim.evaluation import reference_control
 from real2sim.geometry.so3 import apply_delta
 from real2sim.sim.env import So101PickPlaceEnv
 
@@ -15,9 +15,8 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def diagnostic(monkeypatch):
-    monkeypatch.syspath_prepend(str(Path("scripts").resolve()))
-    return importlib.import_module("run_so101_root_cause")
+def diagnostic():
+    return reference_control
 
 
 def inputs():
@@ -69,7 +68,7 @@ def test_matched_routes_preserve_gripper_command_inputs_and_source_arrays(diagno
 
 
 def test_stationary_control_does_not_misclassify_ball_table_contact(diagnostic):
-    probe = importlib.import_module("diag_so101_stationary_hold").probe
+    probe = diagnostic.probe
     state = inputs()[0]["state"][0]
     fixed = probe(Path("configs/sim_so101.yaml"), state, "fixed_joint_target", ticks=20)
     delta = probe(Path("configs/sim_so101.yaml"), state, "zero_delta_current_pose", ticks=20)
@@ -85,7 +84,7 @@ def test_stationary_control_does_not_misclassify_ball_table_contact(diagnostic):
 
 
 def test_in_limit_window_never_bridges_invalid_rows(diagnostic):
-    select = importlib.import_module("diag_so101_control_windows").longest_valid_window
+    select = diagnostic.longest_valid_window
     limits = np.array([[-1, 1]] * 6)
     q = np.zeros((10, 6))
     q[0, 0], q[5, 0] = 2, np.nan

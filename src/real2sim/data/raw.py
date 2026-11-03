@@ -6,7 +6,6 @@ frame-level parquet rows and timestamp-bounded video decoding for one episode an
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -15,6 +14,8 @@ from pathlib import Path
 import av
 import numpy as np
 import pandas as pd
+
+from real2sim.artifacts import sha256_file as sha256_file
 
 SUPPORTED_CODEBASE_VERSIONS = ("v3.0",)
 
@@ -32,17 +33,6 @@ class VideoSegment:
     @property
     def exists(self) -> bool:
         return self.path.is_file()
-
-
-def sha256_file(path: Path, chunk: int = 1 << 20) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        while True:
-            b = f.read(chunk)
-            if not b:
-                break
-            h.update(b)
-    return h.hexdigest()
 
 
 def _read_parquet_dir(directory: Path) -> pd.DataFrame:

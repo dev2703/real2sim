@@ -234,7 +234,7 @@ def gate_failures(evidence: dict, *, include_tiny_fit=True) -> list[str]:
 
 
 def freeze_bundle(paths: dict[str, str | Path]) -> dict:
-    from real2sim.data.raw import sha256_file
+    from real2sim.artifacts import sha256_file
 
     files = {
         name: {"path": str(Path(path).resolve()), "sha256": sha256_file(Path(path))}
@@ -246,7 +246,7 @@ def freeze_bundle(paths: dict[str, str | Path]) -> dict:
 
 
 def verify_bundle(bundle: dict) -> None:
-    from real2sim.data.raw import sha256_file
+    from real2sim.artifacts import sha256_file
 
     if bundle.get("sha256") != manifest_hash(bundle):
         raise ValueError("frozen bundle checksum mismatch")

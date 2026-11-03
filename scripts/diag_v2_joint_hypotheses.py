@@ -158,7 +158,7 @@ def main():
             "input_sha256": {str(p): sha256_file(p) for p in (
                 args.arrays, args.split, args.calibration,
                 Path("assets/menagerie/robotstudio_so101/so101.xml"), Path("configs/task.yaml"),
-                Path("configs/sim_so101.yaml"), Path("src/real2sim/sim/env.py"))},
+                Path("configs/sim_so101.yaml"), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"))},
             "official_calibration_conventions":
                 "https://raw.githubusercontent.com/TheRobotStudio/SO-ARM100/"
                 "608122e9ac330a753735f2e18aee73338e9ac407/Simulation/SO101/README.md",

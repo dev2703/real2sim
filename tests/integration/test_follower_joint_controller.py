@@ -11,7 +11,7 @@ from real2sim.sim.kinematics import NativeKinematics
 
 @pytest.mark.integration
 def test_guarded_joint_hold_and_native_limit_rejection_preserve_model():
-    config = "outputs/v2/inference_sim_smoke_20261023/sim.yaml"
+    config = "tests/fixtures/geometry_ablation/sim.yaml"
     contract = {"joint_target_semantics": {
         "version": VERSION, "variant": "follower_next_arm_leader_gripper",
         "arm_target": "next_observed_follower", "arm_units": "degrees",

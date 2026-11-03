@@ -6,4 +6,4 @@ Installed on17 October2026 in the sibling `../lerobot` checkout. The existing us
 
 `tests/unit/test_recording_trace_integration.py` exercises buffering and capture outcomes, and runs the actual installed or staged recording loop against fake hardware. `tests/unit/test_recording_trace_audit.py` checks physical-time gaps, delayed feedback, stable-command segmentation and label verification. The collector integration tests skip if neither optional local recorder artifact exists; the helper and auditor tests remain independent of hardware.
 
-Pilot setup and limitations: [collection findings](../../docs/collection_pipeline_findings_20261016.md). Read-only analysis: `scripts/audit_recording_trace.py`. Camera exposure times and frame IDs are not supplied by this interface. No hardware timing overhead or real trace has yet been measured.
+Pilot setup and limitations: [collection findings](../../docs/PROJECT_SUMMARY.md). Read-only analysis: `scripts/audit_recording_trace.py`. Camera exposure times and frame IDs are not supplied by this interface. No hardware timing overhead or real trace has yet been measured.

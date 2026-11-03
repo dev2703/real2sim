@@ -253,7 +253,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=Path, default=Path("outputs/v2/three_episode_prefix2_20261025/training/checkpoints/002000"))
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--summary", type=Path, default=Path("results/v2/history_context_audit_20261025.json"))
-    parser.add_argument("--doc", type=Path, default=Path("docs/v2_history_context_audit_20261025.md"))
+    parser.add_argument("--doc", type=Path, default=Path("outputs/v2/history_context_report.md"))
     args = parser.parse_args()
     if args.summary.exists() or args.doc.exists():
         raise FileExistsError("use fresh summary/document paths")

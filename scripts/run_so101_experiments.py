@@ -466,7 +466,8 @@ class Runner:
                 if path.suffix != ".npy":
                     self.frozen_files[str(path)] = expected
         source_files = list(Path("src/real2sim/policy").glob("*.py"))
-        source_files += [Path(p) for p in ("src/real2sim/data/labels.py", "src/real2sim/data/resample.py",
+        source_files += [Path(p) for p in ("src/real2sim/artifacts.py", "src/real2sim/serialization.py",
+                         "src/real2sim/data/labels.py", "src/real2sim/data/resample.py",
                          "scripts/run_so101_experiments.py", "scripts/audit_experiment_policy.py",
                          "scripts/diag_motion_prediction_audit.py", "scripts/profile_act_attention.py",
                          "scripts/train_flow_head.py", "configs/act_cartesian.yaml",

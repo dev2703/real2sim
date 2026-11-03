@@ -129,6 +129,20 @@ def _unambiguous(candidates):
     return ranked[0]
 
 
+def _distinct_targets(candidates, distance_m):
+    """Collapse repeated threshold measurements, retaining separate objects.
+
+    One rim may pass several image brightness levels. Those are correlated views
+    of the same evidence, and must not trip the independent-object ambiguity gate.
+    """
+    selected = []
+    for candidate in sorted(candidates, key=lambda item: item.confidence, reverse=True):
+        if not any(np.linalg.norm(candidate.center_task - other.center_task) <= distance_m
+                   for other in selected):
+            selected.append(candidate)
+    return selected
+
+
 def locate_objects(
     rgb: np.ndarray,
     K: np.ndarray,
@@ -166,10 +180,12 @@ def locate_objects(
 
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
     # Named metric_targets preset: yellow/green tennis-ball material, not its location.
+    # The warm wood background is hue 20--24 in the supplied scene. Keep the
+    # preset lower hue bound at >=25 so a visible ball is not merged into border
+    # pixels that invalidate the silhouette gate.
     window = BALL_HSV["metric_targets"]
     ball_mask = ((hsv[:, :, 0] >= window.hue_min) & (hsv[:, :, 0] <= window.hue_max)
                  & (hsv[:, :, 1] >= window.saturation_min) & (hsv[:, :, 2] >= window.value_min))
-    bowl_mask = (hsv[:, :, 1] <= 46) & (hsv[:, :, 2] >= 80)
     found: dict[str, list[VisualTarget]] = {"ball": [], "bowl": []}
 
     for points, area in _contours(ball_mask):
@@ -205,22 +221,32 @@ def locate_objects(
         confidence = float(np.exp(-error / max_error) * min(ratio, 1 / ratio))
         found["ball"].append(VisualTarget(center, uv, area, error, confidence))
 
-    for points, area in _contours(bowl_mask):
-        try:
-            plane = _plane_points(points, K, pose, bowl_rim_height_m)
-            fit = fit_plane_circle(plane)
-        except ValueError:
-            continue
-        center = np.r_[fit["center_plane_xy_m"], bowl_rim_height_m]
-        ratio = fit["radius_m"] / bowl_outer_radius_m
-        error = fit["circle_rms_m"]
-        max_error = max(.002, .06 * bowl_outer_radius_m)
-        if (not .85 <= ratio <= 1.15 or error > max_error
-                or fit["second_moment_axis_ratio"] < .75
-                or not _in_workspace(center, workspace_xy)):
-            continue
-        uv = _project(center, K, pose)
-        confidence = float(np.exp(-error / max_error) * min(ratio, 1 / ratio))
-        found["bowl"].append(VisualTarget(center, uv, area, error, confidence))
+    # A single low brightness cut joins the grey rim to its dim sidewall or
+    # nearby robot/shadow pixels. Observe complete contours at a fixed series
+    # of brightness levels, retaining the same metric/radius/convexity gates.
+    # This changes image processing only; scene lighting is never altered.
+    for brightness in range(80, 225, 8):
+        bowl_mask = (hsv[:, :, 1] <= 46) & (hsv[:, :, 2] >= brightness)
+        for points, area in _contours(bowl_mask):
+            try:
+                plane = _plane_points(points, K, pose, bowl_rim_height_m)
+                fit = fit_plane_circle(plane)
+            except ValueError:
+                continue
+            center = np.r_[fit["center_plane_xy_m"], bowl_rim_height_m]
+            ratio = fit["radius_m"] / bowl_outer_radius_m
+            error = fit["circle_rms_m"]
+            # A shallow bowl's external silhouette includes a small visible
+            # sidewall below the rim plane. Preserve the original metric gate.
+            max_error = max(.002, .08 * bowl_outer_radius_m)
+            if (not .85 <= ratio <= 1.15 or error > max_error
+                    or fit["second_moment_axis_ratio"] < .75
+                    or not _in_workspace(center, workspace_xy)):
+                continue
+            uv = _project(center, K, pose)
+            confidence = float(np.exp(-error / max_error) * min(ratio, 1 / ratio))
+            found["bowl"].append(VisualTarget(center, uv, area, error, confidence))
+
+    found["bowl"] = _distinct_targets(found["bowl"], .25 * bowl_outer_radius_m)
 
     return {name: _unambiguous(candidates) for name, candidates in found.items()}

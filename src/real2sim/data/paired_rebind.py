@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from real2sim.policy.paired import file_sha256
+from real2sim.artifacts import sha256_file as file_sha256
 
 
 def rebind(source_pairs, source_derived, target_derived, out):

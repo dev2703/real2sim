@@ -93,6 +93,7 @@ class So101FK:
         self.data = mujoco.MjData(self.model)
         self.mapping = mapping or JointMapping()
         self.qadr = np.array([self.model.jnt_qposadr[self.model.joint(j).id] for j in ARM_JOINTS])
+        self.dofadr = np.array([self.model.jnt_dofadr[self.model.joint(j).id] for j in ARM_JOINTS])
         self.site_id = self.model.site(EE_SITE).id
         self.joint_range = np.array([self.model.jnt_range[self.model.joint(j).id] for j in ARM_JOINTS])
 
@@ -113,6 +114,25 @@ class So101FK:
     def fk_real(self, q_real_deg: np.ndarray) -> np.ndarray:
         """LeRobot state/action vectors (degrees; 6th entry gripper ignored) -> EE poses."""
         return self.fk_sim(self.mapping.arm_real_to_sim_rad(q_real_deg))
+
+    def point_kinematics_sim(self, q_sim_rad: np.ndarray, offset: np.ndarray):
+        """Position and analytic arm Jacobian of an EE-local point.
+
+        This includes motion from the point's rotational offset, which matters
+        when reconstructing the source grasp point from a different embodiment.
+        No dynamics, contacts, or dynamic-object measurements are evaluated.
+        """
+        q, offset = np.asarray(q_sim_rad, float), np.asarray(offset, float)
+        if q.shape != (5,) or offset.shape != (3,) or not np.isfinite(np.r_[q, offset]).all():
+            raise ValueError("Point kinematics requires five finite joints and a finite 3D offset")
+        pose = self.fk_sim(q)
+        point = pose[:3, 3] + pose[:3, :3] @ offset
+        # mj_jac requires the subtree COM quantities as well as kinematics.
+        mujoco.mj_comPos(self.model, self.data)
+        jacobian = np.zeros((3, self.model.nv))
+        mujoco.mj_jac(self.model, self.data, jacobian, None, point,
+                      int(self.model.site_bodyid[self.site_id]))
+        return point, jacobian[:, self.dofadr].copy()
 
     def out_of_range(self, q_real_deg: np.ndarray, margin_rad: float = 0.0) -> np.ndarray:
         q = self.mapping.arm_real_to_sim_rad(q_real_deg)

@@ -14,10 +14,9 @@ wheels/
 .DS_Store
 *.claude*
 
-# Large artifacts stay out of git (keep manifests, metrics, small previews)
+# Large artifacts stay out of git
 .cache/
 outputs/
-results/media/**/*.mp4
 *.safetensors
 *.pt
 *.ckpt
@@ -26,10 +25,6 @@ annotations/*.bak
 .coverage
 .pytest_cache/
 .ruff_cache/
-# Failed pair-preparation previews are retained locally; the failure is documented.
-/results/audit/paired_approach_3988577_failed_metadata/
-# New bulk diagnostic outputs belong in outputs/; existing curated previews stay tracked.
-/results/**/*.mp4
-/results/**/*.jpg
-/results/**/*.png
-/results/**/*.npz
+# Retained result inputs and trial records remain tracked. Keep newly generated
+# diagnostics local; use outputs/ for new runs (see docs/PROJECT_SUMMARY.md).
+/results/**

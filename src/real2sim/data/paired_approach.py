@@ -13,8 +13,8 @@ import cv2
 import mujoco
 import numpy as np
 
+from real2sim.artifacts import sha256_file as file_sha256
 from real2sim.policy.dataset import DerivedTickDataset
-from real2sim.policy.paired import file_sha256
 from real2sim.sim.camera_fit import backproject_to_plane, ball_centroid_px
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 

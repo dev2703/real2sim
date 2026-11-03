@@ -6,17 +6,15 @@ The original ACT transformer, VAE, chunk execution and action interface are reus
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
 import torch.nn.functional as F
 from lerobot.configs import PreTrainedConfig
 from lerobot.policies.act.configuration_act import ACTConfig
-from lerobot.policies.act.modeling_act import ACTPolicy
-from torch import nn
 from transformers import Dinov2Config, Dinov2Model
 
-from real2sim.policy.attention import enable_sdpa, validate_attention
+from real2sim.policy.attention import validate_attention
+from real2sim.policy.vision import SpatialACTPolicy, SpatialBackbone
 
 
 @PreTrainedConfig.register_subclass("act_dinov2")
@@ -51,7 +49,7 @@ class DinoACTConfig(ACTConfig):
             raise ValueError("freeze_backbone requires dinov2_trainable_blocks=0")
 
 
-class DinoSpatialBackbone(nn.Module):
+class DinoSpatialBackbone(SpatialBackbone):
     def __init__(self, config: DinoACTConfig, *, initialize_pretrained=False):
         super().__init__()
         hf_config = Dinov2Config(**config.dinov2_config)
@@ -66,23 +64,10 @@ class DinoSpatialBackbone(nn.Module):
             self.dino = Dinov2Model(hf_config)
         self.patch_size = hf_config.patch_size
         self.hidden_size = hf_config.hidden_size
-        self.trainable_blocks = config.dinov2_trainable_blocks
-        self.dino.requires_grad_(False)
-        if self.trainable_blocks:
-            for block in self.dino.encoder.layer[-self.trainable_blocks:]:
-                block.requires_grad_(True)
-            self.dino.layernorm.requires_grad_(True)
-        self.train(self.training)
+        self.configure_training(config.dinov2_trainable_blocks)
 
-    def train(self, mode=True):
-        super().train(mode)
-        self.dino.embeddings.eval()
-        frozen = len(self.dino.encoder.layer) - self.trainable_blocks
-        for block in self.dino.encoder.layer[:frozen]:
-            block.eval()
-        if not self.trainable_blocks:
-            self.dino.layernorm.eval()
-        return self
+    def _vision_parts(self):
+        return (self.dino.embeddings,), self.dino.encoder.layer, self.dino.layernorm
 
     def forward(self, image):
         # Input is already normalized exactly once with ImageNet mean/std, also
@@ -97,24 +82,10 @@ class DinoSpatialBackbone(nn.Module):
         return {"feature_map": features}
 
 
-class DinoACTPolicy(ACTPolicy):
+class DinoACTPolicy(SpatialACTPolicy):
     config_class = DinoACTConfig
     name = "act_dinov2"
-
-    def __init__(self, config: DinoACTConfig, *, initialize_backbone=False, **kwargs):
-        # Construct upstream ACT without downloading a temporary ResNet. Replace
-        # only its visual modules; all nonvisual computation is unchanged.
-        temporary = copy.deepcopy(config)
-        temporary.vision_backbone = "resnet18"
-        temporary.pretrained_backbone_weights = None
-        super().__init__(temporary, **kwargs)
-        self.config = self.model.config = config
-        self.model.backbone = DinoSpatialBackbone(config, initialize_pretrained=initialize_backbone)
-        self.model.encoder_img_feat_input_proj = nn.Conv2d(
-            self.model.backbone.hidden_size, config.dim_model, kernel_size=1,
-        )
-        if config.attention_backend == "sdpa":
-            enable_sdpa(self.model)
+    backbone_class = DinoSpatialBackbone
 
 
 def warmstart_nonvisual(policy, parent):

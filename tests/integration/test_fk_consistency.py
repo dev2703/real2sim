@@ -29,3 +29,21 @@ def test_batch_shapes_and_degree_mapping():
     T = fk.fk_real(q_deg)
     assert T.shape == (3, 4, 4)
     np.testing.assert_allclose(T[0], fk.fk_sim(np.zeros(5)), atol=1e-12)
+
+
+def test_grasp_point_analytic_jacobian_matches_finite_differences():
+    fk = So101FK()
+    rng = np.random.default_rng(42)
+    offset = np.array([-.010, 0., .030])
+    lo, hi = fk.joint_range.T
+    for q in rng.uniform(lo + .01, hi - .01, size=(10, 5)):
+        point, jacobian = fk.point_kinematics_sim(q, offset)
+        pose = fk.fk_sim(q)
+        np.testing.assert_allclose(point, pose[:3, 3] + pose[:3, :3] @ offset, atol=1e-12)
+        numerical = np.empty((3, 5))
+        for joint in range(5):
+            delta = np.eye(5)[joint] * 1e-6
+            plus, minus = fk.fk_sim(q + delta), fk.fk_sim(q - delta)
+            numerical[:, joint] = ((plus[:3, 3] + plus[:3, :3] @ offset)
+                - (minus[:3, 3] + minus[:3, :3] @ offset)) / 2e-6
+        np.testing.assert_allclose(jacobian, numerical, atol=1e-9, rtol=1e-7)

@@ -73,13 +73,30 @@ class RecoveryGate:
         """Every handoff condition on this tick (architecture §4.5)."""
         if decision.deviation:
             return False
-        if float(f.ee_pos[2]) <= self.z_min:
+        # A missing, malformed or non-finite tracker/proprioception reading must never
+        # satisfy handoff. In particular, NaN bypasses ordinary threshold comparisons.
+        ee_pos = np.asarray(f.ee_pos, dtype=np.float64)
+        ee_vel = np.asarray(f.ee_vel, dtype=np.float64)
+        ball_rel = None if f.ball_rel is None else np.asarray(f.ball_rel, dtype=np.float64)
+        ball_conf = float(f.ball_conf)
+        if (
+            ee_pos.shape != (3,)
+            or ee_vel.shape != (3,)
+            or ball_rel is None
+            or ball_rel.shape != (3,)
+            or not np.isfinite(ee_pos).all()
+            or not np.isfinite(ee_vel).all()
+            or not np.isfinite(ball_rel).all()
+            or not np.isfinite(ball_conf)
+            or not 0.0 <= ball_conf <= 1.0
+            or ball_conf < self.handoff_ball_conf_min
+        ):
             return False
-        if f.ball_rel is None or float(f.ball_conf) < self.handoff_ball_conf_min:
+        if ee_pos[2] <= self.z_min:
             return False
-        if float(np.linalg.norm(np.asarray(f.ee_vel, np.float64))) >= self.ee_speed_max:
+        if float(np.linalg.norm(ee_vel)) >= self.ee_speed_max:
             return False
-        return inside_box(f.ee_pos, self.corridor)
+        return inside_box(ee_pos, self.corridor)
 
     def _enter(self, tick: int, state: GateState, reason: str) -> None:
         self.state = state

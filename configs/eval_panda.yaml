@@ -13,7 +13,7 @@ cartesian:
 phase:
   # Tool-site-to-ball-centre distance (ball radius 0.0335 m). A failed trial whose minimum distance
   # stays above this is 'approach', otherwise 'grasp'. Must equal the 3 cm stated in
-  # docs/experiment_protocol.md section 3.
+  # docs/PROJECT_SUMMARY.md
   approach_distance_m: 0.03
 
 inference:

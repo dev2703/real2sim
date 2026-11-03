@@ -211,7 +211,7 @@ def main():
         "source_hashes": {str(path): file_sha256(path) for path in (
             a.config, Path(cfg["task_config"]), Path(__file__),
             Path("src/real2sim/policy/adapters.py"), Path("src/real2sim/policy/kinematic_actions.py"),
-            Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/sim/env.py"),
+            Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"),
         )},
         "raw_data_hashes": {str(path.relative_to(a.root)): file_sha256(path)
                            for path in sorted((a.root / "data").rglob("*.parquet"))},

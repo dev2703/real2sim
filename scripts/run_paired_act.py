@@ -26,7 +26,7 @@ def notify(state, cfg, job=JOB):
         "and results/metrics/paired_approach_3988577/. Review the completed real validation, executed-prefix "
         "paired-image checks and ten closed-loop trials against results/metrics/geometry_3988577/. "
         "If failed, diagnose and fix the bounded pipeline without duplicating live jobs or overwriting results. "
-        "Report measured outcomes and record them in docs/progress.md. If approach improved but execution "
+        "Report measured outcomes and record them in docs/PROJECT_SUMMARY.md. If approach improved but execution "
         "failed, perform the approved recorded-command versus follower-motion diagnostic before proposing "
         "more training. Preserve hardware, data, split, benchmark and privileged-input constraints. "
         "Do not poll while training or launch a larger training run without reviewing this pilot."

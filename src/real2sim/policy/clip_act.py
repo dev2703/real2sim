@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
 import torch
 import torch.nn.functional as F
 from lerobot.configs import PreTrainedConfig
 from lerobot.policies.act.configuration_act import ACTConfig
-from lerobot.policies.act.modeling_act import ACTPolicy
-from torch import nn
 from transformers import CLIPVisionConfig, CLIPVisionModel
 
-from real2sim.policy.attention import enable_sdpa, validate_attention
+from real2sim.policy.attention import validate_attention
+from real2sim.policy.vision import SpatialACTPolicy, SpatialBackbone
 
 
 @PreTrainedConfig.register_subclass("act_clip")
@@ -46,7 +44,7 @@ class ClipACTConfig(ACTConfig):
         validate_attention(self)
 
 
-class ClipSpatialBackbone(nn.Module):
+class ClipSpatialBackbone(SpatialBackbone):
     def __init__(self, config, *, initialize_pretrained=False):
         super().__init__()
         hf = CLIPVisionConfig(**config.clip_config)
@@ -61,12 +59,6 @@ class ClipSpatialBackbone(nn.Module):
         else:
             self.clip = CLIPVisionModel(hf)
         self.hidden_size, self.patch_size = hf.hidden_size, hf.patch_size
-        self.trainable_blocks = config.clip_trainable_blocks
-        self.clip.requires_grad_(False)
-        if self.trainable_blocks:
-            for block in self.vision.encoder.layers[-self.trainable_blocks:]:
-                block.requires_grad_(True)
-            self.vision.post_layernorm.requires_grad_(True)
         # Upstream dataset/inference already applied ImageNet normalization.
         # Convert that tensor to CLIP normalization, preserving the full view.
         for name, values in (
@@ -75,22 +67,16 @@ class ClipSpatialBackbone(nn.Module):
             ("clip_std", [.26862954, .26130258, .27577711]),
         ):
             self.register_buffer(name, torch.tensor(values).view(1, 3, 1, 1), persistent=False)
-        self.train(self.training)
+        self.configure_training(config.clip_trainable_blocks)
 
     @property
     def vision(self):
         # Transformers 5 flattened CLIPVisionModel; retain older checkpoint support.
         return getattr(self.clip, "vision_model", self.clip)
 
-    def train(self, mode=True):
-        super().train(mode)
-        self.vision.embeddings.eval()
-        self.vision.pre_layrnorm.eval()
-        for block in self.vision.encoder.layers[:len(self.vision.encoder.layers) - self.trainable_blocks]:
-            block.eval()
-        if not self.trainable_blocks:
-            self.vision.post_layernorm.eval()
-        return self
+    def _vision_parts(self):
+        vision = self.vision
+        return (vision.embeddings, vision.pre_layrnorm), vision.encoder.layers, vision.post_layernorm
 
     def preprocess(self, image):
         rgb = image * self.imagenet_std + self.imagenet_mean
@@ -106,17 +92,7 @@ class ClipSpatialBackbone(nn.Module):
         return {"feature_map": tokens.transpose(1, 2).reshape(len(image), self.hidden_size, rows, cols)}
 
 
-class ClipACTPolicy(ACTPolicy):
+class ClipACTPolicy(SpatialACTPolicy):
     config_class = ClipACTConfig
     name = "act_clip"
-
-    def __init__(self, config, *, initialize_backbone=False, **kwargs):
-        temporary = copy.deepcopy(config)
-        temporary.vision_backbone = "resnet18"
-        temporary.pretrained_backbone_weights = None
-        super().__init__(temporary, **kwargs)
-        self.config = self.model.config = config
-        self.model.backbone = ClipSpatialBackbone(config, initialize_pretrained=initialize_backbone)
-        self.model.encoder_img_feat_input_proj = nn.Conv2d(self.model.backbone.hidden_size, config.dim_model, 1)
-        if config.attention_backend == "sdpa":
-            enable_sdpa(self.model)
+    backbone_class = ClipSpatialBackbone

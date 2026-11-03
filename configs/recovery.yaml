@@ -1,4 +1,4 @@
-# Recovery package (plan §4 M6, docs/architecture.md §4.5). Specialist architecture and inputs
+# Recovery package (plan §4 M6, docs/PROJECT_SUMMARY.md). Specialist architecture and inputs
 # are decision D-005 (APPROVED option A). Inputs are observable only: the colour-tracking
 # estimates of ball/bowl geometry and the policy's own state; no simulator ground truth.
 #

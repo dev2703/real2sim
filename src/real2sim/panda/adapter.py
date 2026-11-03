@@ -1,4 +1,4 @@
-"""Panda ``CartesianActionAdapter`` (docs/architecture.md section 4.4, plan M5 step 2).
+"""Panda ``CartesianActionAdapter`` (docs/PROJECT_SUMMARY.md, plan M5 step 2).
 
 The 7-D canonical action ``[dx, dy, dz, d_rx, d_ry, d_rz, gripper_target]`` is interpreted
 exactly as for the SO-101: translation in task-frame metres and a rotation vector
@@ -104,7 +104,8 @@ class PandaIK:
         if finger_opening is not None:
             for name in ("finger_joint1", "finger_joint2"):
                 self.data.qpos[self.model.jnt_qposadr[self.model.joint(name).id]] = finger_opening / 2
-        mujoco.mj_forward(self.model, self.data)
+        # Keep contacts/Jacobians current without solving dynamics for each IK probe.
+        mujoco.mj_fwdPosition(self.model, self.data)
         return make_T(self.data.site_xmat[self.site].reshape(3, 3),
                       self.data.site_xpos[self.site] - self.task_origin)
 

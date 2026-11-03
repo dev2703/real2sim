@@ -1,6 +1,6 @@
 """Edge cases for the data contract: silent misalignment, non-finite values, degenerate geometry.
 
-Each test pins a failure that previously passed silently (see docs/progress.md, cleanup entry).
+Each test pins a failure that previously passed silently (see docs/PROJECT_SUMMARY.md, cleanup entry).
 """
 
 import json
