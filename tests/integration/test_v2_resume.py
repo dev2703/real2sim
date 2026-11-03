@@ -7,9 +7,9 @@ import pytest
 import torch
 from safetensors.torch import load_file
 
-from real2sim.policy.act import load_checkpoint
+from real2sim.policy.act import build_act_config, load_checkpoint
 from real2sim.policy.paired import file_sha256
-from real2sim.policy.train import train
+from real2sim.policy.train import train, validate_exact_resume_model_config
 from tests.integration.test_flow_head_smoke import tiny_data  # noqa: F401
 
 
@@ -139,4 +139,46 @@ def test_resume_from_older_checkpoint_preserves_later_checkpoints(trained_run, t
     result = train(cfg, data, destination, resume=checkpoint)
     assert result["steps"] == 3
     assert (destination / "checkpoints/000003/model.safetensors").is_file()
+    assert run_fingerprints(out) == before
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("setting,value", [
+    ("dropout", .75), ("n_heads", 8), ("kl_weight", 3.),
+    ("n_action_steps", 1), ("optimizer_lr", 2e-4),
+])
+def test_exact_resume_rejects_changed_model_semantics(trained_run, tmp_path, setting, value):
+    cfg, data, out = trained_run
+    before = run_fingerprints(out)
+    cfg["train"]["steps"] = 3
+    cfg["model"][setting] = value
+    checkpoint = out / "checkpoints/000002"
+    with pytest.raises(ValueError, match=f"exact resume.*{setting}"):
+        train(cfg, data, out, resume=checkpoint)
+    assert run_fingerprints(out) == before
+
+    destination = tmp_path / "rejected"
+    with pytest.raises(ValueError, match=f"exact resume.*{setting}"):
+        train(cfg, data, destination, resume=checkpoint)
+    assert not destination.exists()
+
+
+@pytest.mark.integration
+def test_exact_resume_accepts_effective_defaults_and_execution_metadata(trained_run, tmp_path):
+    cfg, data, out = trained_run
+    checkpoint = out / "checkpoints/000002"
+    config_path = checkpoint / "config.json"
+    saved_config = json.loads(config_path.read_text())
+    saved_config.update(push_to_hub=True, repo_id="fixture/original", tags=["fixture"])
+    del saved_config["dropout"]
+    config_path.write_text(json.dumps(saved_config))
+    before = run_fingerprints(out)
+    cfg["train"]["steps"] = 3
+    del cfg["model"]["dropout"]  # Omitted 0.1 default has the same effective semantics.
+    manifest = json.loads((data / "manifest.json").read_text())
+    act_cfg = build_act_config(cfg["model"], manifest, "cpu")
+    act_cfg.device = "cuda:99"  # Check device relocation without requiring another accelerator.
+    validate_exact_resume_model_config(act_cfg, checkpoint)
+    result = train(cfg, data, tmp_path / "continued", resume=checkpoint)
+    assert result["steps"] == 3
     assert run_fingerprints(out) == before

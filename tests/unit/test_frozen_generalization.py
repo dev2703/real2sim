@@ -1,5 +1,6 @@
 """The frozen evaluation changes declared nuisance factors, not policy inputs."""
 
+import json
 from copy import deepcopy
 from types import SimpleNamespace
 
@@ -148,4 +149,87 @@ def test_predeclared_layouts_are_reproducible_paired_and_vary_both_objects(tmp_p
     assert len(first["conditions"]) == 7
     assert first["frozen_settings"]["training_updates"] == 0
     assert first["frozen_settings"]["position_forecast_offset"] == 3
+
+
+@pytest.fixture
+def layout_audit():
+    path = generalization.REPO_ROOT / "results/v2/generalization_layout_novelty_20261027.json"
+    audit = json.loads(path.read_text())
+    layouts = [{key: row[key] for key in ("seed", "ball_xy", "bowl_xy")}
+               for row in audit["planned_layouts"]]
+    return audit, layouts
+
+
+def test_layout_audit_accepts_only_tiny_absolute_xy_roundoff_without_rewriting_evidence(
+        tmp_path, monkeypatch, layout_audit):
+    audit, layouts = layout_audit
+    audit["planned_layouts"][0]["ball_xy"][0] += 5e-13
+    audit["planned_layouts"][1]["bowl_xy"][1] -= 5e-13
+    audit_path = tmp_path / "results/v2/generalization_layout_novelty_20261027.json"
+    audit_path.parent.mkdir(parents=True)
+    audit_path.write_text(json.dumps(audit))
+    retained_bytes = audit_path.read_bytes()
+    source = tmp_path / "source"
+    (source / "checkpoint").mkdir(parents=True)
+    (source / "checkpoint/model.safetensors").write_bytes(b"frozen")
+    monkeypatch.setattr(generalization, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(generalization, "dependency_paths", lambda _: [])
+
+    protocol = generalization.prepare(tmp_path / "evaluation", source)
+
+    assert audit_path.read_bytes() == retained_bytes
+    assert protocol["layout_novelty_audit_sha256"] == generalization.sha256_file(audit_path)
+    assert protocol["layout_novelty_xy_absolute_tolerance_m"] == 1e-12
+    assert protocol["layout_novelty_xy_relative_tolerance"] == 0.
+    # The protocol retains its freshly generated values rather than replacing
+    # them with the rounded audit coordinates.
+    assert protocol["layouts"][0]["ball_xy"][0] != audit["planned_layouts"][0]["ball_xy"][0]
+
+
+@pytest.mark.parametrize("coordinate", ["ball_xy", "bowl_xy"])
+@pytest.mark.parametrize("difference", [2e-12, 1e-8])
+def test_layout_audit_rejects_xy_changes_above_absolute_tolerance(
+        layout_audit, coordinate, difference):
+    _, declared = layout_audit
+    audited = deepcopy(declared)
+    audited[0][coordinate][0] += difference
+    with pytest.raises(ValueError, match="maximum XY difference.*absolute tolerance"):
+        generalization.validate_audited_layouts(audited, declared)
+
+
+def test_layout_audit_preserves_numpy_integer_seed_compatibility(tmp_path, monkeypatch):
+    source = tmp_path / "source"
+    (source / "checkpoint").mkdir(parents=True)
+    (source / "checkpoint/model.safetensors").write_bytes(b"frozen")
+    monkeypatch.setattr(generalization, "dependency_paths", lambda _: [])
+    seeds = tuple(np.int64(seed) for seed in range(10000, 10020))
+    protocol = generalization.prepare(tmp_path / "evaluation", source, seeds=seeds)
+    assert [row["seed"] for row in protocol["layouts"]] == list(seeds)
+
+
+@pytest.mark.parametrize("invalid", ["seed", "float_seed", "order", "missing_row", "missing_key",
+                                     "extra_key", "xy_shape", "xy_string", "nan", "infinity"])
+def test_layout_audit_keeps_seed_order_schema_and_finiteness_strict(layout_audit, invalid):
+    _, declared = layout_audit
+    audited = deepcopy(declared)
+    if invalid == "seed":
+        audited[0]["seed"] += 1
+    elif invalid == "float_seed":
+        audited[0]["seed"] = float(audited[0]["seed"])
+    elif invalid == "order":
+        audited[0], audited[1] = audited[1], audited[0]
+    elif invalid == "missing_row":
+        audited.pop()
+    elif invalid == "missing_key":
+        audited[0].pop("ball_xy")
+    elif invalid == "extra_key":
+        audited[0]["other"] = 0
+    elif invalid == "xy_shape":
+        audited[0]["ball_xy"] = [[0., 0.]]
+    elif invalid == "xy_string":
+        audited[0]["ball_xy"][0] = str(audited[0]["ball_xy"][0])
+    else:
+        audited[0]["ball_xy"][0] = float("nan" if invalid == "nan" else "inf")
+    with pytest.raises(ValueError, match="Independent novelty audit"):
+        generalization.validate_audited_layouts(audited, declared)
 

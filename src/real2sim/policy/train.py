@@ -23,12 +23,14 @@ import shutil
 import sys
 import time
 from contextlib import nullcontext
-from dataclasses import asdict
+from dataclasses import MISSING, asdict, fields
 from pathlib import Path
 
+import draccus
 import numpy as np
 import torch
 import yaml
+from lerobot.configs.policies import PreTrainedConfig
 from lerobot.policies.act.modeling_act import ACTPolicy
 from torch.utils.data import DataLoader
 
@@ -152,6 +154,32 @@ def infinite(loader: DataLoader):
         yield from loader
 
 
+def validate_exact_resume_model_config(act_cfg, checkpoint: Path) -> None:
+    """Compare effective saved semantics, including fields without parameter tensors.
+
+    Device, Hub publication metadata and checkpoint source references may differ.
+    Architecture, loss, optimizer, preprocessing and action cadence must match.
+    Fill omitted saved fields from dataclass defaults, as loading the config does.
+    """
+    defaults = {}
+    for field in fields(act_cfg):
+        if field.default is not MISSING:
+            defaults[field.name] = field.default
+        elif field.default_factory is not MISSING:
+            defaults[field.name] = field.default_factory()
+    saved = {**draccus.encode(defaults), **json.loads((checkpoint / "config.json").read_text())}
+    requested = draccus.encode(act_cfg, PreTrainedConfig)
+    execution_metadata = {
+        "device", "push_to_hub", "repo_id", "private", "tags", "license",
+        "pretrained_path", "pretrained_revision",
+    }
+    changed = sorted(key for key in (saved.keys() | requested.keys()) - execution_metadata
+                     if saved.get(key) != requested.get(key))
+    if changed:
+        raise ValueError("exact resume requires identical model configuration; changed: "
+                         f"{', '.join(changed)}; use initial_checkpoint for weights-only initialization")
+
+
 def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = None, resume: Path | None = None, overrides: dict | None = None) -> dict:
     if resume is None:
         for name in ("resolved_config.yaml", "training_history.csv", "training_result.json", "checkpoints"):
@@ -204,6 +232,8 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
                              "training_data_kind": "real_labels_with_mixed_real_and_sim_approach_images"}
 
     act_cfg = build_act_config(cfg["model"], manifest, device)
+    if resume is not None and tcfg.get("exact_resume", False):
+        validate_exact_resume_model_config(act_cfg, resume)
     policy = build_policy(act_cfg, initialize_backbone=resume is None).to(device)
     initial_provenance = None
     if cfg.get("initial_checkpoint"):

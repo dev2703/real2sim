@@ -42,6 +42,7 @@ CONDITIONS = {
     "friction_low": {"lighting_scale": 1., "radius_scale": 1., "sliding_scale": 2 / 3},
     "friction_high": {"lighting_scale": 1., "radius_scale": 1., "sliding_scale": 1.5},
 }
+LAYOUT_XY_ABSOLUTE_TOLERANCE_M = 1e-12
 
 
 def save(path, value):
@@ -58,6 +59,39 @@ def dependency_paths(source):
         "normalization.json", "semantic_data.npz", "source.json",
         "checkpoint/config.json", "checkpoint/model.safetensors"))
     return sorted(p.resolve() for p in paths)
+
+
+def validate_audited_layouts(audited_layouts, layouts):
+    """Compare exact seed/order/schema and finite XY within one picometre.
+
+    Platform math libraries can round the seeded trigonometric calculation
+    differently. This absolute-only allowance is far below simulation geometry
+    precision; it never changes the retained audit or declared layout values.
+    """
+    message = "Independent novelty audit does not match the declared layouts"
+    if (not isinstance(audited_layouts, list) or not isinstance(layouts, list)
+            or not layouts or len(audited_layouts) != len(layouts)):
+        raise ValueError(f"{message}: layout count differs")
+    coordinates = [[], []]
+    for audited, declared in zip(audited_layouts, layouts, strict=True):
+        for index, row in enumerate((audited, declared)):
+            if (not isinstance(row, dict) or set(row) != {"seed", "ball_xy", "bowl_xy"}
+                    or not isinstance(row["seed"], (int, np.integer))
+                    or isinstance(row["seed"], (bool, np.bool_))):
+                raise ValueError(f"{message}: invalid layout schema or seed")
+            for key in ("ball_xy", "bowl_xy"):
+                xy = row[key]
+                if (not isinstance(xy, list) or len(xy) != 2
+                        or any(type(value) not in (int, float) for value in xy)
+                        or not np.isfinite(xy).all()):
+                    raise ValueError(f"{message}: {key} must contain two finite coordinates")
+                coordinates[index].append(xy)
+        if audited["seed"] != declared["seed"]:
+            raise ValueError(f"{message}: seed identity or ordering differs")
+    maximum_difference = float(np.max(np.abs(np.asarray(coordinates[0]) - coordinates[1])))
+    if maximum_difference > LAYOUT_XY_ABSOLUTE_TOLERANCE_M:
+        raise ValueError(f"{message}: maximum XY difference {maximum_difference:.17g} m "
+                         f"exceeds {LAYOUT_XY_ABSOLUTE_TOLERANCE_M:g} m absolute tolerance")
 
 
 def prepare(out, source=SOURCE, seeds=tuple(range(10000, 10020))):
@@ -85,16 +119,23 @@ def prepare(out, source=SOURCE, seeds=tuple(range(10000, 10020))):
     hashes = {str(p): sha256_file(p) for p in dependency_paths(source)}
     audit_path = REPO_ROOT / "results/v2/generalization_layout_novelty_20261027.json"
     audit = json.loads(audit_path.read_text())
-    audited_layouts = [{key: row[key] for key in ("seed", "ball_xy", "bowl_xy")}
-        for row in audit["planned_layouts"]]
-    if audited_layouts != layouts:
-        raise ValueError("Independent novelty audit does not match the declared layouts")
+    if (audit.get("schema") != "generalization_layout_novelty_20261027_v1"
+            or audit.get("status") != "complete"):
+        raise ValueError("Independent novelty audit has an unsupported schema or incomplete status")
+    try:
+        audited_layouts = [{key: row[key] for key in ("seed", "ball_xy", "bowl_xy")}
+            for row in audit["planned_layouts"]]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("Independent novelty audit has an invalid layout schema") from exc
+    validate_audited_layouts(audited_layouts, layouts)
     protocol = {
         "schema": "frozen_shared_semantic_act_generalization_20261027_v1",
         "prepared_utc": datetime.now(UTC).isoformat(),
         "prepared_before_rollouts": True, "source": str(source),
         "layout_novelty_audit": str(audit_path),
         "layout_novelty_audit_sha256": sha256_file(audit_path),
+        "layout_novelty_xy_absolute_tolerance_m": LAYOUT_XY_ABSOLUTE_TOLERANCE_M,
+        "layout_novelty_xy_relative_tolerance": 0.,
         "checkpoint_sha256": sha256_file(source / "checkpoint/model.safetensors"),
         "robots": list(ROBOTS), "layouts": layouts, "conditions": CONDITIONS,
         "schedule": "Complete nominal on both arms before any perturbation. Every perturbation repeats all 20 layouts independently.",
