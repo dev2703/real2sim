@@ -2,7 +2,7 @@ robot: panda
 model: assets/menagerie/franka_emika_panda/panda.xml
 model_sha256: 96ad67da03710f17f798c9478fd9e9efdf24a3bf8359f05e456dd9fb158ea273
 manifest: assets/menagerie/manifest.json
-task_config: /Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml
+task_config: configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml
 data_config: configs/data.yaml
 physics_hz: 500
 control_hz: 10

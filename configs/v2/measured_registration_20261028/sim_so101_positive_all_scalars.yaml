@@ -1,7 +1,7 @@
 robot: so101
 model: assets/menagerie/robotstudio_so101/so101.xml
 manifest: assets/menagerie/manifest.json
-task_config: /Users/deveshvyas/Downloads/real2sim/configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml
+task_config: configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml
 data_config: configs/v2/data.waypoint_20261026.yaml
 physics_hz: 500
 control_hz: 12.5

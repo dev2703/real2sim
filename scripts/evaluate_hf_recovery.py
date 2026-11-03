@@ -76,12 +76,14 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
     policy = NativeLeRobotACT(snapshot)
     policy.policy.eval().requires_grad_(False)
     scene, task = transfer.prepare_source(out, (0.,) * 5, source_scene=source_scene,
-                                         initial_gripper_percent=1.2)
+                                         initial_gripper_percent=1.2,
+                                         native_contract=policy.scene_contract)
     source = transfer.retarget.VirtualSource(scene)
     env = source.source
     report = {"schema": "frozen_hf_with_rgb_recovery_v1", "status": "running",
               "robot": robot, "snapshot": str(snapshot), "seeds": seeds,
               "checkpoint_sha256": policy.weights_sha256,
+              "native_scene_contract": policy.scene_contract,
               "controller_source": "FROZEN_HF_ACT_WITH_RGB_WAYPOINT_RECOVERY",
               "assisted_system": True, "unassisted_frozen_transfer_demonstrated": False,
               "privileged_dynamic_object_poses_or_held_flags_drive_control": False,
@@ -122,7 +124,8 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
         for seed in seeds:
             directory = out / f"seed_{seed:03d}"
             directory.mkdir()
-            tracker = TrialTracker(success_hold_ticks=math.ceil(env.control_hz),
+            tracker = TrialTracker(success_hold_ticks=math.ceil(
+                env.task["episode"]["success_hold_s"] * env.control_hz),
                 approach_distance_m=.03, table_top_z=env.table_top,
                 ball_radius_m=env.task["ball"]["radius"])
             try:
@@ -149,7 +152,8 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
             queue, trigger, abort = [], None, None
             hf_ticks = recovery_ticks = calls = 0
             if video:
-                writer = CaptionedVideo(directory / "rollout.mp4", env.control_hz, (360, 640))
+                writer = CaptionedVideo(directory / "rollout.mp4", env.control_hz,
+                                        tuple(policy.scene_contract["image_shape_chw"][1:]))
             with (directory / "ticks.jsonl").open("w") as stream:
                 try:
                     for tick in range(env.max_episode_steps):

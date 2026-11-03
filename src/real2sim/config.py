@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import yaml
+
+from real2sim.artifacts import sha256_file as sha256_file
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -16,18 +17,6 @@ def project_path(path: str | Path) -> Path:
     """Resolve ``path`` against the repository root unless it is already absolute (``~`` expanded)."""
     path = Path(path).expanduser()
     return path if path.is_absolute() else REPO_ROOT / path
-
-
-def sha256_file(path: str | Path, chunk: int = 1 << 20) -> str:
-    """Hex digest of a file; used for contract and provenance checks."""
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        while True:
-            block = handle.read(chunk)
-            if not block:
-                break
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def json_default(value: Any) -> Any:

@@ -462,8 +462,10 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
     extra = ([Path(learner) / "head.json", Path(learner) / "head.pt"] if learner else [])
     before = source_files(snapshot, source_scene, extra)
     executed_sources = snapshot_sources(out, before)
-    shared = SharedEpisode(robot, out / "live", source_scene)
-    shadow = SharedEpisode(robot, out / "expert_shadow", source_scene)
+    shared = SharedEpisode(robot, out / "live", source_scene,
+                           native_contract=policy.scene_contract)
+    shadow = SharedEpisode(robot, out / "expert_shadow", source_scene,
+                           native_contract=policy.scene_contract)
     act = FrozenACTFeatures(shared, policy)
     executor = CommonCartesianExecutor(shared, require_source_mapping=True)
     encoder = RecoveryObservation(robot, shared.env.control_hz,
@@ -668,7 +670,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     frozen_hash = sha256_file(Path(snapshot) / "model.safetensors")
     head = load_recovery_head(head_dir, frozen_hash)
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] or act_prefix else None
-    shared = SharedEpisode(robot, out / "setup", source_scene)
+    shared = SharedEpisode(robot, out / "setup", source_scene,
+                           native_contract=getattr(policy, "scene_contract", None))
     controller = LearnedRecoveryController(shared, head, policy, phase_guard=phase_guard,
                                            recovery_frame=recovery_frame)
     if act_prefix:
@@ -708,7 +711,9 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
                 initial_lighting = lighting(shared.env)
                 controller.reset()
                 if video:
-                    writer = CaptionedVideo(directory / "rollout.mp4", shared.env.control_hz, (360, 640))
+                    render = shared.env.config["render"]
+                    writer = CaptionedVideo(directory / "rollout.mp4", shared.env.control_hz,
+                                            (render["height"], render["width"]))
                 with (directory / "ticks.jsonl").open("w") as stream:
                     for tick in range(shared.env.max_episode_steps):
                         result = controller.step(obs, shared.env)
