@@ -14,6 +14,20 @@ uv run ruff check .
 uv run pytest -q tests/unit
 ```
 
+## Supported CLIs
+
+The following script entry points are supported and should remain listed here:
+
+- `scripts/evaluate_hf_recovery.py`
+- `scripts/evaluate_hf_act.py`
+- `scripts/benchmark_frozen_act.py`
+- `scripts/audit_frozen_act_results.py`
+- `scripts/run_recovery_dagger.py`
+- `scripts/run_cross_embodiment_recovery.py`
+
+Script lifecycle policy and guardrails are documented in
+[`docs/script_lifecycle_policy.md`](docs/script_lifecycle_policy.md).
+
 Run from the repository root with a new output directory. Replace `so101` with
 `panda` for the other arm:
 
@@ -58,6 +72,5 @@ learned recovery on both arms remain unresolved.
 
 Sources: [demonstrations](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v2)
 and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16).
-
 
 
