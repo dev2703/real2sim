@@ -7,6 +7,8 @@ Frozen ACT can hand over to a separately trained MLP. Native-start recovery and
 post-ACT recovery use different head artifacts because their starting states
 differ. Both arms supply training data; source-only transfer remains unresolved.
 
+The [4 November audit](docs/CODEBASE_AUDIT_20261104.md) records blocking defects,
+targeted fixes, remaining project risks and regression evidence.
 
 ```sh
 uv sync --locked                      # Python 3.12; pinned dependencies in uv.lock
@@ -72,5 +74,3 @@ learned recovery on both arms remain unresolved.
 
 Sources: [demonstrations](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v2)
 and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16).
-
-
