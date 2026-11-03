@@ -18,6 +18,8 @@ from real2sim.policy.train import train
 def test_real_paired_warmstart_smoke():
     cfg = load_yaml("configs/act_joint_paired_approach.yaml")
     parent = Path(cfg["initial_checkpoint"]) / "model.safetensors"
+    if not parent.is_file():
+        pytest.skip("optional paired warm-start checkpoint required")
     digest = file_sha256(parent)
     cfg["train"].update(num_workers=0, batch_size=2, device="mps" if torch.backends.mps.is_available() else "cpu")
     with tempfile.TemporaryDirectory(prefix="real2sim-paired-smoke-") as tmp:
