@@ -59,6 +59,7 @@ else:
     from evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
 
 ARRAY_NAMES = ("observations", "base_actions", "features", "target_actions", "robot_id", "episode_index")
+RESERVED_EVALUATION_SEEDS = frozenset(range(13000, 13100))
 
 
 class CartesianConvergenceTeacher(StaticBowlRecovery):
@@ -429,10 +430,28 @@ class LearnedRecoveryController:
             self.act.close()
 
 
+def validated_trial_seeds(seeds, *, name):
+    """Keep each per-seed artifact unique before any rollout or output write."""
+    message = f"{name} must contain unique nonnegative integer seeds"
+    try:
+        values = list(seeds)
+    except TypeError as exc:
+        raise ValueError(message) from exc
+    if (not values or any(not isinstance(seed, (int, np.integer))
+            or isinstance(seed, (bool, np.bool_)) or seed < 0 for seed in values)
+            or len(set(values)) != len(values)):
+        raise ValueError(message)
+    return values
+
+
 def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
             source_scene=MEASURED_SCENE, learner=None, beta=1., iteration=0,
             expert_execution="common", reference_mode="initial", history_mode="selected",
             observation_geometry="tcp", gripper_clock="all_switches", act_prefix_steps=0):
+    train_seeds = validated_trial_seeds(train_seeds, name="Collection training seeds")
+    val_seeds = validated_trial_seeds(val_seeds, name="Collection validation seeds")
+    if (set(train_seeds) | set(val_seeds)) & RESERVED_EVALUATION_SEEDS:
+        raise ValueError("Reserved evaluation seeds 13000–13099 cannot enter recovery collection splits")
     if out.exists():
         raise FileExistsError(out)
     if not 0 <= beta <= 1 or set(train_seeds) & set(val_seeds):
@@ -484,7 +503,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "observation_geometry": observation_geometry,
         "gripper_clock": gripper_clock,
         "act_feature_dim": feature_dim,
-        "split": {"train": list(train_seeds), "val": list(val_seeds), "evaluation": list(range(13000, 13100))},
+        "split": {"train": train_seeds, "val": val_seeds, "evaluation": sorted(RESERVED_EVALUATION_SEEDS)},
         "expert_queries_actual_learner_states": head is not None,
         "teacher_phase_convergence": "Measured TCP; continuous close/release dwell resets on opposing issued jaw commands",
         "teacher_phase_or_object_truth_in_observations": False,
@@ -663,6 +682,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
 def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
              source_scene=MEASURED_SCENE, video=False, phase_guard=False, recovery_frame="native",
              act_prefix=False):
+    seeds = validated_trial_seeds(seeds, name="Evaluation seeds")
     if out.exists():
         raise FileExistsError(out)
     out.mkdir(parents=True)
