@@ -13,18 +13,8 @@ from real2sim.policy.train import train
 from tests.integration.test_flow_head_smoke import tiny_data  # noqa: F401
 
 
-@pytest.mark.integration
-@pytest.mark.parametrize("trajectory_weight", [0., .1])
-def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path, trajectory_weight):  # noqa: F811
-    data, _, manifest, _ = tiny_data
-    images = np.load(data / "images_iphone.npy")
-    np.save(data / "images_top.npy", images[:, ::-1].copy())
-    manifest["camera_keys"].append("observation.images.top")
-    manifest["image_files"]["observation.images.top"] = "images_top.npy"
-    manifest["files_sha256"]["images_top.npy"] = file_sha256(data / "images_top.npy")
-    manifest["action_representation"] = "cartesian_tool"
-    (data / "manifest.json").write_text(json.dumps(manifest))
-    cfg = {
+def tiny_act_config(trajectory_weight=0.):
+    return {
         "name": "resume_fixture",
         "reconstruction_loss": {"trajectory_weight": trajectory_weight},
         "model": dict(
@@ -64,6 +54,19 @@ def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path,
         ),
         "scheduler": dict(warmup_steps=1, start_factor=0.001, min_lr=1e-7),
     }
+
+@pytest.mark.integration
+@pytest.mark.parametrize("trajectory_weight", [0., .1])
+def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path, trajectory_weight):  # noqa: F811
+    data, _, manifest, _ = tiny_data
+    images = np.load(data / "images_iphone.npy")
+    np.save(data / "images_top.npy", images[:, ::-1].copy())
+    manifest["camera_keys"].append("observation.images.top")
+    manifest["image_files"]["observation.images.top"] = "images_top.npy"
+    manifest["files_sha256"]["images_top.npy"] = file_sha256(data / "images_top.npy")
+    manifest["action_representation"] = "cartesian_tool"
+    (data / "manifest.json").write_text(json.dumps(manifest))
+    cfg = tiny_act_config(trajectory_weight)
     torch.set_num_threads(1)
     train(cfg, data, tmp_path / "full")
     cfg["train"]["steps"] = 1
@@ -82,3 +85,58 @@ def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path,
         **{k: torch.zeros(1, 3, 28, 42) for k in contract["camera_keys"]},
     }
     assert policy.predict_action_chunk(batch).shape == (1, 3, 7)
+
+
+def run_fingerprints(out):
+    return {str(path.relative_to(out)): file_sha256(path) for path in out.rglob("*")
+            if path.is_file()}
+
+
+@pytest.fixture
+def trained_run(tiny_data, tmp_path):  # noqa: F811
+    data, _, _, _ = tiny_data
+    cfg = tiny_act_config()
+    cfg["train"]["steps"] = 2
+    out = tmp_path / "run"
+    torch.set_num_threads(1)
+    train(cfg, data, out)
+    return cfg, data, out
+
+
+@pytest.mark.integration
+def test_train_requires_resume_to_reuse_a_run(trained_run):
+    cfg, data, out = trained_run
+    before = run_fingerprints(out)
+    cfg["train"]["seed"] += 1
+    with pytest.raises(FileExistsError, match="resume"):
+        train(cfg, data, out)
+    assert run_fingerprints(out) == before
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("setting", ["grad_accum", "batch_size"])
+def test_rejected_exact_resume_preserves_run_artifacts(trained_run, setting):
+    cfg, data, out = trained_run
+    before = run_fingerprints(out)
+    cfg["train"]["steps"] = 3
+    cfg["train"][setting] += 1
+    with pytest.raises(ValueError, match="accumulation|physical batch"):
+        train(cfg, data, out, resume=out / "checkpoints/000002")
+    assert run_fingerprints(out) == before
+
+
+@pytest.mark.integration
+def test_resume_from_older_checkpoint_preserves_later_checkpoints(trained_run, tmp_path):
+    cfg, data, out = trained_run
+    before = run_fingerprints(out)
+    cfg["train"]["steps"] = 3
+    checkpoint = out / "checkpoints/000001"
+    with pytest.raises(FileExistsError, match="later checkpoint"):
+        train(cfg, data, out, resume=checkpoint)
+    assert run_fingerprints(out) == before
+
+    destination = tmp_path / "continued"
+    result = train(cfg, data, destination, resume=checkpoint)
+    assert result["steps"] == 3
+    assert (destination / "checkpoints/000003/model.safetensors").is_file()
+    assert run_fingerprints(out) == before

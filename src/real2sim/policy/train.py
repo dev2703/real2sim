@@ -153,6 +153,11 @@ def infinite(loader: DataLoader):
 
 
 def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = None, resume: Path | None = None, overrides: dict | None = None) -> dict:
+    if resume is None:
+        for name in ("resolved_config.yaml", "training_history.csv", "training_result.json", "checkpoints"):
+            artifact = out_dir / name
+            if artifact.exists() or artifact.is_symlink():
+                raise FileExistsError(f"training artifacts already exist in {out_dir}; use --resume or a new output directory")
     cfg = copy.deepcopy(cfg)
     loss_config = ReconstructionLoss(**cfg.get("reconstruction_loss", {}))
     tcfg = cfg["train"]
@@ -270,11 +275,38 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
     steps = int(tcfg["steps"])
     if len(train_ds) < bs or bs < 1 or accum < 1 or steps <= start_step:
         raise ValueError("training requires a full positive batch and steps beyond the resume step")
+    checkpoints = out_dir / "checkpoints"
+    if resume is not None and checkpoints.exists():
+        later = sorted(path.name for path in checkpoints.iterdir()
+                       if path.name.isdigit() and int(path.name) > start_step)
+        if later:
+            raise FileExistsError(f"later checkpoint {later[0]} already exists in {out_dir}; resume its tip or use a new output directory")
     patience = int(tcfg.get("early_stopping_patience", 0))
     min_steps = int(tcfg.get("early_stopping_min_steps", 0))
     min_delta = float(tcfg.get("early_stopping_min_delta", 0.0))
     if patience < 0 or min_steps < 0 or not math.isfinite(min_delta) or min_delta < 0:
         raise ValueError("invalid early stopping configuration")
+
+    # Validate the complete continuation before replacing configuration or truncating
+    # history. A rejected resume must leave the previous run's evidence intact.
+    action_std = np.asarray(train_ds.normalizer.action_std, np.float64)
+    it = ResumableBatches(train_ds, bs, int(tcfg["seed"])) if exact_resume else infinite(train_loader)
+    if resume is not None and exact_resume:
+        continuation = state.get("continuation")
+        if not continuation or continuation["grad_accum"] != accum:
+            raise ValueError("exact resume requires saved sampler/RNG and identical accumulation")
+        if continuation["augmentation"] != cfg.get("augmentation") or continuation["paired_images"] != paired_provenance:
+            raise ValueError("resume augmentation or paired image provenance differs")
+        if continuation.get("train_episodes", manifest["split"]["train"]) != train_episodes:
+            raise ValueError("resume sampled training episodes differ")
+        it.load_state_dict(continuation["sampler"])
+        restore_rng(continuation["rng"])
+    hist_path = out_dir / "training_history.csv"
+    kept: list[dict] = []
+    if resume is not None and hist_path.exists():
+        # Drop rows logged after the resumed checkpoint so steps are never duplicated.
+        with hist_path.open(newline="") as f:
+            kept = [r for r in csv.DictReader(f) if int(r["step"]) <= start_step]
 
     out_dir.mkdir(parents=True, exist_ok=True)
     resolved = {
@@ -293,29 +325,11 @@ def train(cfg: dict, data_dir: Path, out_dir: Path, smoke_steps: int | None = No
         "checkpoint_selection_scope": "offline shortlist; task promotion requires bounded development rollouts followed by reserved evaluation",
     }
     (out_dir / "resolved_config.yaml").write_text(yaml.safe_dump(resolved, sort_keys=False))
-    hist_path = out_dir / "training_history.csv"
-    kept: list[dict] = []
-    if resume is not None and hist_path.exists():
-        # Drop rows logged after the resumed checkpoint so steps are never duplicated.
-        with hist_path.open(newline="") as f:
-            kept = [r for r in csv.DictReader(f) if int(r["step"]) <= start_step]
     hist_f = hist_path.open("w", newline="")
     writer = csv.DictWriter(hist_f, fieldnames=HISTORY_FIELDS)
     writer.writeheader()
     writer.writerows(kept)
 
-    action_std = np.asarray(train_ds.normalizer.action_std, np.float64)
-    it = ResumableBatches(train_ds, bs, int(tcfg["seed"])) if exact_resume else infinite(train_loader)
-    if resume is not None and exact_resume:
-        continuation = state.get("continuation")
-        if not continuation or continuation["grad_accum"] != accum:
-            raise ValueError("exact resume requires saved sampler/RNG and identical accumulation")
-        if continuation["augmentation"] != cfg.get("augmentation") or continuation["paired_images"] != paired_provenance:
-            raise ValueError("resume augmentation or paired image provenance differs")
-        if continuation.get("train_episodes", manifest["split"]["train"]) != train_episodes:
-            raise ValueError("resume sampled training episodes differ")
-        it.load_state_dict(continuation["sampler"])
-        restore_rng(continuation["rng"])
     t_start = time.time()
     t_window = time.time()
     run = {"loss": 0.0, "l1": 0.0, "kld": 0.0, "reconstruction": 0.0, "trajectory": 0.0, "grad_norm": 0.0, "n": 0}
