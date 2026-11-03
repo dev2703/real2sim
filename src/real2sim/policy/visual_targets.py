@@ -176,13 +176,16 @@ def locate_objects(
         raise ValueError("finite heights and positive object radii required")
     # Validate bounds even when neither object is visible.
     _in_workspace(np.zeros(3), workspace_xy)
+    from real2sim.perception.ball_hsv import BALL_HSV
+
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
-    # Hue range is fixed for yellow/green tennis-ball material, not its location.
-    # The warm wood background is hue 20--24 in the supplied scene. Including
-    # it joins an otherwise visible ball to the image border, invalidating its
-    # silhouette. The tennis-ball material and the synthetic tests are >=25.
-    ball_mask = ((hsv[:, :, 0] >= 25) & (hsv[:, :, 0] <= 50)
-                 & (hsv[:, :, 1] >= 75) & (hsv[:, :, 2] >= 30))
+    # Named metric_targets preset: yellow/green tennis-ball material, not its location.
+    # The warm wood background is hue 20--24 in the supplied scene. Keep the
+    # preset lower hue bound at >=25 so a visible ball is not merged into border
+    # pixels that invalidate the silhouette gate.
+    window = BALL_HSV["metric_targets"]
+    ball_mask = ((hsv[:, :, 0] >= window.hue_min) & (hsv[:, :, 0] <= window.hue_max)
+                 & (hsv[:, :, 1] >= window.saturation_min) & (hsv[:, :, 2] >= window.value_min))
     found: dict[str, list[VisualTarget]] = {"ball": [], "bowl": []}
 
     for points, area in _contours(ball_mask):
