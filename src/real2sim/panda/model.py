@@ -35,6 +35,7 @@ import numpy as np
 
 from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
+from real2sim.sim.model import _add_bowl, bowl_dimensions
 from real2sim.sim.model import MIN_WALL_BOXES as MIN_WALL_BOXES
 from real2sim.sim.model import _add_bowl as _add_bowl
 from real2sim.sim.model import _numbers as _numbers
