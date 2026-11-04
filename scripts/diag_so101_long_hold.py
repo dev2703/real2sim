@@ -201,9 +201,9 @@ def main():
     cfg = load_yaml(args.config)
     sources = [Path(__file__), Path("scripts/diag_so101_feasible_carry.py"),
         Path("scripts/diag_so101_contact_retention.py"), args.config, Path(cfg["task_config"]),
-        Path(cfg["model"]), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/model.py"),
+        Path(cfg["model"]), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py"), Path("src/real2sim/sim/model.py"), Path("src/real2sim/artifacts.py"),
         Path("src/real2sim/sim/ball_support.py"), Path("src/real2sim/sim/contact_solver.py"),
-        Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/evaluation/oracle.py")]
+        Path("src/real2sim/sim/kinematics.py"), Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/serialization.py")]
     before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources}
     for path in sources:
         dest = args.out / "source" / path.name

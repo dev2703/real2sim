@@ -141,7 +141,7 @@ def main(argv=None):
                     "and checks.jsonl for the latest findings; verify current job states before acting. "
                     "Fix failures in the background experiments and continue the approved queue without "
                     "duplicating live processes or overwriting results. Review newly completed results; "
-                    "the user permits small evidence-driven follow-up experiments. Preserve plan.md's "
+                    "the user permits small evidence-driven follow-up experiments. Preserve docs/PROJECT_SUMMARY.md's "
                     "data/schema, benchmark and hardware constraints and document decisions/results. "
                     "Do not poll or spend tokens waiting. If healthy, leave jobs running. When all work "
                     "is reviewed and no further justified experiments remain, write outputs/act_monitor/STOP."

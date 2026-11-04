@@ -238,7 +238,7 @@ def main():
         np.testing.assert_array_equal(joint[key], cart[key])
     cfg = yaml.safe_load(config.read_text())
     sources = paths + [args.plan, config, Path(cfg["task_config"]), Path(cfg["model"]),
-        Path(plan["reference_report"]), Path(__file__), Path("src/real2sim/sim/env.py")]
+        Path(plan["reference_report"]), Path(__file__), Path("src/real2sim/sim/env.py"), Path("src/real2sim/sim/base_env.py")]
     hashes = {str(p): hash_file(p) for p in sources}
     reference = json.loads(Path(plan["reference_report"]).read_text())
     report = {"kind": "JAW_CONTACT_RETENTION_DIAGNOSTIC_NOT_CALIBRATION_OR_POLICY", "runs": [],

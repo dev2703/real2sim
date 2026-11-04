@@ -34,4 +34,7 @@ jobs:
           PYOPENGL_PLATFORM: osmesa
         run: uv run pytest -q tests/unit
 
+      - name: Check exact CPU training continuation
+        run: uv run pytest -q tests/integration/test_v2_resume.py
+
       - run: uv run python -m real2sim.data.audit --help

@@ -1,6 +1,5 @@
 """Training-only replacement of eligible real images by provenance-checked renders."""
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -8,10 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-
-def file_sha256(path):
-    with Path(path).open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
+from real2sim.artifacts import sha256_file as file_sha256
 
 
 class PairedViewDataset(Dataset):

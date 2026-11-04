@@ -92,17 +92,6 @@ def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tm
     for name in ("manifest.json", "stats.json"):
         (data / name).write_text("{}\n")
     calls = []
-    real_load_yaml = module.load_yaml
-    source_config = Path("outputs/v2/learning_screen_20261022/configs/L1_resnet_iphone.yaml")
-
-    def load_test_config(path):
-        # The experiment's generated base config is intentionally not committed.
-        # Keep real loading for the saved temporary plan so resume checks still
-        # exercise YAML serialization and the original-plan comparison.
-        if path == source_config:
-            return {"model": {"chunk_size": 25, "n_action_steps": 2}, "scheduler": {}, "train": {}}
-        return real_load_yaml(path)
-
     def fake_train(cfg, source, destination, resume=None):
         calls.append({"steps": cfg["train"]["steps"], "resume": resume,
                       "schedule": cfg["train"]["schedule_steps"],
@@ -130,7 +119,6 @@ def test_interrupted_run_restores_saved_checkpoint_and_preserves_bounded_plan(tm
 
     monkeypatch.setattr(module, "train", fake_train)
     monkeypatch.setattr(module, "audit_training_checkpoint", fake_audit)
-    monkeypatch.setattr(module, "load_yaml", load_test_config)
     with pytest.raises(RuntimeError, match="simulated interruption"):
         module.run(data, out, "cpu", supervised_prefix_steps=prefix)
     original_plan = (out / "plan.yaml").read_bytes()

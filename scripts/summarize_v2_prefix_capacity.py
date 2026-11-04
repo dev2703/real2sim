@@ -278,18 +278,18 @@ def markdown(report, doc_path, summary_path=Path("results/v2/prefix_capacity_202
             cosine_text = "Unavailable" if cosine is None else f"{cosine:.3f}"
             lines.append(f"| {group['object']} | {group['informative_pairs']} | {group['mean_swap_effect_prefix_norm_mm']:.3f} mm | {ratio_text} | {cosine_text} |")
         lines += ["", "Ratios/cosines use only predeclared informative target contrasts. Reciprocal directions are correlated; donor actions are observational comparisons rather than counterfactual ground truth. Mask unions can transfer background/occlusion pixels. Full-image swaps, stationary starts and training-pair endpoint overlap remain in the linked report. Input sensitivity alone does not establish correct object-conditioned actions or rollout success.", "",
-                  "The [paired-checkpoint object comparison](v2_prefix_object_actions_20261025.md) compares this candidate with the original objective and retains stationary development-start checks separately."]
+                  "The paired-checkpoint object comparison (see `docs/PROJECT_SUMMARY.md`) compares this candidate with the original objective and retains stationary development-start checks separately."]
     else:
-        lines += ["", "Object dependence requires a separate matched-layout image/object-swap check. The earlier [matched-object pilot](v2_matched_object_actions_20261025.md) motivates that test; it does not measure this checkpoint."]
-    lines += ["", "The separate [motion-onset audit](v2_motion_onset_audit_20261025.md) finds stationary immediate prefixes with movement in the future tail, and nearly identical observations with differing immediate labels. Prefix supervision changes the trained horizon; it does not remove that observed timing ambiguity. No labels or sampling weights were changed.", "",
-              "Physical camera/base registration and joint/gripper verification remain unresolved. This experiment uses provisional FK labels and cannot justify a geometric correction. The [fixed-base evidence](v2_fixed_landmark_tracking_20261025.md) and [multi-height landmark review](v2_fixed_base_landmark_review_20261024.md) retain those limits. The [calibration capture sheet](v2_calibration_capture_20261025.md) specifies the next physical evidence.", "",
+        lines += ["", "Object dependence requires a separate matched-layout image/object-swap check. The earlier matched-object pilot (see `docs/PROJECT_SUMMARY.md`) motivates that test; it does not measure this checkpoint."]
+    lines += ["", "The separate motion-onset audit (see `docs/PROJECT_SUMMARY.md`) finds stationary immediate prefixes with movement in the future tail, and nearly identical observations with differing immediate labels. Prefix supervision changes the trained horizon; it does not remove that observed timing ambiguity. No labels or sampling weights were changed.", "",
+              "Physical camera/base registration and joint/gripper verification remain unresolved. This experiment uses provisional FK labels and cannot justify a geometric correction. The fixed-base evidence (see `docs/PROJECT_SUMMARY.md`) and multi-height landmark review (see `docs/PROJECT_SUMMARY.md`) retain those limits. The calibration capture sheet (see `docs/PROJECT_SUMMARY.md`) specifies the next physical evidence.", "",
               "Reproduce in fresh paths:", "", "```sh",
               ".venv/bin/python scripts/run_v2_three_episode_fit.py \\",
               "  --out outputs/v2/three_episode_prefix2_NEXT --device cpu --supervised-prefix-steps 2",
               ".venv/bin/python scripts/summarize_v2_prefix_capacity.py \\",
               "  --baseline outputs/v2/three_episode_motion_20261024 \\",
               "  --prefix outputs/v2/three_episode_prefix2_NEXT \\",
-              "  --out results/v2/prefix_capacity_NEXT.json --doc docs/prefix_capacity_NEXT.md", "```", ""]
+              "  --out outputs/v2/prefix_capacity_NEXT/report.json --doc outputs/v2/prefix_capacity_NEXT/review.md", "```", ""]
     return "\n".join(lines)
 
 
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     parser.add_argument("--baseline", type=Path, default=Path("outputs/v2/three_episode_motion_20261024"))
     parser.add_argument("--prefix", type=Path, default=Path("outputs/v2/three_episode_prefix2_20261025"))
     parser.add_argument("--out", type=Path, default=Path("results/v2/prefix_capacity_20261025.json"))
-    parser.add_argument("--doc", type=Path, default=Path("docs/v2_prefix_capacity_20261025.md"))
+    parser.add_argument("--doc", type=Path, default=Path("outputs/v2/prefix_capacity_report.md"))
     parser.add_argument("--object-report", type=Path)
     args = parser.parse_args()
     result = summarize(args.baseline, args.prefix, args.object_report)

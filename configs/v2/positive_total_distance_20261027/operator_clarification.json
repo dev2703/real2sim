@@ -1,0 +1,47 @@
+{
+  "schema": "operator_total_distance_clarification_v1",
+  "work_date": "2026-10-27",
+  "source": "operator replies in this conversation",
+  "camera_sign_instruction_verbatim": "assign +ve sign",
+  "spacing_clarification_verbatim": "12 inches is total distance, not an x-only offset",
+  "ball_bowl_distance_m": 0.3048,
+  "ball_bowl_distance_interval_m": [
+    0.28956,
+    0.32004
+  ],
+  "supersedes_bowl_bearing_only": "configs/v2/positive_setup_20261026/task.yaml",
+  "camera_horizontal_signs_assigned": true,
+  "physical_calibration_accepted": false,
+  "working_assumptions": {
+    "camera_minus_ball_xy_signs": [
+      1,
+      1
+    ],
+    "ball_bowl_measurement_kind": "total planar centre-to-centre distance assumed; not x-only",
+    "bowl_direction_method": "prior image-derived relative layout rotated by new-minus-old base/ball bearing",
+    "inferred_layout_yaw_rad": 0.8959483352277918,
+    "bowl_unit_direction_xy": [
+      0.6742483020869441,
+      -0.7385047238392406
+    ],
+    "source_old_ball_xy": [
+      0.3557,
+      0.2047
+    ],
+    "source_old_bowl_xy": [
+      0.318,
+      -0.035
+    ],
+    "operator_axes_assumed_task_axes": true,
+    "base_reference_assumed_task_origin_xy": true,
+    "camera_identity": "global observation.images.iphone",
+    "camera_rotation": "roll-free look-at nominal ball/bowl midpoint; not measured",
+    "mat_center": "nominal ball/bowl midpoint; not measured",
+    "intrinsics": "previous provisional focal length/principal point retained",
+    "independently_verified_registration": false
+  },
+  "source_sha256": {
+    "configs/v2/task.scalar_measured_20261026.yaml": "ca4c222acfaceca7f23eb71b565e79281d4cf67809f3c6e65f8f848c87887bd1",
+    "configs/v2/measurements.operator_20261026.json": "bb6401bfff000137d6d8384b6d9b8d9e75967347a542326f799ef5c0b02e288b"
+  }
+}

@@ -123,7 +123,7 @@ def markdown(report):
         "  --baseline outputs/v2/prefix_object_probe_NEXT/full_chunk_2000.json \\",
         "  --prefix outputs/v2/prefix_object_probe_NEXT/prefix_2000.json \\",
         "  --out results/v2/prefix_object_actions_NEXT.json \\",
-        "  --doc docs/v2_prefix_object_actions_NEXT.md", "```", ""]
+        "  --doc outputs/v2/prefix_object_actions_NEXT/review.md", "```", ""]
     return "\n".join(lines)
 
 

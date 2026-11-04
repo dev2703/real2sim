@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import math
 import platform
@@ -39,7 +38,8 @@ from pathlib import Path
 
 import numpy as np
 
-from real2sim.config import load_yaml
+from real2sim.artifacts import sha256_file as sha256_file
+from real2sim.config import json_default, load_yaml, project_path
 from real2sim.evaluation.metrics import TRIAL_COLUMNS, TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import (
@@ -57,7 +57,6 @@ from real2sim.policy.adapters import (
 from real2sim.sim.contact_solver import contact_solver_settings
 from real2sim.sim.env import So101PickPlaceEnv
 from real2sim.sim.kinematics import NativeKinematics
-from real2sim.sim.model import project_path
 
 ROBOTS = ("so101", "panda")
 CONTROLLER_SOURCES = {"learned": "LEARNED_ACT", "hold": "HOLD_POSE"}
@@ -107,14 +106,6 @@ class HoldPoseController:
     def step(self, obs: dict, env) -> ApplyResult:
         obs, _, _, truncated, info = env.step(self.action)
         return ApplyResult(obs, info, truncated, float(np.mean(info["control"]["limit_clipped"])))
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for block in iter(lambda: f.read(1 << 20), b""):
-            h.update(block)
-    return h.hexdigest()
 
 
 def check_contract_timing_and_image(contract: dict, env) -> None:
@@ -210,8 +201,14 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
     expected_controller = contract.get("controller_semantics")
     if contract.get("contract_version") and expected_controller not in (None, target_reference):
         raise ContractError("checkpoint execution semantics differ from evaluation configuration")
-    executor = ChunkExecutor(policy, normalizer, obs_adapter, action_adapter)
     run_info = json.loads((checkpoint / "run_info.json").read_text()) if (checkpoint / "run_info.json").is_file() else {}
+    inference = eval_cfg.get("inference", {})
+    executor = ChunkExecutor(policy, normalizer, obs_adapter, action_adapter,
+        n_action_steps=inference.get("n_action_steps"),
+        temporal_ensemble_coeff=inference.get("temporal_ensemble_coeff"),
+        supervised_prefix_steps=run_info.get("reconstruction_loss", {}).get("supervised_prefix_steps"))
+    execution_ablation = (executor.n_action_steps != int(policy.config.n_action_steps)
+        or executor.temporal_ensemble_coeff != getattr(policy.config, "temporal_ensemble_coeff", None))
     meta = {
         "checkpoint": str(checkpoint),
         "checkpoint_sha256": sha256_file(checkpoint / "model.safetensors"),
@@ -219,9 +216,11 @@ def build_learned_controller(env, checkpoint: Path, eval_cfg: dict, device: str,
         "kind": obs_adapter.kind,
         "chunk_size": int(policy.config.chunk_size),
         "n_action_steps": executor.n_action_steps,
+        "temporal_ensemble_coeff": executor.temporal_ensemble_coeff,
+        "supervised_action_steps": executor.supervised_prefix_steps,
         "device": device,
         "target_reference": target_reference if obs_adapter.kind in ("cartesian", "cartesian_absolute", "cartesian_tool") else None,
-        "execution_interface_ablation": projection is not None or (
+        "execution_interface_ablation": execution_ablation or projection is not None or (
             target_reference == "accepted_target" and not contract.get("contract_version")),
         "kinematic_projection": projection,
         "checkpoint_contract_modified": False,
@@ -291,7 +290,7 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
             exp_id = experiment_id or EXPERIMENT_IDS["hold_panda" if robot == "panda" else "hold"]
         caption = CAPTIONS[(robot, controller)]
         if meta["execution_interface_ablation"]:
-            caption += " persistent target (execution ablation)"
+            caption += " configured controller (execution ablation)"
         source = CONTROLLER_SOURCES[controller]
         if controller == "learned" and getattr(ctrl.policy.config, "type", "") == "small_chunk_head":
             source = "LEARNED_FLOW" if ctrl.policy.config.objective == "flow" else "LEARNED_REGRESSION"
@@ -330,6 +329,7 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
             # The first inference includes one-off warm-up (allocation, kernel selection); report it
             # separately so mean_latency_ms describes steady-state control latency.
             steady = lat[1:] if len(lat) > 1 else lat
+            step_lat = getattr(ctrl, "control_step_latencies_ms", [])
             row = tracker.row(
                 experiment_id=exp_id, controller_source=source, robot=robot, seed=seed,
                 checkpoint_sha256=meta["checkpoint_sha256"], checkpoint_step=meta["checkpoint_step"],
@@ -340,6 +340,12 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
                            "warmup_latency_ms": (round(float(lat[0]), 2) if lat else None),
                            "policy_calls": getattr(ctrl, "n_policy_calls", 0),
                            "max_latency_ms": (round(float(np.max(lat)), 2) if lat else None),
+                           "control_step_wall_ms": ({
+                               "mean": float(np.mean(step_lat)),
+                               "p95": float(np.quantile(step_lat, .95)),
+                               "max": float(np.max(step_lat)),
+                               "scope": "host simulation step including next rendered observation; physical camera/motor timestamps unavailable",
+                           } if step_lat else None),
                            "adapter_stats": _compact_stats(adapter_stats),
                            "history": tracker.history})
             print(f"[trial seed={seed}] source={source} success={row['success']} phase_failed="
@@ -357,9 +363,12 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
         "contract": contract,
         "execution_interface": {
             "target_reference": meta["target_reference"],
+            "n_action_steps": meta.get("n_action_steps"),
+            "temporal_ensemble_coeff": meta.get("temporal_ensemble_coeff"),
+            "supervised_action_steps": meta.get("supervised_action_steps"),
             "ablation": meta["execution_interface_ablation"],
             "checkpoint_contract_modified": False,
-            "note": ("Persistent accepted target execution ablation; frozen checkpoint, labels "
+            "note": ("Execution configuration ablation; frozen checkpoint, labels "
                      "and policy observations unchanged. This is not a trained contract change."
                      if meta["execution_interface_ablation"] else "Default execution interface."),
         },
@@ -372,7 +381,7 @@ def run_trials(*, robot: str, checkpoint: Path | None, config: Path, eval_config
                      "system": platform.system()},
         "wall_s_total": round(time.perf_counter() - t_start, 2),
     }
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=_json_default) + "\n")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2, default=json_default) + "\n")
     print(f"successes {summary['summary']['successes']}/{n_trials} -> {out}", flush=True)
     return summary
 
@@ -387,16 +396,6 @@ def _compact_stats(stats: dict | None) -> dict | None:
         out[f"{key}_mean"] = (float(np.mean(vals)) if vals else None)
         out[f"{key}_max"] = (float(np.max(vals)) if vals else None)
     return out
-
-
-def _json_default(o):
-    if isinstance(o, (np.floating, np.integer)):
-        return o.item()
-    if isinstance(o, np.ndarray):
-        return o.tolist()
-    if isinstance(o, Path):
-        return str(o)
-    raise TypeError(f"not JSON serialisable: {type(o)}")
 
 
 def main(argv: list[str] | None = None) -> None:

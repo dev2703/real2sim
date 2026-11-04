@@ -1,11 +1,14 @@
-"""Minimal YAML config loading shared by the CLIs."""
+"""Minimal YAML config loading and shared IO helpers used by the CLIs."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import yaml
+
+from real2sim.artifacts import sha256_file as sha256_file
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -16,11 +19,28 @@ def project_path(path: str | Path) -> Path:
     return path if path.is_absolute() else REPO_ROOT / path
 
 
+def json_default(value: Any) -> Any:
+    """``json.dumps`` default for numpy scalars/arrays, tuples and ``Path`` values."""
+    if isinstance(value, (np.floating, np.integer)):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, tuple):
+        return list(value)
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, (np.bool_,)):
+        return bool(value)
+    raise TypeError(f"not JSON serialisable: {type(value)}")
+
+
 def load_yaml(path: str | Path) -> dict[str, Any]:
-    with Path(path).open() as f:
+    """Load a YAML mapping; repo-relative paths resolve via :func:`project_path`."""
+    resolved = project_path(path)
+    with resolved.open() as f:
         data = yaml.safe_load(f)
     if not isinstance(data, dict):
-        raise ValueError(f"{path} must contain a mapping at top level")
+        raise ValueError(f"{resolved} must contain a mapping at top level")
     return data
 
 

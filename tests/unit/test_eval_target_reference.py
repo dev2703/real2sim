@@ -82,6 +82,30 @@ def test_joint_checkpoint_refuses_persistent_target_but_keeps_default(fake_check
     assert metadata["execution_interface_ablation"] is False
 
 
+def test_evaluation_ensemble_uses_saved_supervised_horizon(fake_checkpoint):
+    checkpoint, env, contract, _ = fake_checkpoint
+    (checkpoint / "run_info.json").write_text(json.dumps({
+        "reconstruction_loss": {"supervised_prefix_steps": 2}}))
+    config = eval_config()
+    config["inference"] = {"n_action_steps": 1, "temporal_ensemble_coeff": 0.01}
+    original = copy.deepcopy(contract)
+    executor, _, metadata = run.build_learned_controller(env, checkpoint, config, "cpu")
+    assert executor.ensemble.horizon == 2
+    assert executor.n_action_steps == 1
+    assert metadata["temporal_ensemble_coeff"] == .01
+    assert metadata["supervised_action_steps"] == 2
+    assert metadata["execution_interface_ablation"]
+    assert contract == original
+
+
+def test_evaluation_refuses_queue_over_saved_supervised_horizon(fake_checkpoint):
+    checkpoint, env, _, _ = fake_checkpoint
+    (checkpoint / "run_info.json").write_text(json.dumps({
+        "reconstruction_loss": {"supervised_prefix_steps": 1}}))
+    with pytest.raises(ValueError, match="supervised prefix"):
+        run.build_learned_controller(env, checkpoint, eval_config(), "cpu")
+
+
 @pytest.mark.parametrize("robot", ["so101", "panda"])
 def test_run_trials_rejects_persistent_hold_before_env_creation(tmp_path, monkeypatch, robot):
     config = tmp_path / "eval.yaml"

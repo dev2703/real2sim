@@ -59,7 +59,7 @@ contacts:
   friction: [0.6, 0.005, 0.0001]
   solref: [0.01, 1.0]
 
-# 7-D action contract limits (docs/architecture.md 4.2, provisional).
+# 7-D action contract limits (docs/PROJECT_SUMMARY.md, provisional).
 action_limits:
   max_translation_m: 0.03
   max_rotation_rad: 0.3

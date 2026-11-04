@@ -29,7 +29,7 @@ class TrialTracker:
     ``success`` latches once ``ball_in_bowl and ball_resting and not ball_held`` has held for
     ``success_hold_ticks`` consecutive ticks. ``approach_distance_m`` is the tool-site-to-ball-centre
     distance below which a failed trial counts as having reached the ball (``grasp`` rather than
-    ``approach``); it must match docs/experiment_protocol.md section 3.
+    ``approach``); it must match docs/PROJECT_SUMMARY.md
 
     ``lifted`` means the ball was above the lift height *while held* (plan M7 "lift success"); a
     ball knocked into the air without a grasp is not a lift. ``rolled_out`` means a released ball
@@ -107,7 +107,7 @@ class TrialTracker:
         return self.success
 
     def phase_failed(self) -> str:
-        """Furthest phase reached (docs/experiment_protocol.md section 3).
+        """Furthest phase reached (docs/PROJECT_SUMMARY.md).
 
         approach: never held and never came within ``approach_distance_m``; grasp: reached or
         touched the ball but never lifted it while held; transport: lifted but never in the bowl;
@@ -127,7 +127,8 @@ class TrialTracker:
     def row(self, *, abort: str | None = None, **static) -> dict:
         row = dict(static)
         row.update({
-            "success": self.success, "pick_place_success": self.pick_place_success and not bool(abort),
+            "success": self.success and not bool(abort),
+            "pick_place_success": self.pick_place_success and not bool(abort),
             "lifted": self.lifted, "delivered": self.delivered,
             "released": self.released, "rolled_out": self.rolled_out and not self.success,
             "ball_escaped_table": self.ball_escaped_table,
@@ -148,16 +149,23 @@ class TrialTracker:
 
 
 def summarize(rows: list[dict]) -> dict:
+    """Count every attempted trial, with aborted outcomes excluded from success numerators.
+
+    Check aborts here as well as in ``row`` so legacy trial rows follow the same rule.
+    """
     n = len(rows)
     count = lambda key: int(sum(bool(r[key]) for r in rows))  # noqa: E731
+    successes = sum(bool(r["success"]) and not r.get("abort") for r in rows)
+    pick_place_successes = sum(bool(r.get("pick_place_success", False)) and not r.get("abort")
+                               for r in rows)
     lat = [r["mean_latency_ms"] for r in rows if r["mean_latency_ms"] is not None]
     return {
         "n": n,
         "aborted": int(sum(bool(r.get("abort")) for r in rows)),
-        "successes": count("success"),
-        "success_rate": (count("success") / n) if n else None,
-        "pick_place_successes": sum(bool(r.get("pick_place_success", False)) for r in rows),
-        "pick_place_success_rate": (sum(bool(r.get("pick_place_success", False)) for r in rows) / n) if n else None,
+        "successes": successes,
+        "success_rate": (successes / n) if n else None,
+        "pick_place_successes": pick_place_successes,
+        "pick_place_success_rate": (pick_place_successes / n) if n else None,
         "lifted": count("lifted"), "delivered": count("delivered"), "released": count("released"),
         "rolled_out": count("rolled_out"), "ball_escaped_table": count("ball_escaped_table"),
         "phase_failed_counts": {p: sum(r["phase_failed"] == p for r in rows) for p in PHASES},

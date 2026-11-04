@@ -221,7 +221,7 @@ def test_success_counter_resets_if_regrasped():
 
 
 def test_phase_failed_uses_protocol_approach_distance():
-    """docs/experiment_protocol.md: 'approach' = never came within 3 cm of the ball."""
+    """docs/PROJECT_SUMMARY.md: 'approach' = never came within 3 cm of the ball."""
     t = _tracker()
     t.update(_priv(held=False, in_bowl=False, resting=True, dist=0.04))
     assert t.phase_failed() == "approach"

@@ -1,0 +1,37 @@
+{
+  "schema": "operator_positive_camera_convention_v1",
+  "date": "2026-10-26",
+  "operator_instruction": "assign +ve sign",
+  "interpretation": "camera-minus-ball horizontal components are positive",
+  "camera_minus_ball_xy_m": [
+    0.7747,
+    0.1143
+  ],
+  "camera_height_above_table_m": 0.4064,
+  "camera_from_base_in_operator_frame_xyz_m": [
+    0.8255,
+    0.4445,
+    0.4064
+  ],
+  "vertical_reference": "tabletop; x/y referenced to reported robot base",
+  "horizontal_signs_assigned": true,
+  "physical_calibration_accepted": false,
+  "working_assumptions": {
+    "camera_minus_ball_xy_signs": [
+      1,
+      1
+    ],
+    "operator_axes_assumed_parallel_to_task_axes": true,
+    "base_reference_assumed_task_origin_xy": true,
+    "camera_identity": "global observation.images.iphone",
+    "bowl_bearing": "+task_x from ball; source declares single-number x-axis measurements",
+    "mat_center": "nominal ball/bowl midpoint; mat placement not measured",
+    "camera_rotation": "roll-free look-at nominal ball/bowl midpoint; not measured",
+    "intrinsics": "previous provisional focal length/principal point retained",
+    "independently_verified_registration": false
+  },
+  "parent_sources_sha256": {
+    "configs/v2/task.scalar_measured_20261026.yaml": "ca4c222acfaceca7f23eb71b565e79281d4cf67809f3c6e65f8f848c87887bd1",
+    "configs/v2/measurements.operator_20261026.json": "bb6401bfff000137d6d8384b6d9b8d9e75967347a542326f799ef5c0b02e288b"
+  }
+}

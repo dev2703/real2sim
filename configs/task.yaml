@@ -1,4 +1,4 @@
-# Task geometry and physical parameters. Labels: see docs/calibration.md (D-012).
+# Task geometry and physical parameters. Labels: see docs/PROJECT_SUMMARY.md (D-012).
 # Units: metres, kilograms, radians unless the key says otherwise. Transforms are T_parent_child.
 provenance_default: PROVISIONAL-STANDARD
 
@@ -19,7 +19,7 @@ ball:
 
 bowl:
   # OPERATOR-SUPPLIED 2026-10-12 (image cross-check suggests ~12 cm outer diameter, ~5-6 cm height;
-  # re-measure requested, see docs/calibration.md section 1)
+  # re-measure requested, see docs/PROJECT_SUMMARY.md)
   inner_rim_radius: 0.050
   inner_depth: 0.0254
   wall_thickness: 0.002

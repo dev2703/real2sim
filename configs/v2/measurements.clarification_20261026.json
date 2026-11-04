@@ -1,0 +1,25 @@
+{
+  "schema": "operator_setup_clarification_v1",
+  "date": "2026-10-26",
+  "source": {
+    "kind": "operator_message_in_this_conversation",
+    "verbatim": "+x towards the ball +y from robot base towards ball yeah 16 inches above the tabletop"
+  },
+  "interpretation": {
+    "camera_height_reference": "tabletop rather than ball centre",
+    "camera_height_above_table_m": 0.4064,
+    "camera_height_interval_m": [0.38608, 0.42672],
+    "height_uncertainty_provenance": "Estimated +-5% from physical_measurements.md; clarification does not supply a new uncertainty estimate.",
+    "camera_identity_applied_to_candidate": "observation.images.iphone",
+    "camera_identity_is_assumption": true,
+    "camera_identity_assumption_reason": "The existing camera-from-ball measurement is interpreted as the global iPhone camera; the message does not explicitly identify the camera.",
+    "ball_from_base_components_operator_m": [0.0508, 0.3302],
+    "ball_from_base_component_signs": [1, 1],
+    "axes_note": "Both reported horizontal components point towards the ball. The message does not fully establish two orthogonal positive directions relative to simulator task axes.",
+    "T_task_operator": null,
+    "camera_horizontal_offset_signs_established": false,
+    "camera_orientation_established": false,
+    "base_reference_point_established": false
+  },
+  "physical_calibration_accepted": false
+}

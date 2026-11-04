@@ -8,13 +8,13 @@ Privileged oracle/scoring information is confined to the separate episode audit.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 from pathlib import Path
 
 import numpy as np
 
+from real2sim.artifacts import sha256_file as sha256
 from real2sim.config import load_yaml
 from real2sim.evaluation.metrics import TrialTracker
 from real2sim.evaluation.oracle import (
@@ -26,11 +26,6 @@ from real2sim.evaluation.oracle import (
 from real2sim.evaluation.video import CaptionedVideo, policy_view_to_bgr
 from real2sim.policy.adapters import IPHONE_KEY, JOINT_STATE_NAMES
 from real2sim.sim.env import So101PickPlaceEnv, real_from_sim, sim_from_real
-
-
-def sha256(path: Path) -> str:
-    with path.open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def rgb(obs: dict) -> np.ndarray:

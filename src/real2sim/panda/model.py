@@ -4,7 +4,7 @@ The task objects (table top, black mat, ball, bowl), their placement and the ``i
 come from ``configs/task.yaml`` so the Panda sees the same task frame as the SO-101 scene
 (plan M5 step 1). ``configs/sim_panda.yaml`` holds simulator-only knobs.
 
-Frames (docs/architecture.md section 4.3):
+Frames (docs/PROJECT_SUMMARY.md):
 
 * ``world``  MuJoCo world, z up. The table top is at ``z = task.table.height``; the Panda base
   body ``link0`` is placed on it at ``(0, 0, table.height)`` with identity orientation, so the
@@ -26,7 +26,6 @@ orange arm): this is a real domain gap for the frozen policy and is reported as 
 
 from __future__ import annotations
 
-import hashlib
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -34,10 +33,15 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
+from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
 from real2sim.sim.model import _add_bowl, bowl_dimensions
+from real2sim.sim.model import MIN_WALL_BOXES as MIN_WALL_BOXES
+from real2sim.sim.model import _add_bowl as _add_bowl
+from real2sim.sim.model import _numbers as _numbers
+from real2sim.sim.model import bowl_dimensions as bowl_dimensions
 from real2sim.sim.model import camera_xyaxes as so101_camera_xyaxes
-from real2sim.sim.model import task_frame_offset as so101_task_frame_offset
+from real2sim.sim.model import task_frame_offset as task_frame_offset
 
 ROOT = REPO_ROOT
 DEFAULT_CONFIG = ROOT / "configs/sim_panda.yaml"
@@ -54,7 +58,7 @@ FINGER_BODIES = ("left_finger", "right_finger")
 
 
 def sha256_of(path: str | Path) -> str:
-    return hashlib.sha256(project_path(path).read_bytes()).hexdigest()
+    return sha256_file(project_path(path))
 
 
 def verify_panda_assets(manifest_path: str | Path, model_path: str | Path) -> dict:
@@ -68,21 +72,9 @@ def verify_panda_assets(manifest_path: str | Path, model_path: str | Path) -> di
         raise ValueError(f"manifest has no rows for {relative}")
     for row in rows:
         asset = manifest_file.parent / row["path"]
-        payload = asset.read_bytes()
-        if len(payload) != row["bytes"] or hashlib.sha256(payload).hexdigest() != row["sha256"]:
+        if asset.stat().st_size != row["bytes"] or sha256_file(asset) != row["sha256"]:
             raise ValueError(f"asset hash mismatch: {asset}")
     return next(r for r in rows if r["path"] == relative)
-
-
-def _numbers(values) -> str:
-    return " ".join(f"{float(v):.12g}" for v in values)
-
-
-def task_frame_offset(task: dict) -> np.ndarray:
-    """``p_world = p_task + offset``: the SAME task frame as the SO-101 scene (the SO-101 base,
-    ``base_z_offset`` above the table top, D-014). Shared so the two embodiments cannot drift."""
-    return so101_task_frame_offset(task)
-
 
 def panda_base_world(task: dict) -> np.ndarray:
     """World position of the Panda base body: on the table top under the task origin.

@@ -1,10 +1,10 @@
 """Assemble the provisional pick-and-place scene around the unchanged pinned robot model.
 
 Single source of truth for geometry and physical parameters is ``configs/task.yaml`` (provenance
-labels live there and in ``docs/calibration.md``). ``configs/sim_so101.yaml`` holds only the
+labels live there and in ``docs/PROJECT_SUMMARY.md``). ``configs/sim_so101.yaml`` holds only the
 simulator-specific knobs: physics rate, control interface, contact softness, render size, IK.
 
-Frames (docs/architecture.md section 4.3):
+Frames (docs/PROJECT_SUMMARY.md):
 
 * ``world``  MuJoCo world, z up. The table top is at ``z = task.table.height`` and the robot base
   body is placed at ``(0, 0, table.height + base_z_offset)`` (offset 0 until D-014 is approved).
@@ -17,7 +17,6 @@ The upstream ``so101.xml`` is parsed and extended in memory only; the pinned fil
 
 from __future__ import annotations
 
-import hashlib
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -26,6 +25,7 @@ import mujoco
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
 
 ROOT = REPO_ROOT
@@ -33,15 +33,12 @@ DEFAULT_CONFIG = ROOT / "configs/sim_so101.yaml"
 MIN_WALL_BOXES = 12
 
 
-
-
 def verify_assets(manifest_path: str | Path) -> dict:
     path = project_path(manifest_path)
     manifest = json.loads(path.read_text())
     for row in manifest["files"]:
         asset = path.parent / row["path"]
-        payload = asset.read_bytes()
-        if len(payload) != row["bytes"] or hashlib.sha256(payload).hexdigest() != row["sha256"]:
+        if asset.stat().st_size != row["bytes"] or sha256_file(asset) != row["sha256"]:
             raise ValueError(f"asset hash mismatch: {asset}")
     return manifest
 
@@ -87,7 +84,7 @@ def camera_xyaxes(camera: dict, cam_pos, cam_at) -> np.ndarray:
 def base_z_offset(task: dict) -> float:
     """Height of the robot base origin above the table top (m), ``robot_so101.base_z_offset``.
 
-    Absent or zero until docs/decisions.md D-014 is approved (the key is read here so that the
+    Absent or zero until docs/PROJECT_SUMMARY.md D-014 is approved (the key is read here so that the
     approved value is a one-line task.yaml change). The task frame stays equal to the base frame,
     so with a non-zero offset the table top lies at ``z_task = -base_z_offset``.
     """
@@ -318,7 +315,7 @@ def load_scene(config_path: str | Path = DEFAULT_CONFIG, *, bowl_inner_depth: fl
     xml = scene_xml(config, task, bowl_inner_depth=bowl_inner_depth, contacts=contacts)
     model = mujoco.MjModel.from_xml_string(xml)
     if task["ball"].get("inertia") == "thin_shell":
-        # Tennis balls are hollow: I = 2/3 m r^2 (docs/calibration.md), not the solid 2/5.
+        # Tennis balls are hollow: I = 2/3 m r^2 (docs/PROJECT_SUMMARY.md), not the solid 2/5.
         geom = model.geom("ball_geom").id
         body = model.geom_bodyid[geom]
         m, r = float(task["ball"]["mass"]), float(task["ball"]["radius"])

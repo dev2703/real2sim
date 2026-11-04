@@ -61,6 +61,14 @@ def test_missing_ball_has_no_position_fallback():
     assert locate(np.zeros((480, 640, 3), dtype=np.uint8)) == {"ball": None, "bowl": None}
 
 
+def test_warm_wood_background_does_not_merge_ball_with_image_border():
+    image = scene()
+    image[np.all(image == 40, axis=2)] = [110, 83, 29]
+    result = locate(image)
+    assert result["ball"] is not None
+    np.testing.assert_allclose(result["ball"].center_task[:2], [.18, .10], atol=.001)
+
+
 def test_camera_frame_conversion_preserves_projection_axes():
     pose = camera_pose_task([.1, -.3, .9], np.eye(3), [.01, .02, .7])
     np.testing.assert_allclose(pose[:3, 3], [.09, -.32, .2])
@@ -83,3 +91,24 @@ def test_wrong_object_scale_and_invalid_input_are_rejected():
     assert result == {"ball": None, "bowl": None}
     with pytest.raises(ValueError, match="uint8"):
         locate(scene().astype(float) / 255)
+
+
+def test_dim_connected_pixels_do_not_hide_a_complete_bright_rim():
+    image = scene()
+    # A dim neutral protrusion merges with the bowl at the original V>=80
+    # threshold, although its brighter complete rim is still visible.
+    overlay = image.copy()
+    cv2.rectangle(overlay, (225, 290), (270, 320), (100, 100, 100), -1)
+    background = np.all(image == 40, axis=2)
+    image[background] = overlay[background]
+    result = locate(image)
+    assert result["bowl"] is not None
+    np.testing.assert_allclose(result["bowl"].center_task[:2], [-.16, -.10], atol=.001)
+
+
+def test_threshold_repeats_do_not_hide_two_independent_matching_bowls():
+    image = scene()
+    other = scene(bowl=(-.16, .18), hide_ball=True)
+    grey = (other[:, :, 0] == 150) & (other[:, :, 1] == 150)
+    image[grey] = other[grey]
+    assert locate(image)["bowl"] is None
