@@ -75,7 +75,7 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
     torch.set_num_threads(2)
     policy = NativeLeRobotACT(snapshot)
     policy.policy.eval().requires_grad_(False)
-    scene, task = transfer.prepare_source(out, (0.,) * 5, source_scene=source_scene,
+    scene, task = transfer.prepare_source(out, source_scene=source_scene,
                                          initial_gripper_percent=1.2,
                                          native_contract=policy.scene_contract)
     source = transfer.retarget.VirtualSource(scene)

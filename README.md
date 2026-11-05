@@ -6,8 +6,8 @@ issued jaw commands and RGB target history, with iterative corrective training.
 Frozen ACT can hand over to a separately trained MLP.
 
 The confirmed target is [v3 ACT](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle),
-revision `076452e6024c778a2bffabe99ecf33776de141e1`. Pass its export through
-`--snapshot`; CLI defaults and retained learned heads still use historical v2.
+revision `076452e6024c778a2bffabe99ecf33776de141e1`. Supported CLI defaults use
+this revision. Retained learned heads still use historical v2.
 V3 has matched raw/RGB evaluation evidence; v3-specific learned recovery is
 still outstanding.
 

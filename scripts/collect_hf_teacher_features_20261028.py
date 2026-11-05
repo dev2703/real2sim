@@ -74,7 +74,7 @@ def run(out, snapshot, *, train_seeds=(100, 101, 102, 103, 104), val_seeds=(200,
     normalization = load_file(Path(snapshot) / "policy_postprocessor_step_0_unnormalizer_processor.safetensors")
     mean = normalization["action.mean"].numpy()
     std = normalization["action.std"].numpy()
-    source_scene, task = transfer.prepare_source(out, (0.,) * 5)
+    source_scene, task = transfer.prepare_source(out)
     source = transfer.retarget.VirtualSource(source_scene)
     try:
         panda_scene, wrist = transfer.prepare_panda(out, source, task, -.15, wrist_mount="external_hand")
