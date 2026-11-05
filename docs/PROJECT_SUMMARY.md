@@ -18,8 +18,12 @@ verified. A guarded SO-101 jaw-command fix removes a reproduced suppression
 mechanism, but its initial matched learned comparison remains 0/2 before and
 after. One further correction/refit also remains 0/2 on SO-101 and regresses
 Panda from 1/2 to 0/2 on matched development seeds; the refit is not promoted.
-Exported v2 states verify 15k at root and 30k in `latest/`; the reported
-40k artifact has not been located. Physical registration remains unaccepted.
+Exported v2 states verify 15k at root and 30k in `latest/`. On 6 November the
+user confirmed v3 as the intended target; its pinned export is already evaluated
+above, resolving checkpoint selection. Its achieved training step remains
+unknown. Existing learned heads remain tied to v2, so v3-specific corrective
+training and learned handoff evaluation are still required. Physical registration
+remains unaccepted.
 
 The [1 November codebase audit](CODEBASE_AUDIT_20261101.md) adds fresh matched v2
 simulation checks: frozen ACT 0/5 on each arm; RGB and ACT→RGB 5/5 each. All 30

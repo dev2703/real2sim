@@ -9,6 +9,12 @@ Frozen ACT can hand over to a separately trained MLP.
 checkpoint steps, v2/v3 matched evaluations, the guarded SO-101 jaw fix and the
 remaining physical calibration inputs.
 
+The confirmed target is [v3 ACT](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle),
+revision `076452e6024c778a2bffabe99ecf33776de141e1`. Pass its export through
+`--snapshot`; CLI defaults and retained learned heads still use historical v2.
+V3 has matched raw/RGB evaluation evidence; v3-specific learned recovery is
+still outstanding.
+
 ```sh
 uv sync --locked                      # Python 3.12; pinned dependencies in uv.lock
 uv run ruff check .
@@ -33,6 +39,11 @@ Run from the repository root with a new output directory. Replace `so101` with
 `panda` for the other arm:
 
 ```sh
+# Confirmed v3 export: raw ACT, RGB and ACT followed by RGB on both arms
+uv run python scripts/benchmark_frozen_act.py --robots so101 panda \
+  --snapshot ~/.cache/huggingface/hub/models--bottowork--act_so101_pickplace_v3_varied_kaggle/snapshots/076452e6024c778a2bffabe99ecf33776de141e1 \
+  --seeds 12040 12041 12042 12043 12044 --out outputs/v2/matched_v3_NEW
+
 # Frozen HF ACT followed by RGB geometric recovery
 uv run python scripts/evaluate_hf_recovery.py --robot so101 \
   --seeds 500 501 502 503 504 --out outputs/v2/hf_recovery_so101_NEW --video

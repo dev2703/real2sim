@@ -24,10 +24,12 @@ step stored beside exported weights.
 | `so101-act-h512-b16`, root / `latest/` | 4,800 / 5,000 | Both downloaded states verified |
 | `act_so101_pickplace_v3_varied_kaggle` | Unknown | Provenance requests 10,000; no exported training state |
 
-No verified 40k export was found in those repositories or the inspected caches.
-The h256 experiment requests 40k updates, but its accompanying saved states do
-not establish that duration. A different 40k artifact still needs an exact path
-or repository/revision before its performance can be assessed.
+On 6 November, the user confirmed **v3** as the intended checkpoint. This is the
+pinned export already loaded and evaluated below, so checkpoint selection is
+resolved. Its achieved training step remains unverified: the available v3
+provenance requests 10k updates and supplies no saved training state. The earlier
+40k description is not established by that metadata; a separate artifact is not
+required to proceed with the confirmed v3 target.
 
 The v2 revision is `e696c8a078935432e3501e2c28c1fb2598fbff7e`; v3 is
 `076452e6024c778a2bffabe99ecf33776de141e1`. Exact additional revisions and hashes
@@ -76,6 +78,11 @@ retains its protocol, reports, full traces and 54 verified source/config files.
 The [benchmark driver](../outputs/v2/blockers_20261105/run_checkpoint_benchmarks.py)
 and [comparison checker](../outputs/v2/blockers_20261105/summarize_checkpoint_results.py)
 are retained beside the outputs.
+
+V3 is evaluated here for raw ACT and geometric recovery. The retained and
+refitted learned heads below declare the v2 `latest/` base-checkpoint hash;
+their loaders enforce that compatibility. V3-specific corrective collection,
+training and learned handoff evaluation remain outstanding.
 
 ## Guarded SO-101 jaw fallback
 
