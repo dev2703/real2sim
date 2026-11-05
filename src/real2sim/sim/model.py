@@ -320,4 +320,8 @@ def load_scene(config_path: str | Path = DEFAULT_CONFIG, *, bowl_inner_depth: fl
         body = model.geom_bodyid[geom]
         m, r = float(task["ball"]["mass"]), float(task["ball"]["radius"])
         model.body_inertia[body] = 2 / 3 * m * r * r
+    from real2sim.sim.cameras import apply_render_near_clip
+
+    # Shared by wrist_cam and the global camera. Extent is only known after compile.
+    apply_render_near_clip(model)
     return model, config, task
