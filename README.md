@@ -5,10 +5,6 @@ evaluation and recovery. Learned recovery now uses achieved robot motion,
 issued jaw commands and RGB target history, with iterative corrective training.
 Frozen ACT can hand over to a separately trained MLP.
 
-[5 November blocker progress](docs/BLOCKER_PROGRESS_20261105.md) records verified
-checkpoint steps, v2/v3 matched evaluations, the guarded SO-101 jaw fix and the
-remaining physical calibration inputs.
-
 The confirmed target is [v3 ACT](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle),
 revision `076452e6024c778a2bffabe99ecf33776de141e1`. Pass its export through
 `--snapshot`; CLI defaults and retained learned heads still use historical v2.
