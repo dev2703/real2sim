@@ -83,7 +83,7 @@ class SharedEpisode:
                  initial_gripper_percent=1.2):
         directory.mkdir(parents=True)
         self.robot = robot
-        scene, task = transfer.prepare_source(directory, (0.,) * 5,
+        scene, task = transfer.prepare_source(directory,
             source_scene=source_scene, initial_gripper_percent=initial_gripper_percent,
             native_contract=native_contract)
         self.source = transfer.retarget.VirtualSource(scene)
