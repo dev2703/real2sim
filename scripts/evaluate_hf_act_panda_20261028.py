@@ -15,6 +15,7 @@ import json
 import math
 import time
 from pathlib import Path
+from typing import NamedTuple
 
 import cv2
 import mujoco
@@ -44,6 +45,29 @@ else:
 
 def save(path, payload):
     write_json(path, payload, atomic=True)
+
+
+class SourceActionDecision(NamedTuple):
+    accepted: bool
+    reason: str | None
+    requested: np.ndarray | None
+    bounded: np.ndarray | None
+    command: np.ndarray | None
+    rejection: dict | None
+
+
+def source_action_or_hold(source, action, hold):
+    """Apply one virtual source command, or hold measured joints when it is out of limits.
+
+    ``VirtualSourceCommandError`` rejects that command only and leaves source
+    memory unchanged. Observation failures and every other exception propagate.
+    """
+    try:
+        requested, bounded = source.source_action(action)
+    except retarget.VirtualSourceCommandError as exc:
+        return SourceActionDecision(False, "source_target_native_limits", exc.requested,
+            exc.bounded, np.asarray(hold, float).copy(), exc.diagnostics())
+    return SourceActionDecision(True, None, requested, bounded, None, None)
 
 
 def save_rgb(path, image):
@@ -252,26 +276,38 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
                                 image_hashes = {key: hashlib.sha256(image.tobytes()).hexdigest() for key, image in images.items()}
                                 queue = list(actions[:execute_steps])
                             action = queue.pop(0)
-                            raw_source, bounded_source = source.source_action(action)
-                            desired = retarget.target_from_source(source, bounded_source)
-                            observed = env.ee_pose()
-                            delta = desired[:3, 3] - observed[:3, 3]
-                            if np.linalg.norm(delta) > .024:
-                                desired[:3, 3] = observed[:3, 3] + delta * .024 / np.linalg.norm(delta)
-                            percent = float(source.mapping.gripper_sim_to_real_percent(bounded_source[5]))
-                            width = retarget.panda_opening_from_percent(percent, env.max_opening)
-                            solved = ik.solve(desired, env.arm_qpos(), finger_opening=max(width, env.gripper_opening()))
-                            command = np.r_[solved.qpos if solved.accepted else env.arm_qpos(), width]
+                            hold = np.r_[env.arm_qpos(), env.gripper_opening()]
+                            decision = source_action_or_hold(source, action, hold)
+                            if decision.accepted:
+                                raw_source, bounded_source = decision.requested, decision.bounded
+                                desired = retarget.target_from_source(source, bounded_source)
+                                observed = env.ee_pose()
+                                delta = desired[:3, 3] - observed[:3, 3]
+                                if np.linalg.norm(delta) > .024:
+                                    desired[:3, 3] = observed[:3, 3] + delta * .024 / np.linalg.norm(delta)
+                                percent = float(source.mapping.gripper_sim_to_real_percent(bounded_source[5]))
+                                width = retarget.panda_opening_from_percent(percent, env.max_opening)
+                                solved = ik.solve(desired, env.arm_qpos(),
+                                    finger_opening=max(width, env.gripper_opening()))
+                                command = np.r_[solved.qpos if solved.accepted else env.arm_qpos(), width]
+                                ik_accepted, ik_reason = solved.accepted, solved.reason
+                                ik_error = solved.position_error_m
+                            else:
+                                raw_source, bounded_source = decision.requested, decision.bounded
+                                desired = None
+                                command = decision.command
+                                ik_accepted, ik_reason, ik_error = False, decision.reason, None
                             _, _, _, truncated, info = env.step(command)
-                            reasons[solved.reason] = reasons.get(solved.reason, 0) + 1
-                            done = tracker.update(info["privileged_metrics"], ik_rejected=not solved.accepted,
+                            reasons[ik_reason] = reasons.get(ik_reason, 0) + 1
+                            done = tracker.update(info["privileged_metrics"], ik_rejected=not ik_accepted,
                                 saturation=float(np.mean(info["control"]["limit_clipped"])))
                             record = {"tick": tick, "inference_ms": infer_ms, "native_input_degree_percent": state,
                                 "actual_panda_image_sha256": image_hashes, "raw_hf_action_degree_percent": action,
                                 "virtual_source_projection_error_m": error,
                                 "source_requested_native_rad": raw_source, "source_bounded_native_rad": bounded_source,
-                                "panda_requested_pose_task": desired, "panda_ik_accepted": solved.accepted,
-                                "panda_ik_reason": solved.reason, "panda_ik_position_error_m": solved.position_error_m,
+                                "source_command_rejection": decision.rejection,
+                                "panda_requested_pose_task": desired, "panda_ik_accepted": ik_accepted,
+                                "panda_ik_reason": ik_reason, "panda_ik_position_error_m": ik_error,
                                 "panda_control": info["control"], "panda_readback": env.sim_state(),
                                 "scoring_only": info["privileged_metrics"]}
                             handle.write(json.dumps(record, default=json_default, allow_nan=False) + "\n")
