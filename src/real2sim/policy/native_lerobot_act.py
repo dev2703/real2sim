@@ -7,8 +7,11 @@ exactly once; do not apply the repository's 192x256 letterbox or normalizer.
 
 from __future__ import annotations
 
+import json
+from dataclasses import fields
 from pathlib import Path
 
+import draccus
 import numpy as np
 import torch
 from lerobot.configs.policies import PreTrainedConfig
@@ -17,6 +20,26 @@ from lerobot.policies.factory import make_pre_post_processors
 from lerobot.utils.constants import OBS_ENV_STATE, OBS_STATE
 
 from real2sim.artifacts import sha256_file as file_sha256
+
+
+def load_native_act_config(path):
+    """Read a local ACT config, retaining strict validation of saved semantics.
+
+    LeRobot 0.6.2 adds ``dtype``: null means the PyTorch default, matching
+    0.6.1's construction behavior. Only that known no-op may be omitted for
+    an older loader. Explicit dtypes and every other unknown field still fail;
+    checkpoint files, weights and processor state are never rewritten.
+    """
+    path = Path(path)
+    payload = json.loads((path / "config.json").read_text())
+    if payload.get("type") != "act":
+        raise ValueError("requires native ACT checkpoint")
+    if "dtype" not in payload or "dtype" in {field.name for field in fields(PreTrainedConfig)}:
+        return PreTrainedConfig.from_pretrained(path, local_files_only=True)
+    if payload["dtype"] is not None:
+        raise ValueError("native ACT loader cannot preserve an explicit dtype with this LeRobot version")
+    payload.pop("dtype")
+    return draccus.decode(PreTrainedConfig, payload)
 
 
 def vectorized_act_actions(model, batch, camera_keys, position_cache):
@@ -116,7 +139,7 @@ class NativeLeRobotACT:
         self.inference_backend = inference_backend
         self.runtime_options = {"device": device, "inference_backend": inference_backend}
         self._position_cache = {}
-        self.config = PreTrainedConfig.from_pretrained(self.path, local_files_only=True)
+        self.config = load_native_act_config(self.path)
         if self.config.type != "act":
             raise ValueError("requires native ACT checkpoint")
         self.scene_contract = native_scene_contract(self.config)

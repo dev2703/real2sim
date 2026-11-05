@@ -5,6 +5,10 @@ evaluation and recovery. Learned recovery now uses achieved robot motion,
 issued jaw commands and RGB target history, with iterative corrective training.
 Frozen ACT can hand over to a separately trained MLP.
 
+[5 November blocker progress](docs/BLOCKER_PROGRESS_20261105.md) records verified
+checkpoint steps, v2/v3 matched evaluations, the guarded SO-101 jaw fix and the
+remaining physical calibration inputs.
+
 ```sh
 uv sync --locked                      # Python 3.12; pinned dependencies in uv.lock
 uv run ruff check .

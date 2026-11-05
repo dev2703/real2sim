@@ -20,6 +20,7 @@ from real2sim.policy.follower_joint import check_joint_request
 ACTION_NAMES = ["tcp_dx_m", "tcp_dy_m", "tcp_dz_m", "world_drx_rad", "world_dry_rad",
                 "world_drz_rad", "gripper_open_fraction"]
 ACTION_SCALE = np.array([.03, .03, .03, .3, .3, .3, 1.], dtype=np.float64)
+EXECUTOR_SEMANTICS = "native_common_cartesian_v2_guarded_so101_jaw_fallback"
 FRAME_NAMES = ([f"tcp_{a}_m" for a in "xyz"] + [f"rotation6d_{i}" for i in range(6)]
     + [f"velocity_{a}_mps" for a in "xyz"] + ["gripper_measured"]
     + [f"initial_rgb_ball_relative_{a}" for a in "xyz"]
@@ -251,6 +252,24 @@ class CommonCartesianExecutor:
             target[:3, 3] = self.source.ball_point(bounded) - POINTING_DOWN @ self.source.panda_offset
         return clip_common(np.r_[delta_action(self.env.ee_pose(), target), raw[5] / 90.])
 
+    def _check_so101_command(self, current, guard_current, command):
+        """Check the actual pose and both native command-path proxies.
+
+        The same gates apply to a full Cartesian solution and a jaw-only
+        request. Numerical soft-stop seed projection must not hide a collision
+        or workspace violation at the actual measured pose.
+        """
+        actual = self.guard.forward(current)
+        cfg = self.guard.config
+        if (np.any(actual[:3, 3] < cfg["workspace_min"])
+                or np.any(actual[:3, 3] > cfg["workspace_max"])
+                or self.guard._collision()):
+            return False, "actual_pose_workspace_or_collision"
+        accepted, reason, _ = check_joint_request(self.guard, guard_current,
+            self.env.data.ctrl[self.env.actuator_ids], command,
+            self.env.max_velocity / self.env.control_hz, samples=17)
+        return accepted, reason
+
     def step(self, action):
         env = self.env
         action = clip_common(action)
@@ -297,18 +316,7 @@ class CommonCartesianExecutor:
                     accepted, reason = False, "command_joint_stop_margin"
             if accepted and self.robot == "so101":
                 command = np.r_[solved.qpos[:5], grip]
-                # Preserve checks on the actual pose as well as the projected
-                # numerical path seed, so soft-stop handling cannot hide contact.
-                actual = self.guard.forward(current)
-                cfg = self.guard.config
-                if (np.any(actual[:3, 3] < cfg["workspace_min"])
-                        or np.any(actual[:3, 3] > cfg["workspace_max"])
-                        or self.guard._collision()):
-                    accepted, reason = False, "actual_pose_workspace_or_collision"
-                else:
-                    accepted, reason, _ = check_joint_request(self.guard, guard_current,
-                        env.data.ctrl[env.actuator_ids], command, env.max_velocity / env.control_hz,
-                        samples=17)
+                accepted, reason = self._check_so101_command(current, guard_current, command)
             projection = None
             if accepted and getattr(self, "require_source_mapping", False):
                 accepted, projection = self._source_mapping_path(current, solved.qpos, grip)
@@ -319,8 +327,24 @@ class CommonCartesianExecutor:
             if accepted:
                 fraction = candidate_fraction
                 break
+        jaw_fallback = None
         if self.robot == "so101":
             command = np.r_[solved.qpos[:5], grip] if accepted else np.clip(current, *env.limits.T)
+            if not accepted:
+                # A rejected arm motion need not suppress an independent jaw
+                # close/open. Hold the measured arm and validate this separate
+                # native request through the same workspace, collision, limits
+                # and sampled rate-bounded path checks. It never makes the
+                # rejected Cartesian arm request count as accepted.
+                jaw_command = np.r_[command[:5], grip]
+                jaw_accepted, jaw_reason = self._check_so101_command(
+                    current, guard_current, jaw_command)
+                jaw_fallback = {"accepted": jaw_accepted, "reason": jaw_reason,
+                    "requested_open_fraction": float(action[6]),
+                    "arm_request_remains_rejected": True,
+                    "collision_path_samples": 17}
+                if jaw_accepted:
+                    command = jaw_command
         else:
             command = np.r_[solved.qpos if accepted else current, grip]
         issued_action = self.native_feedback_action(command, before_pose=current_pose)
@@ -330,6 +354,7 @@ class CommonCartesianExecutor:
         achieved_action = np.r_[delta_action(current_pose, env.ee_pose()), issued_action[6]]
         executed = action.copy()
         executed[:6] = delta_action(current_pose, target) if accepted else 0.
+        executed[6] = issued_action[6]
         return ApplyResult(obs, info, truncated,
             float(np.mean(info["control"]["limit_clipped"])), ik_rejected=not accepted,
             detail={"common_action": executed.tolist(), "requested_common_action": action.tolist(),
@@ -339,6 +364,8 @@ class CommonCartesianExecutor:
                     "achieved_action_semantics": "Measured pre/post TCP delta and issued native jaw intent; not clipped",
                     "feasibility_fraction": fraction, "feasibility_attempts": attempts,
                     "arm_joint_stop_command_margin_rad": .003,
+                    "executor_semantics": EXECUTOR_SEMANTICS,
+                    "jaw_only_fallback": jaw_fallback,
                     "requires_virtual_source_mapping": getattr(self, "require_source_mapping", False),
                     "panda_orientation_projection": "fixed_top_down_expert_manifold" if self.robot == "panda" else None,
                     "requested_native": command.tolist(),

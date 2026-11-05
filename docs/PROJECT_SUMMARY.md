@@ -1,13 +1,25 @@
 # Real2Sim-RaC project summary
 
-Experimental findings are consolidated through 30 October 2026; cleanup and v3
-source metadata were reviewed on 1 November 2026. This replaces the dated reports
+Historical experimental findings are consolidated through 30 October 2026;
+checkpoint and executor follow-up findings are recorded on 5 November below.
+Cleanup and v3 source metadata were reviewed on 1 November. This replaces the dated reports
 and duplicated runbooks previously in `docs/`; their full text remains in Git
-history. Runtime inputs and trial records remain under `results/`. Historical
+history. Historical runtime inputs and trial records remain under `results/`;
+new follow-up artifacts are retained under ignored `outputs/`. Historical
 report links point to their retained Git revision. Paths and hashes inside older
 evidence describe the original runs.
 
 ## Current result
+
+The [5 November blocker follow-up](BLOCKER_PROGRESS_20261105.md) adds actual v3
+export loading and fresh matched v2/v3 evaluations: each checkpoint scores raw
+ACT 0/5 per arm, with RGB and ACT→RGB 5/5 per arm. All 60 trial/trace pairs are
+verified. A guarded SO-101 jaw-command fix removes a reproduced suppression
+mechanism, but its initial matched learned comparison remains 0/2 before and
+after. One further correction/refit also remains 0/2 on SO-101 and regresses
+Panda from 1/2 to 0/2 on matched development seeds; the refit is not promoted.
+Exported v2 states verify 15k at root and 30k in `latest/`; the reported
+40k artifact has not been located. Physical registration remains unaccepted.
 
 The [1 November codebase audit](CODEBASE_AUDIT_20261101.md) adds fresh matched v2
 simulation checks: frozen ACT 0/5 on each arm; RGB and ACT→RGB 5/5 each. All 30
@@ -138,12 +150,14 @@ The additional v3 sources supplied on 1 November have these pinned revisions:
 These metadata checks establish resource identity and schema. Existing runners
 default to the native v2 ACT checkpoint described above. The 1 November audit
 adds checkpoint-derived `top`/`wrist` camera mapping, image dimensions and identity
-to the native runners and matched benchmark. V3 still needs an actual load of its
-saved processors and weights; its [training provenance](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle/blob/076452e6024c778a2bffabe99ecf33776de141e1/run_provenance.json)
-records LeRobot 0.6.2, while this environment pins 0.6.1. SmolVLA needs a policy
-adapter for its camera/language preprocessing; `NativeLeRobotACT` accepts ACT
-checkpoints. V3 inference, task performance and camera registration have not been
-validated by the schema tests.
+to the native runners and matched benchmark. V3's [training provenance](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle/blob/076452e6024c778a2bffabe99ecf33776de141e1/run_provenance.json)
+records LeRobot 0.6.2, while this environment pins 0.6.1. The 5 November
+follow-up handles only the known default `dtype: null` compatibility field,
+loads the actual unchanged export and saved processors, and verifies finite
+inference with normalization exactly once. Its matched raw ACT result remains
+0/5 per arm; camera registration remains unverified. SmolVLA still needs a
+policy adapter for its camera/language preprocessing; `NativeLeRobotACT`
+accepts ACT checkpoints.
 
 Five arm channels use degrees; gripper is percent with 0 closed. Recorded raw
 actions are leader/requested targets, not established sent commands or achieved
