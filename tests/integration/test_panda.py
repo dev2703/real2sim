@@ -179,6 +179,24 @@ def test_ik_rejects_outside_workspace_and_unreachable(env):
     np.testing.assert_array_equal(result.qpos, env.initial_qpos)  # seed returned, never applied
 
 
+def test_ik_soft_limit_overshoot_holds_clipped_seed(env):
+    ik = PandaIK(env.model, env.config, task_origin=env.offset)
+    joint = 3
+    target = ik.forward(env.initial_qpos)
+    near = env.initial_qpos.copy()
+    near[joint] = ik.limits[joint, 1] + 0.00023
+    result = ik.solve(target, near)
+    assert result.reason != "measured_beyond_soft_stop"
+    assert np.all(result.qpos <= ik.limits[:, 1] + 1e-9)
+    assert np.all(result.qpos >= ik.limits[:, 0] - 1e-9)
+    far = env.initial_qpos.copy()
+    far[joint] = ik.limits[joint, 1] + 0.010355
+    result = ik.solve(target, far)
+    assert not result.accepted
+    assert result.reason == "measured_beyond_soft_stop"
+    assert result.qpos[joint] == pytest.approx(ik.limits[joint, 1])
+
+
 def test_adapter_zero_delta_holds_tcp(env):
     obs, _ = env.reset(seed=0)
     adapter = PandaCartesianActionAdapter(env)
