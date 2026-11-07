@@ -184,8 +184,17 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                 queue = list(policy.predict_action_chunk(state, images)[:policy.config.n_action_steps])
                                 calls += 1
                             raw_action = queue.pop(0)
-                            _, bounded = source.source_action(raw_action)
-                            if robot == "so101":
+                            hold = (env.sim_state() if robot == "so101"
+                                    else np.r_[env.arm_qpos(), env.gripper_opening()])
+                            decision = transfer.source_action_or_hold(source, raw_action, hold)
+                            if not decision.accepted:
+                                # Match the frozen benchmark: one illegal command holds
+                                # the measured arm and jaw so RGB recovery can still start.
+                                accepted = False
+                                command_reason = decision.reason
+                                command = decision.command
+                            elif robot == "so101":
+                                bounded = decision.bounded
                                 current = env.sim_state()
                                 guard.data.qpos[:] = env.data.qpos
                                 accepted, command_reason, _ = check_joint_request(guard, current,
@@ -193,13 +202,15 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                     env.max_velocity / env.control_hz, samples=17)
                                 command = bounded if accepted else current
                             else:
+                                bounded = decision.bounded
                                 desired = transfer.retarget.target_from_source(source, bounded)
                                 observed = env.ee_pose()
                                 delta = desired[:3, 3] - observed[:3, 3]
                                 length = np.linalg.norm(delta)
                                 if length > .024:
                                     desired[:3, 3] = observed[:3, 3] + delta * .024 / length
-                                width = transfer.retarget.panda_opening_from_percent(raw_action[5], env.max_opening)
+                                width = transfer.retarget.panda_opening_from_percent(
+                                    raw_action[5], env.max_opening)
                                 solved = guard.solve(desired, env.arm_qpos(),
                                     finger_opening=max(width, env.gripper_opening()))
                                 accepted, command_reason = solved.accepted, solved.reason
@@ -207,7 +218,8 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                             obs, _, _, truncated, info = env.step(command)
                             rejected = not accepted
                             saturation = float(np.mean(info["control"]["limit_clipped"]))
-                            detail = {"guard_reason": command_reason, "requested_native": command}
+                            detail = {"guard_reason": command_reason, "requested_native": command,
+                                      "source_command_rejection": decision.rejection}
                             hf_ticks += 1
                         done = tracker.update(info["privileged_metrics"],
                                               ik_rejected=rejected, saturation=saturation)
