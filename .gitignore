@@ -14,6 +14,7 @@ wheels/
 .DS_Store
 *.claude*
 *.md*
+*!README.md*
 
 # Large artifacts stay out of git
 .cache/
