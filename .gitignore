@@ -13,6 +13,7 @@ wheels/
 #miscellanous
 .DS_Store
 *.claude*
+*.md*
 
 # Large artifacts stay out of git
 .cache/
