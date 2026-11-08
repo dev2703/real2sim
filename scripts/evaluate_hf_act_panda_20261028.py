@@ -51,7 +51,7 @@ def save_rgb(path, image):
         raise OSError(f"Could not write image {path}")
 
 
-def prepare_source(out, joint_offsets_deg, *, source_scene=None, initial_gripper_percent=None,
+def prepare_source(out, joint_offsets_deg=None, *, source_scene=None, initial_gripper_percent=None,
                    native_contract=None):
     directory = out / "source"
     directory.mkdir()
@@ -59,7 +59,8 @@ def prepare_source(out, joint_offsets_deg, *, source_scene=None, initial_gripper
         source=source_scene or Path("configs/v2/sim_so101.waypoint_20261026.yaml"),
         native_contract=native_contract)
     cfg, task = load_yaml(scene), load_yaml(directory / "task.yaml")
-    task["robot_so101"]["real_to_sim"]["offset_deg"] = [float(value) for value in joint_offsets_deg]
+    if joint_offsets_deg is not None:
+        task["robot_so101"]["real_to_sim"]["offset_deg"] = [float(value) for value in joint_offsets_deg]
     # Retain the native physical start under an explicitly changed registration;
     # the corresponding raw degree/percent state is recomputed, never clipped.
     mapping = JointMapping.from_task_config(task)
@@ -148,7 +149,7 @@ def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand", pa
     return paths["sim_panda.yaml"], provenance
 
 
-def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None,
+def run(snapshot, out, seeds, *, joint_offsets_deg=None, execute_steps=None,
         base_dx=-.15, seat_mm=8., video=False, source_scene=None,
         initial_gripper_percent=None, wrist_mount="external_hand", gripper_readback="endpoint",
         head_dir=None, projection_prior="command", panda_scene=None):
@@ -199,7 +200,8 @@ def run(snapshot, out, seeds, *, joint_offsets_deg=(0.,) * 5, execute_steps=None
             "gripper_readback_projection": gripper_readback,
             "initial_gripper_percent": initial_gripper_percent,
             "panda_action_projection": "Source command FK grasp point to Panda fixed-top-down IK; source0closed/90open to Panda0/80mm",
-            "joint_offsets_deg": joint_offsets_deg, "panda_base_dx_task_m": base_dx,
+            "joint_offsets_deg": list(task["robot_so101"]["real_to_sim"]["offset_deg"]),
+            "panda_base_dx_task_m": base_dx,
             "grasp_point_offsets_m": {"so101": retarget.SOURCE_OFFSET, "panda": source.panda_offset},
             "wrist_camera": camera_setup, "lighting": "Unchanged nominal model lighting; no variation or randomization",
             "no_scripted_object_goals_or_task_corrections": True,
@@ -314,7 +316,8 @@ if __name__ == "__main__":
     parser.add_argument("--snapshot", type=Path, default=native.SNAPSHOT)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--seeds", type=int, nargs="+", default=[300, 301, 302, 303, 304])
-    parser.add_argument("--joint-offsets-deg", type=float, nargs=5, default=[0.] * 5)
+    parser.add_argument("--joint-offsets-deg", type=float, nargs=5,
+                        help="Override task real_to_sim.offset_deg; omit to keep the task config")
     parser.add_argument("--execute-steps", type=int)
     parser.add_argument("--base-dx", type=float, default=-.15)
     parser.add_argument("--seat-mm", type=float, default=8.)

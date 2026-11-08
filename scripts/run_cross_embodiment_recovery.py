@@ -19,7 +19,12 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SNAPSHOT = ROOT / ".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+V3_REVISION = "076452e6024c778a2bffabe99ecf33776de141e1"
+SNAPSHOT = (
+    Path.home()
+    / ".cache/huggingface/hub/models--bottowork--act_so101_pickplace_v3_varied_kaggle/snapshots"
+    / V3_REVISION
+)
 SOURCE_SCENE = ROOT / "configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml"
 RESERVED_SEEDS = set(range(13000, 13100))
 
