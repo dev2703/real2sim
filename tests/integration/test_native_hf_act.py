@@ -7,7 +7,7 @@ from safetensors.torch import load_file
 
 from real2sim.config import load_yaml
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT, file_sha256
-from scripts.evaluate_hf_act_20261027 import ROOT_SNAPSHOT, SNAPSHOT, prepare_scene
+from scripts.evaluate_hf_act_20261027 import SNAPSHOT, V3_REVISION, prepare_scene
 
 pytestmark = [pytest.mark.integration,
     pytest.mark.skipif(not (SNAPSHOT / "model.safetensors").is_file(),
@@ -61,4 +61,5 @@ def test_native_scene_accepts_measured_geometry_and_preserves_lighting(tmp_path)
     assert prepared["control_hz"] == 25.
     assert load_yaml(prepared["data_config"])["camera_keys"] == [
         "observation.images.top", "observation.images.iphone"]
-    assert SNAPSHOT == ROOT_SNAPSHOT / "latest"
+    assert SNAPSHOT.name == V3_REVISION
+    assert SNAPSHOT.is_absolute()

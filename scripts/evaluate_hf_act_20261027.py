@@ -30,12 +30,15 @@ from real2sim.sim.cameras import nominal_so101_wrist_camera
 from real2sim.sim.env import So101PickPlaceEnv, sim_from_real
 from real2sim.sim.kinematics import NativeKinematics
 
-REPO = "bottowork/so101-act-h256-b16"
-REVISION = "e696c8a078935432e3501e2c28c1fb2598fbff7e"
-ROOT_SNAPSHOT = Path(f".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/{REVISION}")
-# The root export and latest/ are different trained weights at this immutable
-# revision. New evaluations use the user's explicitly requested latest checkpoint.
-SNAPSHOT = ROOT_SNAPSHOT / "latest"
+V3_REVISION = "076452e6024c778a2bffabe99ecf33776de141e1"
+# Confirmed v3 export in the Hugging Face hub cache. An absolute home path stays
+# valid when the CLI is not launched from the repository root. Learned-head
+# trainers keep their own historical v2 snapshot.
+SNAPSHOT = (
+    Path.home()
+    / ".cache/huggingface/hub/models--bottowork--act_so101_pickplace_v3_varied_kaggle/snapshots"
+    / V3_REVISION
+)
 
 
 def write_json(path, value):
