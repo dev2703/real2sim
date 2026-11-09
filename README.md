@@ -5,12 +5,6 @@ evaluation and recovery. Learned recovery now uses achieved robot motion,
 issued jaw commands and RGB target history, with iterative corrective training.
 Frozen ACT can hand over to a separately trained MLP.
 
-The confirmed target is [v3 ACT](https://huggingface.co/bottowork/act_so101_pickplace_v3_varied_kaggle),
-revision `076452e6024c778a2bffabe99ecf33776de141e1`. Pass its export through
-`--snapshot`; CLI defaults and retained learned heads still use historical v2.
-V3 has matched raw/RGB evaluation evidence; v3-specific learned recovery is
-still outstanding.
-
 ```sh
 uv sync --locked                      # Python 3.12; pinned dependencies in uv.lock
 uv run ruff check .
@@ -27,49 +21,6 @@ The following script entry points are supported and should remain listed here:
 - `scripts/audit_frozen_act_results.py`
 - `scripts/run_recovery_dagger.py`
 - `scripts/run_cross_embodiment_recovery.py`
-
-Script lifecycle policy and guardrails are documented in
-[`docs/script_lifecycle_policy.md`](docs/script_lifecycle_policy.md).
-
-Run from the repository root with a new output directory. Replace `so101` with
-`panda` for the other arm:
-
-```sh
-# Confirmed v3 export: raw ACT, RGB and ACT followed by RGB on both arms
-uv run python scripts/benchmark_frozen_act.py --robots so101 panda \
-  --snapshot ~/.cache/huggingface/hub/models--bottowork--act_so101_pickplace_v3_varied_kaggle/snapshots/076452e6024c778a2bffabe99ecf33776de141e1 \
-  --seeds 12040 12041 12042 12043 12044 --out outputs/v2/matched_v3_NEW
-
-# Frozen HF ACT followed by RGB geometric recovery
-uv run python scripts/evaluate_hf_recovery.py --robot so101 \
-  --seeds 500 501 502 503 504 --out outputs/v2/hf_recovery_so101_NEW --video
-
-# Unassisted frozen HF ACT
-uv run python scripts/evaluate_hf_act.py --robot so101 \
-  --out outputs/v2/hf_only_so101_NEW
-
-# Matched resets: raw ACT, RGB alone, ACT + RGB recovery
-uv run python scripts/benchmark_frozen_act.py --robots so101 \
-  --out outputs/v2/benchmark_so101_NEW --plan-only
-
-# Verify a completed matched report against its retained trial/trace evidence
-uv run python scripts/audit_frozen_act_results.py \
-  outputs/v2/benchmark_so101_NEW/report.json
-
-# Frozen ACT followed by a head trained on post-prefix states
-uv run python scripts/run_recovery_dagger.py evaluate --robot panda \
-  --head outputs/v2/recovery_prefix_adapt_noact_20261030 --act-prefix \
-  --seeds 12040 12041 --out outputs/v2/act_mlp_panda_NEW
-
-# Inspect collection, DAgger, training and matched handoff comparison commands
-uv run python scripts/run_cross_embodiment_recovery.py \
-  --history-mode achieved --action-routing hard --transition-weight .1 \
-  --dagger-iterations 1 --dagger-beta .5 --dagger-learner no_act \
-  --collection-act-prefix-steps 50 --frozen-prefix --prefix-recovery no_act \
-  --out outputs/v2/recovery_pipeline_NEW --matched-benchmark --plan-only
-# Remove --plan-only to execute. Add --train-robots so101 to test source-only
-# training followed by SO-101/Panda evaluation; defaults train on both arms.
-```
 
 The recovery workflow keeps ACT weights frozen, supports phase or residual MLP
 heads, and separates training, validation and development episodes. It records
