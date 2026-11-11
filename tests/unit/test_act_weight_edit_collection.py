@@ -70,6 +70,38 @@ def test_empty_pack_retains_checkpoint_dimensions():
     assert pack["valid"].dtype == np.bool_
 
 
+def test_decoder_memory_pack_preserves_spatial_tokens_and_causal_query_mask():
+    memory = np.arange(20, dtype=np.float32).reshape(4, 5)
+    positions = memory / 10
+    anchor = {"features": np.zeros((3, 5), np.float32), "raw_state": np.zeros(6),
+              "encoder_memory": memory, "encoder_positions": positions,
+              "tick": 1, "episode_index": 7}
+    pack = episode_pack([anchor], np.zeros((2, 6)), [True, True],
+                        chunk_size=3, feature_dim=5, mean=np.zeros(6), std=np.ones(6))
+    np.testing.assert_array_equal(pack["encoder_memory"][0], memory)
+    np.testing.assert_array_equal(pack["encoder_positions"][0], positions)
+    np.testing.assert_array_equal(pack["valid"], [[True, False, False]])
+    assert pack["features"].shape == (1, 3, 5)
+
+
+@pytest.mark.parametrize("invalid", ["missing", "dimension", "shape", "nan"])
+def test_decoder_memory_pack_rejects_inconsistent_or_nonfinite_tokens(invalid):
+    anchor = {"features": np.zeros((3, 5)), "raw_state": np.zeros(6),
+              "encoder_memory": np.zeros((4, 5)), "encoder_positions": np.zeros((4, 5)),
+              "tick": 0, "episode_index": 7}
+    if invalid == "missing":
+        del anchor["encoder_positions"]
+    elif invalid == "dimension":
+        anchor["encoder_memory"] = np.zeros((4, 6))
+    elif invalid == "shape":
+        anchor["encoder_positions"] = np.zeros((3, 5))
+    else:
+        anchor["encoder_memory"][0, 0] = np.nan
+    with pytest.raises(ValueError, match="[Ee]ncoder"):
+        episode_pack([anchor], np.zeros((1, 6)), [True], chunk_size=3,
+                     feature_dim=5, mean=np.zeros(6), std=np.ones(6))
+
+
 @pytest.mark.parametrize("train,val", [([1], [1]), ([1, 1], [2]), ([], [2]), ([1], []), ([-1], [2])])
 def test_episode_roles_reject_overlap_duplicates_and_missing_split(train, val):
     with pytest.raises(ValueError):

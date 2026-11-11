@@ -1,4 +1,4 @@
-"""Matched, resumable frozen-ACT benchmark with explicit assistance accounting.
+"""Matched, resumable ACT benchmark without geometric RGB fallback conditions.
 
 All conditions share 25 Hz control, native starts, cameras and seeded object
 layouts. Panda uses the same declared -150 mm base adapter in every condition.
@@ -24,22 +24,20 @@ from real2sim.artifacts import sha256_file
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.policy.adapters import ApplyResult
 from real2sim.policy.follower_joint import check_joint_request
-from real2sim.policy.hf_recovery import ApproachMonitor
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT
 from real2sim.serialization import json_default, write_json
 from real2sim.sim.kinematics import NativeKinematics
 
 if __package__:
     from scripts import evaluate_hf_act_panda_20261028 as transfer
-    from scripts.evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
 else:
     # Direct-file invocation puts scripts/, rather than the project root, on
     # sys.path. Factories use the same scripts.module names as module invocation.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import evaluate_hf_act_panda_20261028 as transfer
-    from scripts.evaluate_hf_recovery import MEASURED_SCENE, StaticBowlRecovery, lighting
 
-CONDITIONS = ("raw", "rgb", "hf_rgb", "learned", "no_act", "hf_learned")
+MEASURED_SCENE = Path("configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml")
+CONDITIONS = ("raw", "learned", "no_act", "hf_learned")
 CUSTOM_CONDITIONS = ("learned", "no_act", "hf_learned")
 
 
@@ -50,12 +48,24 @@ def digest_json(value):
                                     allow_nan=False).encode()).hexdigest()
 
 
+def lighting(env):
+    """Capture lighting parameters for matched reset evidence, without control."""
+    return {"ambient": env.model.vis.headlight.ambient.copy().tolist(),
+            "diffuse": env.model.vis.headlight.diffuse.copy().tolist(),
+            "specular": env.model.vis.headlight.specular.copy().tolist(),
+            "light_ambient": env.model.light_ambient.copy().tolist(),
+            "light_diffuse": env.model.light_diffuse.copy().tolist(),
+            "light_specular": env.model.light_specular.copy().tolist(),
+            "light_position": env.model.light_pos.copy().tolist(),
+            "light_direction": env.model.light_dir.copy().tolist()}
+
+
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
     """Hash executable inputs, including saved preprocessing and static assets."""
     from real2sim.config import load_yaml, project_path
 
     paths = {Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
-             Path(transfer.retarget.__file__), Path("scripts/evaluate_hf_recovery.py"),
+             Path(transfer.retarget.__file__),
              Path("physical_measurements.md"), Path(source_scene)}
     paths |= {p for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry")
               for p in Path(directory).glob("*.py")}
@@ -200,6 +210,8 @@ def initial_fingerprint(shared, info):
 def run_episode(shared, condition, seed, directory, policy=None, *, scenario=None,
                 controller_factory=None, options=None, execute_steps=None):
     """Custom controllers use reset()/step(obs, env)->ApplyResult, with no scorer input."""
+    if condition not in CONDITIONS:
+        raise ValueError("Geometric RGB controller conditions are no longer supported")
     env = shared.env
     tracker = TrialTracker(success_hold_ticks=math.ceil(
         env.task["episode"]["success_hold_s"] * env.control_hz),
@@ -224,13 +236,7 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                 options={**options, "_frozen_act_policy": policy})
             controller.reset()
         else:
-            geometric = StaticBowlRecovery(env, robot=shared.robot)
-            geometric.bowl_memory = None
-            geometric.reset()
-            acquired = geometric._acquire() if condition == "hf_rgb" else False
-            initial_ball = geometric.ball.copy() if acquired else None
-            monitor = ApproachMonitor(env.control_hz)
-            frozen = FrozenDriver(shared, policy, execute_steps) if condition != "rgb" else None
+            frozen = FrozenDriver(shared, policy, execute_steps)
         with (directory / "ticks.jsonl").open("w") as stream:
             for tick in range(env.max_episode_steps):
                 t0 = time.perf_counter()
@@ -239,19 +245,8 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                     uses_act = bool(result.detail.get("uses_act", condition == "learned"))
                     assisted = bool(result.detail.get("intervention", True))
                 else:
-                    if condition == "hf_rgb" and trigger is None:
-                        distance = None
-                        if initial_ball is not None:
-                            pose = env.ee_pose()
-                            grasp = pose[:3, 3] + pose[:3, :3] @ geometric.ball_in_tool
-                            distance = float(np.linalg.norm(grasp - initial_ball))
-                        reason = monitor.update(tick, distance)
-                        if reason:
-                            trigger = {"tick": tick, "reason": reason, "distance_m": distance}
-                            geometric.reset()
-                    assisted = condition == "rgb" or trigger is not None
-                    uses_act = not assisted
-                    result = geometric.step(obs, env) if assisted else frozen.step(obs, env)
+                    uses_act, assisted = True, False
+                    result = frozen.step(obs, env)
                 latency = (time.perf_counter() - t0) * 1000
                 latencies.append(latency)
                 infer_ms = float(result.detail.get("inference_ms", 0.))
@@ -271,9 +266,7 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                     allow_nan=False) + "\n")
                 if done or result.truncated:
                     break
-        if condition not in CUSTOM_CONDITIONS:
-            perception_log = geometric.perception_log
-        else:
+        if condition in CUSTOM_CONDITIONS:
             trigger = getattr(controller, "trigger", None)
     except (RuntimeError, ValueError, OSError) as exc:
         abort = f"{type(exc).__name__}: {exc}"
@@ -367,7 +360,7 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     execution_steps = checkpoint_execution_steps if execute_steps is None else execute_steps
     if execute_steps is not None:
         if set(conditions) & set(CUSTOM_CONDITIONS):
-            raise ValueError("execution prefix override is supported only for raw/rgb/hf_rgb conditions")
+            raise ValueError("execution prefix override is supported only for raw ACT")
         if (type(execute_steps) is not int or type(chunk_size) is not int
                 or not 1 <= execute_steps <= chunk_size):
             raise ValueError("execution prefix must be an integer within the saved action chunk")
@@ -422,7 +415,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         "score": "Configured held lift, release and success_hold_s resting placement within configured horizon",
         "controller_factory": controller_factory, "controller_options": options,
         "runtime_source_sha256": hashes,
-        "terminology": {"current_rgb_fallback": "geometric controller", "recovery_mlp": "learned model",
+        "rgb_controller_enabled": False,
+        "terminology": {"raw": "native ACT without a geometric controller handoff", "recovery_mlp": "learned model",
                         "DAgger": "iterative corrective-label data collection, not a controller"}}
     protocol_id = digest_json(protocol)
     protocol["protocol_id"] = protocol_id
@@ -438,7 +432,7 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     if set(conditions) & set(CUSTOM_CONDITIONS) and factory is None:
         raise ValueError("Learned conditions require --controller-factory module:function")
     torch.set_num_threads(2)
-    policy = NativeLeRobotACT(snapshot) if set(conditions) - {"rgb", "no_act"} else None
+    policy = NativeLeRobotACT(snapshot) if set(conditions) - {"no_act"} else None
     all_rows = []
     fingerprints = {}
     for robot in robots:
@@ -502,7 +496,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--robots", nargs="+", choices=("so101", "panda"), default=["so101", "panda"])
-    parser.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=["raw", "rgb", "hf_rgb"])
+    parser.add_argument("--conditions", nargs="+", choices=CONDITIONS, default=["raw"])
     parser.add_argument("--seeds", nargs="+", type=int, default=list(range(13000, 13100)))
     parser.add_argument("--snapshot", type=Path, default=transfer.native.SNAPSHOT)
     parser.add_argument("--source-scene", type=Path, default=MEASURED_SCENE)

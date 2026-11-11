@@ -45,6 +45,10 @@ class SimStateTrainingTeacher(VisualWaypointController):
                 self._transition("LOWER" if metrics["ball_over_bowl"] else (
                     "TRANSPORT" if metrics["lifted"] else "LIFT"))
         result = super().step(obs, env)
+        requested = np.asarray(result.info["control"][
+            "requested_radians" if self.robot == "so101" else "requested"], float)
+        goal = requested[:self.n] if self.target_q is None else self.target_q[:self.n]
+        result.detail["supervision_native_goal"] = np.r_[goal, requested[-1]].tolist()
         result.detail["object_source"] = "privileged_simulator_state_for_training_only"
         result.detail["controller_source"] = self.controller_source
         for plan in self.plan_log:

@@ -15,6 +15,65 @@ from scripts import benchmark_frozen_act as benchmark
 from scripts.benchmark_frozen_act import aggregate, completed_trial, digest_json
 
 
+@pytest.mark.parametrize("condition", ["rgb", "hf_rgb"])
+def test_geometric_rgb_conditions_are_rejected_before_any_run_is_written(tmp_path, condition):
+    out = tmp_path / "removed_condition"
+    with pytest.raises(ValueError, match="supported conditions"):
+        benchmark.run(out, ["so101", "panda"], [condition], [23000],
+                      snapshot=tmp_path / "unused", plan_only=True)
+    assert not out.exists()
+    with pytest.raises(ValueError, match="no longer supported"):
+        benchmark.run_episode(None, condition, 23000, out)
+
+
+def test_benchmark_cli_defaults_to_raw_act_only(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(benchmark, "run", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(sys, "argv", ["benchmark_frozen_act.py", "--out", str(tmp_path / "run"), "--plan-only"])
+    benchmark.main()
+    assert calls[0][0][2] == ["raw"]
+
+
+def test_benchmark_import_does_not_load_geometric_rgb_control():
+    program = """
+import importlib.abc
+import sys
+class BlockGeometry(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname in {'scripts.evaluate_hf_recovery', 'real2sim.policy.visual_waypoint',
+                        'real2sim.policy.visual_targets', 'real2sim.policy.hf_recovery'}:
+            raise AssertionError('benchmark imported geometric RGB control: ' + fullname)
+sys.meta_path.insert(0, BlockGeometry())
+import scripts.benchmark_frozen_act
+"""
+    result = subprocess.run([sys.executable, "-c", program], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
+def test_raw_episode_never_constructs_a_recovery_controller(tmp_path, monkeypatch):
+    calls = []
+
+    class NativeDriver:
+        def step(self, obs, env):
+            calls.append("native ACT")
+            metrics = {"ee_ball_distance_m": .1, "ball_held": False, "lifted": False,
+                "ball_in_bowl": False, "ball_resting": True, "ball_xyz": [0., 0., .03],
+                "ball_xyz_task": [0., 0., .03], "tool_xyz_task": [0., 0., .1]}
+            return ApplyResult({}, {"control": {}, "privileged_metrics": metrics}, True, 0.,
+                detail={"uses_act": True, "intervention": False})
+
+    env = SimpleNamespace(control_hz=25., table_top=0., max_episode_steps=1,
+        task={"episode": {"success_hold_s": .04}, "ball": {"radius": .03}})
+    shared = SimpleNamespace(env=env, source=None, robot="so101", reset=lambda *_: ({}, {}))
+    monkeypatch.setattr(benchmark, "FrozenDriver", lambda *args: NativeDriver())
+    monkeypatch.setattr(benchmark, "initial_fingerprint", lambda *_: {"native_reset": True})
+    row = benchmark.run_episode(shared, "raw", 23000, tmp_path / "raw")
+    assert calls == ["native ACT"]
+    assert row["act_ticks"] == 1 and row["assistance_ticks"] == 0
+    assert row["intervention_count"] == 0 and row["perception_log"] == []
+    assert row["abort"] is None
+
+
 def artifact(tmp_path, *, abort=None):
     trace = tmp_path / "ticks.jsonl"
     trace.write_text("" if abort else '{"tick": 0}\n')

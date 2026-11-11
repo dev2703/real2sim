@@ -44,7 +44,7 @@ def native_policy_state(shared):
     return state
 
 
-def accepted_panda_target(shared, result):
+def accepted_panda_target(shared, result, *, native_command=None):
     """Invert applied Panda commands through the benchmark's robot-only adapter.
 
     Seven Panda joints cannot label six native SO-101 channels directly. Project
@@ -56,7 +56,8 @@ def accepted_panda_target(shared, result):
     from scripts.diag_v2_learned_panda_retarget_20261027 import VirtualSourceCommandError
 
     env, source = shared.env, shared.source
-    applied = np.asarray(result.info["control"]["applied"], dtype=np.float64)
+    applied = np.asarray(result.info["control"]["applied"] if native_command is None
+                         else native_command, dtype=np.float64)
     if applied.shape != (8,) or not np.isfinite(applied).all():
         raise ValueError("Panda teacher must return seven finite arm radians and jaw opening")
     if not 0 <= applied[7] <= env.max_opening:
@@ -125,9 +126,10 @@ def validate_rollin_contract(base, rollin):
         raise ValueError("Roll-in checkpoint saved processors differ from the feature base")
 
 
-def accepted_native_target(env, result):
+def accepted_native_target(env, result, *, native_command=None):
     """Label the actual rate/limit-bounded actuator target in checkpoint units."""
-    applied = np.asarray(result.info["control"]["applied_radians"], dtype=np.float64)
+    applied = np.asarray(result.info["control"]["applied_radians"] if native_command is None
+                         else native_command, dtype=np.float64)
     if applied.shape != (6,) or not np.isfinite(applied).all():
         raise ValueError("Teacher must return six finite applied native radians")
     raw = real_from_sim(env.mapping, applied).astype(np.float32)
@@ -229,13 +231,13 @@ def saved_action_statistics(snapshot, action_dim):
 def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(11090, 11091),
             stride=10, source_scene=None, inference_backend="vectorized",
             rollin_snapshot=None, act_prefix_steps=0, robots=("so101",),
-            initial_gripper_percent=1.2, feature_layer="action_head", randomization=None):
+            initial_gripper_percent=1.2, feature_layer="action_head", randomization=None,
+            target_kind="applied"):
     """Collect native fitting/validation features on either or both embodiments."""
-    from scripts.benchmark_frozen_act import SharedEpisode, runtime_hashes
-    from scripts.evaluate_hf_recovery import MEASURED_SCENE
+    from real2sim.evaluation.raw_act import DEFAULT_SCENE, SharedEpisode, runtime_hashes
 
     snapshot, out = Path(snapshot).expanduser().resolve(), Path(out)
-    source_scene = Path(source_scene) if source_scene is not None else MEASURED_SCENE
+    source_scene = Path(source_scene) if source_scene is not None else DEFAULT_SCENE
     validate_seed_split(train_seeds, val_seeds)
     validate_rollin_options(rollin_snapshot, act_prefix_steps)
     robots = validate_robots(robots)
@@ -243,6 +245,8 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
         raise ValueError("Anchor stride must be a positive integer")
     if feature_layer not in ("action_head", "decoder_ffn_input", "decoder_memory"):
         raise ValueError("Unsupported native ACT feature layer")
+    if target_kind not in ("applied", "planned_native_goal"):
+        raise ValueError("Training target must be applied or planned_native_goal")
     if out.exists():
         raise FileExistsError(out)
     torch.set_num_threads(2)
@@ -268,7 +272,6 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
     before = runtime_hashes(snapshot, source_scene, extra_paths=[
         Path(__file__), Path("src/real2sim/sim/training_teacher.py"),
         *([Path("src/real2sim/sim/domain_randomization.py")] if randomization is not None else []),
-        Path("src/real2sim/perception/ball_hsv.py"),
         Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/policy/bounded_joint.py"),
         *rollin_files])
     report = {"schema": "native_act_weight_edit_collection_v2", "status": "collecting",
@@ -284,7 +287,8 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
               "feature_layer": feature_layer,
               "feature_source": f"Actual native ACT {feature_layer} forward prehook on live RGB/state",
               "teacher_source": "SIM_STATE_TRAINING_TEACHER",
-              "target_source": "Training-only simulator teacher applied commands; native SO-101 inverse mapping or Panda virtual-source projection with endpoint jaw inverse",
+              "target_kind": target_kind,
+              "target_source": f"Training-only simulator teacher {target_kind}; native SO-101 inverse mapping or Panda virtual-source projection with endpoint jaw inverse",
               "panda_target_projection": "Same position-only 3 mm acceptance and causal command prior as native execution; failed projections masked",
               "normalization": {"mean": mean, "std": std,
                                 "inverse": "(applied_command-mean)/std; exact inverse of saved MEAN_STD unnormalizer"},
@@ -294,7 +298,7 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
               "rollin_snapshot": str(rollin_snapshot) if rollin_snapshot is not None else None,
               "rollin_checkpoint_sha256": rollin_policy.weights_sha256 if rollin_policy is not None else None,
               "act_prefix_steps": act_prefix_steps, "teacher_start_tick": act_prefix_steps,
-              "label_mask": "Accepted geometric-teacher commands only; all ACT-prefix and rejected-command ticks masked",
+              "label_mask": "Accepted simulator-training-teacher commands only; ACT-prefix and rejected-command ticks masked",
               "cross_embodiment_transfer_claim": False,
               "target_arm_supervision": "panda" in robots,
               "privileged_metrics_used_only_for_scoring_and_episode_selection": False,
@@ -345,7 +349,7 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
                                train_seeds=train_seeds, val_seeds=val_seeds, stride=stride,
                                act_prefix_steps=act_prefix_steps, chunk_size=chunk_size,
                                feature_dim=feature_dim, action_dim=action_dim, mean=mean, std=std,
-                               randomizer=randomizer)
+                               randomizer=randomizer, target_kind=target_kind)
             finally:
                 if shared is not None:
                     shared.close()
@@ -371,9 +375,9 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
 
 def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, *,
                    train_seeds, val_seeds, stride, act_prefix_steps, chunk_size,
-                   feature_dim, action_dim, mean, std, randomizer=None):
+                   feature_dim, action_dim, mean, std, randomizer=None, target_kind="applied"):
+    from real2sim.evaluation.raw_act import FrozenDriver, initial_fingerprint
     from real2sim.sim.training_teacher import SimStateTrainingTeacher
-    from scripts.benchmark_frozen_act import FrozenDriver, initial_fingerprint
 
     env, robot = shared.env, shared.robot
     if env.control_hz != 25.:
@@ -412,12 +416,14 @@ def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, 
                             anchors.append({**captured, "raw_state": state,
                                             "tick": tick, "episode_index": seed})
                         result = teacher.step(obs, env) if teacher_tick else rollin_driver.step(obs, env)
+                        native_goal = (result.detail["supervision_native_goal"]
+                                       if teacher_tick and target_kind == "planned_native_goal" else None)
                         if not teacher_tick:
                             raw_command, valid_command = np.zeros(action_dim, np.float32), False
                         elif robot == "so101":
-                            raw_command, valid_command = accepted_native_target(env, result)
+                            raw_command, valid_command = accepted_native_target(env, result, native_command=native_goal)
                         else:
-                            raw_command, valid_command = accepted_panda_target(shared, result)
+                            raw_command, valid_command = accepted_panda_target(shared, result, native_command=native_goal)
                         commands.append(raw_command)
                         accepted.append(valid_command)
                         obs = result.obs
@@ -426,6 +432,7 @@ def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, 
                         stream.write(json.dumps({"tick": tick, "time_s": tick / env.control_hz,
                             "uses_act": not teacher_tick, "assisted": teacher_tick,
                             "teacher_start_tick": act_prefix_steps, "detail": result.detail,
+                            "target_kind": target_kind,
                             "accepted_supervision": valid_command, "target_degree_percent": raw_command,
                             "control": result.info["control"],
                             "scoring_only": result.info["privileged_metrics"]},
@@ -486,13 +493,15 @@ def main():
                         default="action_head")
     parser.add_argument("--domain-randomization", type=Path,
                         help="JSON randomization profile; {} enables the standard training profile")
+    parser.add_argument("--target-kind", choices=("applied", "planned_native_goal"), default="applied")
     args = parser.parse_args()
     collect(args.snapshot, args.out, train_seeds=args.train_seeds, val_seeds=args.val_seeds,
             stride=args.stride, source_scene=args.source_scene, inference_backend=args.inference_backend,
             rollin_snapshot=args.rollin_snapshot, act_prefix_steps=args.act_prefix_steps,
             robots=args.robots, initial_gripper_percent=args.initial_gripper_percent,
             feature_layer=args.feature_layer,
-            randomization=json.loads(args.domain_randomization.read_text()) if args.domain_randomization else None)
+            randomization=json.loads(args.domain_randomization.read_text()) if args.domain_randomization else None,
+            target_kind=args.target_kind)
 
 
 if __name__ == "__main__":

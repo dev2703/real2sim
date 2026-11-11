@@ -19,7 +19,6 @@ from lerobot.policies.act.modeling_act import ACTDecoder
 from safetensors import safe_open
 from safetensors.torch import load_file, save_file
 from torch import nn
-from torch.nn import functional as F
 
 from real2sim.artifacts import sha256_file
 from real2sim.policy.weight_edit import _scene_identity
@@ -143,7 +142,8 @@ def _metrics(model, pack, groups, batch_size):
 
 
 def fit_decoder(state, config, train, validation, *, steps=1500, batch_size=8, lr=1e-4,
-                l2=1., loss="l1", validation_every=50, patience=10, min_improvement=1e-6, seed=0):
+                l2=1., loss="l1", validation_every=50, patience=10, min_improvement=1e-6,
+                seed=0, progress=False):
     """Train native decoder attention using robot-balanced, masked whole chunks."""
     for name, value in (("steps", steps), ("batch_size", batch_size),
                         ("validation_every", validation_every), ("patience", patience)):
@@ -184,6 +184,7 @@ def fit_decoder(state, config, train, validation, *, steps=1500, batch_size=8, l
         optimizer.zero_grad(set_to_none=True)
         error = _forward(model, train_data, indices) - train_data["target_normalized"][indices]
         mask = train_data["valid"][indices]
+        error = error.masked_fill(~mask.unsqueeze(-1), 0.)
         values = error.abs() if loss == "l1" else error.square()
         # Average each sampled anchor separately so long surviving chunks do
         # not change the declared equal-robot sampling weight.
@@ -209,6 +210,12 @@ def fit_decoder(state, config, train, validation, *, steps=1500, batch_size=8, l
             score = metrics["robot_balanced_mae_normalized"]
         else:
             stale += 1
+        if progress:
+            print(json.dumps({"step": step, "best_step": best_step,
+                "validation_mae": metrics["robot_balanced_mae_normalized"],
+                "per_robot_validation_mae": {robot: row["mae_normalized"]
+                    for robot, row in metrics["per_robot"].items()},
+                "no_robot_regression": no_regression}), flush=True)
         if stale >= patience:
             break
     model.load_state_dict({key.removeprefix("model."): value for key, value in best.items()}, strict=True)
@@ -280,6 +287,9 @@ def fit_from_cache(data, out, snapshot, *, prefix=50, **options):
     profiles = {json.dumps(cache[2].get("domain_randomization"), sort_keys=True) for cache in caches}
     if len(profiles) != 1:
         raise ValueError("Decoder collections must share the same domain randomization profile")
+    target_kinds = {cache[2].get("target_kind", "applied") for cache in caches}
+    if len(target_kinds) != 1:
+        raise ValueError("Decoder collections must share the same target_kind supervision semantics")
     train, validation = ({key: np.concatenate([cache[index][key] for cache in caches], axis=0)
                           for key in PACK_NAMES} for index in (0, 1))
     episodes = [set(zip(pack["robot_id"].tolist(), pack["episode_index"].tolist(), strict=True))
@@ -297,9 +307,13 @@ def fit_from_cache(data, out, snapshot, *, prefix=50, **options):
         source_sha256_before=before, source_sha256_after=after,
         source_scene=caches[0][2].get("source_scene"),
         domain_randomization=caches[0][2].get("domain_randomization"),
+        target_kind=next(iter(target_kinds)),
+        supervision_source=[cache[2].get("target_source") for cache in caches],
         feature_collections=[str(path.resolve()) for path in paths],
         train_episodes=[list(value) for value in sorted(episodes[0])],
         validation_episodes=[list(value) for value in sorted(episodes[1])],
+        training_seeds=sorted({value[1] for value in episodes[0]}),
+        validation_seeds=sorted({value[1] for value in episodes[1]}),
         changed_tensor_names=changed, hf_upload_performed=False)
     out.mkdir(parents=True)
     if report["accepted"]:
@@ -335,11 +349,13 @@ def main():
     parser.add_argument("--validation-every", type=int, default=50)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--quiet", action="store_true", help="Print only the final adaptation report")
     args = parser.parse_args()
     torch.set_num_threads(2)
     report = fit_from_cache(args.data, args.out, args.snapshot, prefix=args.prefix,
         steps=args.steps, batch_size=args.batch_size, lr=args.lr, l2=args.l2, loss=args.loss,
-        validation_every=args.validation_every, patience=args.patience, seed=args.seed)
+        validation_every=args.validation_every, patience=args.patience, seed=args.seed,
+        progress=not args.quiet)
     print(json.dumps({key: report[key] for key in (
         "accepted", "selected_step", "baseline_validation", "edited_validation")}))
 

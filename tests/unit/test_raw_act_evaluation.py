@@ -167,6 +167,16 @@ def test_known_export_fit_roles_reject_evaluation_leak_before_writing(fake_runti
     assert not out.exists()
 
 
+def test_decoder_adaptation_report_seed_lists_and_episode_roles_are_all_excluded(tmp_path):
+    (tmp_path / "decoder_adaptation_report.json").write_text(json.dumps({
+        "train_episodes": [[0, 20010]], "validation_episodes": [[1, 21010]],
+        "training_seeds": [20011, 20012], "validation_seeds": [21011]}))
+    train, validation, declarations = raw_act.known_fitting_seeds(tmp_path)
+    assert train == {20010, 20011, 20012}
+    assert validation == {21010, 21011}
+    assert len(declarations) == 1
+
+
 @pytest.mark.parametrize("tamper", ["trace", "leaf", "score"])
 def test_audit_rejects_changed_evidence_and_false_task_claims(fake_runtime, tmp_path, tamper):
     snapshot, _ = fake_runtime

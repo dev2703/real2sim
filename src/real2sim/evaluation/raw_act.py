@@ -37,7 +37,8 @@ def digest_json(value):
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
     """Hash the native policy, processors, scene builders, inputs and assets."""
-    paths = {Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
+    paths = {Path(__file__), Path("scripts/evaluate_raw_act.py"),
+             Path(transfer.__file__), Path(transfer.native.__file__),
              Path(transfer.retarget.__file__), Path(source_scene), *map(Path, extra_paths)}
     for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry"):
         paths.update(Path(directory).glob("*.py"))
@@ -197,7 +198,7 @@ def known_fitting_seeds(snapshot):
     """Read saved fit roles; never infer a held-out split from a seed's magnitude."""
     training, validation = set(), set()
     declarations = []
-    for name in ("decoder_weight_edit_report.json", "weight_edit_report.json"):
+    for name in ("decoder_weight_edit_report.json", "weight_edit_report.json", "decoder_adaptation_report.json"):
         path = Path(snapshot) / name
         if not path.is_file():
             continue
@@ -208,6 +209,11 @@ def known_fitting_seeds(snapshot):
                         or type(identity[1]) is not int or identity[1] < 0):
                     raise ValueError(f"Malformed saved fitting episode: {name}:{key}")
                 destination.add(identity[1])
+        for key, destination in (("training_seeds", training), ("validation_seeds", validation)):
+            for seed in report.get(key, []):
+                if type(seed) is not int or seed < 0:
+                    raise ValueError(f"Malformed saved fitting seed: {name}:{key}")
+                destination.add(seed)
         declarations.append(str(path))
     return training, validation, declarations
 
