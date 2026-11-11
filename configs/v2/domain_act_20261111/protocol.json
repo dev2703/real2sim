@@ -1,0 +1,70 @@
+{
+  "schema": "raw_act_domain_adaptation_protocol_v1",
+  "robots": [
+    "so101",
+    "panda"
+  ],
+  "source_scene": "configs/v2/weight_space_20261111/sim_so101.yaml",
+  "randomization": "configs/v2/domain_act_20261111/randomization.json",
+  "training_seeds": [
+    20010,
+    20011,
+    20012,
+    20013,
+    20014,
+    20015,
+    20016,
+    20017,
+    20018,
+    20019,
+    20020,
+    20021,
+    20022,
+    20023,
+    20024,
+    20025,
+    20026,
+    20027,
+    20028,
+    20029
+  ],
+  "validation_seeds": [
+    21010,
+    21011,
+    21012,
+    21013,
+    21014,
+    21015
+  ],
+  "development_seeds": [
+    22010,
+    22011,
+    22012
+  ],
+  "final_test_seeds": [
+    23000,
+    23001,
+    23002,
+    23003,
+    23004,
+    23005,
+    23006,
+    23007,
+    23008,
+    23009,
+    23010,
+    23011,
+    23012,
+    23013,
+    23014,
+    23015,
+    23016,
+    23017,
+    23018,
+    23019
+  ],
+  "success_metric": "pick_place_success",
+  "raw_only": true,
+  "required_successes_per_arm": 20,
+  "failures_and_aborts_retained": true
+}

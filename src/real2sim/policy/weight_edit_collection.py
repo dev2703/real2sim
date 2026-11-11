@@ -1,6 +1,6 @@
-"""Collect native ACT decoder features and accepted RGB teacher commands.
+"""Collect native ACT features and applied simulator-state teacher commands.
 
-The geometric teacher supplies every supervised action. An optional separate ACT
+The training-only simulator teacher supplies every supervised action. An optional ACT
 checkpoint executes an initial prefix before teacher takeover. Frozen base ACT
 features observe live state/images only after takeover. Only complete successful
 episodes enter supervision; every attempted episode score and trace is retained.
@@ -167,15 +167,29 @@ def episode_pack(anchors, commands, accepted, *, chunk_size, feature_dim, mean, 
         valid[in_episode] = accepted[offsets[in_episode]]
         targets = np.zeros((chunk_size, action_dim), np.float32)
         targets[valid] = (commands[offsets[valid]] - mean) / std
-        rows.append({"features": features, "target_normalized": targets, "valid": valid,
+        row = {"features": features, "target_normalized": targets, "valid": valid,
                      "raw_state": state, "robot_id": np.int64(ROBOT_IDS[robot]),
-                     "episode_index": np.int64(anchor["episode_index"]), "tick": np.int64(tick)})
+                     "episode_index": np.int64(anchor["episode_index"]), "tick": np.int64(tick)}
+        if "encoder_memory" in anchor or "encoder_positions" in anchor:
+            for key in ("encoder_memory", "encoder_positions"):
+                value = np.asarray(anchor.get(key), np.float32)
+                if (value.ndim != 2 or value.shape[1] != feature_dim or not value.size
+                        or not np.isfinite(value).all()):
+                    raise ValueError("Invalid cached encoder memory or positions")
+                row[key] = value
+            if row["encoder_memory"].shape != row["encoder_positions"].shape:
+                raise ValueError("Encoder memory and position shapes must match")
+        rows.append(row)
     return stack_records(rows, chunk_size=chunk_size, feature_dim=feature_dim, action_dim=action_dim)
 
 
 def stack_records(records, *, chunk_size, feature_dim, action_dim):
     names = ("features", "target_normalized", "valid", "raw_state", "robot_id", "episode_index", "tick")
     if records:
+        if "encoder_memory" in records[0]:
+            names += ("encoder_memory", "encoder_positions")
+        if any(set(record) != set(names) for record in records):
+            raise ValueError("Feature records must contain the same cached tensors")
         return {name: np.stack([row[name] for row in records]) for name in names}
     return {"features": np.empty((0, chunk_size, feature_dim), np.float32),
             "target_normalized": np.empty((0, chunk_size, action_dim), np.float32),
@@ -215,7 +229,7 @@ def saved_action_statistics(snapshot, action_dim):
 def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(11090, 11091),
             stride=10, source_scene=None, inference_backend="vectorized",
             rollin_snapshot=None, act_prefix_steps=0, robots=("so101",),
-            initial_gripper_percent=1.2, feature_layer="action_head"):
+            initial_gripper_percent=1.2, feature_layer="action_head", randomization=None):
     """Collect native fitting/validation features on either or both embodiments."""
     from scripts.benchmark_frozen_act import SharedEpisode, runtime_hashes
     from scripts.evaluate_hf_recovery import MEASURED_SCENE
@@ -227,8 +241,8 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
     robots = validate_robots(robots)
     if type(stride) is not int or stride < 1:
         raise ValueError("Anchor stride must be a positive integer")
-    if feature_layer not in ("action_head", "decoder_ffn_input"):
-        raise ValueError("Feature layer must be action_head or decoder_ffn_input")
+    if feature_layer not in ("action_head", "decoder_ffn_input", "decoder_memory"):
+        raise ValueError("Unsupported native ACT feature layer")
     if out.exists():
         raise FileExistsError(out)
     torch.set_num_threads(2)
@@ -252,10 +266,12 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
                         if path.suffix in (".json", ".safetensors")]
     out.mkdir(parents=True)
     before = runtime_hashes(snapshot, source_scene, extra_paths=[
-        Path(__file__), Path("src/real2sim/perception/ball_hsv.py"),
+        Path(__file__), Path("src/real2sim/sim/training_teacher.py"),
+        *([Path("src/real2sim/sim/domain_randomization.py")] if randomization is not None else []),
+        Path("src/real2sim/perception/ball_hsv.py"),
         Path("src/real2sim/evaluation/oracle.py"), Path("src/real2sim/policy/bounded_joint.py"),
         *rollin_files])
-    report = {"schema": "native_act_weight_edit_collection_v1", "status": "collecting",
+    report = {"schema": "native_act_weight_edit_collection_v2", "status": "collecting",
               "snapshot": str(snapshot), "weights_sha256": policy.weights_sha256,
               "checkpoint_identity": policy.checkpoint_identity,
               "training_seeds": list(train_seeds), "validation_seeds": list(val_seeds),
@@ -267,7 +283,8 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
               "runtime_options": policy.runtime_options,
               "feature_layer": feature_layer,
               "feature_source": f"Actual native ACT {feature_layer} forward prehook on live RGB/state",
-              "target_source": "Accepted RGB teacher applied commands: SO-101 inverse joint mapping; Panda applied TCP projected into virtual SO-101 with endpoint jaw inverse",
+              "teacher_source": "SIM_STATE_TRAINING_TEACHER",
+              "target_source": "Training-only simulator teacher applied commands; native SO-101 inverse mapping or Panda virtual-source projection with endpoint jaw inverse",
               "panda_target_projection": "Same position-only 3 mm acceptance and causal command prior as native execution; failed projections masked",
               "normalization": {"mean": mean, "std": std,
                                 "inverse": "(applied_command-mean)/std; exact inverse of saved MEAN_STD unnormalizer"},
@@ -280,23 +297,33 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
               "label_mask": "Accepted geometric-teacher commands only; all ACT-prefix and rejected-command ticks masked",
               "cross_embodiment_transfer_claim": False,
               "target_arm_supervision": "panda" in robots,
-              "privileged_metrics_used_only_for_scoring_and_episode_selection": True,
+              "privileged_metrics_used_only_for_scoring_and_episode_selection": False,
+              "privileged_teacher_state_used_for_training_labels_only": True,
+              "domain_randomization": randomization,
               "source_sha256_before": before, "trials": []}
     write_json(out / "report.json", report, atomic=True)
     cache = {"train": [], "val": []}
     captured = {}
 
-    def hook(_module, inputs):
+    def hook(_module, inputs, kwargs):
         features = inputs[0]
-        if feature_layer == "decoder_ffn_input":
+        if feature_layer in ("decoder_ffn_input", "decoder_memory"):
             features = features.transpose(0, 1)
         if features.shape != (1, chunk_size, feature_dim) or not torch.isfinite(features).all():
             raise ValueError("Native decoder returned invalid collection features")
         captured["features"] = features.detach().cpu().numpy()[0].copy()
+        if feature_layer == "decoder_memory":
+            for name, value in (("encoder_memory", inputs[1]),
+                                ("encoder_positions", kwargs["encoder_pos_embed"])):
+                if (value.ndim != 3 or value.shape[1:] != (1, feature_dim)
+                        or not torch.isfinite(value).all()):
+                    raise ValueError("Native decoder returned invalid encoder tokens")
+                captured[name] = value.detach().cpu().numpy()[:, 0].copy()
 
-    feature_module = (policy.policy.model.action_head if feature_layer == "action_head"
-                      else policy.policy.model.decoder.layers[-1].linear1)
-    handle = feature_module.register_forward_pre_hook(hook)
+    feature_module = (policy.policy.model.decoder if feature_layer == "decoder_memory" else (
+        policy.policy.model.action_head if feature_layer == "action_head"
+        else policy.policy.model.decoder.layers[-1].linear1))
+    handle = feature_module.register_forward_pre_hook(hook, with_kwargs=True)
     try:
         for robot in robots:
             shared = None
@@ -309,13 +336,22 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
                     "width": shared.env.config["render"]["width"],
                     "height": shared.env.config["render"]["height"],
                 }
+                randomizer = None
+                if randomization is not None:
+                    from real2sim.sim.domain_randomization import DomainRandomizer
+
+                    randomizer = DomainRandomizer(shared.env, randomization)
                 _collect_robot(shared, policy, rollin_policy, out, report, cache, captured,
                                train_seeds=train_seeds, val_seeds=val_seeds, stride=stride,
                                act_prefix_steps=act_prefix_steps, chunk_size=chunk_size,
-                               feature_dim=feature_dim, action_dim=action_dim, mean=mean, std=std)
+                               feature_dim=feature_dim, action_dim=action_dim, mean=mean, std=std,
+                               randomizer=randomizer)
             finally:
                 if shared is not None:
                     shared.close()
+        for name, records in cache.items():
+            np.savez_compressed(out / f"{name}.npz", **stack_records(
+                records, chunk_size=chunk_size, feature_dim=feature_dim, action_dim=action_dim))
         after = {path: sha256_file(path) for path in before}
         covered = {name: set(int(row["robot_id"]) for row in rows) for name, rows in cache.items()}
         usable = all(covered[name] == {ROBOT_IDS[robot] for robot in robots} for name in cache)
@@ -335,9 +371,9 @@ def collect(snapshot, out, *, train_seeds=(10090, 10091, 10092), val_seeds=(1109
 
 def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, *,
                    train_seeds, val_seeds, stride, act_prefix_steps, chunk_size,
-                   feature_dim, action_dim, mean, std):
+                   feature_dim, action_dim, mean, std, randomizer=None):
+    from real2sim.sim.training_teacher import SimStateTrainingTeacher
     from scripts.benchmark_frozen_act import FrozenDriver, initial_fingerprint
-    from scripts.evaluate_hf_recovery import StaticBowlRecovery
 
     env, robot = shared.env, shared.robot
     if env.control_hz != 25.:
@@ -353,13 +389,13 @@ def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, 
                 approach_distance_m=.03, table_top_z=env.table_top,
                 ball_radius_m=env.task["ball"]["radius"])
             anchors, commands, accepted = [], [], []
-            abort, initial, teacher = None, None, None
+            abort, initial, teacher, randomized = None, None, None, None
             started = time.perf_counter()
             try:
-                obs, info = shared.reset(seed)
+                randomized = randomizer.apply(seed) if randomizer is not None else None
+                obs, info = shared.reset(seed, randomized["scenario"] if randomized else None)
                 initial = initial_fingerprint(shared, info)
-                teacher = StaticBowlRecovery(env, robot=robot)
-                teacher.bowl_memory = None
+                teacher = SimStateTrainingTeacher(env, robot=robot)
                 teacher.reset()
                 policy.reset()
                 rollin_driver = FrozenDriver(shared, rollin_policy) if rollin_policy is not None else None
@@ -372,8 +408,8 @@ def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, 
                             captured.clear()
                             policy.predict_action_chunk(state, images)
                             if "features" not in captured:
-                                raise ValueError("ACT action_head did not provide decoder features")
-                            anchors.append({"features": captured.pop("features"), "raw_state": state,
+                                raise ValueError("ACT did not provide the requested cached features")
+                            anchors.append({**captured, "raw_state": state,
                                             "tick": tick, "episode_index": seed})
                         result = teacher.step(obs, env) if teacher_tick else rollin_driver.step(obs, env)
                         if not teacher_tick:
@@ -405,15 +441,15 @@ def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, 
                                 feature_dim=feature_dim, mean=mean, std=std, robot=robot)
             np.savez_compressed(directory / "anchors.npz", **pack)
             row = tracker.row(experiment_id="ACT_WEIGHT_EDIT_TEACHER_COLLECTION",
-                controller_source="ACT_ROLLIN_RGB_GEOMETRIC_TEACHER" if rollin_policy is not None
-                                  else "RGB_GEOMETRIC_TEACHER", robot=robot, seed=seed,
+                controller_source="ACT_ROLLIN_SIM_TRAINING_TEACHER" if rollin_policy is not None
+                                  else "SIM_STATE_TRAINING_TEACHER", robot=robot, seed=seed,
                 checkpoint_sha256=policy.weights_sha256, checkpoint_step=None,
                 mean_latency_ms=None, video_path="", abort=abort)
             included = bool(row["pick_place_success"]) and abort is None and bool(pack["valid"].any())
             if included:
                 cache[partition].extend(_records(pack))
             row.update(partition=partition, included_in_supervision=included,
-                       initial_state=initial, anchors=len(anchors),
+                       initial_state=initial, anchors=len(anchors), domain_randomization=randomized,
                        teacher_start_tick=act_prefix_steps,
                        rollin_checkpoint_sha256=report["rollin_checkpoint_sha256"],
                        valid_command_targets=int(pack["valid"].sum()),
@@ -422,9 +458,10 @@ def _collect_robot(shared, policy, rollin_policy, out, report, cache, captured, 
                        perception_log=teacher.perception_log if teacher is not None else [])
             write_json(directory / "report.json", row, atomic=True)
             report["trials"].append(row)
-            for name, rows in cache.items():
-                np.savez_compressed(out / f"{name}.npz", **stack_records(
-                    rows, chunk_size=chunk_size, feature_dim=feature_dim, action_dim=action_dim))
+            if report["feature_layer"] != "decoder_memory":
+                for name, rows in cache.items():
+                    np.savez_compressed(out / f"{name}.npz", **stack_records(
+                        rows, chunk_size=chunk_size, feature_dim=feature_dim, action_dim=action_dim))
             report["supervised_anchors"] = {name: len(rows) for name, rows in cache.items()}
             report["summary"] = summarize(report["trials"])
             write_json(out / "report.json", report, atomic=True)
@@ -445,14 +482,17 @@ def main():
     parser.add_argument("--act-prefix-steps", type=int, default=0)
     parser.add_argument("--robots", choices=tuple(ROBOT_IDS), nargs="+", default=["so101"])
     parser.add_argument("--initial-gripper-percent", type=float, default=1.2)
-    parser.add_argument("--feature-layer", choices=("action_head", "decoder_ffn_input"),
+    parser.add_argument("--feature-layer", choices=("action_head", "decoder_ffn_input", "decoder_memory"),
                         default="action_head")
+    parser.add_argument("--domain-randomization", type=Path,
+                        help="JSON randomization profile; {} enables the standard training profile")
     args = parser.parse_args()
     collect(args.snapshot, args.out, train_seeds=args.train_seeds, val_seeds=args.val_seeds,
             stride=args.stride, source_scene=args.source_scene, inference_backend=args.inference_backend,
             rollin_snapshot=args.rollin_snapshot, act_prefix_steps=args.act_prefix_steps,
             robots=args.robots, initial_gripper_percent=args.initial_gripper_percent,
-            feature_layer=args.feature_layer)
+            feature_layer=args.feature_layer,
+            randomization=json.loads(args.domain_randomization.read_text()) if args.domain_randomization else None)
 
 
 if __name__ == "__main__":
