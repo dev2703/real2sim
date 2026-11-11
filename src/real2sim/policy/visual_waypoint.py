@@ -76,6 +76,19 @@ class VisualWaypointController:
         return (self.env.sim_state() if self.robot == "so101"
                 else self.env.arm_qpos())
 
+    def _measured_arm(self):
+        """Actual arm joints, and the same vector clipped onto ``env.limits``.
+
+        MuJoCo soft stops let qpos sit outside ``jnt_range``. Native IK raises
+        ``IK seed exceeds native joint limits`` and ``least_squares`` raises
+        ``Initial guess is outside of provided bounds``. The oracle and the
+        Cartesian adapter already clip that seed. Collision and path checks
+        keep the measured joints.
+        """
+        measured = np.asarray(self._native()[:self.n], float).copy()
+        lo, hi = np.asarray(self.env.limits[:self.n], float).T
+        return measured, np.clip(measured, lo, hi)
+
     def _grip(self, opened):
         if self.robot == "panda":
             return self.env.max_opening if opened else 0.
@@ -134,7 +147,7 @@ class VisualWaypointController:
     def _plan_grasp(self):
         env, grip = self.env, self._grip(True)
         lo, hi = env.limits[:self.n].T
-        current = self._native()[:self.n]
+        measured, current = self._measured_arm()
         candidates = []
         if self.robot == "so101":
             pan = float(np.arctan2(self.ball[1], self.ball[0]))
@@ -177,10 +190,10 @@ class VisualWaypointController:
                     continue
                 pre_q = np.clip(first.qpos[:self.n], lo, hi)
                 grasp_q = np.clip(second.qpos[:self.n], lo, hi)
-                if not self._path_safe(current, pre_q, grip) or not self._path_safe(pre_q, grasp_q, grip):
+                if not self._path_safe(measured, pre_q, grip) or not self._path_safe(pre_q, grasp_q, grip):
                     attempts["path_rejected"] += 1
                     continue
-                score = float(np.linalg.norm(pre_q - current) + np.linalg.norm(grasp_q - pre_q))
+                score = float(np.linalg.norm(pre_q - measured) + np.linalg.norm(grasp_q - pre_q))
                 candidates.append((score, pre_q, grasp_q, rotation.copy()))
         if not candidates:
             self.failure = "No collision-free grasp branch satisfies native IK gates"
@@ -194,11 +207,14 @@ class VisualWaypointController:
         return True
 
     def _plan_carry(self):
-        env, current, grip = self.env, self._native()[:self.n], self._grip(False)
+        env, grip = self.env, self._grip(False)
+        measured, current = self._measured_arm()
         lo, hi = env.limits[:self.n].T
         # Preserve the RGB-derived ball/tool geometry. Jaw readback, object
         # contacts, and a hidden held-ball transform never enter this estimate.
-        pose = self._forward(current, grip)
+        # ``current`` is the clipped solver start; FK and the path use the
+        # measured arm so a soft-stop overshoot is not planned away.
+        pose = self._forward(measured, grip)
         ball_now = pose[:3, 3] + pose[:3, :3] @ self.ball_in_tool
         if self.phase == "LIFT":
             goal = self.ball + [0, 0, .08]
@@ -230,7 +246,7 @@ class VisualWaypointController:
         # Exact FK target is checked with the native solver once per phase.
         checked = self._solve(T, target, grip)
         if (not fitted.success or position_error > self.ik.config["position_tolerance_m"] or not checked.accepted
-                or not self._path_safe(current, target, grip)):
+                or not self._path_safe(measured, target, grip)):
             self.failure = f"{self.phase} has no feasible bounded path (error {position_error:.4f}m)"
             return False
         self.target_q = target.copy()
