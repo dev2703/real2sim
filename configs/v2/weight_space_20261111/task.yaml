@@ -1,0 +1,167 @@
+# Exploratory axes and camera hypothesis; not physically calibrated.
+provenance_default: PROVISIONAL-STANDARD
+geometry_status: exploratory_confirmed_forward_side_axes_20261111
+physical_calibration_accepted: false
+source_task: configs/v2/task.exploratory_20261022.yaml
+source_task_sha256: 5d23c3e36ce6a45ff692cb70177e0af79ef72aa4178d0e1d939e649fff948237
+table:
+  height: 0.737
+  mat:
+    size_xy:
+    - 0.4064
+    - 0.30479999999999996
+    center_task_xy:
+    - 0.2537424460041449
+    - -0.08103323722404339
+frames:
+  T_task_so101base:
+    xyz:
+    - 0.0
+    - 0.0
+    - 0.0
+    rpy:
+    - 0.0
+    - 0.0
+    - 0.0
+ball:
+  radius: 0.03234028443627313
+  mass: 0.058
+  friction:
+    nominal: 0.6
+    sweep:
+    - 0.4
+    - 0.9
+  inertia: thin_shell
+  restitution_nominal: 0.75
+  start_region:
+    center_task_xy:
+    - 0.3302
+    - 0.0508
+    radius: 0.03
+    provenance: 'Candidate based on plan.md operator confirmation: 13in forward and
+      2in sideways; sign follows prior image registration hypothesis'
+  radius_interval_m:
+  - 0.030723270214459475
+  - 0.03395729865808679
+  radius_provenance: OPERATOR-MEASURED circumference 8 in; physical_measurements.md;
+    +-5%; radius=C/(2*pi)
+bowl:
+  inner_rim_radius: 0.05515
+  inner_depth: 0.0254
+  wall_thickness: 0.002
+  outer_height: 0.03
+  base_diameter: 0.06
+  mass: 0.3
+  static: true
+  center_task_xy:
+  - 0.17728489200828984
+  - -0.21286647444808676
+  center_provenance: Exploratory prior relative bowl direction rotated with ball bearing;
+    original planar ball-bowl distance retained
+  collision:
+    wall_boxes: 20
+    base: cylinder
+  depth_sweep:
+  - 0.0254
+  - 0.045
+  - 0.06
+  diameter_interpretation: 4.5in interpreted as OUTER diameter for provisional executable
+    candidate
+camera_iphone:
+  key: observation.images.iphone
+  width: 1280
+  height: 720
+  fovy_deg: 43.0
+  intrinsics_px:
+    fx: 913.9132424391506
+    fy: 913.9132424391506
+    cx: 640.0
+    cy: 360.0
+  extrinsics_provenance: 'Exploratory operator-axis correction: rotate previous relative
+    camera layout with corrected ball bearing; 43deg field of view from earlier fit;
+    not physically calibrated'
+  approx_position_task:
+  - 0.6720722543352602
+  - -0.6537196531791907
+  - 0.3944
+  look_at_task:
+  - 0.2537424460041449
+  - -0.08103323722404339
+  - 0.020340284436273132
+  height_above_table_m: 0.4064
+  height_above_table_interval_m:
+  - 0.38608
+  - 0.42672
+robot_so101:
+  base_z_offset: 0.012
+  joint_names:
+  - shoulder_pan
+  - shoulder_lift
+  - elbow_flex
+  - wrist_flex
+  - wrist_roll
+  real_to_sim:
+    sign:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    offset_deg:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    provenance: PROVISIONAL-STANDARD; physical signs and zeros remain unverified
+  gripper:
+    real_unit: percent
+    closed_at: 0
+    sim_range_rad:
+    - -0.1745
+    - 1.7454
+episode:
+  success_hold_s: 1.0
+  timeout_s: 30.0
+operator_measurements:
+  source: physical_measurements.md
+  sha256: 8a31d789968eef7543df6ab177ff9f60f820300b1a25ef766bf3894fc116273b
+  applied_fields:
+  - ball.radius
+  - ball.start_region.center_task_xy
+  - bowl.center_task_xy total distance with image-derived bearing prior
+  - bowl.inner_rim_radius inferred from outer4.5in
+  - table.mat.size_xy
+  - camera_iphone distance magnitudes; bearing remains an image-layout hypothesis
+  relative_uncertainty: 0.05
+total_distance_setup_assumptions:
+  camera_minus_ball_xy_signs:
+  - 1
+  - -1
+  ball_bowl_measurement_kind: total planar centre-to-centre distance assumed; not
+    x-only
+  bowl_direction_method: prior image-derived relative layout rotated by new-minus-old
+    base/ball bearing
+  inferred_layout_yaw_rad: -0.3695493347765745
+  bowl_unit_direction_xy:
+  - -0.5016899868494428
+  - -0.8650474883467414
+  source_old_ball_xy:
+  - 0.3557
+  - 0.2047
+  source_old_bowl_xy:
+  - 0.318
+  - -0.035
+  operator_axes_assumed_task_axes: false
+  base_reference_assumed_task_origin_xy: true
+  camera_identity: global observation.images.iphone
+  camera_rotation: roll-free look-at nominal ball/bowl midpoint; not measured
+  mat_center: nominal ball/bowl midpoint; not measured
+  intrinsics: Exploratory fovy43deg (913.913px on1280x720); prior fit hypothesis,
+    not measured calibration
+  independently_verified_registration: false
+operator_clarification:
+  path: configs/v2/positive_total_distance_20261027/operator_clarification.json
+  sha256: ec6f90e4fa5a57c60977b64f98d28d1e38e51b998f6ad435ac27f1209e945d68
+candidate_source_scene: configs/v2/measured_registration_20261028/task_positive_all_scalars.yaml
+candidate_rotation_rad: -1.2654976700043663

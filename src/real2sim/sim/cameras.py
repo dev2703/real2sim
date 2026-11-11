@@ -9,9 +9,32 @@ import copy
 import hashlib
 import json
 import xml.etree.ElementTree as ET
+from numbers import Real
 from pathlib import Path
 
 import numpy as np
+
+
+def apply_render_settings(model, render: dict) -> None:
+    """Apply an optional near clipping distance in metres to a compiled scene.
+
+    MuJoCo stores clipping planes as fractions of the compiled model's extent.
+    Configure this after compilation so scenery and either robot's scale are
+    accounted for. Omitting the setting preserves the upstream rendering.
+    """
+    if "near_clip_m" not in render:
+        return
+    distance = render["near_clip_m"]
+    if (isinstance(distance, bool) or not isinstance(distance, Real)
+            or not np.isfinite(distance) or distance <= 0):
+        raise ValueError("render.near_clip_m must be a finite positive distance in metres")
+    extent = float(model.stat.extent)
+    far_distance = float(model.vis.map.zfar) * extent
+    if not np.isfinite(extent) or extent <= 0:
+        raise ValueError("render.near_clip_m requires a finite positive compiled model extent")
+    if distance >= far_distance:
+        raise ValueError("render.near_clip_m must be less than the far clipping distance")
+    model.vis.map.znear = float(distance) / extent
 
 
 def nominal_so101_wrist_camera(mjcf: str | Path) -> dict:

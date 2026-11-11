@@ -11,10 +11,13 @@ from safetensors.torch import save_file
 from real2sim.geometry.so101_fk import JointMapping
 from real2sim.policy.weight_edit_collection import (
     accepted_native_target,
+    accepted_panda_target,
     collect_anchor_at,
     episode_pack,
+    native_policy_state,
     saved_action_statistics,
     stack_records,
+    validate_robots,
     validate_rollin_contract,
     validate_rollin_options,
     validate_seed_split,
@@ -75,6 +78,45 @@ def test_episode_roles_reject_overlap_duplicates_and_missing_split(train, val):
 
 def test_episode_roles_accept_disjoint_whole_episodes():
     validate_seed_split([10090, 10091], [11090])
+
+
+@pytest.mark.parametrize("robots", [[], ["panda", "panda"], ["unknown"]])
+def test_collection_rejects_ambiguous_or_unsupported_robots(robots):
+    with pytest.raises(ValueError, match="robots"):
+        validate_robots(robots)
+
+
+def test_panda_pack_keeps_robot_identity_separate_from_so101_same_seed():
+    anchor = {"features": np.zeros((2, 3)), "raw_state": np.zeros(6),
+              "tick": 0, "episode_index": 10}
+    kwargs = dict(chunk_size=2, feature_dim=3, mean=np.zeros(6), std=np.ones(6))
+    source = episode_pack([anchor], np.zeros((1, 6)), [True], robot="so101", **kwargs)
+    panda = episode_pack([anchor], np.zeros((1, 6)), [True], robot="panda", **kwargs)
+    assert source["episode_index"][0] == panda["episode_index"][0] == 10
+    assert source["robot_id"][0] == 0 and panda["robot_id"][0] == 1
+
+
+def test_panda_policy_input_uses_benchmark_endpoint_jaw_readback():
+    source = SimpleNamespace(source_state=lambda env: (np.arange(6, dtype=np.float32), .001))
+    env = SimpleNamespace(gripper_opening=lambda: .04, max_opening=.08)
+    state = native_policy_state(SimpleNamespace(robot="panda", env=env, source=source))
+    np.testing.assert_array_equal(state, [0, 1, 2, 3, 4, 45])
+
+
+@pytest.mark.parametrize("rejected,representable", [(True, True), (False, False)])
+def test_panda_rejections_mask_labels_and_preserve_causal_command_prior(rejected, representable):
+    def unexpected_command(raw):
+        pytest.fail("Rejected teacher command must not advance source history")
+
+    source = SimpleNamespace(project_pose=lambda pose: SimpleNamespace(accepted=representable),
+                             source_action=unexpected_command)
+    shared = SimpleNamespace(env=SimpleNamespace(max_opening=.08), source=source,
+                             guard=SimpleNamespace(forward=lambda q, **kw: np.eye(4)))
+    result = SimpleNamespace(info={"control": {"applied": [0.] * 7 + [.04]}},
+                             ik_rejected=rejected)
+    target, valid = accepted_panda_target(shared, result)
+    assert not valid
+    np.testing.assert_array_equal(target, np.zeros(6))
 
 
 def test_labels_use_applied_command_inverse_mapping_and_keep_rejection_mask():

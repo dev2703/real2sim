@@ -35,7 +35,7 @@ import numpy as np
 
 from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
-from real2sim.sim.model import _add_bowl, bowl_dimensions
+from real2sim.sim.cameras import apply_render_settings
 from real2sim.sim.model import MIN_WALL_BOXES as MIN_WALL_BOXES
 from real2sim.sim.model import _add_bowl as _add_bowl
 from real2sim.sim.model import _numbers as _numbers
@@ -172,6 +172,7 @@ def load_scene(config_path: str | Path = DEFAULT_CONFIG, *, bowl_inner_depth: fl
         raise ValueError("configs/sim_panda.yaml model_sha256 disagrees with the manifest")
     xml = scene_xml(config, task, bowl_inner_depth=bowl_inner_depth, contacts=contacts)
     model = mujoco.MjModel.from_xml_string(xml)
+    apply_render_settings(model, config["render"])
     if task["ball"].get("inertia") == "thin_shell":
         geom = model.geom("ball_geom").id
         body = model.geom_bodyid[geom]

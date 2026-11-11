@@ -58,7 +58,8 @@ def prepare_scene(out, source=Path("configs/v2/sim_so101.waypoint_20261026.yaml"
     data.update(camera_keys=list(contract["camera_keys"]),
                 policy_hz=25., excluded_cameras=[])
     _, height, width = contract["image_shape_chw"]
-    config.update(control_hz=25., render={"width": width, "height": height})
+    config["control_hz"] = 25.
+    config["render"].update(width=width, height=height)
     config["task_config"] = str((out / "task.yaml").resolve())
     config["data_config"] = str((out / "data.yaml").resolve())
     data["task_config"] = config["task_config"]

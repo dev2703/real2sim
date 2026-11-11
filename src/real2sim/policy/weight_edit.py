@@ -41,14 +41,37 @@ def _metric(x, y, weight, bias):
             "mse_normalized": float(np.square(error).mean())}
 
 
+def _groups(values, rows, name):
+    values = np.asarray(values)
+    if values.shape != (rows,) or values.dtype.kind not in "iu" or np.any(values < 0):
+        raise ValueError(f"{name} must contain one nonnegative integer robot ID per row")
+    return values
+
+
+def _group_metric(x, y, weight, bias, groups):
+    metrics = _metric(x, y, weight, bias)
+    if groups is not None:
+        metrics["per_robot"] = {str(robot): {
+            "rows": int(np.sum(groups == robot)),
+            **_metric(x[groups == robot], y[groups == robot], weight, bias)}
+            for robot in np.unique(groups)}
+        metrics["robot_balanced_mae_normalized"] = float(np.mean([
+            value["mae_normalized"] for value in metrics["per_robot"].values()]))
+    return metrics
+
+
 def fit_weight_edit(weight, bias, train_features, train_targets,
                     validation_features, validation_targets, *, ridges=DEFAULT_RIDGES,
-                    alphas=DEFAULT_ALPHAS, min_improvement=1e-6):
+                    alphas=DEFAULT_ALPHAS, min_improvement=1e-6,
+                    train_groups=None, validation_groups=None):
     """Return edited ``(weight, bias, report)``; rejected fits return the originals.
 
     Minimize mean squared residual error plus ``ridge * ||delta||²`` in
     training-standardized feature coordinates, including a regularized intercept.
     Candidate metrics use the export dtype so selection reflects saved weights.
+    When robot IDs are supplied, each robot receives equal total fitting weight
+    and candidates must preserve every robot's baseline validation MAE. Both
+    fitting and validation must cover the same robots.
     """
     original_weight = np.asarray(weight)
     original_bias = np.asarray(bias)
@@ -72,13 +95,33 @@ def fit_weight_edit(weight, bias, train_features, train_targets,
         raise ValueError("edit strengths must include zero and lie in [0,1]")
     if not np.isfinite(min_improvement) or min_improvement < 0:
         raise ValueError("minimum improvement must be finite and nonnegative")
-    mean, scale = x.mean(0), x.std(0).clip(.01)
+    if (train_groups is None) != (validation_groups is None):
+        raise ValueError("training and validation robot groups must be supplied together")
+    if train_groups is not None:
+        train_groups = _groups(train_groups, len(x), "training groups")
+        validation_groups = _groups(validation_groups, len(vx), "validation groups")
+        robot_ids = np.unique(train_groups)
+        if not np.array_equal(robot_ids, np.unique(validation_groups)):
+            raise ValueError("training and validation must cover the same robot IDs")
+    else:
+        robot_ids = np.empty(0, np.int64)
+    probabilities = np.full(len(x), 1. / len(x))
+    if len(robot_ids) > 1:
+        for robot in robot_ids:
+            mask = train_groups == robot
+            probabilities[mask] = 1. / (len(robot_ids) * int(mask.sum()))
+        mean = probabilities @ x
+        scale = np.sqrt(probabilities @ np.square(x - mean)).clip(.01)
+    else:
+        mean, scale = x.mean(0), x.std(0).clip(.01)
     design = np.column_stack(((x - mean) / scale, np.ones(len(x))))
     residual = y - (x @ w.T + b)
-    gram, rhs = design.T @ design / len(x), design.T @ residual / len(x)
+    gram = design.T @ (design * probabilities[:, None])
+    rhs = design.T @ (residual * probabilities[:, None])
     identity = np.eye(design.shape[1])
-    baseline = _metric(vx, vy, w, b)
-    best = baseline["mae_normalized"]
+    baseline = _group_metric(vx, vy, w, b, validation_groups)
+    score_key = "robot_balanced_mae_normalized" if train_groups is not None else "mae_normalized"
+    best = baseline[score_key]
     selected_w, selected_b = original_weight.copy(), original_bias.copy()
     selected_ridge, selected_alpha = None, 0.
     candidates = []
@@ -91,13 +134,17 @@ def fit_weight_edit(weight, bias, train_features, train_targets,
             candidate_b = (b + alpha * delta_b).astype(original_bias.dtype)
             if not np.isfinite(candidate_w).all() or not np.isfinite(candidate_b).all():
                 raise ValueError("weight edit exceeds the checkpoint dtype")
-            metrics = _metric(vx, vy, candidate_w, candidate_b)
-            candidates.append({"ridge": ridge, "alpha": alpha, **metrics})
-            if metrics["mae_normalized"] < best:
-                best = metrics["mae_normalized"]
+            metrics = _group_metric(vx, vy, candidate_w, candidate_b, validation_groups)
+            no_robot_regression = validation_groups is None or all(
+                value["mae_normalized"] <= baseline["per_robot"][robot]["mae_normalized"]
+                for robot, value in metrics["per_robot"].items())
+            candidates.append({"ridge": ridge, "alpha": alpha,
+                               "no_robot_regression": no_robot_regression, **metrics})
+            if no_robot_regression and metrics[score_key] < best:
+                best = metrics[score_key]
                 selected_w, selected_b = candidate_w, candidate_b
                 selected_ridge, selected_alpha = ridge, alpha
-    improvement = baseline["mae_normalized"] - best
+    improvement = baseline[score_key] - best
     accepted = selected_alpha > 0 and improvement > min_improvement
     if not accepted:
         selected_w, selected_b = original_weight.copy(), original_bias.copy()
@@ -105,17 +152,23 @@ def fit_weight_edit(weight, bias, train_features, train_targets,
     delta = np.r_[(selected_w.astype(np.float64) - w).ravel(),
                   selected_b.astype(np.float64) - b]
     original_norm = float(np.linalg.norm(np.r_[w.ravel(), b]))
-    report = {"accepted": accepted, "selection": "minimum held-out episode normalized action MAE; baseline included",
+    edited_validation = _group_metric(vx, vy, selected_w, selected_b, validation_groups)
+    report = {"accepted": accepted, "selection": (
+        "minimum robot-balanced held-out action MAE with no robot baseline regression; baseline included"
+        if train_groups is not None else "minimum held-out action MAE; baseline included"),
         "objective": "mean squared training residual + ridge times squared standardized head delta (including bias)",
+        "robot_balanced_fitting": train_groups is not None,
+        "robot_ids": robot_ids.tolist(), "selection_metric": score_key,
         "train_rows": len(x), "validation_rows": len(vx),
         "feature_dimension": w.shape[1], "action_dimension": w.shape[0],
         "train_feature_std_floor": .01, "min_improvement": min_improvement,
         "baseline_validation": baseline,
-        "edited_validation": _metric(vx, vy, selected_w, selected_b),
-        "baseline_train": _metric(x, y, w, b),
-        "edited_train": _metric(x, y, selected_w, selected_b),
+        "edited_validation": edited_validation,
+        "baseline_train": _group_metric(x, y, w, b, train_groups),
+        "edited_train": _group_metric(x, y, selected_w, selected_b, train_groups),
         "selected_ridge": selected_ridge, "selected_alpha": selected_alpha,
-        "validation_mae_improvement": baseline["mae_normalized"] - _metric(vx, vy, selected_w, selected_b)["mae_normalized"],
+        "validation_mae_improvement": baseline["mae_normalized"] - edited_validation["mae_normalized"],
+        "selection_score_improvement": baseline[score_key] - edited_validation[score_key],
         "delta_l2": float(np.linalg.norm(delta)), "delta_max_abs": float(np.abs(delta).max()),
         "delta_relative_l2": float(np.linalg.norm(delta) / max(original_norm, 1e-12)),
         "edited_parameter_count": int(w.size + b.size), "candidates": candidates,
@@ -123,7 +176,7 @@ def fit_weight_edit(weight, bias, train_features, train_targets,
     return selected_w, selected_b, report
 
 
-def load_feature_rows(path, prefix):
+def load_feature_rows(path, prefix, *, with_groups=False):
     """Flatten valid prefix queries and retain episode identities for split checks."""
     if type(prefix) is not int or prefix < 1:
         raise ValueError("prefix must be a positive integer")
@@ -145,7 +198,11 @@ def load_feature_rows(path, prefix):
     if not mask.any():
         raise ValueError("feature pack contains no valid supervised prefix queries")
     identities = set(zip(arrays["robot_id"].tolist(), arrays["episode_index"].tolist(), strict=True))
-    return x[:, :prefix][mask], y[:, :prefix][mask], identities
+    rows = x[:, :prefix][mask], y[:, :prefix][mask], identities
+    if with_groups:
+        groups = np.broadcast_to(arrays["robot_id"][:, None], mask.shape)[mask]
+        return (*rows, groups)
+    return rows
 
 
 def _validated_cache(data, source_files, base_sha, prefix):
@@ -172,9 +229,33 @@ def _validated_cache(data, source_files, base_sha, prefix):
     for name, expected in feature_hashes.items():
         if sha256_file(data / name) != expected:
             raise ValueError(f"feature pack checksum mismatch: {name}")
-    x, y, train_episodes = load_feature_rows(data / "train.npz", prefix)
-    vx, vy, val_episodes = load_feature_rows(data / "val.npz", prefix)
-    return x, y, vx, vy, train_episodes, val_episodes, provenance
+    x, y, train_episodes, train_groups = load_feature_rows(data / "train.npz", prefix, with_groups=True)
+    vx, vy, val_episodes, val_groups = load_feature_rows(data / "val.npz", prefix, with_groups=True)
+    return x, y, vx, vy, train_episodes, val_episodes, provenance, train_groups, val_groups
+
+
+def _scene_identity(provenance):
+    scene = provenance.get("source_scene")
+    if scene is None:
+        return None
+    resolved = str(Path(scene).expanduser().resolve())
+    sources = provenance["source_sha256_before"]
+    checksum = sources.get(resolved)
+    scene_key = ("sha256", checksum) if checksum else ("path", resolved)
+    # The same YAML can render differently after a scene-preparation change
+    # (for example dropping near_clip_m). Include referenced task/data YAMLs
+    # and the builders so such collections cannot silently be pooled.
+    builder_names = (
+        "scripts/evaluate_hf_act_20261027.py",
+        "scripts/evaluate_hf_act_panda_20261028.py",
+        "src/real2sim/sim/model.py", "src/real2sim/sim/cameras.py",
+        "src/real2sim/panda/model.py", "src/real2sim/panda/workspace.py",
+    )
+    builders = tuple(sorted((name, digest) for path, digest in sources.items()
+                            for name in builder_names if Path(path).as_posix().endswith("/" + name)))
+    configs = tuple(sorted(digest for path, digest in sources.items()
+                           if Path(path).suffix in (".yaml", ".yml")))
+    return scene_key, builders, configs
 
 
 def fit_from_cache(data, out, snapshot, *, prefix=10, ridges=DEFAULT_RIDGES,
@@ -209,6 +290,11 @@ def fit_from_cache(data, out, snapshot, *, prefix=10, ridges=DEFAULT_RIDGES,
         for name in ("report.json", "train.npz", "val.npz"))]
     before = {str(path.resolve()): sha256_file(path) for path in watched}
     caches = [_validated_cache(path, source_files, base_sha, prefix) for path in data_paths]
+    if any(cache[6].get("feature_layer", "action_head") != "action_head" for cache in caches):
+        raise ValueError("Linear head editing requires action_head input features")
+    scenes = {_scene_identity(cache[6]) for cache in caches}
+    if len(scenes) > 1:
+        raise ValueError("feature caches must declare the same source scene")
     train_episodes = set().union(*(cache[4] for cache in caches))
     val_episodes = set().union(*(cache[5] for cache in caches))
     if train_episodes & val_episodes:
@@ -218,16 +304,20 @@ def fit_from_cache(data, out, snapshot, *, prefix=10, ridges=DEFAULT_RIDGES,
         raise ValueError("feature cache dimensions differ across collections")
     x, y, vx, vy = (np.concatenate([cache[index] for cache in caches], axis=0)
         for index in range(4))
+    train_groups, val_groups = (np.concatenate([cache[index] for cache in caches])
+                               for index in (7, 8))
     state = load_file(weights_path, device="cpu")
     if WEIGHT_KEY not in state or BIAS_KEY not in state:
         raise ValueError("checkpoint lacks the native linear ACT action head")
     weight, bias = state[WEIGHT_KEY], state[BIAS_KEY]
     edited_w, edited_b, report = fit_weight_edit(weight.numpy(), bias.numpy(), x, y, vx, vy,
-        ridges=ridges, alphas=alphas, min_improvement=min_improvement)
+        ridges=ridges, alphas=alphas, min_improvement=min_improvement,
+        train_groups=train_groups, validation_groups=val_groups)
     report.update(schema="native_act_direct_weight_edit_v1", status="complete",
         base_checkpoint=str(snapshot.resolve()), base_checkpoint_sha256=base_sha,
         data=str(data_paths[0].resolve()) if len(data_paths) == 1 else [str(path.resolve()) for path in data_paths],
         prefix=prefix,
+        source_scene=caches[0][6].get("source_scene"),
         train_episodes=[list(pair) for pair in sorted(train_episodes)],
         validation_episodes=[list(pair) for pair in sorted(val_episodes)],
         source_sha256_before=before,

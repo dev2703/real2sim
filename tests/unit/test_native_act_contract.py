@@ -39,6 +39,20 @@ def test_checkpoint_camera_roles_and_sizes_drive_source_scene(tmp_path, wrist):
     assert task["additional_cameras"][0]["physical_calibration_accepted"] is False
 
 
+def test_checkpoint_dimensions_preserve_source_render_settings(tmp_path):
+    source = load_yaml("configs/v2/sim_so101.waypoint_20261026.yaml")
+    source["render"].update(near_clip_m=.005, width=640, height=360)
+    source_path = tmp_path / "source.yaml"
+    source_path.write_text(yaml.safe_dump(source))
+    prepared = tmp_path / "prepared"
+    prepared.mkdir()
+
+    contract = native_scene_contract(config("wrist", (3, 180, 320)))
+    scene = load_yaml(prepare_scene(prepared, source=source_path, native_contract=contract))
+
+    assert scene["render"] == {"width": 320, "height": 180, "near_clip_m": .005}
+
+
 @pytest.mark.parametrize("invalid", ["state", "action", "missing_state", "camera", "shape",
                                      "rgb", "ensemble", "observations", "prefix"])
 def test_unsupported_native_interfaces_fail_before_robot_execution(invalid):

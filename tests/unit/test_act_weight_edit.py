@@ -64,6 +64,55 @@ def test_constant_features_remain_finite():
     assert report["edited_validation"]["mae_normalized"] < .02
 
 
+def test_robot_regression_rejected_even_when_aggregate_mae_improves():
+    # The majority arm makes an edit look useful, but the minority arm already
+    # matches its validation targets and must not be sacrificed by averaging.
+    x = np.zeros((101, 1))
+    train_y = np.ones((101, 1))
+    validation_y = train_y.copy()
+    validation_y[-1] = 0.
+    groups = np.r_[np.zeros(100, np.int64), np.ones(1, np.int64)]
+    w, b = np.zeros((1, 1), np.float32), np.zeros(1, np.float32)
+    _, _, ordinary = fit_weight_edit(w, b, x, train_y, x, validation_y,
+                                    ridges=(.01,), alphas=(0, 1))
+    ew, eb, grouped = fit_weight_edit(w, b, x, train_y, x, validation_y,
+        ridges=(.01,), alphas=(0, 1), train_groups=groups, validation_groups=groups)
+    assert ordinary["accepted"]
+    assert not grouped["accepted"]
+    assert grouped["robot_ids"] == [0, 1]
+    candidate = grouped["candidates"][-1]
+    assert candidate["mae_normalized"] < grouped["baseline_validation"]["mae_normalized"]
+    assert not candidate["no_robot_regression"]
+    assert candidate["per_robot"]["1"]["mae_normalized"] > 0
+    np.testing.assert_array_equal(ew, w)
+    np.testing.assert_array_equal(eb, b)
+
+
+def test_each_robot_has_equal_total_fitting_weight_despite_different_row_counts():
+    x = np.zeros((101, 1))
+    groups = np.r_[np.zeros(100, np.int64), np.ones(1, np.int64)]
+    train_y = np.r_[np.full(100, 2.), 0.][:, None]
+    _, bias, report = fit_weight_edit(np.zeros((1, 1), np.float64), np.zeros(1),
+        x, train_y, np.zeros((2, 1)), np.ones((2, 1)), ridges=(1e-8,), alphas=(0, 1),
+        train_groups=groups, validation_groups=np.array([0, 1]))
+    assert report["accepted"]
+    np.testing.assert_allclose(bias, [1.], atol=1e-7)
+    assert report["baseline_train"]["per_robot"]["0"]["rows"] == 100
+    assert report["baseline_train"]["per_robot"]["1"]["rows"] == 1
+    assert report["selection_metric"] == "robot_balanced_mae_normalized"
+
+
+@pytest.mark.parametrize("train,val", [
+    (None, [0, 1]), ([0, 1], None), ([0], [0, 1]), ([0., 1.], [0, 1]),
+    ([-1, 0], [-1, 0]), ([0, 1], [0, 0]),
+])
+def test_invalid_or_unvalidated_robot_groups_are_rejected(train, val):
+    with pytest.raises(ValueError, match="robot|groups"):
+        fit_weight_edit(np.zeros((1, 1), np.float32), np.zeros(1, np.float32),
+            np.zeros((2, 1)), np.ones((2, 1)), np.zeros((2, 1)), np.ones((2, 1)),
+            train_groups=train, validation_groups=val)
+
+
 @pytest.mark.parametrize("kwargs", [
     {"ridges": (0,)}, {"ridges": (float("nan"),)},
     {"alphas": (.5, 1)}, {"alphas": (0, 2)}, {"min_improvement": -1},
@@ -74,14 +123,14 @@ def test_reject_invalid_search_configuration(kwargs):
             np.ones((4, 1)), np.ones((4, 1)), np.ones((4, 1)), np.ones((4, 1)), **kwargs)
 
 
-def _pack(path, seed, *, negative=False, episode=0):
+def _pack(path, seed, *, negative=False, episode=0, robot=0):
     rng = np.random.default_rng(seed)
     x = rng.normal(size=(20, 3, 4)).astype(np.float32)
     y = np.stack([x[..., 0] + .5, x[..., 1] - .3], axis=-1)
     if negative:
         y[:] = 0
     np.savez(path, features=x, target_normalized=y, valid=np.ones((20, 3), bool),
-        robot_id=np.zeros(20, np.int64), episode_index=np.full(20, episode, np.int64),
+        robot_id=np.full(20, robot, np.int64), episode_index=np.full(20, episode, np.int64),
         tick=np.arange(20))
 
 
@@ -170,6 +219,15 @@ def test_wrong_base_checkpoint_rejected(cache, tmp_path):
         fit_from_cache(data, tmp_path / "out", snapshot, prefix=2)
 
 
+def test_decoder_input_features_cannot_be_mistaken_for_action_head_features(cache, tmp_path):
+    data, snapshot = cache
+    payload = json.loads((data / "report.json").read_text())
+    payload["feature_layer"] = "decoder_ffn_input"
+    (data / "report.json").write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match="action_head input"):
+        fit_from_cache(data, tmp_path / "out", snapshot, prefix=2)
+
+
 def test_incomplete_collection_rejected(cache, tmp_path):
     data, snapshot = cache
     payload = json.loads((data / "report.json").read_text())
@@ -248,6 +306,68 @@ def test_aggregate_requires_at_least_one_cache(cache, tmp_path):
         fit_from_cache([], tmp_path / "edited", snapshot, prefix=2)
 
 
+def test_multi_robot_cache_export_records_coverage_and_per_robot_metrics(cache, tmp_path):
+    data, snapshot = cache
+    panda = tmp_path / "panda"
+    shutil.copytree(data, panda)
+    _pack(panda / "train.npz", 92, episode=10, robot=1)
+    _pack(panda / "val.npz", 93, episode=20, robot=1)
+    _update_feature_hashes(panda)
+    report = fit_from_cache([data, panda], tmp_path / "edited", snapshot, prefix=2)
+    assert report["accepted"]
+    assert report["robot_balanced_fitting"]
+    assert report["robot_ids"] == [0, 1]
+    for robot, baseline in report["baseline_validation"]["per_robot"].items():
+        edited = report["edited_validation"]["per_robot"][robot]
+        assert edited["mae_normalized"] <= baseline["mae_normalized"]
+
+
+@pytest.mark.parametrize("second_scene", ["different_scene.yaml", None])
+def test_caches_with_different_or_missing_scene_declarations_cannot_mix(cache, tmp_path, second_scene):
+    data, snapshot = cache
+    second = tmp_path / "second"
+    shutil.copytree(data, second)
+    for directory, scene in ((data, "first_scene.yaml"), (second, second_scene)):
+        report = json.loads((directory / "report.json").read_text())
+        if scene is not None:
+            report["source_scene"] = scene
+        (directory / "report.json").write_text(json.dumps(report))
+    with pytest.raises(ValueError, match="same source scene"):
+        fit_from_cache([data, second], tmp_path / "edited", snapshot, prefix=2)
+
+
+def test_scene_compatibility_uses_recorded_content_hash_for_relocated_configs(cache, tmp_path):
+    data, snapshot = cache
+    second = tmp_path / "second"
+    shutil.copytree(data, second)
+    for index, directory in enumerate((data, second)):
+        report = json.loads((directory / "report.json").read_text())
+        scene = tmp_path / f"source_{index}.yaml"
+        report["source_scene"] = str(scene)
+        for key in ("source_sha256_before", "source_sha256_after"):
+            report[key][str(scene.resolve())] = "same-recorded-scene-content"
+        (directory / "report.json").write_text(json.dumps(report))
+    report = fit_from_cache([data, second], tmp_path / "edited", snapshot, prefix=2)
+    assert report["accepted"]
+
+
+@pytest.mark.parametrize("changed_input", ["scripts/evaluate_hf_act_20261027.py", "configs/task.yaml"])
+def test_same_scene_yaml_cannot_hide_changed_render_builder_or_task(cache, tmp_path, changed_input):
+    data, snapshot = cache
+    second = tmp_path / "second"
+    shutil.copytree(data, second)
+    for index, directory in enumerate((data, second)):
+        report = json.loads((directory / "report.json").read_text())
+        scene = tmp_path / "same_scene.yaml"
+        report["source_scene"] = str(scene)
+        for key in ("source_sha256_before", "source_sha256_after"):
+            report[key][str(scene.resolve())] = "same-scene-yaml"
+            report[key][str((tmp_path / changed_input).resolve())] = f"different-{index}"
+        (directory / "report.json").write_text(json.dumps(report))
+    with pytest.raises(ValueError, match="same source scene"):
+        fit_from_cache([data, second], tmp_path / "edited", snapshot, prefix=2)
+
+
 def test_valid_prefix_mask_excludes_unexecuted_queries(tmp_path):
     path = tmp_path / "features.npz"
     x, y = np.arange(12, dtype=np.float32).reshape(2, 3, 2), np.ones((2, 3, 1), np.float32)
@@ -258,6 +378,8 @@ def test_valid_prefix_mask_excludes_unexecuted_queries(tmp_path):
     np.testing.assert_array_equal(xx, x[[0, 1], [0, 1]])
     assert yy.shape == (2, 1)
     assert episodes == {(0, 1), (1, 2)}
+    _, _, _, groups = load_feature_rows(path, 2, with_groups=True)
+    np.testing.assert_array_equal(groups, [0, 1])
 
 
 def test_nonfinite_input_rejected():

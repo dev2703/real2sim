@@ -15,6 +15,7 @@ wheels/
 *.claude*
 *.md*
 *!README.md*
+!docs/ACT_WEIGHT_SPACE_20261111.md
 
 # Large artifacts stay out of git
 .cache/
