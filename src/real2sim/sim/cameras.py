@@ -107,6 +107,28 @@ def camera_projection_attributes(camera: dict, render: dict | None = None) -> di
     }
 
 
+# Absolute render near clip. MuJoCo stores vis.map.znear as a fraction of
+# stat.extent. Scenery boxes inflate that extent, so the default 0.01 fraction
+# clips the wrist jaws and the ball at grasp (about 8.5 cm on the measured scene).
+RENDER_NEAR_CLIP_M = 0.005
+
+
+def apply_render_near_clip(model, near_m: float = RENDER_NEAR_CLIP_M) -> float:
+    """Set the shared visual-map near plane to an absolute distance in metres.
+
+    Wrist and global cameras share model.vis.map, so one fraction covers both
+    at render time. Returns the fraction written (near_m / stat.extent).
+    """
+    extent = float(model.stat.extent)
+    if not np.isfinite(extent) or extent <= 0:
+        raise ValueError("model extent must be a positive finite length")
+    if not np.isfinite(near_m) or near_m <= 0:
+        raise ValueError("near clip must be a positive finite distance")
+    fraction = near_m / extent
+    model.vis.map.znear = fraction
+    return float(model.vis.map.znear)
+
+
 def camera_intrinsics_px(model, camera_id: int, width: int, height: int) -> np.ndarray:
     """Read OpenCV intrinsics from the compiled camera at the requested image size."""
     if min(width, height) <= 0:
