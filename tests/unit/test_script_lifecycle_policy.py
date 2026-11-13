@@ -14,6 +14,10 @@ def _supported_cli_entries() -> set[str]:
     return set(re.findall(r"`(scripts/[^`]+\.py)`", section.group(1)))
 
 
+def _script_references(path: Path) -> set[str]:
+    return set(re.findall(r"(scripts/[A-Za-z0-9_./-]+\.py)", path.read_text()))
+
+
 def test_policy_document_covers_required_rules():
     text = POLICY.read_text()
     for phrase in (
@@ -39,3 +43,12 @@ def test_script_guardrails_hold():
     diag_files = [path for path in files if path.name.startswith("diag_")]
     assert len(files) <= 120
     assert len(diag_files) <= 32
+
+
+def test_readme_and_tests_do_not_reference_missing_scripts():
+    missing: dict[str, list[str]] = {}
+    for path in [README, *ROOT.glob("tests/**/*.py")]:
+        refs = sorted(ref for ref in _script_references(path) if not (ROOT / ref).exists())
+        if refs:
+            missing[str(path.relative_to(ROOT))] = refs
+    assert not missing, f"Found references to missing scripts: {missing}"
