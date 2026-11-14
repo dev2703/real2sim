@@ -90,6 +90,7 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
               "static_collision_map_used_by_native_guards": True,
               "lighting_conditions_changed": False,
               "recovery_rule": "Initial RGB target/live FK approach stagnation for2s, or bounded5s HF attempt; recovery reacquires the ball and may remember a previously observed static bowl",
+              "panda_source_retarget": "Five source arm joints move the measured Panda grasp point by that command's grasp-point displacement; orientation stays top-down and the seventh joint is the measured IK seed. Source joints are not copied onto the seven-DoF arm.",
               "trials": []}
     watched = [Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
                Path(transfer.retarget.__file__), Path("physical_measurements.md"),
@@ -150,6 +151,7 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                 continue
             monitor = ApproachMonitor(env.control_hz)
             queue, trigger, abort = [], None, None
+            anchor_pose, anchor_q = None, None
             hf_ticks = recovery_ticks = calls = 0
             if video:
                 writer = CaptionedVideo(directory / "rollout.mp4", env.control_hz,
@@ -168,6 +170,7 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                        "reason": reason, "rgb_tool_ball_distance_m": distance}
                             recovery.reset()
                             queue.clear()
+                            anchor_pose = anchor_q = None
                         raw_action = None
                         if trigger is not None:
                             result = recovery.step(obs, env)
@@ -180,6 +183,9 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                 state = env.real_state() if robot == "so101" else source.source_state(env)[0]
                                 if robot == "panda":
                                     state[5] = float(np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.)
+                                    # Absolute chunk targets stay tied to the observation that produced them.
+                                    anchor_pose = env.ee_pose().copy()
+                                    anchor_q = source.q.copy()
                                 images = {key: env.render(env.camera_bindings[key]) for key in policy.camera_keys}
                                 queue = list(policy.predict_action_chunk(state, images)[:policy.config.n_action_steps])
                                 calls += 1
@@ -203,7 +209,11 @@ def run(robot, out, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                 command = bounded if accepted else current
                             else:
                                 bounded = decision.bounded
-                                desired = transfer.retarget.target_from_source(source, bounded)
+                                if anchor_pose is None or anchor_q is None:
+                                    raise RuntimeError(
+                                        "Panda source retarget is missing this chunk's measured pose")
+                                desired = transfer.retarget.panda_target_from_source_command(
+                                    source, bounded, anchor_pose, anchor_q)
                                 observed = env.ee_pose()
                                 delta = desired[:3, 3] - observed[:3, 3]
                                 length = np.linalg.norm(delta)
