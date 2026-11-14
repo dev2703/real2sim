@@ -15,6 +15,20 @@ import numpy as np
 from real2sim.geometry.so3 import is_rotation
 
 
+def approach_distance(env, ball, grasp_offset):
+    if ball is None:
+        return None
+    target = np.asarray(ball, float)
+    pose = np.asarray(env.ee_pose(), float)
+    if target.shape != (3,) or not np.isfinite(target).all():
+        raise ValueError("Frozen-prefix RGB ball reference must be finite with three coordinates")
+    if (pose.shape != (4, 4) or not np.isfinite(pose).all()
+            or not np.allclose(pose[3], [0., 0., 0., 1.]) or not is_rotation(pose[:3, :3])):
+        raise ValueError("Frozen-prefix measured TCP requires a finite proper pose")
+    grasp = pose[:3, 3] + pose[:3, :3] @ grasp_offset
+    return float(np.linalg.norm(grasp - target))
+
+
 class FrozenPrefixRecoveryController:
     """Run frozen ACT until an injected observable monitor requests recovery.
 
@@ -72,15 +86,7 @@ class FrozenPrefixRecoveryController:
             refresh_ticks = getattr(self.references, "refresh_ticks", None)
             if refresh_ticks is not None and self.tick - seen_tick >= int(refresh_ticks):
                 return None
-        target = np.asarray(ball, float)
-        pose = np.asarray(env.ee_pose(), float)
-        if target.shape != (3,) or not np.isfinite(target).all():
-            raise ValueError("Frozen-prefix RGB ball reference must be finite with three coordinates")
-        if (pose.shape != (4, 4) or not np.isfinite(pose).all()
-                or not np.allclose(pose[3], [0., 0., 0., 1.]) or not is_rotation(pose[:3, :3])):
-            raise ValueError("Frozen-prefix measured TCP requires a finite proper pose")
-        grasp = pose[:3, 3] + pose[:3, :3] @ self.grasp_offset
-        return float(np.linalg.norm(grasp - target))
+        return approach_distance(env, ball, self.grasp_offset)
 
     def step(self, obs, env):
         if env is not self.env:

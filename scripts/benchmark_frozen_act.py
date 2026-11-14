@@ -58,7 +58,8 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
     paths |= {Path("src/real2sim/policy") / name for name in (
         "hf_recovery.py", "visual_waypoint.py", "visual_targets.py", "common_recovery.py",
         "recovery_mlp.py", "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py",
-        "source_recovery_frame.py", "progress_geometry.py", "frozen_prefix_recovery.py")}
+        "source_recovery_frame.py", "progress_geometry.py", "frozen_prefix_recovery.py",
+        "retention_guard.py")}
     return raw_act.runtime_hashes(snapshot, source_scene, paths)
 
 

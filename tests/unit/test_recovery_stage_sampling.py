@@ -25,3 +25,15 @@ def test_phase_sampling_rejects_misaligned_or_noninteger_labels():
         robot_episode_weights(np.zeros(2), np.ones(2), np.array([1]))
     with pytest.raises(ValueError, match="matching integer"):
         robot_episode_weights(np.zeros(2), np.ones(2), np.array([1., 2.]))
+
+
+def test_stall_collection_rejects_fixed_prefix_and_missing_tracked_rgb(tmp_path):
+    from scripts.run_recovery_dagger import collect
+
+    # These validations run before loading a checkpoint or constructing physics.
+    with pytest.raises(ValueError, match="not both"):
+        collect("so101", tmp_path / "both", [10220], [11220],
+                act_prefix_steps=50, act_prefix_until_stall=True)
+    with pytest.raises(ValueError, match="tracked RGB"):
+        collect("panda", tmp_path / "untracked", [10220], [11220],
+                act_prefix_until_stall=True, reference_mode="initial")

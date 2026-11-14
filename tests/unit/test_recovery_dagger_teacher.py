@@ -426,3 +426,61 @@ def test_rgb_handover_rejects_future_or_unobserved_reference_times():
         last_seen={"ball": 51, "bowl": 10}, visible={"ball": True, "bowl": False})
     with pytest.raises(ValueError, match="previously observed"):
         controller.inherit_rgb_references(prefix, 50)
+
+
+@pytest.mark.parametrize("phase,rejected,valid", [
+    ("TRANSPORT", False, True), ("TRANSPORT", True, False),
+    ("FAILED", False, False), ("DONE", False, False), ("LIFT", True, False),
+])
+def test_rejected_or_terminal_teacher_commands_are_not_supervision(phase, rejected, valid):
+    result = SimpleNamespace(ik_rejected=rejected, detail={"phase": phase})
+    assert dagger_module.valid_teacher_label(result) is valid
+
+
+def test_retention_controller_latches_jaw_invalidates_act_and_records_assistance(monkeypatch):
+    class References:
+        def __init__(self, _env):
+            self.ball, self.bowl = np.array([0., 0., .02]), np.array([.3, .1, .03])
+            self.log = [{"tick": 0}]
+
+        def update(self, tick, *, force=False):
+            pass
+
+        def observation_metadata(self, tick):
+            return {"visibility": (True, True), "last_seen_ticks": (tick, tick)}
+
+    commands = []
+
+    class Executor:
+        def __init__(self, _episode, **kwargs):
+            pass
+
+        def step(self, action):
+            commands.append(action.copy())
+            return SimpleNamespace(ik_rejected=False, detail={
+                "achieved_common_action": np.r_[np.zeros(6), action[6]].tolist()})
+
+    Executor.hf_to_common = lambda self, raw: np.zeros(7)
+    proposed = iter([0., 1.])
+    head = SimpleNamespace(metadata={"use_act": False,
+        "observation_names": ["fresh_rgb_ball_relative_x"]}, head_sha256="head",
+        predict=lambda *_: np.r_[.01, 0., .002, np.zeros(3), next(proposed)])
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4),
+        gripper_semantic=lambda: .7)
+    episode = SimpleNamespace(env=env, robot="panda", source=None)
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
+    monkeypatch.setattr(dagger_module, "RGBReferenceTracker", References)
+    controller = dagger_module.LearnedRecoveryController(episode, head, retention_guard=True)
+    first = controller.step({}, env).detail
+    invalidations = []
+    controller.act = SimpleNamespace(next=lambda: (np.zeros(6), np.zeros(256)),
+        invalidate=invalidations.append)
+    second = controller.step({}, env).detail
+    assert first["retention_guard"]["execution_stage"] == "CLOSE"
+    assert second["retention_guard"]["execution_stage"] == "LIFT"
+    assert second["retention_guard_enabled"]
+    assert second["predicted_common_action"][6] == 1.
+    assert commands[-1][6] == 0.
+    assert not commands[-1][[0, 1, 3, 4, 5]].any()
+    assert invalidations == ["retention_stage_transition"]
+    assert controller.grasp_anchor is not None
