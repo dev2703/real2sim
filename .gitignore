@@ -16,6 +16,8 @@ wheels/
 *.md*
 *!README.md*
 !docs/ACT_WEIGHT_SPACE_20261111.md
+!docs/DAGGER_STAGES_20261115.md
+!docs/RETENTION_SEQUENCING_20261115.md
 
 # Large artifacts stay out of git
 .cache/
