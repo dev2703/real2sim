@@ -257,6 +257,40 @@ def target_from_source(source, q):
     return target
 
 
+def panda_target_from_source_command(source, commanded, measured_pose, reference):
+    """Map one five-joint source command onto a seven-joint Panda task pose.
+
+    The source arm does not specify Panda joint angles or a shared orientation.
+    Its command contributes only the grasp-point displacement from the source
+    pose that represents this measurement. Applying that displacement to the
+    measured grasp point keeps a tolerated projection residual from becoming
+    motion. The target keeps the declared top-down orientation, and the extra
+    joint stays with the measured IK seed. The source gripper is not an arm joint.
+    """
+    commanded = np.asarray(commanded, float)
+    reference = np.asarray(reference, float)
+    measured_pose = np.asarray(measured_pose, float)
+    offset = np.asarray(source.panda_offset, float)
+    if commanded.shape != (6,) or reference.shape != (6,):
+        raise ValueError("source command and reference must be five arm joints plus a gripper")
+    if (not np.isfinite(commanded).all() or not np.isfinite(reference).all()
+            or offset.shape != (3,) or not np.isfinite(offset).all()):
+        raise ValueError("source command, reference and Panda tool offset must be finite")
+    if (measured_pose.shape != (4, 4) or not np.isfinite(measured_pose).all()
+            or not np.allclose(measured_pose[3], [0., 0., 0., 1.])
+            or not is_rotation(measured_pose[:3, :3])):
+        raise ValueError("measured Panda pose must be a finite proper transform")
+    displacement = np.asarray(source.ball_point(commanded), float) - np.asarray(
+        source.ball_point(reference), float)
+    if displacement.shape != (3,) or not np.isfinite(displacement).all():
+        raise ValueError("source grasp-point displacement must be a finite 3-vector")
+    native_point = measured_pose[:3, 3] + measured_pose[:3, :3] @ offset
+    target = np.eye(4)
+    target[:3, :3] = POINTING_DOWN
+    target[:3, 3] = native_point + displacement - POINTING_DOWN @ offset
+    return target
+
+
 def panda_opening_from_percent(percent, maximum):
     """Map the source teacher's 0=closed/90=open commands to Panda endpoints.
 
