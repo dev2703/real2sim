@@ -10,6 +10,72 @@ def sample(monitor, tick, *, z=0., measured=.7, command=0., **kwargs):
     return monitor.update(tick, [0., 0., z], measured, command, **kwargs)
 
 
+def test_visual_hold_requires_repeated_rgb_matches_and_expires_on_occlusion():
+    monitor = ObservableGraspMonitor(25.)
+    sample(monitor, 0, command=1., fresh_sphere=[0, 0, 0])
+    sample(monitor, 1, fresh_sphere=[0, 0, 0], predicted_ball=[0, 0, 0])
+    kwargs = dict(z=.03, fresh_sphere=[0, 0, .03], predicted_ball=[0, 0, .03])
+    feedback = sample(monitor, 2, **kwargs)
+    assert feedback["visual_hold_supported"] and not feedback["held_verified"]
+    for tick in range(3, 14):
+        feedback = sample(monitor, tick, z=.03)
+    assert not feedback["visual_hold_supported"]
+    assert not feedback["loss_suspected"]
+
+
+def test_3d_rgb_detects_closed_jaw_loss_and_opening_resets_visual_support():
+    monitor = ObservableGraspMonitor(25.)
+    sample(monitor, 0, fresh_sphere=[0, 0, 0], predicted_ball=[0, 0, 0])
+    for tick in (1, 2):
+        feedback = sample(monitor, tick, z=.03, fresh_sphere=[0, 0, .03],
+                          predicted_ball=[0, 0, .03])
+    assert feedback["visual_hold_supported"]
+    for tick in (3, 4):
+        feedback = sample(monitor, tick, z=.03, fresh_sphere=[.1, 0, .03],
+                          predicted_ball=[0, 0, .03])
+    assert feedback["loss_reason"] == "fresh_3d_rgb_ball_separated_from_predicted_grasp"
+    assert not feedback["visual_hold_supported"]
+    feedback = sample(monitor, 5, command=1., fresh_sphere=[0, 0, .03])
+    assert not feedback["loss_suspected"] and not feedback["visual_hold_supported"]
+    assert feedback["fresh_ball_3d"] == [0., 0., .03]
+
+
+def test_stationary_table_ball_cannot_support_hold_even_with_small_anchor_error():
+    monitor = ObservableGraspMonitor(25.)
+    sample(monitor, 0, fresh_sphere=[0, 0, 0], predicted_ball=[0, 0, 0])
+    for tick in range(1, 10):
+        feedback = sample(monitor, tick, z=.021, fresh_sphere=[0, 0, 0],
+                          predicted_ball=[0, 0, .021])
+        assert not feedback["visual_hold_supported"]
+    assert feedback["grasp_candidate"]  # Jaw + TCP evidence alone was misleading.
+
+
+def test_visual_lift_event_survives_lowering_while_current_rgb_still_matches():
+    monitor = ObservableGraspMonitor(25.)
+    sample(monitor, 0, fresh_sphere=[0, 0, 0], predicted_ball=[0, 0, 0])
+    feedback = sample(monitor, 1, z=.03, fresh_sphere=[0, 0, .03], predicted_ball=[0, 0, .03])
+    assert feedback["visual_hold_supported"]
+    feedback = sample(monitor, 2, z=.005, fresh_sphere=[0, 0, .005], predicted_ball=[0, 0, .005])
+    assert feedback["visual_lift_confirmed"] and feedback["visual_hold_supported"]
+    feedback = sample(monitor, 3, command=1.)
+    assert not feedback["visual_lift_confirmed"] and not feedback["visual_hold_supported"]
+
+
+def test_expired_visual_motion_cannot_establish_lift_from_a_later_empty_tcp_motion():
+    monitor = ObservableGraspMonitor(25.)
+    sample(monitor, 0, fresh_sphere=[0, 0, 0], predicted_ball=[0, 0, 0])
+    for tick in (1, 2):
+        sample(monitor, tick, fresh_sphere=[0, 0, .021], predicted_ball=[0, 0, 0])
+    for tick in range(3, 14):
+        sample(monitor, tick)
+    feedback = sample(monitor, 14, z=.021)
+    assert not feedback["visual_lift_confirmed"]
+    for tick in (15, 16):
+        feedback = sample(monitor, tick, z=.021, fresh_sphere=[0, 0, 0],
+                          predicted_ball=[0, 0, .021])
+        assert not feedback["visual_hold_supported"]
+
+
 def test_closed_command_and_tcp_lift_do_not_establish_a_grasp_with_empty_jaws():
     monitor = ObservableGraspMonitor(25.)
     for tick in range(30):
@@ -228,3 +294,41 @@ def test_monitor_has_no_environment_and_guard_rejects_unknown_phase():
         guard.filter(np.zeros(8), "LIFT", {})
     guard.reset()
     np.testing.assert_array_equal(guard.velocity, np.zeros(3))
+
+
+def test_one_observed_seating_update_recovers_support_and_cannot_follow_later_slip():
+    monitor = ObservableGraspMonitor(25.)
+    sample(monitor, 0, command=1., fresh_sphere=[0., 0., 0.])
+    for tick in range(1, 6):
+        feedback = sample(monitor, tick, z=.03 if tick == 5 else 0.,
+            fresh_sphere=[0., 0., .025 if tick == 5 else 0.], predicted_ball=[0., 0., .06])
+    # The close-edge estimate is 35mm away; do not loosen the 25mm match gate.
+    assert feedback["grasp_candidate"] and not feedback["visual_hold_supported"]
+    pose = np.eye(4)
+    pose[2, 3] = .03
+    anchor = monitor.seated_rgb_anchor(pose, feedback)
+    np.testing.assert_allclose(anchor, [0., 0., -.005])
+    for tick in (6, 7):
+        feedback = sample(monitor, tick, z=.03, fresh_sphere=[0., 0., .025],
+                          predicted_ball=pose[:3, 3] + anchor)
+    assert feedback["visual_hold_supported"] and not feedback["held_verified"]
+    for tick in (8, 9):
+        feedback = sample(monitor, tick, z=.03, fresh_sphere=[.1, 0., .025],
+                          predicted_ball=pose[:3, 3] + anchor)
+        assert monitor.seated_rgb_anchor(pose, feedback) is None
+    assert feedback["loss_suspected"] and not feedback["visual_hold_supported"]
+    sample(monitor, 10, command=1.)
+    assert not monitor.visual_anchor_seated
+
+
+@pytest.mark.parametrize("change", [
+    {"fresh_ball_3d": None}, {"visual_ball_lift_m": 0.}, {"visual_ball_lift_m": None},
+    {"grasp_candidate": False}, {"loss_suspected": True}, {"closed_command": False},
+    {"fresh_ball_3d": [.2, 0., .025]},
+])
+def test_seating_estimate_requires_current_independent_lift_and_nearby_jaw_candidate(change):
+    monitor = ObservableGraspMonitor(25.)
+    feedback = {"fresh_ball_3d": [0., 0., .025], "visual_ball_lift_m": .025,
+                "grasp_candidate": True, "closed_command": True, **change}
+    assert monitor.seated_rgb_anchor(np.eye(4), feedback) is None
+    assert not monitor.visual_anchor_seated

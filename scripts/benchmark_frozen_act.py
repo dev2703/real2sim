@@ -72,7 +72,9 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
     paths |= {Path("src/real2sim/policy") / name for name in (
         "native_lerobot_act.py", "hf_recovery.py", "visual_waypoint.py", "visual_targets.py",
         "follower_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
-        "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py", "retention_guard.py")}
+        "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py", "retention_guard.py",
+        "sphere_arcs.py")}
+    paths.add(Path("src/real2sim/perception/ball_hsv.py"))
     paths.add(Path("src/real2sim/policy/source_recovery_frame.py"))
     paths.add(Path("src/real2sim/policy/progress_geometry.py"))
     paths.add(Path("src/real2sim/policy/frozen_prefix_recovery.py"))

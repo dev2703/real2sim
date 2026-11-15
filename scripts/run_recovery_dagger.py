@@ -243,7 +243,8 @@ def save_pack(path, rows, *, feature_dim=256):
 
 class LearnedRecoveryController:
     def __init__(self, episode, head, policy=None, *, phase_guard=False, retention_guard=False,
-                 retention_mode="full", recovery_frame="native"):
+                 retention_mode="full", recovery_frame="native", visual_feedback=False,
+                 visual_ball_fit="complete"):
         self.episode, self.env, self.robot, self.head = episode, episode.env, episode.robot, head
         self.use_act = bool(head.metadata["use_act"])
         self.feature_dim = int(head.metadata.get("act_feature_dim", 256))
@@ -270,9 +271,15 @@ class LearnedRecoveryController:
             raise ValueError("Retention guard requires tracked RGB and cannot combine with phase guard")
         if retention_guard and recovery_frame != "native":
             raise ValueError("Retention guard currently requires the native recovery frame")
-        if retention_mode not in ("full", "jaw") or (retention_mode != "full" and not retention_guard):
-            raise ValueError("Retention mode requires enabled retention assistance and a full/jaw mode")
+        if retention_mode not in ("full", "jaw", "visual") or (retention_mode != "full" and not retention_guard):
+            raise ValueError("Retention mode requires enabled retention assistance and a full/jaw/visual mode")
         self.retention_guard = RetentionGuard(self.env.control_hz, mode=retention_mode) if retention_guard else None
+        self.visual_feedback = bool(visual_feedback or (retention_guard and retention_mode == "visual"))
+        if visual_ball_fit not in ("complete", "arcs") or (visual_ball_fit != "complete" and not self.visual_feedback):
+            raise ValueError("Visual ball fit requires visual feedback and a complete/arcs mode")
+        self.visual_ball_fit = visual_ball_fit
+        if self.visual_feedback and head_reference_mode(head) != "tracked":
+            raise ValueError("Visual feedback requires tracked RGB references")
         self.grasp_monitor = ObservableGraspMonitor(self.env.control_hz)
         self.phase_guard = RecoveryPhaseGuard(self.env.control_hz) if phase_guard else None
         self.history_mode = head_history_mode(head)
@@ -292,6 +299,9 @@ class LearnedRecoveryController:
         self.reference_seed_metadata = {}
         self.rgb_reference_handover = None
         self.references = RGBReferenceTracker(self.env) if self.reference_mode == "tracked" else None
+        if self.references and self.visual_feedback:
+            self.references.track_ball_3d = True
+            self.references.ball_3d_fit = self.visual_ball_fit
         self.grasp_anchor = None
         self.previous_issued_gripper = 1.
         self.grasp_monitor.reset()
@@ -352,19 +362,24 @@ class LearnedRecoveryController:
         if self.references:
             self.references.update(self.tick, force=self.ball is None or bool(
                 self.retention_guard and self.retention_guard.needs_rgb))
-            metadata = self.references.observation_metadata(self.tick)
             self.ball, self.bowl = self.references.ball, self.references.bowl
             self.rgb_acquisition = self.references.log[0]
         elif self.ball is None:
             self.ball, self.bowl, self.rgb_acquisition = initial_references(env, self.robot)
-        metadata = (self.references.observation_metadata(self.tick) if self.references
-                    else self.reference_seed_metadata)
+        missing_target = self.ball is None
+        if missing_target and self.retention_guard and self.bowl is not None:
+            metadata = {"visibility": (False, self.references.visible["bowl"]),
+                        "last_seen_ticks": (None, self.references.last_seen["bowl"])}
+        else:
+            metadata = (self.references.observation_metadata(self.tick) if self.references
+                        else self.reference_seed_metadata)
         observation_env = self.source_frame.update() if self.source_frame else env
-        observed = self.encoder.encode(observation_env, self.ball, self.bowl, self.tick, **metadata)
-        if self.observation_geometry == "grasp":
+        observed = (None if missing_target else
+                    self.encoder.encode(observation_env, self.ball, self.bowl, self.tick, **metadata))
+        if observed is not None and self.observation_geometry == "grasp":
             observed = transform_observation_geometry(observed,
                 observation_names(self.reference_mode, self.history_mode, self.gripper_clock), geometry="grasp")
-        reference_ages = [(self.tick - seen) / env.control_hz
+        reference_ages = [None if seen is None else (self.tick - seen) / env.control_hz
                           for seen in metadata.get("last_seen_ticks", (0, 0))]
         pose = env.ee_pose()
         predicted_ball = (None if self.grasp_anchor is None
@@ -374,8 +389,14 @@ class LearnedRecoveryController:
         feedback = self.grasp_monitor.update(self.tick, pose[:3, 3],
             semantic_gripper(env, self.robot),
             self.previous_issued_gripper,
-            fresh_ball=fresh_ball, predicted_ball=predicted_ball)
-        if self.act:
+            fresh_ball=fresh_ball, predicted_ball=predicted_ball,
+            fresh_sphere=(getattr(self.references, "observed_ball", None)
+                if getattr(self.references, "observed_ball_tick", None) == self.tick else None))
+        seated_anchor = self.grasp_monitor.seated_rgb_anchor(pose, feedback) if self.visual_feedback else None
+        if seated_anchor is not None:
+            self.grasp_anchor = seated_anchor
+        feedback["carry_anchor_rebased_after_observed_lift"] = seated_anchor is not None
+        if self.act and not missing_target:
             raw, features = self.act.next()
             try:
                 base = (self.source_frame.hf_to_common(raw) if self.source_frame
@@ -387,11 +408,12 @@ class LearnedRecoveryController:
         else:
             base, features, invalid_prior = np.zeros(7), np.zeros(self.feature_dim, np.float32), None
         prediction_started = time.perf_counter()
-        action = self.head.predict(observed, base, features)
+        action = (np.r_[np.zeros(6), self.previous_issued_gripper] if missing_target
+                  else self.head.predict(observed, base, features))
         head_inference_ms = (time.perf_counter() - prediction_started) * 1000
         predicted_action = action.copy()
         guard_detail = None
-        if self.phase_guard:
+        if self.phase_guard and not missing_target:
             from real2sim.policy.phase_recovery_mlp import PHASE_NAMES
 
             action, guard_detail = self.phase_guard.filter(
@@ -400,9 +422,17 @@ class LearnedRecoveryController:
         if self.retention_guard:
             # Guard geometry and motion limits always use native task units.
             action = self.source_frame.map_action(action) if self.source_frame else action
+            # A current 3D observation can corroborate the existing pickup
+            # reference without changing the trained reference or its age.
+            sphere = feedback.get("fresh_ball_3d")
+            corroborated = (self.retention_guard.mode == "visual" and self.ball is not None
+                            and sphere is not None and np.linalg.norm(np.asarray(sphere) - self.ball) <= .015)
+            guard_ball_age = 0. if corroborated else reference_ages[0]
             action, retention_detail = self.retention_guard.filter(action, feedback,
                 position=pose[:3, 3], predicted_ball=predicted_ball, bowl=self.bowl,
-                ball_age_s=reference_ages[0], bowl_age_s=reference_ages[1])
+                ball_age_s=guard_ball_age, bowl_age_s=reference_ages[1])
+            retention_detail["rgb_3d_corroborated_pickup_reference"] = bool(corroborated)
+            retention_detail["pickup_reference_age_s"] = guard_ball_age
         native_action = (self.source_frame.map_action(action)
                          if self.source_frame and not self.retention_guard else action)
         result = self.executor.step(native_action)
@@ -415,6 +445,12 @@ class LearnedRecoveryController:
                 if retention_detail["execution_stage"] == "REACQUIRE":
                     self.grasp_anchor = None
                     self.grasp_monitor.reset()
+                    self.encoder.reset()
+                    if self.retention_guard.mode == "visual":
+                        self.references.invalidate_ball()
+                        self.ball = None
+                elif retention_detail["execution_stage"] == "ACQUIRE":
+                    self.encoder.reset()
         native = result.detail.get("requested_native")
         issued = (issued_gripper_opening(env, self.robot, native) if native is not None
                   else float(action[6]))
@@ -424,9 +460,13 @@ class LearnedRecoveryController:
         if issued >= .5:
             self.grasp_anchor = None
         elif self.previous_issued_gripper >= .5:
-            recent = bool(reference_ages and reference_ages[0] <= .2)
-            if recent and np.linalg.norm(self.ball - pose[:3, 3]) <= .06:
-                self.grasp_anchor = pose[:3, :3].T @ (self.ball - pose[:3, 3])
+            recent = bool(reference_ages and reference_ages[0] is not None and reference_ages[0] <= .2)
+            close_ball = (getattr(self.references, "observed_ball", None)
+                          if getattr(self.references, "observed_ball_tick", None) == self.tick else None)
+            if close_ball is None:
+                close_ball = self.ball if recent else None
+            if close_ball is not None and np.linalg.norm(close_ball - pose[:3, 3]) <= .06:
+                self.grasp_anchor = pose[:3, :3].T @ (close_ball - pose[:3, 3])
         self.previous_issued_gripper = issued
         if self.history_mode == "achieved":
             history_action = (self.source_frame.feedback_action(issued) if self.source_frame
@@ -445,13 +485,16 @@ class LearnedRecoveryController:
             history_mode=self.history_mode, history_feedback_action=history_action.tolist(),
             observation_geometry=self.observation_geometry,
             gripper_clock=self.gripper_clock,
-            rgb_ball_reference=self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist(),
+            rgb_ball_reference=None if self.ball is None else self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist(),
             rgb_reference_visibility=list(metadata.get("visibility", (True, True))),
             rgb_reference_age_s=reference_ages,
             rgb_reference_handover=self.rgb_reference_handover,
-            recovery_inputs={"observations": observed.tolist(), "base_actions": base.tolist(),
+            head_skipped_missing_rgb_target=missing_target,
+            recovery_inputs={"observations": None if observed is None else observed.tolist(), "base_actions": base.tolist(),
                              "features": features.tolist()},
             observable_grasp_feedback=feedback, phase_guard=guard_detail,
+            visual_feedback_enabled=self.visual_feedback,
+            visual_ball_fit=self.visual_ball_fit,
             phase_guard_enabled=self.phase_guard is not None,
             retention_guard=retention_detail, retention_guard_enabled=self.retention_guard is not None,
             predicted_common_action=predicted_action.tolist(),
@@ -774,7 +817,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
 
 def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
              source_scene=MEASURED_SCENE, video=False, phase_guard=False, retention_guard=False, recovery_frame="native",
-             act_prefix=False, retention_mode="full"):
+             act_prefix=False, retention_mode="full", visual_feedback=False, visual_ball_fit="complete"):
     seeds = validated_trial_seeds(seeds, name="Evaluation seeds")
     if out.exists():
         raise FileExistsError(out)
@@ -788,6 +831,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     controller = LearnedRecoveryController(shared, head, policy, phase_guard=phase_guard,
                                            retention_guard=retention_guard,
                                            retention_mode=retention_mode,
+                                           visual_feedback=visual_feedback,
+                                           visual_ball_fit=visual_ball_fit,
                                            recovery_frame=recovery_frame)
     if act_prefix:
         controller = frozen_prefix_controller(shared, controller, policy)
@@ -806,6 +851,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
         "panda_actions_require_source_mapping": robot == "panda" and (
             bool(head.metadata["use_act"]) or controller.source_frame is not None),
         "observable_grasp_feedback_changes_head_inputs": False,
+        "visual_feedback_enabled": controller.visual_feedback,
+        "visual_ball_fit": controller.visual_ball_fit,
         "retention_guard_enabled": retention_guard,
         "retention_guard_is_additional_execution_assistance": retention_guard,
         "retention_guard_config": controller.retention_guard.config if controller.retention_guard else None,
@@ -943,6 +990,8 @@ def controller_factory(*, env, source, robot, snapshot, condition, options):
         phase_guard=bool(options.get("phase_guard", False)),
         retention_guard=bool(options.get("retention_guard", False)),
         retention_mode=options.get("retention_mode", "full"),
+        visual_feedback=bool(options.get("visual_feedback", False)),
+        visual_ball_fit=options.get("visual_ball_fit", "complete"),
         recovery_frame=options.get("recovery_frame", "native"))
     return frozen_prefix_controller(shared, recovery, policy) if condition == "hf_learned" else recovery
 
@@ -975,8 +1024,12 @@ def main():
                         help="Evaluate disclosed stateful jaw/phase/motion assistance")
     parser.add_argument("--retention-guard", action="store_true",
                         help="Evaluate observable retain/deliver/reacquire assistance with tracked RGB")
-    parser.add_argument("--retention-mode", choices=("full", "jaw"), default="full",
-                        help="jaw keeps learned pickup motion; full also gates lateral lift motion and limits speed")
+    parser.add_argument("--retention-mode", choices=("full", "jaw", "visual"), default="full",
+                        help="visual adds 3D RGB carry/release validation; jaw preserves pickup motion; full also limits motion")
+    parser.add_argument("--visual-feedback", action="store_true",
+                        help="Observe 3D RGB ball feedback without enabling execution assistance")
+    parser.add_argument("--visual-ball-fit", choices=("complete", "arcs"), default="complete",
+                        help="Opt-in robust tangent arcs for partial RGB silhouettes; requires visual feedback")
     parser.add_argument("--configured-gripper", action="store_true",
                         help="Collection: use the scene jaw reset, matching configured-gripper benchmarks")
     parser.add_argument("--act-prefix", action="store_true",
@@ -991,7 +1044,8 @@ def main():
             parser.error("--act-prefix is an evaluation option")
         if args.recovery_frame != "native":
             parser.error("--recovery-frame is an evaluation option")
-        if args.phase_guard or args.retention_guard or args.retention_mode != "full":
+        if (args.phase_guard or args.retention_guard or args.retention_mode != "full"
+                or args.visual_feedback or args.visual_ball_fit != "complete"):
             parser.error("--phase-guard and --retention-guard are evaluation assistance options")
         return collect(args.robot, args.out, args.train_seeds, args.val_seeds,
             snapshot=args.snapshot, source_scene=args.source_scene, learner=args.head,
@@ -1011,7 +1065,8 @@ def main():
         snapshot=args.snapshot, source_scene=args.source_scene, video=args.video,
         phase_guard=args.phase_guard, retention_guard=args.retention_guard,
         recovery_frame=args.recovery_frame, act_prefix=args.act_prefix,
-        retention_mode=args.retention_mode)
+        retention_mode=args.retention_mode, visual_feedback=args.visual_feedback,
+        visual_ball_fit=args.visual_ball_fit)
 
 
 if __name__ == "__main__":

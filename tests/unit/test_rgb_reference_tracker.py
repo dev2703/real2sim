@@ -51,6 +51,65 @@ def test_missing_measurements_never_create_configured_goal_fallback(monkeypatch)
         tracker.observation_metadata(0)
 
 
+def test_3d_carry_observation_does_not_overwrite_table_goal_and_loss_invalidates_it(monkeypatch):
+    tracker = setup(monkeypatch, [{"ball": target(.1, .2), "bowl": target(.3, .1)}] * 3)
+    tracker.update(0)
+    tracker.track_ball_3d = True
+    carried = VisualTarget(np.array([.2, .1, .2]), np.zeros(2), 100., .0001, .9)
+    monkeypatch.setattr(tracker_module, "locate_ball_3d", lambda *_a, **_kw: carried)
+    tracker.update(1, force=True)
+    np.testing.assert_allclose(tracker.ball, [.1, .2, .03])
+    np.testing.assert_allclose(tracker.observed_ball, [.2, .1, .2])
+    assert tracker.last_seen["ball"] == 1
+    tracker.invalidate_ball()
+    assert tracker.ball is None and tracker.last_seen["ball"] is None
+    tracker.update(2, force=True)
+    assert tracker.ball is None  # A carried sphere cannot become a pickup goal.
+
+
+def test_3d_instrumentation_preserves_normal_table_reference_geometry(monkeypatch):
+    tracker = setup(monkeypatch, [{"ball": target(.1, .2), "bowl": target(.3, .1)}])
+    tracker.track_ball_3d = True
+    monkeypatch.setattr(tracker_module, "locate_ball_3d", lambda *_a, **_kw: None)
+    tracker.update(0)
+    np.testing.assert_array_equal(tracker.ball, [.1, .2, .03])
+
+
+def test_arc_measurements_are_fresh_each_tick_and_leave_table_cadence_intact(monkeypatch):
+    tracker = setup(monkeypatch, [{"ball": target(.1, .2), "bowl": target(.3, .1)}] * 2)
+    tracker.track_ball_3d, tracker.ball_3d_fit = True, "arcs"
+    results = iter([target(.2, .1), None, target(.3, .1)])
+    modes = []
+
+    def detect(*_args, **kwargs):
+        modes.append(kwargs["fit_mode"])
+        return next(results)
+
+    monkeypatch.setattr(tracker_module, "locate_ball_3d", detect)
+    tracker.update(0)
+    assert tracker.observed_ball_tick == 0
+    record = tracker.update(1)
+    assert tracker.observed_ball is None and tracker.observed_ball_tick is None
+    assert tracker.last_seen == {"ball": 0, "bowl": 0}
+    assert record["ball_3d_fit"] == "arcs" and record["targets"] == {}
+    tracker.update(5)
+    assert tracker.observed_ball_tick == 5
+    assert modes == ["arcs"] * 3
+    np.testing.assert_array_equal(tracker.ball, [.1, .2, .03])
+
+
+def test_post_loss_reacquisition_can_use_supported_arcs_but_passive_references_cannot(monkeypatch):
+    tracker = setup(monkeypatch, [{"ball": None, "bowl": target(.3, .1)}] * 2)
+    tracker.track_ball_3d, tracker.ball_3d_fit = True, "arcs"
+    monkeypatch.setattr(tracker_module, "locate_ball_3d", lambda *_a, **_kw: target(.2, .1))
+    tracker.update(0)
+    assert tracker.ball is None  # Passive sensing preserves the trained reference path.
+    tracker.invalidate_ball()
+    tracker.update(1, force=True)
+    np.testing.assert_array_equal(tracker.ball, [.2, .1, .03])
+    assert tracker.last_seen["ball"] == 1 and not tracker.require_supported_ball
+
+
 def test_expert_replans_displaced_free_ball_but_leaves_observed_bowl_contents(monkeypatch):
     tracker = setup(monkeypatch, [{"ball": target(.1, .2), "bowl": target(.3, .1)}])
     tracker.update(0)
