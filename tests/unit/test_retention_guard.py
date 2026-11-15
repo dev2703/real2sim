@@ -125,3 +125,30 @@ def test_acquisition_blocks_stale_targets_and_retry_count_is_bounded():
 def test_configuration_validation(kwargs):
     with pytest.raises(ValueError):
         RetentionGuard(**kwargs)
+
+
+def test_jaw_ablation_preserves_pickup_motion_but_still_blocks_premature_release():
+    guard = RetentionGuard(25, mode="jaw")
+    step(guard)
+    action, detail = step(guard, jaw=1.)
+    np.testing.assert_array_equal(action[:6], [.01, 0., .002, 0., 0., 0.])
+    assert action[6] == 0. and detail["mode"] == "jaw"
+    assert "lift_before_lateral_transport" not in detail["intervention_reasons"]
+    step(guard, grasp_candidate=True, candidate_ever=True)
+    action, _ = step(guard, jaw=1., predicted=(0., 0., .2), candidate_ever=True)
+    assert action[6] == 0. and action[0] == .01
+
+
+def test_jaw_ablation_still_holds_on_loss_and_requires_fresh_reacquisition():
+    guard = RetentionGuard(25, mode="jaw")
+    carry(guard)
+    action, _ = step(guard, loss_suspected=True)
+    assert guard.stage == "REACQUIRE" and action[6] == 1. and not action[:6].any()
+    for _ in range(10):
+        action, _ = step(guard, ball_age=5.)
+        assert guard.stage == "REACQUIRE" and not action[:6].any()
+
+
+def test_unknown_retention_mode_is_rejected():
+    with pytest.raises(ValueError, match="mode"):
+        RetentionGuard(25, mode="unknown")

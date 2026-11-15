@@ -12,18 +12,22 @@ import numpy as np
 
 
 class RetentionGuard:
-    def __init__(self, hz, *, fresh_s=.4, close_wait_s=1.2, release_dwell_s=.2,
+    def __init__(self, hz, *, mode="full", fresh_s=.4, close_wait_s=1.2, release_dwell_s=.2,
                  retry_pause_s=.2, reacquire_wait_s=2., rejection_ticks=8,
                  max_retries=3, delivery_xy_m=.025, delivery_height_m=.05,
                  max_speed_mps=.10, max_acceleration_mps2=.5):
         values = locals().copy()
         values.pop("self")
+        values.pop("mode")
+        if mode not in ("full", "jaw"):
+            raise ValueError("Retention mode must be full or jaw")
         if not np.isfinite(list(values.values())).all() or min(values.values()) <= 0:
             raise ValueError("Retention guard requires positive finite limits")
         for name in ("rejection_ticks", "max_retries"):
             if isinstance(values[name], bool) or int(values[name]) != values[name]:
                 raise ValueError("Retention guard counts must be integers")
-        self.config = values
+        self.config = {**values, "mode": mode}
+        self.mode = mode
         self.hz = float(hz)
         self.reset()
 
@@ -120,8 +124,9 @@ class RetentionGuard:
             else:
                 if action[2] > 0:
                     self._stage("LIFT")
-                result[[0, 1, 3, 4, 5]] = 0.
-                reasons.append("lift_before_lateral_transport")
+                if self.mode == "full":
+                    result[[0, 1, 3, 4, 5]] = 0.
+                    reasons.append("lift_before_lateral_transport")
         elif self.stage in ("TRANSPORT", "LOWER"):
             aligned = (predicted is not None and bowl_age_s <= self.config["fresh_s"]
                        and np.linalg.norm(predicted[:2] - bowl[:2]) <= self.config["delivery_xy_m"])
@@ -158,7 +163,7 @@ class RetentionGuard:
                 or (before == "REACQUIRE") or (self.stage == "ACQUIRE" and not fresh))
         if hold:
             result[:6] = 0.
-        else:
+        elif self.mode == "full":
             velocity = result[:3] * self.hz
             norm = np.linalg.norm(velocity)
             velocity *= min(1., self.config["max_speed_mps"] / max(norm, 1e-12))
@@ -175,6 +180,7 @@ class RetentionGuard:
             if not np.allclose(result[:3], action[:3], atol=1e-12, rtol=0):
                 reasons.append("achieved_motion_speed_or_acceleration_limit")
         detail = {"assistance_enabled": True, "execution_stage": self.stage,
+                  "mode": self.mode,
                   "stage_changed": before != self.stage, "retry_count": self.retries,
                   "native_rejection_streak": self.rejections,
                   "delivery_dwell_ticks": self.delivery_ticks,

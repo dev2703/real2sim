@@ -14,9 +14,10 @@ from scripts.benchmark_frozen_act import SharedEpisode
 
 
 @pytest.mark.parametrize("robot", ["so101", "panda"])
+@pytest.mark.parametrize("configured_gripper", [False, True])
 @pytest.mark.parametrize("mode", ["collect", "act_recovery", "no_act_after_prefix"])
 def test_recovery_uses_checkpoint_camera_names_order_and_dimensions(
-        tmp_path, monkeypatch, robot, mode):
+        tmp_path, monkeypatch, robot, mode, configured_gripper):
     snapshot = tmp_path / "checkpoint"
     snapshot.mkdir()
     (snapshot / "model.safetensors").write_bytes(b"frozen weights")
@@ -38,6 +39,8 @@ def test_recovery_uses_checkpoint_camera_names_order_and_dimensions(
         """Stop after real CPU scene construction, before rendering/inference."""
 
     def inspect_scene(*args, **kwargs):
+        if mode == "collect":
+            assert kwargs["initial_gripper_percent"] == (None if configured_gripper else 1.2)
         shared = SharedEpisode(*args, **kwargs)
         try:
             # Check source and target scenes: Panda's virtual SO-101 must use
@@ -57,7 +60,8 @@ def test_recovery_uses_checkpoint_camera_names_order_and_dimensions(
     out = tmp_path / "recovery"
     with pytest.raises(ScenesChecked):
         if mode == "collect":
-            dagger.collect(robot, out, [10000], [11000], snapshot=snapshot)
+            dagger.collect(robot, out, [10000], [11000], snapshot=snapshot,
+                           configured_gripper=configured_gripper)
         else:
             dagger.evaluate(robot, tmp_path / "head", out, [12000], snapshot=snapshot,
                             act_prefix=mode == "no_act_after_prefix")
