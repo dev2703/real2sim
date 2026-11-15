@@ -67,3 +67,10 @@ loss reacquisition and rejection holds. It requires tracked RGB and native-frame
 recovery, and remains off by default. Both matched smoke tasks failed and Panda
 lift regressed; this is experimental assistance, not a promoted controller.
 See [the retention findings](docs/RETENTION_SEQUENCING_20261115.md).
+
+The [retention/data follow-up](docs/RECOVERY_DATA_FOLLOWUP_20261115.md) adds
+configured-jaw corrective collection, teacher-label accounting, a jaw-retention
+ablation and phase-balanced stage prediction. Historical confirmation on the
+original experiment checkout improved Panda from 1/5 to 4/5, with SO101 at 3/5.
+Those artifacts predate the publication branch's Panda retarget changes; see the
+follow-up for evidence scope and remaining transport/loss-recovery failures.
