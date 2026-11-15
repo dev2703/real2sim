@@ -34,3 +34,6 @@ annotations/*.bak
 # Retained result inputs and trial records remain tracked. Keep newly generated
 # diagnostics local; use outputs/ for new runs (see docs/PROJECT_SUMMARY.md).
 /results/**
+
+!docs/VISUAL_RETENTION_FEEDBACK_20261115.md
+!docs/CARRY_OBSERVATION_FOLLOWUP_20261115.md
