@@ -54,12 +54,13 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
     """Extend the shared evaluation hashes with matched-benchmark inputs."""
     paths = {Path(__file__), Path(__file__).resolve().with_name("evaluate_hf_recovery.py"),
              Path("physical_measurements.md"),
-             Path("src/real2sim/evaluation/video.py"), *map(Path, extra_paths)}
+             Path("src/real2sim/evaluation/video.py"),
+             Path("src/real2sim/evaluation/visual_feedback_audit.py"), *map(Path, extra_paths)}
     paths |= {Path("src/real2sim/policy") / name for name in (
         "hf_recovery.py", "visual_waypoint.py", "visual_targets.py", "common_recovery.py",
         "recovery_mlp.py", "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py",
         "source_recovery_frame.py", "progress_geometry.py", "frozen_prefix_recovery.py",
-        "retention_guard.py")}
+        "retention_guard.py", "sphere_arcs.py")}
     return raw_act.runtime_hashes(snapshot, source_scene, paths)
 
 

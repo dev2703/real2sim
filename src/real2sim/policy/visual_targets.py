@@ -92,7 +92,7 @@ def _project(point, K, pose):
     return pixel[:2] / pixel[2]
 
 
-def _contours(mask):
+def _contours(mask, *, minimum_solidity=.90):
     contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     height, width = mask.shape
     for contour in contours:
@@ -105,7 +105,7 @@ def _contours(mask):
                 or points[:, 0].max() >= width - 1 or points[:, 1].max() >= height - 1):
             continue
         hull_area = float(cv2.contourArea(cv2.convexHull(contour)))
-        if hull_area <= 0 or area / hull_area < .90:
+        if hull_area <= 0 or area / hull_area < minimum_solidity:
             continue
         yield points, area
 
@@ -141,6 +141,81 @@ def _distinct_targets(candidates, distance_m):
                    for other in selected):
             selected.append(candidate)
     return selected
+
+
+def locate_ball_3d(rgb, K, T_task_camera_opencv, *, ball_radius_m, workspace_xy=None,
+                   fit_mode="complete"):
+    """Fit a visible sphere in 3D without assuming table support or TCP proximity.
+
+    ``complete`` retains the strict full-silhouette diagnostic. Opt-in ``arcs``
+    fits well distributed tangent arcs while excluding occluding edges. Clipped,
+    ambiguous and insufficiently constrained shapes supply no measurement in
+    either mode. Neither fit is contact or held-state truth.
+    """
+    rgb = np.asarray(rgb)
+    if rgb.dtype != np.uint8 or rgb.ndim != 3 or rgb.shape[2] != 3:
+        raise ValueError("native uint8 RGB image required")
+    K, pose = _validate_camera(K, T_task_camera_opencv)
+    if not np.isfinite(ball_radius_m) or ball_radius_m <= 0:
+        raise ValueError("positive finite ball radius required")
+    if fit_mode not in ("complete", "arcs"):
+        raise ValueError("Sphere fit mode must be complete or arcs")
+    _in_workspace(np.zeros(3), workspace_xy)
+    from real2sim.perception.ball_hsv import BALL_HSV
+
+    window = BALL_HSV["metric_targets"]
+    mask = cv2.inRange(cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV), window.lower, window.upper)
+    candidates = []
+    for points, area in _contours(mask, minimum_solidity=.55 if fit_mode == "arcs" else .90):
+        if fit_mode == "arcs":
+            from real2sim.policy.sphere_arcs import fit_sphere_arcs
+
+            fit = fit_sphere_arcs(points, K, ball_radius_m)
+            if fit is None:
+                continue
+            camera_center, error, support = fit
+            center = pose[:3, :3] @ camera_center + pose[:3, 3]
+            if not _in_workspace(center, workspace_xy):
+                continue
+            pixel_error = error * min(K[0, 0], K[1, 1]) / camera_center[2]
+            confidence = float(support * np.exp(-pixel_error))
+            candidates.append(VisualTarget(center, _project(center, K, pose), area, error, confidence))
+            continue
+        # OpenCV returns centres of the outermost foreground pixels. The
+        # physical silhouette lies half a pixel further out; fitting those
+        # interior centres directly systematically underestimates depth.
+        radial = points - points.mean(axis=0)
+        boundary = points + .5 * radial / np.linalg.norm(radial, axis=1, keepdims=True)
+        rays = _rays(boundary, K, pose)
+        axis = rays.mean(axis=0)
+        axis /= np.linalg.norm(axis)
+        sine = np.median(np.linalg.norm(np.cross(rays, axis), axis=1))
+        if sine <= 0:
+            continue
+        initial = axis * ball_radius_m / sine
+
+        def residual(center, rays=rays):
+            return np.linalg.norm(np.cross(rays, center), axis=1) - ball_radius_m
+
+        fit = least_squares(residual, initial, max_nfev=40)
+        center = pose[:3, 3] + fit.x
+        error = float(np.sqrt(np.mean(fit.fun ** 2)))
+        max_error = max(.0015, .045 * ball_radius_m)
+        depth = (pose[:3, :3].T @ fit.x)[2]
+        if (not fit.success or error > max_error or np.max(np.abs(fit.fun)) > 3 * max_error
+                or depth <= ball_radius_m or not _in_workspace(center, workspace_xy)):
+            continue
+        ratio = area / (np.pi * K[0, 0] * K[1, 1] * ball_radius_m ** 2 / depth ** 2)
+        if not .75 <= ratio <= 1.35:
+            continue
+        confidence = float(np.exp(-error / max_error) * min(ratio, 1 / ratio))
+        # A shallow occluding chord can pass the broad geometric gates while
+        # biasing inferred depth. Carry feedback needs a stricter complete-
+        # silhouette fit than the supported-plane reference frontend.
+        if confidence < .65:
+            continue
+        candidates.append(VisualTarget(center, _project(center, K, pose), area, error, confidence))
+    return _unambiguous(candidates)
 
 
 def locate_objects(

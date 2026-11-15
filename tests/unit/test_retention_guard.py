@@ -152,3 +152,93 @@ def test_jaw_ablation_still_holds_on_loss_and_requires_fresh_reacquisition():
 def test_unknown_retention_mode_is_rejected():
     with pytest.raises(ValueError, match="mode"):
         RetentionGuard(25, mode="unknown")
+
+
+def test_visual_mode_holds_closed_without_recent_rgb_and_never_opens_on_occlusion():
+    guard = RetentionGuard(25, mode="visual", visual_wait_s=.12)
+    carry(guard)
+    step(guard, visual_hold_supported=True)
+    for _ in range(4):
+        action, detail = step(guard, jaw=1., candidate_ever=True)
+        assert not action.any()
+    assert guard.stage == "STOP" and detail["stop_reason"] == "visual_hold_timeout"
+
+
+def test_visual_mode_preserves_initial_pickup_during_bounded_observation_window():
+    guard = RetentionGuard(25, mode="visual", visual_wait_s=.12)
+    carry(guard)
+    action, _ = step(guard, jaw=1., candidate_ever=True)
+    np.testing.assert_array_equal(action[:6], [.01, 0., .002, 0., 0., 0.])
+    assert action[6] == 0.
+
+
+def test_visual_hold_on_lift_transition_cannot_be_forgotten_by_transport():
+    guard = RetentionGuard(25, mode="visual")
+    step(guard)
+    step(guard, grasp_candidate=True, visual_hold_supported=True)
+    assert guard.stage == "TRANSPORT" and guard.visual_hold_seen
+    action, _ = step(guard, candidate_ever=True)
+    assert not action[:6].any() and action[6] == 0.
+
+
+def test_visual_payload_without_jaw_candidate_stops_closed_on_candidate_timeout():
+    guard = RetentionGuard(25, mode="visual", close_wait_s=.08)
+    step(guard)
+    for _ in range(5):
+        action, _ = step(guard, visual_hold_supported=True, commanded_opening=0.)
+    assert guard.stage == "STOP" and action[6] == 0.
+
+
+def test_previous_visual_payload_stays_closed_on_rejection_even_when_now_occluded():
+    guard = RetentionGuard(25, mode="visual", rejection_ticks=2)
+    step(guard)
+    step(guard, visual_hold_supported=True)
+    for _ in range(2):
+        guard.observe_execution(rejected=True, achieved_action=np.zeros(7))
+    action, _ = step(guard, commanded_opening=0.)
+    assert guard.stage == "STOP" and action[6] == 0.
+
+
+def test_visual_release_uses_measured_ball_then_requires_settled_bowl_observation():
+    guard = RetentionGuard(25, mode="visual", release_dwell_s=.08)
+    carry(guard)
+    evidence = dict(candidate_ever=True, visual_hold_supported=True)
+    # A plausible carry prediction alone cannot authorize opening.
+    for _ in range(4):
+        action, _ = step(guard, jaw=1., **evidence)
+        assert action[6] == 0.
+    evidence["fresh_ball_3d"] = [.2, 0, .12]
+    for _ in range(2):
+        action, _ = step(guard, jaw=1., **evidence)
+    assert guard.stage == "RELEASE" and action[6] == 1.
+    for _ in range(3):
+        step(guard, measured_opening=.8)  # Jaw opening alone is insufficient.
+        assert guard.stage == "RELEASE"
+    step(guard, measured_opening=.8, fresh_ball_3d=[.2, 0, .09])
+    step(guard, measured_opening=.8, fresh_ball_3d=[.2, 0, .09])
+    _, detail = step(guard, measured_opening=.8, fresh_ball_3d=[.2, 0, .09])
+    assert guard.stage == "RETREAT" and detail["release_validated"]
+
+
+def test_visual_release_times_out_without_regrasp_or_false_validation():
+    guard = RetentionGuard(25, mode="visual", release_dwell_s=.04, release_wait_s=.12)
+    carry(guard)
+    step(guard, jaw=1., candidate_ever=True, visual_hold_supported=True,
+         fresh_ball_3d=[.2, 0, .12])
+    for _ in range(4):
+        action, detail = step(guard, commanded_opening=1., measured_opening=.8,
+                              fresh_ball_3d=[.4, 0, .09])
+    assert guard.stage == "STOP" and detail["stop_reason"] == "release_unconfirmed"
+    assert action[6] == 1. and not detail["release_validated"]
+
+
+@pytest.mark.parametrize("possible_payload", [False, True])
+def test_visual_rejection_replans_only_when_no_payload_evidence(possible_payload):
+    guard = RetentionGuard(25, mode="visual", rejection_ticks=2)
+    step(guard)
+    for _ in range(2):
+        guard.observe_execution(rejected=True, achieved_action=np.zeros(7))
+    action, _ = step(guard, candidate_ever=possible_payload, commanded_opening=0.)
+    assert guard.stage == ("STOP" if possible_payload else "REACQUIRE")
+    assert action[6] == (0. if possible_payload else 1.)
+    assert not action[:6].any()

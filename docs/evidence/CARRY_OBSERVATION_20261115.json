@@ -1,0 +1,753 @@
+{
+  "schema": "carry_observation_publication_evidence_v1",
+  "publication_parent": "2108b54d446e76007a7c418c04f01946ebe00342",
+  "scoring_only_audit": true,
+  "development_seeds": [
+    12660,
+    12661
+  ],
+  "seeds_reused_during_debugging": true,
+  "guard_enabled_by_default": false,
+  "variants": {
+    "baseline_reviewed": {
+      "local_artifact_directory": "outputs/v2/carry_observation_20261115/baseline_reviewed",
+      "protocol_id": "b0aede007c47817f4099d41b42ef5cdde282f6cb80696c75bc0c56b69d03808f",
+      "protocol_sha256": "09ce0924244e55772c266220a6a91c87c6c9d430521b3ccebfb4fda4fc0de422",
+      "report_sha256": "a0a850f89e97e9beb324264472f77fdd0de399fd62f32023f15aa742a625f327",
+      "snapshot_manifest_sha256": "30703ab08988b29d1c66086c1ae04d29189ec6404020af1ec7f82800fa101bff",
+      "sensing_audit_sha256": "44918dd328e09703389344b811259a06ac8cb599677b9f2c8c757bfde9220f9e",
+      "integrity_verified_trials": 4,
+      "controller_options": {
+        "head": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/retention_data_20261115/head_phase_augmented",
+        "snapshot": "/Users/deveshvyas/.cache/huggingface/hub/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "seed": 12660,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "66abaf1ca9f6d77284ccafecaa91c31625e3d971d94142d19c894331ca25960e",
+          "trace_sha256": "9d95fb69019d5742a9691272f8b6dc6a00cb1db4efad024d16e99fe4f018d173",
+          "trial_report_sha256": "48ee8f7b4ddd751cdc98043c7da5cdf3242bfb03f6c8587a7a29f6ef2a4e23ab",
+          "held_ticks": 12,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 0.48,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false
+        },
+        {
+          "robot": "so101",
+          "seed": 12661,
+          "success": true,
+          "abort": null,
+          "ticks": 368,
+          "initial_state_sha256": "d6e9c2d1e41de8a424ceab0aef01b3f4a80f60b1aa12f9af86a814b2a19832ae",
+          "trace_sha256": "1507e541e8f50b3f4681a7a3df8b89cd403f476ef246fe351fd127443d1673c2",
+          "trial_report_sha256": "fdee6c4c7227ba6eed9621764f1ae74efb81ef367bdb3a9f924403ad108de00c",
+          "held_ticks": 92,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 3.68,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false
+        },
+        {
+          "robot": "panda",
+          "seed": 12660,
+          "success": true,
+          "abort": null,
+          "ticks": 208,
+          "initial_state_sha256": "1664a578a5e1fc086daedd645181480be87c425eeb9cf6d9c01f20f98db63ed2",
+          "trace_sha256": "30eedf43bac8638f2fb8f7d7c3f59e9bc298c2cf192ff3b09e84e913240fa2ed",
+          "trial_report_sha256": "e170c06b7541d68c7c361714b837eee98577c6043c8d1e863c3ecf9de363500b",
+          "held_ticks": 84,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 2.8,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false
+        },
+        {
+          "robot": "panda",
+          "seed": 12661,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "4541f1a253110cfc0cf070e01aa4d6d4c8cf4b77b1f16c2cc9e8fa1c8088b6b0",
+          "trace_sha256": "2a65aa6acea97310ec610883f5c54c2227d3d482006c517d3589a6a2352d6092",
+          "trial_report_sha256": "5e90682d10ffb585e12cb41cbe2dd01dbea1964df99cde7983b00972b3a9971b",
+          "held_ticks": 54,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 1.96,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [
+            {
+              "tick": 153,
+              "loss_flag_at_transition": false
+            }
+          ],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false
+        }
+      ]
+    },
+    "complete_reviewed": {
+      "local_artifact_directory": "outputs/v2/carry_observation_20261115/complete_reviewed",
+      "protocol_id": "003965407f5e0b057a2e554ded3a8c83309deabf56efc4ea3012d41f26e6f175",
+      "protocol_sha256": "40dd8be317a73e19c9fc24def0bd37d19bd37f4091000a004476f5647166c8a7",
+      "report_sha256": "4629d264e006402bbee7e5972a2204de1e9672a6bded63938320967fda8e1094",
+      "snapshot_manifest_sha256": "30703ab08988b29d1c66086c1ae04d29189ec6404020af1ec7f82800fa101bff",
+      "sensing_audit_sha256": "6afbc58f1a770ab1e56fc1aaa6aee256c20048e678d3d73d5348248811fa2fa0",
+      "integrity_verified_trials": 4,
+      "controller_options": {
+        "head": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/retention_data_20261115/head_phase_augmented",
+        "visual_feedback": true,
+        "snapshot": "/Users/deveshvyas/.cache/huggingface/hub/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "seed": 12660,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "66abaf1ca9f6d77284ccafecaa91c31625e3d971d94142d19c894331ca25960e",
+          "trace_sha256": "60ed5e9dc1726a1748e35cea60a6841a25f448de9beb39589b09f9dfd6c7605c",
+          "trial_report_sha256": "7f27fd53971652c88b0205ca989895ac8798ea3b123a1097b0aaf91135ca5c95",
+          "held_ticks": 12,
+          "measured_held_ticks": 1,
+          "longest_missing_held_s": 0.44,
+          "held_measurement_error": {
+            "measurements": 1,
+            "median_m": 0.008575675961072416,
+            "p95_m": 0.008575675961072416,
+            "max_m": 0.008575675961072416,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 680,
+            "median_m": 0.00888456980676481,
+            "p95_m": 0.010311082898139855,
+            "max_m": 0.011656214508100659,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        },
+        {
+          "robot": "so101",
+          "seed": 12661,
+          "success": true,
+          "abort": null,
+          "ticks": 368,
+          "initial_state_sha256": "d6e9c2d1e41de8a424ceab0aef01b3f4a80f60b1aa12f9af86a814b2a19832ae",
+          "trace_sha256": "7ec3809e70a95e9a38df2fa983b5597ca1bee66815ac86d71ab9893c468e40c3",
+          "trial_report_sha256": "fe46f1bcac4c3ae7d06c2bbef2b491681c52fd26f5d0f855debfcb8de01d0e35",
+          "held_ticks": 92,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 3.68,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 99,
+            "median_m": 0.007005333616849445,
+            "p95_m": 0.007012569487478611,
+            "max_m": 0.008398732356431819,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        },
+        {
+          "robot": "panda",
+          "seed": 12660,
+          "success": true,
+          "abort": null,
+          "ticks": 208,
+          "initial_state_sha256": "1664a578a5e1fc086daedd645181480be87c425eeb9cf6d9c01f20f98db63ed2",
+          "trace_sha256": "774095c55c39cca5ac18a0b1c3686bc5a16b38cdbe45d67f49a0326986af6b1a",
+          "trial_report_sha256": "d98ad98f16a16c9badfbc8fc1c5bfa71e9105f24b2c257095137dff57a557316",
+          "held_ticks": 84,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 2.8,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 37,
+            "median_m": 0.008246273350752896,
+            "p95_m": 0.008670005102700037,
+            "max_m": 0.008697747028362249,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        },
+        {
+          "robot": "panda",
+          "seed": 12661,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "4541f1a253110cfc0cf070e01aa4d6d4c8cf4b77b1f16c2cc9e8fa1c8088b6b0",
+          "trace_sha256": "5a8f5e60cb09544d6efac2fa3cf5af6a388ee50fce31325318dbfc95416e035c",
+          "trial_report_sha256": "71ef8242214b5653d40938d61a879fc760d14baf5d6a38aa6d6a1953844c587c",
+          "held_ticks": 54,
+          "measured_held_ticks": 0,
+          "longest_missing_held_s": 1.96,
+          "held_measurement_error": {
+            "measurements": 0,
+            "median_m": null,
+            "p95_m": null,
+            "max_m": null,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 31,
+            "median_m": 0.00346685036873818,
+            "p95_m": 0.00956566387987259,
+            "max_m": 0.010774871581520892,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [
+            {
+              "tick": 153,
+              "loss_flag_at_transition": false
+            }
+          ],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        }
+      ]
+    },
+    "passive_reviewed": {
+      "local_artifact_directory": "outputs/v2/carry_observation_20261115/passive_reviewed",
+      "protocol_id": "53bd08336d51dc220d4576dabbbe704f9904693b4d2eb85aa13607ca4fadf505",
+      "protocol_sha256": "99c4a549df1b28b7661ee5e6d4fa91e9a979898e4f189e50a40aeb8b017adc04",
+      "report_sha256": "029cacefd0e85ae517fff20fb4bef6052a21691ce13189316baad4811f74a7bb",
+      "snapshot_manifest_sha256": "30703ab08988b29d1c66086c1ae04d29189ec6404020af1ec7f82800fa101bff",
+      "sensing_audit_sha256": "3bb5d3f16b23570eff8954a82595cbe7b77e1eb8d79717db725e1748a9ff7a90",
+      "integrity_verified_trials": 4,
+      "controller_options": {
+        "head": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/retention_data_20261115/head_phase_augmented",
+        "visual_feedback": true,
+        "visual_ball_fit": "arcs",
+        "snapshot": "/Users/deveshvyas/.cache/huggingface/hub/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "seed": 12660,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "66abaf1ca9f6d77284ccafecaa91c31625e3d971d94142d19c894331ca25960e",
+          "trace_sha256": "0737d6de400cb159f34c8840b9a297dbb50adcc4a396515615f1fc2f271bc17c",
+          "trial_report_sha256": "ee4a01ff69f27247f658e77766e38fcbd51e7defc9cf95cf6d4ece4e0935d53d",
+          "held_ticks": 12,
+          "measured_held_ticks": 12,
+          "longest_missing_held_s": 0.0,
+          "held_measurement_error": {
+            "measurements": 12,
+            "median_m": 0.007529336525989389,
+            "p95_m": 0.010816334005664705,
+            "max_m": 0.011068868025016712,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 700,
+            "median_m": 0.008816282677757484,
+            "p95_m": 0.010310589522966207,
+            "max_m": 0.011655795916411351,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        },
+        {
+          "robot": "so101",
+          "seed": 12661,
+          "success": true,
+          "abort": null,
+          "ticks": 368,
+          "initial_state_sha256": "d6e9c2d1e41de8a424ceab0aef01b3f4a80f60b1aa12f9af86a814b2a19832ae",
+          "trace_sha256": "14cce1a42114793b305935f5b3609a14c7cca940c71fcc00c3dd99da25e13a26",
+          "trial_report_sha256": "7b18b2eb2721fec327e60426e89a31c0556a521d4dd09d4622f34a835ff0233a",
+          "held_ticks": 92,
+          "measured_held_ticks": 92,
+          "longest_missing_held_s": 0.0,
+          "held_measurement_error": {
+            "measurements": 92,
+            "median_m": 0.0058643265295061945,
+            "p95_m": 0.009655054969834133,
+            "max_m": 0.012036583180047638,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 252,
+            "median_m": 0.006296675755514543,
+            "p95_m": 0.007998371093564455,
+            "max_m": 0.012036583180047638,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 71,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 1,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        },
+        {
+          "robot": "panda",
+          "seed": 12660,
+          "success": true,
+          "abort": null,
+          "ticks": 208,
+          "initial_state_sha256": "1664a578a5e1fc086daedd645181480be87c425eeb9cf6d9c01f20f98db63ed2",
+          "trace_sha256": "5af8175c80a5dfca28fe239abc7403f9b25fa192d2a80c95c0fe2ba329075edc",
+          "trial_report_sha256": "3a05e01dfecbcc880f1bc5bb7188b4e68ba1d91b7327d05ec5023fdcdd30103e",
+          "held_ticks": 84,
+          "measured_held_ticks": 84,
+          "longest_missing_held_s": 0.0,
+          "held_measurement_error": {
+            "measurements": 84,
+            "median_m": 0.0035498679791581616,
+            "p95_m": 0.007263316217522625,
+            "max_m": 0.011391529354501871,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 149,
+            "median_m": 0.003991489497763178,
+            "p95_m": 0.009234284585006245,
+            "max_m": 0.011391529354501871,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 47,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        },
+        {
+          "robot": "panda",
+          "seed": 12661,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "4541f1a253110cfc0cf070e01aa4d6d4c8cf4b77b1f16c2cc9e8fa1c8088b6b0",
+          "trace_sha256": "cfd7e42cb9820fe783c86e2a7f498986d92e0b7a74cbcc03ba79ca13e576e441",
+          "trial_report_sha256": "359d78b9b773ce341347caadc106a28555c16777b29c4be44b14dac6d8d83eb3",
+          "held_ticks": 54,
+          "measured_held_ticks": 32,
+          "longest_missing_held_s": 0.68,
+          "held_measurement_error": {
+            "measurements": 32,
+            "median_m": 0.0017794116999548058,
+            "p95_m": 0.0035556697339799445,
+            "max_m": 0.004129791683947356,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 243,
+            "median_m": 0.008950176898236555,
+            "p95_m": 0.018249634120682378,
+            "max_m": 0.02156508306702811,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 29,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [
+            {
+              "tick": 153,
+              "loss_flag_at_transition": false
+            }
+          ],
+          "seating_updates": 1,
+          "guard_stage_ticks": {},
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false,
+          "passive_control_and_scoring_exactly_equal": true
+        }
+      ]
+    },
+    "guard_reviewed": {
+      "local_artifact_directory": "outputs/v2/carry_observation_20261115/guard_reviewed",
+      "protocol_id": "4d5e83f5cc58925b1392e8ec7107ecdf4cd403121af159060bf7cb12ccc7c736",
+      "protocol_sha256": "5d89971967ed56eb71ccfd83e39807991b59483d309f3759133ec0794fe003bc",
+      "report_sha256": "9b35f8f712f77567f025c9b41236bc02b5b9047f0adda9061b68f417bdb1a57e",
+      "snapshot_manifest_sha256": "30703ab08988b29d1c66086c1ae04d29189ec6404020af1ec7f82800fa101bff",
+      "sensing_audit_sha256": "372a696e2e1bff5c927e69293af2acb5d66d506b199b14a871a71294aaaf9e71",
+      "integrity_verified_trials": 4,
+      "controller_options": {
+        "head": "/Users/deveshvyas/Downloads/real2sim/outputs/v2/retention_data_20261115/head_phase_augmented",
+        "retention_guard": true,
+        "retention_mode": "visual",
+        "visual_ball_fit": "arcs",
+        "snapshot": "/Users/deveshvyas/.cache/huggingface/hub/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest"
+      },
+      "trials": [
+        {
+          "robot": "so101",
+          "seed": 12660,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "66abaf1ca9f6d77284ccafecaa91c31625e3d971d94142d19c894331ca25960e",
+          "trace_sha256": "f7fb7415834945335a6cb611f7ea611aa074633018440a66a7ab60b480dedd60",
+          "trial_report_sha256": "25fc8705eabec1a6de82a92baa57224206b49923f77947c1edbcda0c63ad01db",
+          "held_ticks": 19,
+          "measured_held_ticks": 19,
+          "longest_missing_held_s": 0.0,
+          "held_measurement_error": {
+            "measurements": 19,
+            "median_m": 0.008351225587746201,
+            "p95_m": 0.00965836413751324,
+            "max_m": 0.010281981915203166,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 352,
+            "median_m": 0.008600204469772062,
+            "p95_m": 0.010873797446387272,
+            "max_m": 0.012747505978236625,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 0,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {
+            "ACQUIRE": 620,
+            "CLOSE": 15,
+            "LIFT": 45,
+            "TRANSPORT": 10,
+            "REACQUIRE": 10
+          },
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false
+        },
+        {
+          "robot": "so101",
+          "seed": 12661,
+          "success": true,
+          "abort": null,
+          "ticks": 617,
+          "initial_state_sha256": "d6e9c2d1e41de8a424ceab0aef01b3f4a80f60b1aa12f9af86a814b2a19832ae",
+          "trace_sha256": "4bbe10ed1a557b2d15bb06a82b8b73c026847f23e4675a4f79bf7ba3563fb520",
+          "trial_report_sha256": "ddbb86d33c762e32675101e3fc376e77b5f76e6aafbd4e2737fc52319cace5f6",
+          "held_ticks": 394,
+          "measured_held_ticks": 394,
+          "longest_missing_held_s": 0.0,
+          "held_measurement_error": {
+            "measurements": 394,
+            "median_m": 0.004267912134587062,
+            "p95_m": 0.007060339634525365,
+            "max_m": 0.010987429038676328,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 501,
+            "median_m": 0.004641595560171189,
+            "p95_m": 0.007237676005674566,
+            "max_m": 0.010989123656252844,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 139,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 1,
+          "guard_stage_ticks": {
+            "ACQUIRE": 66,
+            "CLOSE": 1,
+            "LIFT": 15,
+            "TRANSPORT": 55,
+            "LOWER": 96,
+            "STOP": 268
+          },
+          "guard_stop_reason_ticks": {
+            "repeated_native_rejection": 268
+          },
+          "guard_release_validated": false
+        },
+        {
+          "robot": "panda",
+          "seed": 12660,
+          "success": true,
+          "abort": null,
+          "ticks": 584,
+          "initial_state_sha256": "1664a578a5e1fc086daedd645181480be87c425eeb9cf6d9c01f20f98db63ed2",
+          "trace_sha256": "978948b331734a3b16d9b6b0d1cf286f80e736efb5064f06bcef223da4bdec78",
+          "trial_report_sha256": "425a58deee8b7c2f3623ed5cccd546d1de33c4cde0e1e56daa07d46d04f416dd",
+          "held_ticks": 462,
+          "measured_held_ticks": 462,
+          "longest_missing_held_s": 0.0,
+          "held_measurement_error": {
+            "measurements": 462,
+            "median_m": 0.0017745273631676725,
+            "p95_m": 0.005337960777054161,
+            "max_m": 0.007769078336519605,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 525,
+            "median_m": 0.0017980330470936964,
+            "p95_m": 0.008027587937537068,
+            "max_m": 0.010025363921153668,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 55,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [],
+          "seating_updates": 0,
+          "guard_stage_ticks": {
+            "ACQUIRE": 28,
+            "CLOSE": 1,
+            "LIFT": 23,
+            "TRANSPORT": 42,
+            "LOWER": 64,
+            "STOP": 367
+          },
+          "guard_stop_reason_ticks": {
+            "visual_hold_timeout": 367
+          },
+          "guard_release_validated": false
+        },
+        {
+          "robot": "panda",
+          "seed": 12661,
+          "success": false,
+          "abort": null,
+          "ticks": 750,
+          "initial_state_sha256": "4541f1a253110cfc0cf070e01aa4d6d4c8cf4b77b1f16c2cc9e8fa1c8088b6b0",
+          "trace_sha256": "216176e58f6932f6ef46cd4619b635634f2a2d914850e20bf55e344fbe0de822",
+          "trial_report_sha256": "0899c693491a74b9effe00a701bc9ce148c74631413eacc63dd29d3a43df3814",
+          "held_ticks": 48,
+          "measured_held_ticks": 33,
+          "longest_missing_held_s": 0.4,
+          "held_measurement_error": {
+            "measurements": 33,
+            "median_m": 0.0017462625521633714,
+            "p95_m": 0.004573310565353608,
+            "max_m": 0.0051787421498288525,
+            "over_limit": 0
+          },
+          "all_measurement_error": {
+            "measurements": 80,
+            "median_m": 0.002497182778713785,
+            "p95_m": 0.004455640027657,
+            "max_m": 0.0051787421498288525,
+            "over_limit": 0
+          },
+          "visual_support_ticks": 31,
+          "support_ticks_without_scored_contact": 0,
+          "outside_bowl_closed_contact_losses": [
+            {
+              "tick": 146,
+              "loss_flag_at_transition": false
+            }
+          ],
+          "seating_updates": 1,
+          "guard_stage_ticks": {
+            "ACQUIRE": 623,
+            "CLOSE": 3,
+            "LIFT": 14,
+            "TRANSPORT": 46,
+            "REACQUIRE": 5
+          },
+          "guard_stop_reason_ticks": {},
+          "guard_release_validated": false
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Small reused development sample, not independent confirmation",
+    "Calibrated colour/known-radius model assumptions; no physical validation",
+    "Contact scoring can flicker and does not prove a sustained drop",
+    "Task completion does not establish guard release validation"
+  ],
+  "matched_initial_states_verified": true,
+  "identical_runtime_sources_all_variants": true,
+  "runtime_python_sha256": {
+    "scripts/benchmark_frozen_act.py": "6e8b9317abdf7a8f55d00bcc8d3767fdc7afdeadec0b768c43202f7a29331d2f",
+    "scripts/diag_v2_learned_panda_retarget_20261027.py": "6eb3e2b08149e14c1734898e0425e1ced5b9829c445797d0b8ba81e709035d14",
+    "scripts/evaluate_hf_act_20261027.py": "ecf968fa8290c2c7fe6c09a81fcacd33447f185808eb45e46b5d48c109adc39f",
+    "scripts/evaluate_hf_act_panda_20261028.py": "33db1dcc79fc778cb4c7789bd57e5f4112e00144585dd1faad24313f47e6c574",
+    "scripts/run_recovery_dagger.py": "05bb2e69dbbf28ccc46fbe4879ea8bb235563b9803f5934d12a1fdd7013a2b1d",
+    "src/real2sim/artifacts.py": "d9148566b3e47d41767937cf2796fd9225f7fe6a2003a51c10bb5924979b1ab0",
+    "src/real2sim/config.py": "6ccb45c5b6d8c1356a96d14f7fdea9ad73604c35ff68da9c9a6903b5c5a890b4",
+    "src/real2sim/evaluation/metrics.py": "37b787e7c84169f16f9e2e83e9623eda0a1728ea0f8f9e9a191ae24c3661c884",
+    "src/real2sim/evaluation/video.py": "7a10fa5399fdea290cfc87ac58cdfb9896f10d642568c58214107881b3b674dd",
+    "src/real2sim/geometry/__init__.py": "0d3da53e932f928b2e48e7fa016ec65bee6e97f14fda2ae0f669e94971b4c0a8",
+    "src/real2sim/geometry/checkerboard.py": "44acacba609c18845437d283c6611d5bb9a1e6bb75d96d464c342920cb0d1248",
+    "src/real2sim/geometry/image_measurements.py": "629d281d6afbb2552ff80d679fd2b9932d8caa95e7042499ebb9edb372f1ccda",
+    "src/real2sim/geometry/planar_camera.py": "54c7a89aae76f2d03898a25efe0d51dd0625f738323a5cc35670d31dce52a9ce",
+    "src/real2sim/geometry/registration.py": "3cc8b2948b9889fb10618beaefb2bbecd86d349789f11616b30b0ee050741412",
+    "src/real2sim/geometry/so101_fk.py": "a74a640f405c2a0ecda3c87e4d456863162a48f8a805468090170c249f512a41",
+    "src/real2sim/geometry/so3.py": "bd39987bdc6c85bdd39c102896543e254c69ed57b446435d4fff841f2e9dd758",
+    "src/real2sim/panda/__init__.py": "98d9a84aefe82d03647857bc3012a9c3054bb636a118567bdbd94f738f8b877f",
+    "src/real2sim/panda/adapter.py": "9f21ed4aec5d6a5071d77709aeec8d11a6e48ea002b8fab1c114a280fe37aee0",
+    "src/real2sim/panda/env.py": "30014ec1d3803730c35b8390858e5f11633f08bc3524bc59f50a05b21c4a4d49",
+    "src/real2sim/panda/model.py": "c1cac17e43afaf4e7024a63518eb52c2a1b131d477aade577d0172e39cfaa939",
+    "src/real2sim/panda/retarget.py": "9ba107ff07a4a9d0af7da14cfcf76ff5ae231db65866ae37b162e5597178a7d4",
+    "src/real2sim/panda/validate_ik.py": "fdbb80259ccafb7dbfdd39ec14dddab3816d3c39512046484dcfb954f8705137",
+    "src/real2sim/panda/workspace.py": "f4e7618860e200888c4318356f19adef9b8e983a870d61174609b1e7a1c92c40",
+    "src/real2sim/perception/ball_hsv.py": "3a3e29f881006d19baf840e0ea635bd61eb2b356fe75d7b8fd922fcfc029987b",
+    "src/real2sim/policy/adapters.py": "1057919f161638619ee501a8d2eb46dead5ecc15d998e09b3846a621847c29bf",
+    "src/real2sim/policy/common_recovery.py": "19443b77902dd0841abdfbac90a7a7ab824081a691237f81f3f8391cb7414724",
+    "src/real2sim/policy/follower_joint.py": "74f04cf7110cf914c55217c40c57987e88f2a68cd0e13a90bc897bdafddef55a",
+    "src/real2sim/policy/frozen_prefix_recovery.py": "5632609e84eaa9d74d30e1e320eed918e656dcd4c32645ce2c4db462341f2b94",
+    "src/real2sim/policy/grasp_feedback.py": "c0b70d8d563cb06297dc20c48d0e590e66cc1c3ded69da2c2329a026ecaa56ad",
+    "src/real2sim/policy/hf_recovery.py": "88d0b4dffe1f0db5252ae700ba5fd01d293ea9d16fa2a7c14fe379c943ea3d76",
+    "src/real2sim/policy/native_lerobot_act.py": "877ece83b9e6a50383519276656bf019615e0157bc382c0dea74ec91cf8dfb76",
+    "src/real2sim/policy/phase_recovery_mlp.py": "b9d8c0ce3a10c14ef14030c3d2cfcae7b0bb6a5b5854b219389a59aa5aed5e6f",
+    "src/real2sim/policy/progress_geometry.py": "e109a71350fd543d30cd0cee1042c1125ff29171b1dd2b7254e53fed4d98b8ac",
+    "src/real2sim/policy/recovery_mlp.py": "5cb2feba9f10068c50b35a960a628dbf4ed0353b04c62258ce86562079d98b25",
+    "src/real2sim/policy/retention_guard.py": "7767fa707c7b896d32a58c709afa4cefa4317a4ad2a2c85586c6c39b69b2a4ae",
+    "src/real2sim/policy/rgb_reference_tracker.py": "6d3dd46e538637035dd16b02319f0f8386d2e95cff031e57734871e8622101ed",
+    "src/real2sim/policy/source_recovery_frame.py": "65104a98a98037effd403fd9c76ea8b0339a90da7f452892f178a51fb7b297ad",
+    "src/real2sim/policy/sphere_arcs.py": "f11dfedaf9948ba2dc255ab6d092ad682b87325bcea74c0a78487a347cb06f75",
+    "src/real2sim/policy/visual_targets.py": "a70f957292c1aea71c7c961f342ec12c6f4c95d200096b5b956768b7d7079d5f",
+    "src/real2sim/policy/visual_waypoint.py": "0d0092ace2a7607011b07ce27bda90237af8b208048feafba9ff97093a13661d",
+    "src/real2sim/serialization.py": "e084156a04328c7aef3b2684bb723a231a1dba7e4aad87ee56a11f5a66309a43",
+    "src/real2sim/sim/__init__.py": "a386ab89d84ce49e09c678d149806f5a602e5aff12dab7ee58724ae2bafd2c32",
+    "src/real2sim/sim/ball_support.py": "b6a6d869daff5eb716c61bc1746c23348b423a4e34f2a9f382e51a0a40b810ef",
+    "src/real2sim/sim/base_env.py": "b5cc9ce8a8e899c3cc27de8871afeef79ac9435d3d41a2bb708c163af383d9ee",
+    "src/real2sim/sim/camera_fit.py": "4b4c4f3eace582a2ef304098b6164b37c7baa5d566abfe75929eec2b6dc0d7a6",
+    "src/real2sim/sim/cameras.py": "9427a7465efe0d74573b443214c8588a60249e7e7bd605eaf7b62f40077b1734",
+    "src/real2sim/sim/contact_solver.py": "3375b0f6c6aa3aae30eba82c77a725a9b5dbbe7dc6358b638f8d8d1d2debef06",
+    "src/real2sim/sim/domain_randomization.py": "a46437651c4614a4353bb06b363c7c6bfbcc922689ee1e449a303f4b7c56a18b",
+    "src/real2sim/sim/env.py": "0a3b3b32c4cceb9b576eb6d20767e06cec98e29290d388820619ed375e8e3940",
+    "src/real2sim/sim/follower_response.py": "69b80f2e9a3959e45d97757d9f9bda533206349ad02479cca644160f8e4a3410",
+    "src/real2sim/sim/kinematics.py": "80cb644d05fb59a4b14342dd282b3e87cc1c0bf3a794adf59fb431d72f196de1",
+    "src/real2sim/sim/model.py": "32e62cc02c1e161dbc5103b000f5a7c5ca14f16b9447e27597f2ce81ffc5a07e",
+    "src/real2sim/sim/training_teacher.py": "cfda68c7a42a5d5efa9717ab52e2166c55ff6838266d1bde31d9d11d7cd78905"
+  },
+  "audit_source_sha256": "d0db00f0a9f374c8a6d35ec837ed31b452389445f28fd3bdf06f295f4daaca0f",
+  "validation": {
+    "focused_tests_passed": 162,
+    "unit_tests_passed": 1291,
+    "unit_tests_skipped": 2,
+    "inherited_unit_failures": 2,
+    "inherited_unit_errors": 3,
+    "inherited_failures_reproduced_on_parent": true
+  }
+}

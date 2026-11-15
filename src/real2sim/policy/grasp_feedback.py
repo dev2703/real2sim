@@ -32,9 +32,11 @@ class ObservableGraspMonitor:
 
     def __init__(self, hz, *, empty_opening=.08, resistance_opening=.18,
                  settle_s=.2, minimum_lift_m=.02, loss_dwell_s=.08,
-                 free_ball_separation_m=.06, narrowing_warning=.12):
+                 free_ball_separation_m=.06, narrowing_warning=.12,
+                 visual_match_m=.025, visual_fresh_s=.4):
         values = [hz, empty_opening, resistance_opening, settle_s, minimum_lift_m,
-                  loss_dwell_s, free_ball_separation_m, narrowing_warning]
+                  loss_dwell_s, free_ball_separation_m, narrowing_warning,
+                  visual_match_m, visual_fresh_s]
         if (not np.isfinite(values).all() or min(values) <= 0
                 or not empty_opening < resistance_opening < 1 or narrowing_warning >= 1):
             raise ValueError("Positive finite grasp thresholds and ordered opening fractions required")
@@ -46,6 +48,7 @@ class ObservableGraspMonitor:
         self.loss_ticks = max(1, math.ceil(loss_dwell_s * self.hz))
         self.free_ball_separation_m = float(free_ball_separation_m)
         self.narrowing_warning = float(narrowing_warning)
+        self.visual_match_m, self.visual_fresh_s = float(visual_match_m), float(visual_fresh_s)
         self.reset()
 
     @property
@@ -56,7 +59,8 @@ class ObservableGraspMonitor:
                 "minimum_lift_m": self.minimum_lift_m,
                 "loss_dwell_s": self.loss_ticks / self.hz,
                 "free_ball_separation_m": self.free_ball_separation_m,
-                "narrowing_warning": self.narrowing_warning}
+                "narrowing_warning": self.narrowing_warning,
+                "visual_match_m": self.visual_match_m, "visual_fresh_s": self.visual_fresh_s}
 
     def reset(self):
         self.previous_tick = None
@@ -67,9 +71,42 @@ class ObservableGraspMonitor:
         self.candidate_ever = False
         self.candidate_peak_opening = None
         self.loss_reason = None
+        self.visual_matches = self.visual_separations = 0
+        self.visual_tick = None
+        self.visual_origin = None
+        self.visual_origin_tick = None
+        self.visual_lift_m = 0.
+        self.visual_lift_confirmed = False
+        self.visual_anchor_seated = False
+
+    def seated_rgb_anchor(self, tcp_pose, feedback):
+        """Latch one post-seating carry estimate after independently seen lift.
+
+        A close-edge estimate can move relative to the ball as the jaws seat.
+        Re-establish it once, while resistance and fresh RGB show both tool and
+        ball have lifted. Never follow a stationary free ball or re-anchor after
+        support/loss. Subsequent separation remains independent loss evidence.
+        """
+        sphere = feedback.get("fresh_ball_3d")
+        ball_lift = feedback.get("visual_ball_lift_m")
+        if (self.visual_anchor_seated or self.visual_lift_confirmed or sphere is None
+                or not feedback.get("closed_command", False)
+                or not feedback.get("grasp_candidate", False) or feedback.get("loss_suspected", False)
+                or ball_lift is None or ball_lift < self.minimum_lift_m):
+            return None
+        pose = np.asarray(tcp_pose, float)
+        if pose.shape != (4, 4) or not np.isfinite(pose).all():
+            raise ValueError("RGB carry estimate requires a finite TCP pose")
+        sphere = _position(sphere, "Fresh RGB sphere")
+        if np.linalg.norm(sphere - pose[:3, 3]) > .06:
+            return None
+        self.visual_anchor_seated = True
+        self.visual_matches = self.visual_separations = 0
+        self.visual_tick = None
+        return pose[:3, :3].T @ (sphere - pose[:3, 3])
 
     def update(self, tick, tcp_position, measured_opening, commanded_opening, *,
-               fresh_ball=None, predicted_ball=None):
+               fresh_ball=None, predicted_ball=None, fresh_sphere=None):
         position = _position(tcp_position, "TCP position")
         if (not isinstance(tick, (int, np.integer)) or tick < 0
                 or (self.previous_tick is not None and tick != self.previous_tick + 1)):
@@ -79,6 +116,7 @@ class ObservableGraspMonitor:
             raise ValueError("Measured and commanded openings must be fractions in 0..1")
         ball = None if fresh_ball is None else _position(fresh_ball, "Fresh RGB ball")
         expected = None if predicted_ball is None else _position(predicted_ball, "Predicted ball")
+        sphere = None if fresh_sphere is None else _position(fresh_sphere, "Fresh RGB sphere")
         self.previous_tick = int(tick)
         closed = bool(commanded_opening < .5)
         if not closed:
@@ -87,8 +125,21 @@ class ObservableGraspMonitor:
             self.candidate_ever = False
             self.candidate_peak_opening = None
             self.loss_reason = None
+            self.visual_matches = self.visual_separations = 0
+            self.visual_tick = None
+            self.visual_lift_m = 0.
+            self.visual_lift_confirmed = False
+            self.visual_anchor_seated = False
+            # The last visible open-jaw ball is a baseline for observed lift.
+            if sphere is not None:
+                self.visual_origin = sphere.copy()
+                self.visual_origin_tick = tick
         elif self.close_tick is None:
             self.close_tick, self.close_position = int(tick), position.copy()
+            if (self.visual_origin_tick is not None
+                    and (tick - self.visual_origin_tick) / self.hz > self.visual_fresh_s):
+                self.visual_origin = None
+                self.visual_origin_tick = None
         dwell = 0. if self.close_tick is None else (tick - self.close_tick + 1) / self.hz
         lift = 0. if self.close_position is None else float(position[2] - self.close_position[2])
         resisted = bool(closed and measured_opening >= self.resistance_opening)
@@ -112,6 +163,35 @@ class ObservableGraspMonitor:
             elif self.candidate_ever and self.empty_ticks >= self.loss_ticks:
                 self.loss_reason = "previously_resisted_jaw_closed_to_empty_range"
         suspected = self.loss_reason is not None
+        visual_separation = (None if sphere is None or expected is None
+                             else float(np.linalg.norm(sphere - expected)))
+        if closed and visual_separation is not None:
+            if self.visual_origin is None:
+                self.visual_origin = sphere.copy()
+                self.visual_origin_tick = tick
+            gap = self.visual_tick is None or (tick - self.visual_tick) / self.hz > self.visual_fresh_s
+            matches = visual_separation <= self.visual_match_m
+            self.visual_matches = (1 if gap else self.visual_matches + 1) if matches else 0
+            self.visual_separations = ((1 if gap else self.visual_separations + 1)
+                if visual_separation > self.free_ball_separation_m else 0)
+            self.visual_tick = tick
+            if self.visual_separations >= self.loss_ticks:
+                self.loss_reason = "fresh_3d_rgb_ball_separated_from_predicted_grasp"
+                suspected = True
+        visual_age = None if self.visual_tick is None else (tick - self.visual_tick) / self.hz
+        visual_lift = (None if sphere is None or self.visual_origin is None
+                       else float(sphere[2] - self.visual_origin[2]))
+        if visual_lift is not None:
+            self.visual_lift_m = visual_lift
+        # Lift establishes an event; valid lowering must not erase it. Current
+        # closure, fresh matching observations and loss evidence remain gates.
+        self.visual_lift_confirmed |= bool(closed and not suspected and sphere is not None
+            and visual_age is not None and visual_age <= self.visual_fresh_s
+            and lift >= self.minimum_lift_m and visual_lift >= self.minimum_lift_m
+            and self.visual_matches >= self.loss_ticks)
+        visual_supported = bool(closed and not suspected and self.visual_lift_confirmed
+            and self.visual_matches >= self.loss_ticks and visual_age is not None
+            and visual_age <= self.visual_fresh_s)
         status = ("loss_suspected" if suspected else "retention_warning" if warning
                   else "grasp_candidate" if candidate
                   else "empty_closed" if empty else "closing" if closed else "open")
@@ -123,6 +203,12 @@ class ObservableGraspMonitor:
                 "candidate_ever": self.candidate_ever, "loss_suspected": suspected,
                 "loss_reason": self.loss_reason, "fresh_rgb_separation_m": separation,
                 "jaw_narrowing_since_candidate": narrowing, "retention_warning": warning,
+                "visual_hold_supported": visual_supported,
+                "visual_observation_age_s": visual_age,
+                "visual_grasp_separation_m": visual_separation,
+                "visual_ball_lift_m": visual_lift,
+                "visual_lift_confirmed": self.visual_lift_confirmed,
+                "fresh_ball_3d": None if sphere is None else sphere.tolist(),
                 "held_verified": False}
 
 
