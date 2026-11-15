@@ -242,7 +242,8 @@ def save_pack(path, rows, *, feature_dim=256):
 
 
 class LearnedRecoveryController:
-    def __init__(self, episode, head, policy=None, *, phase_guard=False, retention_guard=False, recovery_frame="native"):
+    def __init__(self, episode, head, policy=None, *, phase_guard=False, retention_guard=False,
+                 retention_mode="full", recovery_frame="native"):
         self.episode, self.env, self.robot, self.head = episode, episode.env, episode.robot, head
         self.use_act = bool(head.metadata["use_act"])
         self.feature_dim = int(head.metadata.get("act_feature_dim", 256))
@@ -269,7 +270,9 @@ class LearnedRecoveryController:
             raise ValueError("Retention guard requires tracked RGB and cannot combine with phase guard")
         if retention_guard and recovery_frame != "native":
             raise ValueError("Retention guard currently requires the native recovery frame")
-        self.retention_guard = RetentionGuard(self.env.control_hz) if retention_guard else None
+        if retention_mode not in ("full", "jaw") or (retention_mode != "full" and not retention_guard):
+            raise ValueError("Retention mode requires enabled retention assistance and a full/jaw mode")
+        self.retention_guard = RetentionGuard(self.env.control_hz, mode=retention_mode) if retention_guard else None
         self.grasp_monitor = ObservableGraspMonitor(self.env.control_hz)
         self.phase_guard = RecoveryPhaseGuard(self.env.control_hz) if phase_guard else None
         self.history_mode = head_history_mode(head)
@@ -484,7 +487,8 @@ def validated_trial_seeds(seeds, *, name):
 def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
             source_scene=MEASURED_SCENE, learner=None, beta=1., iteration=0,
             expert_execution="common", reference_mode="initial", history_mode="selected",
-            observation_geometry="tcp", gripper_clock="all_switches", act_prefix_steps=0, act_prefix_until_stall=False):
+            observation_geometry="tcp", gripper_clock="all_switches", act_prefix_steps=0,
+            act_prefix_until_stall=False, configured_gripper=False):
     train_seeds = validated_trial_seeds(train_seeds, name="Collection training seeds")
     val_seeds = validated_trial_seeds(val_seeds, name="Collection validation seeds")
     if (set(train_seeds) | set(val_seeds)) & RESERVED_EVALUATION_SEEDS:
@@ -521,9 +525,11 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
     before = source_files(snapshot, source_scene, extra)
     executed_sources = snapshot_sources(out, before)
     shared = SharedEpisode(robot, out / "live", source_scene,
-                           native_contract=policy.scene_contract)
+                           native_contract=policy.scene_contract,
+                           initial_gripper_percent=None if configured_gripper else 1.2)
     shadow = SharedEpisode(robot, out / "expert_shadow", source_scene,
-                           native_contract=policy.scene_contract)
+                           native_contract=policy.scene_contract,
+                           initial_gripper_percent=None if configured_gripper else 1.2)
     act = FrozenACTFeatures(shared, policy)
     executor = CommonCartesianExecutor(shared, require_source_mapping=True)
     label_executor = CommonCartesianExecutor(shadow, require_source_mapping=True)
@@ -536,6 +542,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "iteration": iteration, "beta_teacher_execution": beta, "learner": str(learner) if learner else None,
         "act_prefix_steps": int(act_prefix_steps),
         "act_prefix_until_stall": bool(act_prefix_until_stall),
+        "initial_gripper_percent_override": None if configured_gripper else 1.2,
+        "configured_gripper": bool(configured_gripper),
         "prefix_actions_are_corrective_labels": False,
         "expert_queries_executed_act_handoff_states": bool(act_prefix_steps or act_prefix_until_stall),
         "expert_execution": expert_execution, "action_names": ACTION_NAMES,
@@ -574,7 +582,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                 prefix_trigger = None
                 prefix_rgb_log = None
                 references = None
-                reason_counts = {}
+                reason_counts, label_counts = {}, {"accepted": 0, "rejected_native": 0,
+                    "terminal": 0, "rejected_common": 0}
                 trial_rows = []
                 try:
                     shared.reset(seed)
@@ -665,6 +674,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         command_phase = label_result.detail["phase"]
                         target = teacher_common_action(teacher, label_result, executor)
                         label_valid = valid_teacher_label(label_result)
+                        if not label_valid:
+                            label_counts["rejected_native" if label_result.ik_rejected else "terminal"] += 1
                         if label_valid and expert_execution == "common":
                             # Validate the projected action against the actual
                             # learner state, not the teacher's native branch or
@@ -676,12 +687,15 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                                 shadow.env._ee_velocity = env._ee_velocity.copy()
                             executable = label_executor.step(target)
                             label_valid = not executable.ik_rejected
+                            if not label_valid:
+                                label_counts["rejected_common"] += 1
                             if label_valid:
                                 target = np.asarray(executable.detail["common_action"], float)
                         # Terminal expert holds from a failed physical pickup
                         # are not corrective demonstrations. Retain the attempt
                         # in scoring but avoid hundreds of idle terminal labels.
                         if label_valid:
+                            label_counts["accepted"] += 1
                             row = {"observations": observation,
                                 "base_actions": base.astype(np.float32), "features": features,
                                 "target_actions": target.astype(np.float32),
@@ -733,6 +747,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                     frozen_prefix_trace_sha256=sha256_file(prefix_trace) if prefix_trace is not None else None,
                     frozen_prefix_rgb_log=prefix_rgb_log,
                     invalid_hf_priors=failures, command_reasons=reason_counts, initial_rgb=initial_rgb,
+                    teacher_label_counts=label_counts,
                     abort_source_projection=abort_projection,
                     teacher_final_phase=getattr(teacher, "phase", None) if initial_rgb else None,
                     rgb_expert_replans=replans, rgb_reference_log=references.log if references else None)
@@ -759,7 +774,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
 
 def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
              source_scene=MEASURED_SCENE, video=False, phase_guard=False, retention_guard=False, recovery_frame="native",
-             act_prefix=False):
+             act_prefix=False, retention_mode="full"):
     seeds = validated_trial_seeds(seeds, name="Evaluation seeds")
     if out.exists():
         raise FileExistsError(out)
@@ -772,6 +787,7 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
                            native_contract=getattr(policy, "scene_contract", None))
     controller = LearnedRecoveryController(shared, head, policy, phase_guard=phase_guard,
                                            retention_guard=retention_guard,
+                                           retention_mode=retention_mode,
                                            recovery_frame=recovery_frame)
     if act_prefix:
         controller = frozen_prefix_controller(shared, controller, policy)
@@ -926,6 +942,7 @@ def controller_factory(*, env, source, robot, snapshot, condition, options):
     recovery = LearnedRecoveryController(shared, head, policy,
         phase_guard=bool(options.get("phase_guard", False)),
         retention_guard=bool(options.get("retention_guard", False)),
+        retention_mode=options.get("retention_mode", "full"),
         recovery_frame=options.get("recovery_frame", "native"))
     return frozen_prefix_controller(shared, recovery, policy) if condition == "hf_learned" else recovery
 
@@ -958,6 +975,10 @@ def main():
                         help="Evaluate disclosed stateful jaw/phase/motion assistance")
     parser.add_argument("--retention-guard", action="store_true",
                         help="Evaluate observable retain/deliver/reacquire assistance with tracked RGB")
+    parser.add_argument("--retention-mode", choices=("full", "jaw"), default="full",
+                        help="jaw keeps learned pickup motion; full also gates lateral lift motion and limits speed")
+    parser.add_argument("--configured-gripper", action="store_true",
+                        help="Collection: use the scene jaw reset, matching configured-gripper benchmarks")
     parser.add_argument("--act-prefix", action="store_true",
                         help="Execute frozen ACT first; observable approach failure triggers learned recovery")
     parser.add_argument("--act-prefix-until-stall", action="store_true",
@@ -970,7 +991,7 @@ def main():
             parser.error("--act-prefix is an evaluation option")
         if args.recovery_frame != "native":
             parser.error("--recovery-frame is an evaluation option")
-        if args.phase_guard or args.retention_guard:
+        if args.phase_guard or args.retention_guard or args.retention_mode != "full":
             parser.error("--phase-guard and --retention-guard are evaluation assistance options")
         return collect(args.robot, args.out, args.train_seeds, args.val_seeds,
             snapshot=args.snapshot, source_scene=args.source_scene, learner=args.head,
@@ -978,7 +999,10 @@ def main():
             reference_mode=args.reference_mode, history_mode=args.history_mode,
             observation_geometry=args.observation_geometry, gripper_clock=args.gripper_clock,
             act_prefix_steps=args.act_prefix_steps,
-            act_prefix_until_stall=args.act_prefix_until_stall)
+            act_prefix_until_stall=args.act_prefix_until_stall,
+            configured_gripper=args.configured_gripper)
+    if args.configured_gripper:
+        parser.error("--configured-gripper is a collection option; use benchmark_frozen_act.py for matched evaluation resets")
     if args.act_prefix_until_stall:
         parser.error("--act-prefix-until-stall is a collection option")
     if args.head is None:
@@ -986,7 +1010,8 @@ def main():
     return evaluate(args.robot, args.head, args.out, args.seeds,
         snapshot=args.snapshot, source_scene=args.source_scene, video=args.video,
         phase_guard=args.phase_guard, retention_guard=args.retention_guard,
-        recovery_frame=args.recovery_frame, act_prefix=args.act_prefix)
+        recovery_frame=args.recovery_frame, act_prefix=args.act_prefix,
+        retention_mode=args.retention_mode)
 
 
 if __name__ == "__main__":

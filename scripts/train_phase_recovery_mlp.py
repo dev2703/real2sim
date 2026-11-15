@@ -211,7 +211,7 @@ def drop_approach_timers(observations, observation_names, phase_ids, training_me
 def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
           phase_weight=.2, temperature=.5, temporal_weight=0., require_command_labels=False,
           use_act=True, action_routing="soft", history_noise=0., history_dropout=0.,
-          transition_weight=0., residual_prior=True, approach_timer_dropout=0.):
+          transition_weight=0., residual_prior=True, approach_timer_dropout=0., balance_phases=False):
     if (steps < 1 or not np.isfinite([phase_weight, temporal_weight, transition_weight]).all()
             or phase_weight <= 0 or min(temporal_weight, transition_weight) < 0):
         raise ValueError("Positive training steps and phase-loss weight required")
@@ -239,7 +239,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     drop_approach_timers(tensors["train"]["observations"][:1], observation_names,
         tensors["train"]["expert_phase_id"][:1], model.observation_mean,
         probability=approach_timer_dropout, generator=history_generator)
-    sampling = robot_episode_weights(training["robot_id"], training["episode_index"])
+    sampling = robot_episode_weights(training["robot_id"], training["episode_index"],
+        training["expert_phase_id"] if balance_phases else None)
     pairs = training["consecutive_pairs"]
     pair_sampling = (robot_episode_weights(training["robot_id"][pairs[:, 0]],
         training["episode_index"][pairs[:, 0]]) if len(pairs) else None)
@@ -269,6 +270,7 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     report = {"schema": "frozen_act_phase_supervised_recovery_mlp_v1", "status": "training",
         "base_checkpoint_sha256": base_hash, "base_weights_frozen": True, "lighting_changed": False,
         "use_act": use_act, "architecture": "Shared MLP256->128, 11 predicted phase logits and 11x7 action components; persisted soft/hard predicted routing with optional ACT residual prior",
+        "balance_phases": balance_phases,
         "phase_names": PHASE_NAMES, "phase_temperature": model.temperature,
         "phase_loss_weight": phase_weight, "expert_phase_is_runtime_input": False,
         "action_routing": model.action_routing,
@@ -395,6 +397,8 @@ if __name__ == "__main__":
     parser.add_argument("--approach-timer-dropout", type=float, default=0.)
     parser.add_argument("--no-residual-prior", action="store_false", dest="residual_prior", default=True)
     parser.add_argument("--require-command-labels", action="store_true")
+    parser.add_argument("--balance-phases", action="store_true",
+                        help="Sample robots, episodes, then issued-command phases equally")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--use-act", action="store_true", dest="use_act", default=True)
     mode.add_argument("--no-act", action="store_false", dest="use_act")
@@ -406,4 +410,4 @@ if __name__ == "__main__":
           use_act=args.use_act, action_routing=args.action_routing,
           history_noise=args.history_noise, history_dropout=args.history_dropout,
           transition_weight=args.transition_weight, residual_prior=args.residual_prior,
-          approach_timer_dropout=args.approach_timer_dropout)
+          approach_timer_dropout=args.approach_timer_dropout, balance_phases=args.balance_phases)
