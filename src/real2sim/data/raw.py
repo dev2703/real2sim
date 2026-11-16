@@ -79,6 +79,7 @@ class RawDataset:
         stats_path = self.root / "meta" / "stats.json"
         self.stats = json.loads(stats_path.read_text()) if stats_path.is_file() else None
         self._data: pd.DataFrame | None = None
+        self._episode_positions: dict | None = None
 
     # ------------------------------------------------------------------ metadata
     @property
@@ -137,8 +138,12 @@ class RawDataset:
         return self._data
 
     def episode_rows(self, episode_index: int) -> pd.DataFrame:
+        """Select rows in table order using a lazy index over the read-only data."""
         df = self.data
-        return df[df["episode_index"] == episode_index].reset_index(drop=True)
+        if self._episode_positions is None:
+            self._episode_positions = df.groupby("episode_index", sort=False).indices
+        positions = self._episode_positions.get(episode_index, np.empty(0, dtype=np.intp))
+        return df.iloc[positions].reset_index(drop=True)
 
     def episode_length(self, episode_index: int) -> int:
         row = self.episodes[self.episodes["episode_index"] == episode_index]
