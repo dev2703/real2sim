@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,34 @@ from real2sim.artifacts import sha256_file
 from real2sim.policy.adapters import ApplyResult
 from scripts import benchmark_frozen_act as benchmark
 from scripts.benchmark_frozen_act import aggregate, completed_trial, digest_json
+
+
+@pytest.mark.parametrize("dependency", [
+    "src/real2sim/perception/ball_hsv.py",
+    "src/real2sim/evaluation/oracle.py",
+    "src/real2sim/policy/bounded_joint.py",
+])
+def test_runtime_dependency_edits_invalidate_resume(tmp_path, monkeypatch, dependency):
+    # Hash a disposable source tree so the test really changes a runtime input.
+    root = Path(__file__).resolve().parents[2]
+    for directory in ("src", "configs"):
+        shutil.copytree(root / directory, tmp_path / directory,
+                        ignore=shutil.ignore_patterns("__pycache__"))
+    shutil.copyfile(root / "physical_measurements.md", tmp_path / "physical_measurements.md")
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+    monkeypatch.chdir(tmp_path)
+    out = tmp_path / "benchmark"
+    first = benchmark.run(out, ["so101"], ["raw"], [12000],
+                          snapshot=snapshot, plan_only=True)
+    path = tmp_path / dependency
+    assert first["runtime_source_sha256"][str(path)] == sha256_file(path)
+    with path.open("a") as stream:
+        stream.write("\n# Runtime input changed.\n")
+    with pytest.raises(ValueError, match="protocol/inputs changed"):
+        benchmark.run(out, ["so101"], ["raw"], [12000],
+                      snapshot=snapshot, plan_only=True)
 
 
 @pytest.mark.parametrize("condition", ["rgb", "hf_rgb"])

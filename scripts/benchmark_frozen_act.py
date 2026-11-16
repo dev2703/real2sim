@@ -71,12 +71,13 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
               for p in Path(directory).glob("*.py")}
     paths |= {Path("src/real2sim/policy") / name for name in (
         "native_lerobot_act.py", "hf_recovery.py", "visual_waypoint.py", "visual_targets.py",
-        "follower_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
+        "follower_joint.py", "bounded_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
         "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py")}
     paths.add(Path("src/real2sim/policy/source_recovery_frame.py"))
     paths.add(Path("src/real2sim/policy/progress_geometry.py"))
     paths.add(Path("src/real2sim/policy/frozen_prefix_recovery.py"))
-    paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py")}
+    paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py", "oracle.py")}
+    paths.add(Path("src/real2sim/perception/ball_hsv.py"))
     paths |= {Path("src/real2sim") / name for name in ("config.py", "serialization.py", "artifacts.py")}
     paths |= set(Path(snapshot).glob("*.json")) | set(Path(snapshot).glob("*.safetensors"))
     for config in (source_scene, Path("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml")):
