@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from real2sim.data.raw import RawDataset
@@ -34,6 +35,35 @@ def test_rows_are_episode_contiguous(synthetic_root):
         np.testing.assert_allclose(g["timestamp"].to_numpy(), np.arange(n) / ds.fps, atol=1e-5)
         total += n
     assert total == len(ds.data) == ds.info["total_frames"]
+
+
+def test_episode_lookup_preserves_interleaved_order_and_empty_schema(synthetic_root):
+    ds = RawDataset(synthetic_root)
+    # Frame tables need not have contiguous episode blocks or dense IDs.
+    ds._data = pd.DataFrame({"episode_index": [9, 2, 9, 2],
+                             "frame_index": [3, 7, 4, 8]}, index=[5, 6, 7, 8])
+    for episode in (9, 2, 100):
+        expected = ds.data[ds.data["episode_index"] == episode].reset_index(drop=True)
+        pd.testing.assert_frame_equal(ds.episode_rows(episode), expected)
+    rows = ds.episode_rows(9)
+    rows.loc[0, "frame_index"] = -1
+    assert ds.episode_rows(9)["frame_index"].tolist() == [3, 4]
+
+
+def test_repeated_episode_reads_do_not_scan_the_episode_column(synthetic_root, monkeypatch):
+    ds = RawDataset(synthetic_root)
+    ds.episode_rows(0)  # Build the lazy index once.
+    original = pd.Series.__eq__
+
+    def reject_scan(series, other):
+        if series.name == "episode_index" and len(series) == len(ds.data):
+            raise AssertionError("episode lookup scanned the entire frame table")
+        return original(series, other)
+
+    monkeypatch.setattr(pd.Series, "__eq__", reject_scan)
+    for episode in (0, 1, 2, 99):
+        rows = ds.episode_rows(episode)
+        assert len(rows) == (0 if episode == 99 else ds.episode_length(episode))
 
 
 def test_decode_counts_match_episode_lengths(synthetic_root):
