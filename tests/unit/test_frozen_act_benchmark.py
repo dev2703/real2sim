@@ -168,6 +168,8 @@ def test_head_changes_invalidate_protocol_and_recovery_runtime_is_hashed(tmp_pat
     first = benchmark.run(tmp_path / "first", ["so101"], ["learned"], [12000],
                           snapshot=snapshot, controller_options=options, plan_only=True)
     hashes = first["runtime_source_sha256"]
+    driver_source = Path(benchmark.raw_act.__file__)
+    assert hashes[str(driver_source)] == sha256_file(driver_source)
     assert hashes[str(weights.resolve())] == sha256_file(weights)
     for name in ("common_recovery.py", "recovery_mlp.py", "phase_recovery_mlp.py",
                  "rgb_reference_tracker.py"):

@@ -109,7 +109,7 @@ class FrozenDriver:
         self.policy, self.guard = policy, shared.guard
         self.execute_steps = policy.config.n_action_steps if execute_steps is None else execute_steps
         if type(self.execute_steps) is not int or not 1 <= self.execute_steps <= policy.config.chunk_size:
-            raise ValueError("Execution prefix must be an integer within the saved action chunk")
+            raise ValueError("execution prefix must be an integer within the saved action chunk")
         self.reset()
 
     def reset(self):

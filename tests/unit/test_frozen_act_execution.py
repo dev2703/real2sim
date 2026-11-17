@@ -58,7 +58,7 @@ def driver_setup(monkeypatch):
         guard=SimpleNamespace(data=SimpleNamespace(qpos=np.zeros(6))))
     monkeypatch.setattr(benchmark.transfer.native, "saturate_gripper_only",
                         lambda raw, env: (raw.copy(), raw.copy()))
-    monkeypatch.setattr(benchmark, "check_joint_request",
+    monkeypatch.setattr(benchmark.raw_act, "check_joint_request",
                         lambda guard, current, start, requested, cap, **kwargs:
                         (True, "accepted", requested.copy()))
     return shared, policy
