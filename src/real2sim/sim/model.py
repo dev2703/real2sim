@@ -27,7 +27,7 @@ from scipy.spatial.transform import Rotation
 
 from real2sim.artifacts import sha256_file
 from real2sim.config import REPO_ROOT, load_yaml, project_path
-from real2sim.sim.cameras import apply_render_settings
+from real2sim.sim.cameras import apply_render_near_clip, apply_render_settings
 
 ROOT = REPO_ROOT
 DEFAULT_CONFIG = ROOT / "configs/sim_so101.yaml"
@@ -315,15 +315,14 @@ def load_scene(config_path: str | Path = DEFAULT_CONFIG, *, bowl_inner_depth: fl
     task = load_yaml(project_path(config["task_config"]))
     xml = scene_xml(config, task, bowl_inner_depth=bowl_inner_depth, contacts=contacts)
     model = mujoco.MjModel.from_xml_string(xml)
-    apply_render_settings(model, config["render"])
+    if "near_clip_m" in config["render"]:
+        apply_render_settings(model, config["render"])
+    else:
+        apply_render_near_clip(model)
     if task["ball"].get("inertia") == "thin_shell":
         # Tennis balls are hollow: I = 2/3 m r^2 (docs/PROJECT_SUMMARY.md), not the solid 2/5.
         geom = model.geom("ball_geom").id
         body = model.geom_bodyid[geom]
         m, r = float(task["ball"]["mass"]), float(task["ball"]["radius"])
         model.body_inertia[body] = 2 / 3 * m * r * r
-    from real2sim.sim.cameras import apply_render_near_clip
-
-    # Shared by wrist_cam and the global camera. Extent is only known after compile.
-    apply_render_near_clip(model)
     return model, config, task

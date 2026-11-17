@@ -94,6 +94,29 @@ def test_complete_failed_trial_is_resumable_and_keeps_its_denominator(tmp_path):
     assert completed_trial(path, "frozen_protocol", robot="so101", condition="raw", seed=13000) == data["trial"]
 
 
+def test_resume_validates_trace_before_loading_policy_or_scene(tmp_path, monkeypatch):
+    (tmp_path / "model.safetensors").write_bytes(b"reference")
+    out = tmp_path / "run"
+    args = (out, ["so101"], ["raw"], [13000])
+    plan = benchmark.run(*args, snapshot=tmp_path, plan_only=True)
+    attempt = out / "so101/raw/seed_013000/attempt_0001"
+    attempt.mkdir(parents=True)
+    path, data = artifact(attempt)
+    data["protocol_id"] = plan["protocol_id"]
+    data["trial"].update(initial_state_sha256="reset", intervention_required=False)
+    data["trial_sha256"] = digest_json(data["trial"])
+    path.write_text(json.dumps(data))
+    monkeypatch.setattr(benchmark, "aggregate", lambda rows: {"n": len(rows)})
+    monkeypatch.setattr(benchmark, "SharedEpisode", lambda *a, **kw: pytest.fail("scene loaded"))
+    monkeypatch.setattr(benchmark, "NativeLeRobotACT", lambda *_: pytest.fail("policy loaded"))
+
+    report = benchmark.run(*args, snapshot=tmp_path)
+    assert report["trials"] == [data["trial"]]
+    (attempt / "ticks.jsonl").write_text("changed")
+    with pytest.raises(pytest.fail.Exception, match="policy loaded"):
+        benchmark.run(*args, snapshot=tmp_path)
+
+
 def test_partial_edited_or_wrong_seed_attempts_are_not_resumed(tmp_path):
     path, data = artifact(tmp_path)
     assert completed_trial(path, "frozen_protocol") is not None
@@ -145,6 +168,8 @@ def test_head_changes_invalidate_protocol_and_recovery_runtime_is_hashed(tmp_pat
     first = benchmark.run(tmp_path / "first", ["so101"], ["learned"], [12000],
                           snapshot=snapshot, controller_options=options, plan_only=True)
     hashes = first["runtime_source_sha256"]
+    driver_source = Path(benchmark.raw_act.__file__)
+    assert hashes[str(driver_source)] == sha256_file(driver_source)
     assert hashes[str(weights.resolve())] == sha256_file(weights)
     for name in ("common_recovery.py", "recovery_mlp.py", "phase_recovery_mlp.py",
                  "rgb_reference_tracker.py"):

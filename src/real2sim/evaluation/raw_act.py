@@ -37,8 +37,7 @@ def digest_json(value):
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
     """Hash the native policy, processors, scene builders, inputs and assets."""
-    paths = {Path(__file__), Path("scripts/evaluate_raw_act.py"),
-             Path(transfer.__file__), Path(transfer.native.__file__),
+    paths = {Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
              Path(transfer.retarget.__file__), Path(source_scene), *map(Path, extra_paths)}
     for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry"):
         paths.update(Path(directory).glob("*.py"))
@@ -110,7 +109,7 @@ class FrozenDriver:
         self.policy, self.guard = policy, shared.guard
         self.execute_steps = policy.config.n_action_steps if execute_steps is None else execute_steps
         if type(self.execute_steps) is not int or not 1 <= self.execute_steps <= policy.config.chunk_size:
-            raise ValueError("Execution prefix must be an integer within the saved action chunk")
+            raise ValueError("execution prefix must be an integer within the saved action chunk")
         self.reset()
 
     def reset(self):
