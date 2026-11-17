@@ -24,11 +24,11 @@ def write_scene(tmp_path, builder, distance):
 
 def test_near_clip_metres_uses_compiled_extent_and_preserves_scene(tmp_path, scene_builder):
     original, _, _ = scene_builder.load_scene()
-    configured, config, _ = scene_builder.load_scene(write_scene(tmp_path, scene_builder, .005))
+    configured, config, _ = scene_builder.load_scene(write_scene(tmp_path, scene_builder, .008))
 
-    assert config["render"]["near_clip_m"] == .005
+    assert config["render"]["near_clip_m"] == .008
     assert configured.stat.extent != pytest.approx(1.)
-    assert configured.vis.map.znear * configured.stat.extent == pytest.approx(.005, rel=1e-6)
+    assert configured.vis.map.znear * configured.stat.extent == pytest.approx(.008, rel=1e-6)
     assert configured.vis.map.znear != original.vis.map.znear
     assert configured.vis.map.zfar == original.vis.map.zfar
     for field in ("body_pos", "body_mass", "body_inertia", "geom_size", "geom_friction",
@@ -36,13 +36,14 @@ def test_near_clip_metres_uses_compiled_extent_and_preserves_scene(tmp_path, sce
         np.testing.assert_array_equal(getattr(configured, field), getattr(original, field))
 
 
-def test_absent_near_clip_preserves_upstream_setting(scene_builder):
+def test_absent_near_clip_uses_robot_default(scene_builder):
     import mujoco
 
     model, config, task = scene_builder.load_scene()
     assert "near_clip_m" not in config["render"]
     upstream = mujoco.MjModel.from_xml_string(scene_builder.scene_xml(config, task))
-    assert model.vis.map.znear == upstream.vis.map.znear
+    expected = .005 / model.stat.extent if scene_builder is so101 else upstream.vis.map.znear
+    assert model.vis.map.znear == pytest.approx(expected)
     assert model.vis.map.zfar == upstream.vis.map.zfar
 
 
