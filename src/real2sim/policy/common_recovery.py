@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections import deque
 from copy import deepcopy
 from time import perf_counter
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -68,12 +69,23 @@ def semantic_gripper(env, robot):
 
 
 def soft_stop_seed(measured, limits, tolerance=.001):
-    """Project tiny soft-stop readback errors, never requested command limits."""
-    measured, limits = np.asarray(measured, float), np.asarray(limits, float)
+    """Clip a measured seed onto its stops.
+
+    Overshoot within ``tolerance`` is numerical readback: the clipped seed is
+    safe to solve from. A larger finite overshoot is still clipped so the
+    caller can hold that position, and ``exceeded`` is true. Callers record
+    ``measured_beyond_soft_stop`` instead of raising. Non-finite values raise.
+    This does not widen requested command limits.
+    """
+    measured = np.asarray(measured, float)
+    limits = np.asarray(limits, float)
+    if (measured.ndim != 1 or limits.shape != (measured.size, 2)
+            or not np.isfinite(measured).all() or not np.isfinite(limits).all()
+            or not np.isfinite(tolerance) or tolerance < 0):
+        raise ValueError("measured soft-stop seed must be finite")
     bounded = np.clip(measured, *limits.T)
-    if not np.isfinite(measured).all() or np.max(np.abs(bounded - measured)) > tolerance:
-        raise ValueError("Measured joint exceeds soft-stop seed tolerance")
-    return bounded
+    exceeded = bool(np.max(np.abs(bounded - measured)) > tolerance)
+    return bounded, exceeded
 
 
 class RecoveryObservation:
@@ -270,6 +282,19 @@ class CommonCartesianExecutor:
             self.env.max_velocity / self.env.control_hz, samples=17)
         return accepted, reason
 
+    def _hold_measured_soft_stop(self, current):
+        """Reject a seed past the soft-stop tolerance without aborting the trial.
+
+        Collision and workspace still use the unclipped measured pose.
+        """
+        actual = self.guard.forward(current)
+        cfg = self.guard.config
+        if (np.any(actual[:3, 3] < cfg["workspace_min"])
+                or np.any(actual[:3, 3] > cfg["workspace_max"])
+                or self.guard._collision()):
+            return False, "actual_pose_workspace_or_collision"
+        return False, "measured_beyond_soft_stop"
+
     def step(self, action):
         env = self.env
         action = clip_common(action)
@@ -278,12 +303,13 @@ class CommonCartesianExecutor:
                 if self.robot == "so101" else action[6] * env.max_opening)
         accepted, reason, fraction = False, "unattempted", 0.
         current = env.sim_state() if self.robot == "so101" else env.arm_qpos()
+        beyond_soft_stop = False
         if self.robot == "so101":
             self.guard.data.qpos[:] = env.data.qpos
-            # MuJoCo soft joint stops can leave measured readbacks a fraction
-            # of a milliradian past a stop. Project only that numerical seed;
-            # requested commands still pass the unchanged hard-limit guard.
-            arm_seed = soft_stop_seed(current[:5], self.guard.limits[:5])
+            # MuJoCo soft joint stops can leave measured readbacks past a stop.
+            # Clip a sub-milliradian seed and keep solving. A larger overshoot
+            # holds the clipped measurement instead of raising.
+            arm_seed, beyond_soft_stop = soft_stop_seed(current[:5], self.guard.limits[:5])
             # The compliant jaw can cross its soft stop when empty. Its hinge
             # does not move the fixed-jaw TCP; seed it with the bounded command
             # while checking contacts at its actual measured pose below.
@@ -294,39 +320,46 @@ class CommonCartesianExecutor:
         # pose, workspace, collision and sampled-path acceptance thresholds.
         # No object goal or geometric corrective direction enters this step.
         attempts = []
-        for candidate_fraction in (1., .5, .25, .125, .0625):
-            target = apply_delta(current_pose, action[:6] * candidate_fraction)
-            if self.robot == "so101":
-                solved = self.guard.solve(target, seed, gripper=grip)
-            else:
-                from real2sim.panda.model import POINTING_DOWN
+        if beyond_soft_stop:
+            accepted, reason = self._hold_measured_soft_stop(current)
+            attempts.append({"fraction": 1., "accepted": False, "reason": reason})
+            solved = SimpleNamespace(accepted=False, reason=reason,
+                                     qpos=np.r_[arm_seed, current[5]])
+            target = current_pose
+        else:
+            for candidate_fraction in (1., .5, .25, .125, .0625):
+                target = apply_delta(current_pose, action[:6] * candidate_fraction)
+                if self.robot == "so101":
+                    solved = self.guard.solve(target, seed, gripper=grip)
+                else:
+                    from real2sim.panda.model import POINTING_DOWN
 
-                # All Panda expert grasps use this task orientation, as does
-                # the existing frozen-ACT retarget adapter. Anchor that known
-                # action manifold instead of integrating tiny rotation errors.
-                target[:3, :3] = POINTING_DOWN
-                solved = self.guard.solve(target, current,
-                    finger_opening=max(grip, env.gripper_opening()))
-            accepted, reason = solved.accepted, solved.reason
-            n_arm = 5 if self.robot == "so101" else 7
-            if accepted:
-                arm = solved.qpos[:n_arm]
-                lower, upper = env.limits[:n_arm].T
-                if np.any(arm < lower + .003) or np.any(arm > upper - .003):
-                    accepted, reason = False, "command_joint_stop_margin"
-            if accepted and self.robot == "so101":
-                command = np.r_[solved.qpos[:5], grip]
-                accepted, reason = self._check_so101_command(current, guard_current, command)
-            projection = None
-            if accepted and getattr(self, "require_source_mapping", False):
-                accepted, projection = self._source_mapping_path(current, solved.qpos, grip)
-                if not accepted:
-                    reason = projection["reason"]
-            attempts.append({"fraction": candidate_fraction, "accepted": accepted, "reason": reason,
-                             **({"source_mapping": projection} if projection is not None else {})})
-            if accepted:
-                fraction = candidate_fraction
-                break
+                    # All Panda expert grasps use this task orientation, as does
+                    # the existing frozen-ACT retarget adapter. Anchor that known
+                    # action manifold instead of integrating tiny rotation errors.
+                    target[:3, :3] = POINTING_DOWN
+                    solved = self.guard.solve(target, current,
+                        finger_opening=max(grip, env.gripper_opening()))
+                accepted, reason = solved.accepted, solved.reason
+                n_arm = 5 if self.robot == "so101" else 7
+                if accepted:
+                    arm = solved.qpos[:n_arm]
+                    lower, upper = env.limits[:n_arm].T
+                    if np.any(arm < lower + .003) or np.any(arm > upper - .003):
+                        accepted, reason = False, "command_joint_stop_margin"
+                if accepted and self.robot == "so101":
+                    command = np.r_[solved.qpos[:5], grip]
+                    accepted, reason = self._check_so101_command(current, guard_current, command)
+                projection = None
+                if accepted and getattr(self, "require_source_mapping", False):
+                    accepted, projection = self._source_mapping_path(current, solved.qpos, grip)
+                    if not accepted:
+                        reason = projection["reason"]
+                attempts.append({"fraction": candidate_fraction, "accepted": accepted, "reason": reason,
+                                 **({"source_mapping": projection} if projection is not None else {})})
+                if accepted:
+                    fraction = candidate_fraction
+                    break
         jaw_fallback = None
         if self.robot == "so101":
             command = np.r_[solved.qpos[:5], grip] if accepted else np.clip(current, *env.limits.T)
@@ -346,7 +379,8 @@ class CommonCartesianExecutor:
                 if jaw_accepted:
                     command = jaw_command
         else:
-            command = np.r_[solved.qpos if accepted else current, grip]
+            hold = solved.qpos if accepted or reason == "measured_beyond_soft_stop" else current
+            command = np.r_[hold, grip]
         issued_action = self.native_feedback_action(command, before_pose=current_pose)
         obs, _, _, truncated, info = env.step(command)
         applied = info["control"].get("applied_radians" if self.robot == "so101" else "applied", command)

@@ -29,9 +29,34 @@ def validate_semantics(contract: dict) -> int:
     return count
 
 
+# MuJoCo soft stops leave measured qpos a few milliradians outside jnt_range.
+# 20 mrad covers the observed ~10 mrad dynamic overshoot and still rejects a
+# joint that is genuinely past the stop. Requested targets do not use this.
+MEASURED_SOFT_LIMIT_TOLERANCE_RAD = 2e-2
+
+
+def _project_soft_readback(q, limits, tolerance):
+    """Clip a readback that sits only slightly outside a native stop.
+
+    ``None`` means at least one joint is farther than ``tolerance`` outside.
+    That is a genuine limit violation, not soft-stop overshoot.
+    """
+    low, high = limits[:, 0], limits[:, 1]
+    if np.any(q < low - tolerance) or np.any(q > high + tolerance):
+        return None
+    return np.clip(q, low, high)
+
+
 def check_joint_request(kinematics, current, command_start, requested, max_delta,
                         samples: int = 17) -> tuple[bool, str, np.ndarray]:
-    """Check the requested endpoint and both rate-bounded command-path proxies."""
+    """Check the requested endpoint and both rate-bounded command-path proxies.
+
+    A measured joint or previous actuator command a few milliradians past a
+    soft stop is clipped before the limit gate, so an in-range command is not
+    rejected on every later tick. A larger violation still rejects. Requested
+    targets stay on the hard limits. Workspace and collision probes still see
+    the unclipped pose.
+    """
     current, command_start, requested, max_delta = map(
         lambda value: np.asarray(value, float), (current, command_start, requested, max_delta))
     if (any(v.shape != (6,) or not np.isfinite(v).all() for v in
@@ -40,12 +65,15 @@ def check_joint_request(kinematics, current, command_start, requested, max_delta
     if type(samples) is not int or samples < 3:
         raise ValueError("at least three static path samples required")
     limits = kinematics.limits
-    if np.any(current < limits[:, 0]) or np.any(current > limits[:, 1]):
-        return False, "current_native_limits", current.copy()
-    if np.any(command_start < limits[:, 0]) or np.any(command_start > limits[:, 1]):
-        return False, "command_native_limits", current.copy()
+    measured, commanded = current.copy(), command_start.copy()
+    current = _project_soft_readback(measured, limits, MEASURED_SOFT_LIMIT_TOLERANCE_RAD)
+    if current is None:
+        return False, "current_native_limits", measured.copy()
+    command_start = _project_soft_readback(commanded, limits, MEASURED_SOFT_LIMIT_TOLERANCE_RAD)
+    if command_start is None:
+        return False, "command_native_limits", measured.copy()
     if np.any(requested < limits[:, 0]) or np.any(requested > limits[:, 1]):
-        return False, "target_native_limits", current.copy()
+        return False, "target_native_limits", measured.copy()
     applied = command_start + np.clip(requested - command_start, -max_delta, max_delta)
 
     def probe(q):
@@ -55,14 +83,23 @@ def check_joint_request(kinematics, current, command_start, requested, max_delta
             return "outside_workspace"
         return "collision" if kinematics._collision() else None
 
+    # Projection is only the limit gate and the rate-bounded command. Contact
+    # at the true overshot pose must still reject.
+    low, high = limits[:, 0], limits[:, 1]
+    for q in (measured, commanded):
+        if np.array_equal(q, np.clip(q, low, high)):
+            continue
+        reason = probe(q)
+        if reason:
+            return False, "path_" + reason, measured.copy()
     reason = probe(requested)
     if reason:
-        return False, "target_" + reason, current.copy()
+        return False, "target_" + reason, measured.copy()
     for start in (current, command_start):
         for fraction in np.linspace(0, 1, samples):
             reason = probe(start + fraction * (applied - start))
             if reason:
-                return False, "path_" + reason, current.copy()
+                return False, "path_" + reason, measured.copy()
     return True, "accepted", applied
 
 

@@ -123,6 +123,47 @@ def test_joint_request_checks_capped_path_not_only_requested_endpoint():
     assert not accepted and reason == "path_collision"
 
 
+def test_soft_limit_overshoot_does_not_reject_an_inward_command():
+    """0.23 mrad past a stop must not freeze later in-range commands."""
+    current = np.zeros(6)
+    current[3] = 1.00023
+    requested = np.zeros(6)
+    requested[3] = .9
+    accepted, reason, target = check_joint_request(
+        Kinematics(), current, current.copy(), requested, np.full(6, .1))
+    assert accepted and reason == "accepted"
+    assert target[3] <= 1.
+
+    start = np.zeros(6)
+    start[3] = 1.00023
+    accepted, reason, target = check_joint_request(
+        Kinematics(), np.zeros(6), start, requested, np.full(6, .1))
+    assert accepted and reason == "accepted"
+    assert target[3] <= 1.
+
+    far = current.copy()
+    far[3] = 1.2
+    accepted, reason, hold = check_joint_request(
+        Kinematics(), far, far.copy(), requested, np.full(6, .1))
+    assert not accepted and reason == "current_native_limits"
+    np.testing.assert_array_equal(hold, far)
+
+
+def test_soft_limit_overshoot_collision_uses_the_measured_pose():
+    ik = Kinematics()
+    ik.config = {"workspace_min": [-2, -2, -2], "workspace_max": [2, 2, 2]}
+    # The clipped joint (1.0) is outside this interval; only the 0.23 mrad
+    # overshoot is inside it. Skipping the raw pose would accept the command.
+    ik.collision_interval = (1.0001, 1.01)
+    current = np.zeros(6)
+    current[0] = 1.00023
+    requested = np.zeros(6)
+    requested[0] = .5
+    accepted, reason, _ = check_joint_request(
+        ik, current, current.copy(), requested, np.full(6, .1))
+    assert not accepted and reason == "path_collision"
+
+
 def test_joint_request_matches_native_rate_cap_about_previous_command():
     start = np.full(6, .2)
     requested = np.full(6, .5)

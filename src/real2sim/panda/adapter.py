@@ -49,7 +49,7 @@ class IKResult:
     reason: str  # accepted | outside_workspace | joint_limit | residual_rejected | collision
 
 
-SEED_LIMIT_TOLERANCE_RAD = 1e-3  # live qpos may sit a few ULP (or soft-limit overshoot) past a limit
+SEED_LIMIT_TOLERANCE_RAD = 1e-3  # clip and solve within this; further overshoot is a hold
 
 
 class PandaIK:
@@ -134,22 +134,31 @@ class PandaIK:
         fingers for the penetration check (``None`` keeps the data's current finger pose).
 
         A seed within ``SEED_LIMIT_TOLERANCE_RAD`` outside a joint limit is clipped onto the
-        limit (the live arm routinely sits a few ULP past a limit after a clipped solution);
-        anything further out is a caller error. On rejection ``qpos`` is that clipped seed.
+        limit (the live arm routinely sits a few ULP past a limit after a clipped solution).
+        A larger finite overshoot does not raise: the measured pose is checked for penetration
+        and the result holds the clipped seed with reason ``measured_beyond_soft_stop`` (or
+        ``collision`` when that pose already penetrates). On rejection ``qpos`` is that clipped seed.
         """
         target, seed = np.asarray(target, dtype=float), np.asarray(seed, dtype=float)
         if target.shape != (4, 4) or not np.all(np.isfinite(target)) or \
                 not np.allclose(target[3], [0, 0, 0, 1]) or not is_rotation(target[:3, :3]):
             raise ValueError("IK target must be a finite proper 4x4 transform")
-        if seed.shape != (N_ARM,) or not np.all(np.isfinite(seed)) or \
-                np.any(seed < self.limits[:, 0] - SEED_LIMIT_TOLERANCE_RAD) or \
-                np.any(seed > self.limits[:, 1] + SEED_LIMIT_TOLERANCE_RAD):
+        if seed.shape != (N_ARM,) or not np.all(np.isfinite(seed)):
             raise ValueError("IK seed must be seven finite radians inside the joint limits")
-        seed = np.clip(seed, self.limits[:, 0], self.limits[:, 1])
+        clipped = np.clip(seed, self.limits[:, 0], self.limits[:, 1])
+        beyond = (np.any(seed < self.limits[:, 0] - SEED_LIMIT_TOLERANCE_RAD)
+                  or np.any(seed > self.limits[:, 1] + SEED_LIMIT_TOLERANCE_RAD))
         if finger_opening is not None:
             self.set_finger_opening(finger_opening)
         cfg = self.config
         p_t, R_t = target[:3, 3], target[:3, :3]
+        if beyond:
+            measured = self.forward(seed)
+            position_error = float(np.linalg.norm(p_t - measured[:3, 3]))
+            orientation_error = float(np.linalg.norm(log_so3(R_t @ measured[:3, :3].T)))
+            reason = "collision" if self._penetrates() else "measured_beyond_soft_stop"
+            return IKResult(clipped.copy(), False, position_error, orientation_error, 0, reason)
+        seed = clipped
         if np.any(p_t < self.workspace[0]) or np.any(p_t > self.workspace[1]):
             T = self.forward(seed)
             return IKResult(seed.copy(), False, float(np.linalg.norm(p_t - T[:3, 3])),

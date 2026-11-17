@@ -91,13 +91,90 @@ def test_feedback_distinguishes_requested_issued_applied_and_measured_motion(acc
     assert detail["achieved_common_action"][6] == .4
 
 
-def test_soft_stop_projection_only_accepts_small_measured_seed_error():
+def test_soft_stop_projection_clips_small_error_and_flags_larger_overshoot():
     measured = np.array([1.0001, -.2])
     limits = np.array([[-1., 1.], [-1., 1.]])
-    np.testing.assert_array_equal(soft_stop_seed(measured, limits), [1., -.2])
+    bounded, exceeded = soft_stop_seed(measured, limits)
+    np.testing.assert_array_equal(bounded, [1., -.2])
+    assert not exceeded
     assert measured[0] == 1.0001
-    with pytest.raises(ValueError, match="soft-stop"):
-        soft_stop_seed(np.array([1.002, 0.]), limits)
+    bounded, exceeded = soft_stop_seed(np.array([1.002, 0.]), limits)
+    np.testing.assert_array_equal(bounded, [1., 0.])
+    assert exceeded
+    bounded, exceeded = soft_stop_seed(np.array([1.010355, 0.]), limits)
+    np.testing.assert_array_equal(bounded, [1., 0.])
+    assert exceeded
+    with pytest.raises(ValueError, match="finite"):
+        soft_stop_seed(np.array([np.nan, 0.]), limits)
+
+
+def so101_executor(measured, *, collide=False):
+    commands, seeds = [], []
+
+    def step(command):
+        commands.append(np.asarray(command, float).copy())
+        return {}, 0., False, False, {"control": {
+            "limit_clipped": [False] * 6, "applied_radians": np.asarray(command, float).tolist()}}
+
+    def solve(target, seed, **kwargs):
+        seeds.append(np.asarray(seed, float).copy())
+        return SimpleNamespace(accepted=True, reason="accepted", qpos=np.asarray(seed, float).copy())
+
+    result = object.__new__(CommonCartesianExecutor)
+    result.robot = "so101"
+    result.require_source_mapping = False
+    result.env = SimpleNamespace(
+        ee_pose=lambda: np.eye(4), sim_state=lambda: np.asarray(measured, float).copy(),
+        step=step, limits=np.tile([-1., 1.], (6, 1)), max_velocity=np.ones(6), control_hz=25.,
+        data=SimpleNamespace(ctrl=np.zeros(6), qpos=np.zeros(6)), actuator_ids=np.arange(6),
+        mapping=SimpleNamespace(gripper_real_to_sim_rad=lambda percent: 0.,
+                                gripper_sim_to_real_percent=lambda rad: 0.))
+    result.guard = SimpleNamespace(
+        limits=np.tile([-1., 1.], (6, 1)), data=SimpleNamespace(qpos=np.zeros(6)),
+        config={"workspace_min": np.full(3, -2.), "workspace_max": np.full(3, 2.)},
+        forward=lambda q, **kwargs: np.eye(4), _collision=lambda: collide, solve=solve)
+    return result, commands, seeds
+
+
+def test_dynamic_soft_stop_overshoot_holds_clipped_joint_without_raising():
+    measured = np.zeros(6)
+    measured[1] = 1.010355
+    controller, commands, seeds = so101_executor(measured)
+    result = controller.step(np.array([.01, 0., 0., 0., 0., 0., 0.]))
+    assert seeds == []
+    assert result.ik_rejected
+    assert result.detail["ik_reason"] == "measured_beyond_soft_stop"
+    assert commands[0][1] == pytest.approx(1.)
+    np.testing.assert_allclose(commands[0][:5], np.clip(measured[:5], -1., 1.))
+
+
+def test_soft_stop_hold_still_reports_collision_at_the_measured_pose():
+    measured = np.zeros(6)
+    measured[1] = 1.010355
+    controller, commands, seeds = so101_executor(measured, collide=True)
+    result = controller.step(np.zeros(7))
+    assert seeds == []
+    assert result.detail["ik_reason"] == "actual_pose_workspace_or_collision"
+    assert result.ik_rejected
+
+
+def test_sub_mrad_overshoot_is_clipped_into_the_recovery_seed():
+    measured = np.zeros(6)
+    measured[1] = 1.00023
+    controller, commands, seeds = so101_executor(measured)
+
+    def solve(target, seed, **kwargs):
+        seeds.append(np.asarray(seed, float).copy())
+        q = np.asarray(seed, float).copy()
+        q[1] = .5
+        return SimpleNamespace(accepted=True, reason="accepted", qpos=q)
+
+    controller.guard.solve = solve
+    result = controller.step(np.zeros(7))
+    assert seeds and seeds[0][1] == pytest.approx(1.)
+    assert np.all(np.abs(seeds[0][:5]) <= 1.)
+    assert not result.ik_rejected
+    assert commands[0][1] == pytest.approx(.5)
 
 
 def source_constrained_executor(representable):
