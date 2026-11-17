@@ -37,8 +37,7 @@ def digest_json(value):
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
     """Hash the native policy, processors, scene builders, inputs and assets."""
-    paths = {Path(__file__), Path("scripts/evaluate_raw_act.py"),
-             Path(transfer.__file__), Path(transfer.native.__file__),
+    paths = {Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
              Path(transfer.retarget.__file__), Path(source_scene), *map(Path, extra_paths)}
     for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry"):
         paths.update(Path(directory).glob("*.py"))

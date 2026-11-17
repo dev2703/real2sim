@@ -13,6 +13,19 @@ from real2sim.evaluation import raw_act
 from real2sim.policy.adapters import ApplyResult
 
 
+def test_plan_hashes_live_evaluator_and_checkpoint(tmp_path):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    weights = snapshot / "model.safetensors"
+    weights.write_bytes(b"weights")
+    (snapshot / "config.json").write_text('{"chunk_size": 10, "n_action_steps": 5}')
+
+    plan = raw_act.run(tmp_path / "plan", snapshot=snapshot, plan_only=True)
+    hashes = plan["runtime_source_sha256"]
+    assert hashes[str(weights)] == plan["checkpoint_sha256"] == sha256_file(weights)
+    assert hashes[raw_act.__file__] == sha256_file(raw_act.__file__)
+
+
 def successful_cohort(seeds=tuple(range(15000, 15020))):
     return [{"robot": robot, "seed": seed, "controller_source": "raw", "ticks": 10,
         "act_ticks": 10, "assistance_ticks": 0, "intervention_count": 0,
