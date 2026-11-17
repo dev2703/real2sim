@@ -432,22 +432,16 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     if set(conditions) & set(CUSTOM_CONDITIONS) and factory is None:
         raise ValueError("Learned conditions require --controller-factory module:function")
     torch.set_num_threads(2)
-    policy = NativeLeRobotACT(snapshot) if set(conditions) - {"no_act"} else None
+    needs_policy = bool(set(conditions) - {"no_act"})
+    policy = None
     all_rows = []
     fingerprints = {}
     for robot in robots:
         for condition in conditions:
             parent = out / robot / condition
             parent.mkdir(parents=True, exist_ok=True)
-            setup = parent / "setups" / f"setup_{time.time_ns()}"
-            shared = SharedEpisode(robot, setup, source_scene,
-                                   native_contract=getattr(policy, "scene_contract", None),
-                                   initial_gripper_percent=initial_gripper_percent)
+            shared = None
             try:
-                if model_effects:
-                    from scripts.prepare_fixed_lighting_robustness import apply_model_condition
-
-                    apply_model_condition(shared.env, model_effects)
                 for seed in seeds:
                     trial_root = parent / f"seed_{seed:06d}"
                     trial_root.mkdir(exist_ok=True)
@@ -455,6 +449,17 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                 for p in sorted(trial_root.glob("attempt_*/report.json"))]
                     row = next((r for r in reversed(existing) if r is not None), None)
                     if row is None:
+                        if shared is None:
+                            if needs_policy and policy is None:
+                                policy = NativeLeRobotACT(snapshot)
+                            setup = parent / "setups" / f"setup_{time.time_ns()}"
+                            shared = SharedEpisode(robot, setup, source_scene,
+                                native_contract=getattr(policy, "scene_contract", None),
+                                initial_gripper_percent=initial_gripper_percent)
+                            if model_effects:
+                                from scripts.prepare_fixed_lighting_robustness import apply_model_condition
+
+                                apply_model_condition(shared.env, model_effects)
                         attempts = [int(p.name.split("_")[-1]) for p in trial_root.glob("attempt_*") if p.is_dir()]
                         attempt = trial_root / f"attempt_{max(attempts, default=0) + 1:04d}"
                         before_lighting = lighting(shared.env)
@@ -485,7 +490,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
                         "success": row["pick_place_success"], "intervention": row["intervention_required"],
                         "abort": row["abort"]}), flush=True)
             finally:
-                shared.close()
+                if shared is not None:
+                    shared.close()
     report["status"] = "complete"
     report["matched_initial_states_verified"] = all(r["initial_state_sha256"] is not None for r in all_rows)
     write_json(out / "report.json", report, atomic=True)
