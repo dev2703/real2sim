@@ -71,12 +71,4 @@ and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16)
 
 On Apple Silicon, install the optional backend with
 `uv pip install --python .venv/bin/python mlx==0.32.4` and add `--backend mlx`
-to `scripts/train_recovery_mlp.py`. Gradients and AdamW run in MLX/Metal;
-the selected weights export to the existing `head.pt` runtime contract.
-ACT stays frozen. Use `scripts/run_recovery_dagger.py evaluate --act-prefix`
-for observable stall-triggered, latched handover to that head.
-
-Train aggregated original and corrective packs with optional `--balance-phases`
-to balance issued-command stages within each robot/episode. Phase labels affect
-training sampling only and are never runtime inputs. Validation selects the
-checkpoint; action loss does not establish closed-loop task success.
+to `scripts/train_recovery_mlp.py`.
