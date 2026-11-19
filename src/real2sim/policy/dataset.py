@@ -46,8 +46,11 @@ class Normalizer:
         return x * self.action_std + self.action_mean
 
     def image(self, hwc_uint8: np.ndarray) -> np.ndarray:
-        chw = hwc_uint8.transpose(2, 0, 1).astype(np.float32) / 255.0
-        return (chw - self.img_mean) / self.img_std
+        chw = np.array(hwc_uint8.transpose(2, 0, 1), dtype=np.float32, order="C", copy=True)
+        chw /= 255.0
+        chw -= self.img_mean
+        chw /= self.img_std
+        return chw
 
 
 class DerivedTickDataset(Dataset):
