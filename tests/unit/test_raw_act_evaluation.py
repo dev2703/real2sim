@@ -11,6 +11,41 @@ import pytest
 from real2sim.artifacts import sha256_file
 from real2sim.evaluation import raw_act
 from real2sim.policy.adapters import ApplyResult
+from scripts import benchmark_frozen_act
+
+
+@pytest.mark.parametrize("runner", [raw_act, benchmark_frozen_act])
+@pytest.mark.parametrize("outcome, ticks", [("pick_place", 5), ("timeout", 3), ("abort", 2)])
+def test_push_only_success_does_not_end_pick_place_trial(tmp_path, monkeypatch, runner, outcome, ticks):
+    # Two resting ticks after a push, then a held lift and two resting ticks after release.
+    samples = iter(enumerate([(False, True), (False, True), (True, False),
+                              (False, True), (False, True)], start=1))
+
+    def step(obs, env):
+        tick, (held, in_bowl) = next(samples)
+        if tick == 3 and outcome == "abort":
+            raise RuntimeError("actuator failure")
+        metrics = {"ee_ball_distance_m": .01, "ball_held": held, "lifted": held,
+                   "ball_in_bowl": in_bowl, "ball_over_bowl": in_bowl,
+                   "ball_resting": in_bowl and not held, "ball_xyz": [0., 0., .1],
+                   "ball_xyz_task": [0., 0., .1], "tool_xyz_task": [0., 0., .1]}
+        return ApplyResult({}, {"control": {}, "privileged_metrics": metrics},
+                           tick == 3 and outcome == "timeout", 0.,
+                           detail={"uses_act": True, "intervention": False})
+
+    env = SimpleNamespace(control_hz=25., table_top=0., max_episode_steps=6,
+                          task={"episode": {"success_hold_s": .08}, "ball": {"radius": .03}})
+    shared = SimpleNamespace(env=env, robot="so101", reset=lambda *_: ({}, {}))
+    policy = SimpleNamespace(weights_sha256="weights")
+    monkeypatch.setattr(runner, "FrozenDriver", lambda *_: SimpleNamespace(step=step))
+    monkeypatch.setattr(runner, "initial_fingerprint", lambda *_: {"seed": 15000})
+    args = (shared,) if runner is raw_act else (shared, "raw")
+    row = runner.run_episode(*args, seed=15000, directory=tmp_path / "trial", policy=policy)
+
+    assert row["ticks"] == row["act_ticks"] == ticks
+    assert row["success"] is (outcome != "abort")
+    assert row["pick_place_success"] is (outcome == "pick_place")
+    assert row["abort"] == ("RuntimeError: actuator failure" if outcome == "abort" else None)
 
 
 def test_plan_hashes_live_evaluator_and_checkpoint(tmp_path):

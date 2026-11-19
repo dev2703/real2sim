@@ -146,14 +146,14 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                 intervention_count += assisted and not mode_before
                 mode_before = assisted
                 obs = result.obs
-                done = tracker.update(result.info["privileged_metrics"],
+                tracker.update(result.info["privileged_metrics"],
                     saturation=result.saturation, ik_rejected=result.ik_rejected)
                 stream.write(json.dumps({"tick": tick, "time_s": tick / env.control_hz,
                     "uses_act": uses_act, "assisted": assisted, "latency_ms": latency,
                     "detail": result.detail, "control": result.info["control"],
                     "scoring_only": result.info["privileged_metrics"]}, default=json_default,
                     allow_nan=False) + "\n")
-                if done or result.truncated:
+                if tracker.pick_place_success or result.truncated:
                     break
         if condition in CUSTOM_CONDITIONS:
             trigger = getattr(controller, "trigger", None)
