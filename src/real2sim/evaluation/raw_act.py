@@ -264,14 +264,14 @@ def run_episode(shared, policy, seed, directory, *, execute_steps=None, scenario
                     raise ValueError("Raw ACT execution cannot accept assistance")
                 act_ticks += 1
                 obs = result.obs
-                done = tracker.update(result.info["privileged_metrics"],
+                tracker.update(result.info["privileged_metrics"],
                     saturation=result.saturation, ik_rejected=result.ik_rejected)
                 stream.write(json.dumps({"tick": tick, "time_s": tick / env.control_hz,
                     "uses_act": True, "assisted": False, "latency_ms": latency,
                     "detail": result.detail, "control": result.info["control"],
                     "scoring_only": result.info["privileged_metrics"]},
                     default=json_default, allow_nan=False) + "\n")
-                if done or result.truncated:
+                if tracker.pick_place_success or result.truncated:
                     break
     except (RuntimeError, ValueError, OSError) as exc:
         abort = f"{type(exc).__name__}: {exc}"
