@@ -19,3 +19,11 @@ To keep experiment logic testable and avoid script sprawl, follow these rules:
 
 If a change requires exceeding these guardrails, clean up/retire scripts in the
 same change or explicitly revise this policy and rationale.
+
+The V2 wrist-zero and camera-uncertainty drivers were retired in `a041d2a`.
+The maintained registration tests cover fit and verification separation, the
+free-landmark wrist-roll ambiguity, and unclipped joint-limit reporting. The
+retired drivers' native-base-to-mat transform and conditional four-corner fit
+with shifted principal point, unequal focal lengths, and radial distortion
+were specific to those diagnostics. The maintained planar initializer assumes
+centered, square-pixel, distortion-free intrinsics.
