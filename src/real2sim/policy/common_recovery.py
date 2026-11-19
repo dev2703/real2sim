@@ -185,7 +185,7 @@ class CommonCartesianExecutor:
 
             self.guard = PandaIK(self.env.model, config, task_origin=self.env.offset)
 
-    def _source_mapping_path(self, current, command, grip):
+    def _source_mapping_path(self, current, command, grip, current_projection):
         """Check bounded native motion without mutating the virtual source.
 
         A 1 mm command margin sits inside the unchanged 3 mm measured-pose
@@ -194,9 +194,7 @@ class CommonCartesianExecutor:
         guard, not a prediction of contact dynamics or a substitute for checking
         measured feedback at the next ACT query.
         """
-        maximum_error, checked = 0., 0
-        current_projection = self.source.project_pose(self.env.ee_pose())
-        maximum_error = current_projection.error_m
+        maximum_error, checked = current_projection.error_m, 0
         if not current_projection.accepted:
             return False, {**current_projection.diagnostics(), "path_samples": 1,
                            "command_margin_m": .001, "failed_at": "measured_pose",
@@ -320,6 +318,7 @@ class CommonCartesianExecutor:
         # pose, workspace, collision and sampled-path acceptance thresholds.
         # No object goal or geometric corrective direction enters this step.
         attempts = []
+        current_projection = None
         if beyond_soft_stop:
             accepted, reason = self._hold_measured_soft_stop(current)
             attempts.append({"fraction": 1., "accepted": False, "reason": reason})
@@ -352,7 +351,10 @@ class CommonCartesianExecutor:
                     accepted, reason = self._check_so101_command(current, guard_current, command)
                 projection = None
                 if accepted and getattr(self, "require_source_mapping", False):
-                    accepted, projection = self._source_mapping_path(current, solved.qpos, grip)
+                    if current_projection is None:
+                        current_projection = self.source.project_pose(current_pose)
+                    accepted, projection = self._source_mapping_path(
+                        current, solved.qpos, grip, current_projection)
                     if not accepted:
                         reason = projection["reason"]
                 attempts.append({"fraction": candidate_fraction, "accepted": accepted, "reason": reason,

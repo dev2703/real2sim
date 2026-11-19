@@ -204,6 +204,16 @@ def source_constrained_executor(representable):
 
 def test_act_input_requirement_backtracks_native_feasible_unrepresentable_pose():
     controller, commands = source_constrained_executor(lambda x: x <= .005)
+    measured_pose = controller.env.ee_pose()
+    controller.env.ee_pose = lambda: measured_pose
+    project_pose = controller.source.project_pose
+    projected = []
+
+    def record_projection(pose):
+        projected.append(pose)
+        return project_pose(pose)
+
+    controller.source.project_pose = record_projection
     result = controller.step(np.array([.03, 0., 0., 0., 0., 0., 1.]))
     assert result.detail["feasibility_fraction"] == .125
     assert result.detail["requires_virtual_source_mapping"]
@@ -213,6 +223,10 @@ def test_act_input_requirement_backtracks_native_feasible_unrepresentable_pose()
         "virtual_source_unrepresentable"] * 3 + ["accepted"]
     assert attempts[0]["source_mapping"]["position_tolerance_m"] == .003
     assert attempts[-1]["source_mapping"]["path_samples"] == 5
+    assert sum(pose is measured_pose for pose in projected) == 1
+
+    controller.step(np.array([.03, 0., 0., 0., 0., 0., 1.]))
+    assert sum(pose is measured_pose for pose in projected) == 2
 
 
 def test_source_constraint_checks_interior_of_native_joint_path():
