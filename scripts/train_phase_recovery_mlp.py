@@ -36,6 +36,7 @@ if __package__:
     from scripts.run_recovery_dagger import snapshot_sources
     from scripts.train_recovery_mlp import (
         SNAPSHOT,
+        _validate_scene_compatibility,
         load_collections,
         recovery_normalizers,
         robot_episode_weights,
@@ -44,6 +45,7 @@ else:
     from run_recovery_dagger import snapshot_sources
     from train_recovery_mlp import (
         SNAPSHOT,
+        _validate_scene_compatibility,
         load_collections,
         recovery_normalizers,
         robot_episode_weights,
@@ -51,8 +53,11 @@ else:
 
 
 def load_phase_collections(directories, *, expected_base_sha256,
-                           require_command_labels=False, require_sequences=False):
-    data, manifests, sources = load_collections(directories, expected_base_sha256=expected_base_sha256)
+                           require_command_labels=False, require_sequences=False,
+                           allow_mixed_scenes=False):
+    data, manifests, sources = load_collections(
+        directories, expected_base_sha256=expected_base_sha256,
+        allow_mixed_scenes=allow_mixed_scenes)
     phases = {"train": [], "val": []}
     ticks, collection_ids = {"train": [], "val": []}, {"train": [], "val": []}
     for collection_id, (directory, item) in enumerate(zip(directories, manifests, strict=True)):
@@ -211,7 +216,8 @@ def drop_approach_timers(observations, observation_names, phase_ids, training_me
 def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
           phase_weight=.2, temperature=.5, temporal_weight=0., require_command_labels=False,
           use_act=True, action_routing="soft", history_noise=0., history_dropout=0.,
-          transition_weight=0., residual_prior=True, approach_timer_dropout=0.):
+          transition_weight=0., residual_prior=True, approach_timer_dropout=0.,
+          allow_mixed_scenes=False):
     if (steps < 1 or not np.isfinite([phase_weight, temporal_weight, transition_weight]).all()
             or phase_weight <= 0 or min(temporal_weight, transition_weight) < 0):
         raise ValueError("Positive training steps and phase-loss weight required")
@@ -220,7 +226,10 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
     base_hash = sha256_file(snapshot / "model.safetensors")
     data, manifests, sources = load_phase_collections(directories, expected_base_sha256=base_hash,
         require_command_labels=require_command_labels,
-        require_sequences=temporal_weight > 0 or transition_weight > 0)
+        require_sequences=temporal_weight > 0 or transition_weight > 0,
+        allow_mixed_scenes=allow_mixed_scenes)
+    collection_scenes = _validate_scene_compatibility(
+        manifests, allow_mixed_scenes=allow_mixed_scenes)
     torch.set_num_threads(2)
     torch.manual_seed(seed)
     out.mkdir(parents=True)
@@ -295,7 +304,10 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         "train_episodes": sorted(set(training["episode_index"].tolist())),
         "validation_episodes": sorted(set(data["val"]["episode_index"].tolist())),
         "selection": "Minimum equal-robot then equal-episode normalized action MAE on held-out episodes; task success remains a separate closed-loop test",
-        "normalization_source": "Training rows only", "collections": manifests,
+        "normalization_source": "Training rows only",
+        "allow_mixed_scenes": bool(allow_mixed_scenes),
+        "collection_scenes": collection_scenes,
+        "collections": manifests,
         "binary_channel_normalization": "Declared robot/visibility indicators use mean 0 and scale 1",
         "training_robot_ids": sorted(set(training["robot_id"].tolist())),
         "seed": seed, "steps": steps, "source_sha256_before": sources,
@@ -370,6 +382,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, steps=4000, seed=42,
         "transition_loss_weight": transition_weight,
         "expert_phase_used_only_for_training_loss": True, "best_step": best_step,
         "base_weights_frozen": True, "lighting_changed": False,
+        "allow_mixed_scenes": bool(allow_mixed_scenes),
+        "collection_scenes": collection_scenes,
         "validation_metrics": metrics, "training_report": str(out / "report.json")}
     write_json(out / "head.json", metadata, atomic=True)
     report.update(status="complete", best_step=best_step, validation_metrics=metrics,
@@ -399,6 +413,8 @@ if __name__ == "__main__":
     mode.add_argument("--use-act", action="store_true", dest="use_act", default=True)
     mode.add_argument("--no-act", action="store_false", dest="use_act")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--allow-mixed-scenes", action="store_true",
+                        help="Allow aggregating collection packs whose scene or render-source metadata differs")
     args = parser.parse_args()
     train(args.data, args.out, snapshot=args.snapshot, steps=args.steps,
           seed=args.seed, phase_weight=args.phase_weight, temperature=args.temperature,
@@ -406,4 +422,5 @@ if __name__ == "__main__":
           use_act=args.use_act, action_routing=args.action_routing,
           history_noise=args.history_noise, history_dropout=args.history_dropout,
           transition_weight=args.transition_weight, residual_prior=args.residual_prior,
-          approach_timer_dropout=args.approach_timer_dropout)
+          approach_timer_dropout=args.approach_timer_dropout,
+          allow_mixed_scenes=args.allow_mixed_scenes)

@@ -17,6 +17,90 @@ from real2sim.serialization import write_json
 
 SNAPSHOT = Path(".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest")
 ARRAY_NAMES = ("observations", "base_actions", "features", "target_actions", "robot_id", "episode_index")
+SCENE_CONTRACT_KEYS = (
+    "source_scene",
+    "scene_sha256",
+    "source_scene_sha256",
+    "render_sha256",
+    "render_source_sha256",
+    "scene_contract",
+    "render_contract",
+)
+_SCENE_SOURCE_SEGMENTS = (
+    ("src", "real2sim", "sim"),
+    ("src", "real2sim", "panda"),
+    ("configs",),
+    ("assets",),
+)
+_SCENE_SOURCE_EXTENSIONS = (".yaml", ".yml", ".xml", ".stl", ".obj", ".png", ".mtl")
+_IGNORED_SOURCE_FILES = {"head.json", "head.pt", "model.safetensors", "config.json"}
+
+
+def _canonical_scene_source_key(path_str: str) -> str:
+    parts = [part for part in path_str.replace("\\", "/").split("/") if part and part != "."]
+    best_index = -1
+    for segments in _SCENE_SOURCE_SEGMENTS:
+        width = len(segments)
+        for index in range(len(parts) - width, -1, -1):
+            if tuple(parts[index:index + width]) == segments:
+                best_index = max(best_index, index)
+                break
+    if best_index != -1:
+        return "/".join(parts[best_index:])
+    return "/".join(parts) if parts else path_str
+
+
+def _is_scene_source_entry(path_str: str) -> bool:
+    parts = [part for part in path_str.replace("\\", "/").split("/") if part and part != "."]
+    name = parts[-1] if parts else path_str
+    lowered = name.lower()
+    if name in _IGNORED_SOURCE_FILES or lowered.startswith(("policy_preprocessor", "policy_postprocessor")):
+        return False
+    for segments in _SCENE_SOURCE_SEGMENTS:
+        width = len(segments)
+        if any(tuple(parts[index:index + width]) == segments for index in range(len(parts) - width + 1)):
+            return True
+    if lowered.endswith(_SCENE_SOURCE_EXTENSIONS):
+        return True
+    return "scene" in lowered or "render" in lowered
+
+
+def extract_scene_metadata(manifest: dict) -> dict:
+    """Extract declared scene/render-source identifiers and hashes from a pack manifest."""
+    metadata = {}
+    for key in SCENE_CONTRACT_KEYS:
+        value = manifest.get(key)
+        if value is not None:
+            metadata[key] = value
+    source_hashes = manifest.get("source_sha256_before")
+    if isinstance(source_hashes, dict):
+        scene_hashes = {}
+        for path_str, digest in source_hashes.items():
+            if _is_scene_source_entry(str(path_str)):
+                key = _canonical_scene_source_key(str(path_str))
+                if key in scene_hashes and scene_hashes[key] != digest:
+                    raise ValueError(f"Conflicting digests for canonical scene source {key!r}")
+                scene_hashes[key] = digest
+        if scene_hashes:
+            encoded = json.dumps(scene_hashes, sort_keys=True, separators=(",", ":")).encode()
+            metadata["source_render_sha256"] = hashlib.sha256(encoded).hexdigest()
+    return metadata
+
+
+def _validate_scene_compatibility(manifests, *, allow_mixed_scenes: bool) -> list[dict]:
+    records = [{"directory": item["directory"], **extract_scene_metadata(item["manifest"])}
+               for item in manifests]
+    identities = [{key: value for key, value in record.items() if key != "directory"}
+                  for record in records]
+    if any(identities) and not allow_mixed_scenes:
+        reference = identities[0]
+        for other in identities[1:]:
+            if other != reference:
+                raise ValueError(
+                    "Recovery collection scene/render-source metadata differs across packs "
+                    f"({reference} vs {other}); pass --allow-mixed-scenes to opt in"
+                )
+    return records
 
 
 def validate_rows(rows, *, where):
@@ -38,7 +122,7 @@ def validate_rows(rows, *, where):
         raise ValueError(f"{where}: episode IDs must be integers")
 
 
-def load_collections(directories, *, expected_base_sha256):
+def load_collections(directories, *, expected_base_sha256, allow_mixed_scenes=False):
     """Aggregate iteration packs without leaking held-out episodes into training."""
     collected, manifests, sources = {"train": [], "val": []}, [], {}
     dimension = None
@@ -97,6 +181,7 @@ def load_collections(directories, *, expected_base_sha256):
         manifests.append({"directory": str(directory), "manifest": manifest})
     if not manifests:
         raise ValueError("Supply at least one recovery collection")
+    _validate_scene_compatibility(manifests, allow_mixed_scenes=allow_mixed_scenes)
     merged = {partition: {name: np.concatenate([rows[name] for rows in groups], axis=0)
                          for name in ARRAY_NAMES}
               for partition, groups in collected.items()}
@@ -169,7 +254,8 @@ def evaluate(model, tensors, robots, *, episodes=None):
 
 
 def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
-          batch_size=256, learning_rate=5e-4, seed=42, normalization_clip=10., backend="torch", balance_phases=False):
+          batch_size=256, learning_rate=5e-4, seed=42, normalization_clip=10., backend="torch",
+          balance_phases=False, allow_mixed_scenes=False):
     if backend not in ("torch", "mlx"):
         raise ValueError("Training backend must be torch or mlx")
     if steps < 1 or batch_size < 1 or not np.isfinite(learning_rate) or learning_rate <= 0:
@@ -183,12 +269,16 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
         else:
             from train_phase_recovery_mlp import load_phase_collections
         data, manifests, sources = load_phase_collections(
-            directories, expected_base_sha256=base_hash, require_command_labels=True)
+            directories, expected_base_sha256=base_hash, require_command_labels=True,
+            allow_mixed_scenes=allow_mixed_scenes)
         for path in (Path("scripts/train_phase_recovery_mlp.py"),
                      Path("src/real2sim/policy/phase_sequences.py")):
             sources[str(path)] = sha256_file(path)
     else:
-        data, manifests, sources = load_collections(directories, expected_base_sha256=base_hash)
+        data, manifests, sources = load_collections(
+            directories, expected_base_sha256=base_hash, allow_mixed_scenes=allow_mixed_scenes)
+    collection_scenes = _validate_scene_compatibility(
+        manifests, allow_mixed_scenes=allow_mixed_scenes)
     out.mkdir(parents=True)
     torch.set_num_threads(2)
     torch.manual_seed(seed)
@@ -225,6 +315,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
               "train_rows": len(train_rows["observations"]), "validation_rows": len(val_rows["observations"]),
               "train_episodes": sorted(set(train_rows["episode_index"].tolist())),
               "validation_episodes": sorted(set(val_rows["episode_index"].tolist())),
+              "allow_mixed_scenes": bool(allow_mixed_scenes),
+              "collection_scenes": collection_scenes,
               "collections": manifests,
               "sampling": "Equal robot, episode, then issued phase" if balance_phases else "Equal robot probability then equal source-episode probability within each robot",
               "balance_phases": balance_phases,
@@ -289,6 +381,8 @@ def train(directories, out, *, snapshot=SNAPSHOT, use_act=True, steps=3000,
                 "action_names": ACTION_NAMES, "action_scales": ACTION_SCALES,
                 "best_step": best_step, "validation_mae_normalized": best,
                 "validation_metrics": best_metrics,
+                "allow_mixed_scenes": bool(allow_mixed_scenes),
+                "collection_scenes": collection_scenes,
                 "collection_iterations": [item["manifest"].get("iteration", 0) for item in manifests],
                 "base_weights_frozen": True, "training_report": str(out / "report.json")}
     write_json(out / "head.json", metadata, atomic=True)
@@ -316,8 +410,10 @@ if __name__ == "__main__":
     parser.add_argument("--learning-rate", type=float, default=5e-4)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--normalization-clip", type=float, default=10.)
+    parser.add_argument("--allow-mixed-scenes", action="store_true",
+                        help="Allow aggregating collection packs whose scene or render-source metadata differs")
     args = parser.parse_args()
     train(args.data, args.out, snapshot=args.snapshot, use_act=args.use_act, steps=args.steps,
           batch_size=args.batch_size, learning_rate=args.learning_rate, seed=args.seed,
           normalization_clip=args.normalization_clip, backend=args.backend,
-          balance_phases=args.balance_phases)
+          balance_phases=args.balance_phases, allow_mixed_scenes=args.allow_mixed_scenes)

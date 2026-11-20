@@ -11,6 +11,40 @@ import pytest
 from real2sim.artifacts import sha256_file
 from real2sim.evaluation import raw_act
 from real2sim.policy.adapters import ApplyResult
+from scripts import benchmark_frozen_act
+
+
+@pytest.mark.parametrize("runner", [raw_act, benchmark_frozen_act])
+@pytest.mark.parametrize("outcome, expected_ticks", [("push_only", 6), ("pick_place", 5), ("truncated", 3)])
+def test_runner_stops_on_strict_placement_or_episode_end(tmp_path, monkeypatch, runner, outcome, expected_ticks):
+    samples = [(False, True)] * 6
+    if outcome == "pick_place":
+        samples[2] = (True, False)
+    ticks = iter(enumerate(samples, start=1))
+
+    def step(obs, env):
+        tick, (held, in_bowl) = next(ticks)
+        metrics = {"ee_ball_distance_m": .01, "ball_held": held, "lifted": held,
+                   "ball_in_bowl": in_bowl, "ball_over_bowl": in_bowl,
+                   "ball_resting": in_bowl and not held, "ball_xyz": [0., 0., .1],
+                   "ball_xyz_task": [0., 0., .1], "tool_xyz_task": [0., 0., .1]}
+        return ApplyResult({}, {"control": {}, "privileged_metrics": metrics},
+                           outcome == "truncated" and tick == 3, 0.,
+                           detail={"uses_act": True, "intervention": False})
+
+    env = SimpleNamespace(control_hz=25., table_top=0., max_episode_steps=len(samples),
+                          task={"episode": {"success_hold_s": .08}, "ball": {"radius": .03}})
+    shared = SimpleNamespace(env=env, robot="so101", reset=lambda *_: ({}, {}))
+    policy = SimpleNamespace(weights_sha256="weights")
+    monkeypatch.setattr(runner, "FrozenDriver", lambda *_: SimpleNamespace(step=step))
+    monkeypatch.setattr(runner, "initial_fingerprint", lambda *_: {"seed": 15000})
+    args = (shared,) if runner is raw_act else (shared, "raw")
+    row = runner.run_episode(*args, seed=15000, directory=tmp_path / "trial", policy=policy)
+
+    assert row["ticks"] == row["act_ticks"] == expected_ticks
+    assert row["success"] is True
+    assert row["pick_place_success"] is (outcome == "pick_place")
+    assert row["abort"] is None
 
 
 def test_plan_hashes_live_evaluator_and_checkpoint(tmp_path):

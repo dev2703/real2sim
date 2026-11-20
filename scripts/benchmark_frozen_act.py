@@ -51,29 +51,15 @@ def lighting(env):
 
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
-    """Hash executable inputs, including saved preprocessing and static assets."""
-    from real2sim.config import load_yaml, project_path
-
-    paths = {Path(__file__), Path(raw_act.__file__), Path(transfer.__file__), Path(transfer.native.__file__),
-             Path(transfer.retarget.__file__),
-             Path("physical_measurements.md"), Path(source_scene)}
-    paths |= {p for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry")
-              for p in Path(directory).glob("*.py")}
+    """Extend the shared evaluation hashes with matched-benchmark inputs."""
+    paths = {Path(__file__), Path(__file__).resolve().with_name("evaluate_hf_recovery.py"),
+             Path("physical_measurements.md"),
+             Path("src/real2sim/evaluation/video.py"), *map(Path, extra_paths)}
     paths |= {Path("src/real2sim/policy") / name for name in (
-        "native_lerobot_act.py", "hf_recovery.py", "visual_waypoint.py", "visual_targets.py",
-        "follower_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
-        "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py")}
-    paths.add(Path("src/real2sim/policy/source_recovery_frame.py"))
-    paths.add(Path("src/real2sim/policy/progress_geometry.py"))
-    paths.add(Path("src/real2sim/policy/frozen_prefix_recovery.py"))
-    paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py")}
-    paths |= {Path("src/real2sim") / name for name in ("config.py", "serialization.py", "artifacts.py")}
-    paths |= set(Path(snapshot).glob("*.json")) | set(Path(snapshot).glob("*.safetensors"))
-    for config in (source_scene, Path("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml")):
-        cfg = load_yaml(config)
-        paths |= {project_path(cfg[key]) for key in ("task_config", "data_config", "model", "manifest")}
-    paths |= {Path(p) for p in extra_paths}
-    return {str(p.resolve()): sha256_file(p) for p in sorted(paths)}
+        "hf_recovery.py", "visual_waypoint.py", "visual_targets.py", "common_recovery.py",
+        "recovery_mlp.py", "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py",
+        "source_recovery_frame.py", "progress_geometry.py", "frozen_prefix_recovery.py")}
+    return raw_act.runtime_hashes(snapshot, source_scene, paths)
 
 
 class SharedEpisode(raw_act.SharedEpisode):
@@ -146,14 +132,14 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                 intervention_count += assisted and not mode_before
                 mode_before = assisted
                 obs = result.obs
-                done = tracker.update(result.info["privileged_metrics"],
+                tracker.update(result.info["privileged_metrics"],
                     saturation=result.saturation, ik_rejected=result.ik_rejected)
                 stream.write(json.dumps({"tick": tick, "time_s": tick / env.control_hz,
                     "uses_act": uses_act, "assisted": assisted, "latency_ms": latency,
                     "detail": result.detail, "control": result.info["control"],
                     "scoring_only": result.info["privileged_metrics"]}, default=json_default,
                     allow_nan=False) + "\n")
-                if done or result.truncated:
+                if tracker.pick_place_success or result.truncated:
                     break
         if condition in CUSTOM_CONDITIONS:
             trigger = getattr(controller, "trigger", None)

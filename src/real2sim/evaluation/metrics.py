@@ -32,8 +32,10 @@ class TrialTracker:
     ``approach``); it must match docs/PROJECT_SUMMARY.md
 
     ``lifted`` means the ball was above the lift height *while held* (plan M7 "lift success"); a
-    ball knocked into the air without a grasp is not a lift. ``rolled_out`` means a released ball
-    left the bowl and the trial did not end in success (a bounce that settles back is not a roll).
+    ball knocked into the air without a grasp is not a lift. ``pick_place_success`` requires a held
+    lift in the carry that released the ball over the bowl, followed by a settled dwell.
+    ``rolled_out`` means a released ball left the bowl and the trial did not end in success
+    (a bounce that settles back is not a roll).
     """
 
     success_hold_ticks: int
@@ -57,6 +59,7 @@ class TrialTracker:
     _held_prev: bool = False
     _released_over_bowl_after_lift: bool = False
     history: list[dict] = field(default_factory=list)
+    _lifted_this_carry: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if int(self.success_hold_ticks) < 1:
@@ -72,13 +75,21 @@ class TrialTracker:
         self.min_ee_ball_distance_m = min(self.min_ee_ball_distance_m,
                                           float(privileged["ee_ball_distance_m"]))
         held = bool(privileged["ball_held"])
-        self.lifted |= bool(privileged["lifted"]) and held
-        self.held_ever |= held
-        if self._held_prev and not held:
-            self.released = True
-            self._released_over_bowl_after_lift = self.lifted and bool(
-                privileged.get("ball_over_bowl", privileged["ball_in_bowl"]))
         in_bowl = bool(privileged["ball_in_bowl"])
+        held_lift = bool(privileged["lifted"]) and held
+        self.lifted |= held_lift
+        self.held_ever |= held
+        if held:
+            self._lifted_this_carry |= held_lift
+            self._released_over_bowl_after_lift = False
+        elif self._held_prev:
+            self.released = True
+            self._released_over_bowl_after_lift = self._lifted_this_carry and bool(
+                privileged.get("ball_over_bowl", in_bowl))
+            self._lifted_this_carry = False
+        elif not privileged.get("ball_over_bowl", True):
+            # A ball that leaves the bowl region before settling needs a new carry.
+            self._released_over_bowl_after_lift = False
         self.delivered |= in_bowl
         # Only a *released* ball leaving the bowl counts as rolling out: the ball must be unheld
         # on both the previous and the current tick. A held ball lowered through the rim+radius
