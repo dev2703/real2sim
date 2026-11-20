@@ -221,6 +221,8 @@ def test_grasp_monitor_and_rgb_close_anchor_follow_issued_jaw_without_changing_h
     controller.step({}, env)
     assert controller.grasp_anchor is None
     detail = controller.step({}, env).detail
+    assert not detail["retention_guard_enabled"]
+    assert not detail["visual_feedback_enabled"]
     assert detail["observable_grasp_feedback"]["commanded_opening"] == 1.
     assert not detail["observable_grasp_feedback"]["closed_command"]
     np.testing.assert_allclose(controller.grasp_anchor, [.01, 0., .02])
@@ -426,3 +428,188 @@ def test_rgb_handover_rejects_future_or_unobserved_reference_times():
         last_seen={"ball": 51, "bowl": 10}, visible={"ball": True, "bowl": False})
     with pytest.raises(ValueError, match="previously observed"):
         controller.inherit_rgb_references(prefix, 50)
+
+
+@pytest.mark.parametrize("phase,rejected,valid", [
+    ("TRANSPORT", False, True), ("TRANSPORT", True, False),
+    ("FAILED", False, False), ("DONE", False, False), ("LIFT", True, False),
+])
+def test_rejected_or_terminal_teacher_commands_are_not_supervision(phase, rejected, valid):
+    result = SimpleNamespace(ik_rejected=rejected, detail={"phase": phase})
+    assert dagger_module.valid_teacher_label(result) is valid
+
+
+def test_retention_controller_latches_jaw_invalidates_act_and_records_assistance(monkeypatch):
+    class References:
+        def __init__(self, _env):
+            self.ball, self.bowl = np.array([0., 0., .02]), np.array([.3, .1, .03])
+            self.log = [{"tick": 0}]
+
+        def update(self, tick, *, force=False):
+            pass
+
+        def observation_metadata(self, tick):
+            return {"visibility": (True, True), "last_seen_ticks": (tick, tick)}
+
+    commands = []
+
+    class Executor:
+        def __init__(self, _episode, **kwargs):
+            pass
+
+        def step(self, action):
+            commands.append(action.copy())
+            return SimpleNamespace(ik_rejected=False, detail={
+                "achieved_common_action": np.r_[np.zeros(6), action[6]].tolist()})
+
+    Executor.hf_to_common = lambda self, raw: np.zeros(7)
+    proposed = iter([0., 1.])
+    head = SimpleNamespace(metadata={"use_act": False,
+        "observation_names": ["fresh_rgb_ball_relative_x"]}, head_sha256="head",
+        predict=lambda *_: np.r_[.01, 0., .002, np.zeros(3), next(proposed)])
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4),
+        gripper_semantic=lambda: .7)
+    episode = SimpleNamespace(env=env, robot="panda", source=None)
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
+    monkeypatch.setattr(dagger_module, "RGBReferenceTracker", References)
+    controller = dagger_module.LearnedRecoveryController(episode, head, retention_guard=True)
+    first = controller.step({}, env).detail
+    invalidations = []
+    controller.act = SimpleNamespace(next=lambda: (np.zeros(6), np.zeros(256)),
+        invalidate=invalidations.append)
+    second = controller.step({}, env).detail
+    assert first["retention_guard"]["execution_stage"] == "CLOSE"
+    assert second["retention_guard"]["execution_stage"] == "LIFT"
+    assert second["retention_guard_enabled"]
+    assert second["predicted_common_action"][6] == 1.
+    assert commands[-1][6] == 0.
+    assert not commands[-1][[0, 1, 3, 4, 5]].any()
+    assert invalidations == ["retention_stage_transition"]
+    assert controller.grasp_anchor is not None
+
+
+def test_visual_loss_discards_target_skips_head_and_restarts_with_fresh_history(monkeypatch):
+    class References:
+        def __init__(self, _env):
+            self.ball, self.bowl = np.array([0., 0., .02]), np.array([.3, .1, .03])
+            self.log = [{"tick": 0}]
+            self.visible = {"ball": True, "bowl": True}
+            self.last_seen = {"ball": 0, "bowl": 0}
+
+        def update(self, tick, *, force=False):
+            if tick == 1 or tick >= 8:
+                self.ball = np.array([.3, 0., .02])
+                self.last_seen["ball"] = tick
+            self.last_seen["bowl"] = tick
+
+        def observation_metadata(self, tick):
+            assert self.ball is not None
+            return {"visibility": (True, True),
+                    "last_seen_ticks": (self.last_seen["ball"], tick)}
+
+        invalidate_ball = dagger_module.RGBReferenceTracker.invalidate_ball
+
+    class Executor:
+        def __init__(self, *_a, **_kw):
+            pass
+
+        def step(self, action):
+            return SimpleNamespace(ik_rejected=False, detail={
+                "achieved_common_action": np.r_[np.zeros(6), action[6]].tolist()})
+
+    inputs = []
+
+    def predict(observed, *_):
+        inputs.append(observed.copy())
+        return np.r_[.01, np.zeros(5), 0.]
+
+    head = SimpleNamespace(metadata={"use_act": False,
+        "observation_names": ["fresh_rgb_ball_relative_x"]}, head_sha256="head", predict=predict)
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4), gripper_semantic=lambda: .7)
+    episode = SimpleNamespace(env=env, robot="panda", source=None)
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
+    monkeypatch.setattr(dagger_module, "RGBReferenceTracker", References)
+    controller = dagger_module.LearnedRecoveryController(episode, head,
+        retention_guard=True, retention_mode="visual")
+    controller.step({}, env)
+    loss = controller.step({}, env).detail
+    assert loss["retention_guard"]["execution_stage"] == "REACQUIRE"
+    assert controller.ball is None and controller.references.last_seen["ball"] is None
+    calls_at_loss = len(inputs)
+    for _ in range(6):
+        detail = controller.step({}, env).detail
+        assert detail["head_skipped_missing_rgb_target"]
+        assert detail["recovery_inputs"]["observations"] is None
+        assert detail["selected_head_action"][:6] == [0.] * 6
+    assert len(inputs) == calls_at_loss
+    controller.step({}, env)  # Fresh detection permits ACQUIRE, holding this tick.
+    controller.step({}, env)
+    assert controller.retention_guard.stage == "CLOSE"
+    # All three frames are post-loss; the old goal never re-enters history.
+    frames = inputs[-1].reshape(3, 33)
+    np.testing.assert_allclose(frames[:, 13], .3)
+
+
+@pytest.mark.parametrize("sphere_tick,expected", [(0, [0., 0., .025]), (-1, None)])
+def test_close_anchor_uses_current_3d_rgb_when_table_reference_is_stale(monkeypatch, sphere_tick, expected):
+    class References:
+        def __init__(self, _env):
+            self.ball, self.bowl = np.array([.2, 0., .02]), np.array([.3, .1, .03])
+            self.log = [{"tick": 0}]
+            self.observed_ball = np.array([0., 0., .025])
+            self.observed_ball_tick = sphere_tick
+
+        def update(self, tick, *, force=False):
+            pass
+
+        def observation_metadata(self, tick):
+            return {"visibility": (False, True), "last_seen_ticks": (-25, tick)}
+
+    class Executor:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def step(self, action):
+            return SimpleNamespace(ik_rejected=False, detail={"achieved_common_action": action.tolist()})
+
+    head = SimpleNamespace(metadata={"use_act": False, "observation_names": ["fresh_rgb_ball_relative_x"]},
+        head_sha256="head", predict=lambda *_: np.r_[np.zeros(6), 0.])
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4), gripper_semantic=lambda: .7)
+    monkeypatch.setattr(dagger_module, "RGBReferenceTracker", References)
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", Executor)
+    episode = SimpleNamespace(env=env, robot="panda", source=None)
+    controller = dagger_module.LearnedRecoveryController(episode, head, visual_feedback=True, visual_ball_fit="arcs")
+    detail = controller.step({}, env).detail
+    assert detail["visual_feedback_enabled"]
+    assert detail["visual_ball_fit"] == "arcs" and not detail["retention_guard_enabled"]
+    assert controller.references.ball_3d_fit == "arcs"
+    if expected is None:
+        assert controller.grasp_anchor is None
+    else:
+        np.testing.assert_array_equal(controller.grasp_anchor, expected)
+    np.testing.assert_array_equal(detail["rgb_ball_reference"], [.2, 0., .02])
+
+
+@pytest.mark.parametrize("sphere,sphere_tick,corroborated", [
+    ([0., 0., .025], 0, True), ([0., 0., .025], -1, False), ([.2, 0., .025], 0, False),
+])
+def test_visual_guard_only_corroborates_an_existing_goal_with_current_matching_rgb(
+        monkeypatch, sphere, sphere_tick, corroborated):
+    references = SimpleNamespace(ball=np.array([0., 0., .02]), bowl=np.array([.3, .1, .03]),
+        observed_ball=np.array(sphere), observed_ball_tick=sphere_tick, log=[{"tick": 0}],
+        update=lambda *_a, **_kw: None,
+        observation_metadata=lambda tick: {"visibility": (False, True), "last_seen_ticks": (-25, tick)})
+    monkeypatch.setattr(dagger_module, "RGBReferenceTracker", lambda _: references)
+    executor = SimpleNamespace(step=lambda action: SimpleNamespace(ik_rejected=False,
+        detail={"achieved_common_action": action.tolist()}))
+    monkeypatch.setattr(dagger_module, "CommonCartesianExecutor", lambda *_a, **_kw: executor)
+    head = SimpleNamespace(metadata={"use_act": False, "observation_names": ["fresh_rgb_ball_relative_x"]},
+        head_sha256="head", predict=lambda *_: np.r_[np.zeros(6), 0.])
+    env = SimpleNamespace(control_hz=25., ee_pose=lambda: np.eye(4), gripper_semantic=lambda: .7)
+    controller = dagger_module.LearnedRecoveryController(SimpleNamespace(env=env, robot="panda", source=None),
+        head, retention_guard=True, retention_mode="visual", visual_ball_fit="arcs")
+    detail = controller.step({}, env).detail
+    guard = detail["retention_guard"]
+    assert guard["rgb_3d_corroborated_pickup_reference"] is corroborated
+    assert guard["execution_stage"] == ("CLOSE" if corroborated else "ACQUIRE")
+    assert detail["rgb_reference_age_s"][0] == 1.  # Head still receives the real reference age.

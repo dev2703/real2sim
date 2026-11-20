@@ -42,18 +42,23 @@ def runtime_hashes(snapshot, source_scene, extra_paths=()):
     for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry"):
         paths.update(Path(directory).glob("*.py"))
     paths.update(Path("src/real2sim/policy") / name for name in (
-        "act.py", "adapters.py", "bounded_joint.py", "dataset.py",
+        "__init__.py", "act.py", "adapters.py", "bounded_joint.py", "dataset.py",
         "follower_joint.py", "native_lerobot_act.py"))
     paths.update(Path("src/real2sim/data") / name for name in (
-        "follower_joint_targets.py", "labels.py", "raw.py", "resample.py", "transforms.py"))
+        "__init__.py", "follower_joint_targets.py", "labels.py", "raw.py", "resample.py", "transforms.py"))
     paths.update(Path("src/real2sim") / name for name in (
-        "artifacts.py", "config.py", "serialization.py"))
+        "__init__.py", "artifacts.py", "config.py", "serialization.py"))
     paths.update(Path("src/real2sim/evaluation") / name for name in (
-        "metrics.py", "oracle.py", "replay.py"))
-    paths.add(Path("src/real2sim/perception/ball_hsv.py"))
+        "__init__.py", "metrics.py", "oracle.py", "replay.py"))
+    paths.update(Path("src/real2sim/perception") / name for name in ("__init__.py", "ball_hsv.py"))
     paths.update(Path(snapshot).glob("*.json"))
     paths.update(Path(snapshot).glob("*.safetensors"))
-    for scene in (source_scene, Path("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml")):
+    source_config = load_yaml(source_scene)
+    source_task = load_yaml(project_path(source_config["task_config"]))
+    panda_scene = project_path(transfer.default_panda_scene(source_task))
+    paths.add(panda_scene)
+    paths.add(project_path(transfer.PANDA_DATA_CONFIG))
+    for scene in (source_scene, panda_scene):
         config = load_yaml(scene)
         paths.update(project_path(config[key]) for key in ("task_config", "data_config", "model", "manifest"))
         paths.update(path for path in project_path(config["model"]).parent.rglob("*")

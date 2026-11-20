@@ -32,8 +32,7 @@ from real2sim.sim.kinematics import NativeKinematics
 
 V3_REVISION = "076452e6024c778a2bffabe99ecf33776de141e1"
 # Confirmed v3 export in the Hugging Face hub cache. An absolute home path stays
-# valid when the CLI is not launched from the repository root. Learned-head
-# trainers keep their own historical v2 snapshot.
+# valid when the CLI is not launched from the repository root.
 SNAPSHOT = (
     Path.home()
     / ".cache/huggingface/hub/models--bottowork--act_so101_pickplace_v3_varied_kaggle/snapshots"

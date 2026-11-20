@@ -21,6 +21,7 @@ import numpy as np
 import torch
 
 from real2sim.artifacts import sha256_file
+from real2sim.config import REPO_ROOT, project_path
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo
 from real2sim.geometry.so3 import delta_action
@@ -46,6 +47,7 @@ from real2sim.policy.progress_geometry import (
     transform_observation_geometry,
 )
 from real2sim.policy.recovery_mlp import RecoveryMLPPolicy
+from real2sim.policy.retention_guard import RetentionGuard
 from real2sim.policy.rgb_reference_tracker import RGBReferenceTracker
 from real2sim.serialization import json_default, write_json
 
@@ -115,6 +117,15 @@ def teacher_common_action(teacher, label_result, executor):
     return common
 
 
+def valid_teacher_label(result):
+    """A rejected solve or terminal hold supplies no corrective supervision.
+
+    Native teacher acceptance does not establish that a projected common
+    action is executable; common collection separately validates that action.
+    """
+    return not result.ik_rejected and result.detail["phase"] not in ("FAILED", "DONE")
+
+
 def initial_references(env, robot):
     """Acquire RGB once; this detector never plans or executes a waypoint."""
     detector = StaticBowlRecovery(env, robot=robot)
@@ -130,14 +141,7 @@ def tracker_for(env):
 
 
 def source_files(snapshot, source_scene, extra=()):
-    return runtime_hashes(snapshot, source_scene, extra_paths=[Path(__file__),
-        Path("src/real2sim/policy/common_recovery.py"), Path("src/real2sim/policy/recovery_mlp.py"),
-        Path("src/real2sim/policy/phase_recovery_mlp.py"),
-        Path("src/real2sim/policy/source_recovery_frame.py"),
-        Path("src/real2sim/policy/progress_geometry.py"),
-        Path("src/real2sim/policy/frozen_prefix_recovery.py"),
-        Path("src/real2sim/policy/grasp_feedback.py"),
-        Path("src/real2sim/policy/rgb_reference_tracker.py"), *extra])
+    return runtime_hashes(snapshot, source_scene, extra_paths=extra)
 
 
 def snapshot_sources(out, hashes):
@@ -231,7 +235,9 @@ def save_pack(path, rows, *, feature_dim=256):
 
 
 class LearnedRecoveryController:
-    def __init__(self, episode, head, policy=None, *, phase_guard=False, recovery_frame="native"):
+    def __init__(self, episode, head, policy=None, *, phase_guard=False, retention_guard=False,
+                 retention_mode="full", recovery_frame="native", visual_feedback=False,
+                 visual_ball_fit="complete"):
         self.episode, self.env, self.robot, self.head = episode, episode.env, episode.robot, head
         self.use_act = bool(head.metadata["use_act"])
         self.feature_dim = int(head.metadata.get("act_feature_dim", 256))
@@ -254,6 +260,19 @@ class LearnedRecoveryController:
             require_source_mapping=self.use_act or self.source_frame is not None)
         if phase_guard and not hasattr(head, "last_phase_id"):
             raise ValueError("Phase guard requires a phase-supervised recovery head")
+        if retention_guard and (phase_guard or head_reference_mode(head) != "tracked"):
+            raise ValueError("Retention guard requires tracked RGB and cannot combine with phase guard")
+        if retention_guard and recovery_frame != "native":
+            raise ValueError("Retention guard currently requires the native recovery frame")
+        if retention_mode not in ("full", "jaw", "visual") or (retention_mode != "full" and not retention_guard):
+            raise ValueError("Retention mode requires enabled retention assistance and a full/jaw/visual mode")
+        self.retention_guard = RetentionGuard(self.env.control_hz, mode=retention_mode) if retention_guard else None
+        self.visual_feedback = bool(visual_feedback or (retention_guard and retention_mode == "visual"))
+        if visual_ball_fit not in ("complete", "arcs") or (visual_ball_fit != "complete" and not self.visual_feedback):
+            raise ValueError("Visual ball fit requires visual feedback and a complete/arcs mode")
+        self.visual_ball_fit = visual_ball_fit
+        if self.visual_feedback and head_reference_mode(head) != "tracked":
+            raise ValueError("Visual feedback requires tracked RGB references")
         self.grasp_monitor = ObservableGraspMonitor(self.env.control_hz)
         self.phase_guard = RecoveryPhaseGuard(self.env.control_hz) if phase_guard else None
         self.history_mode = head_history_mode(head)
@@ -273,9 +292,14 @@ class LearnedRecoveryController:
         self.reference_seed_metadata = {}
         self.rgb_reference_handover = None
         self.references = RGBReferenceTracker(self.env) if self.reference_mode == "tracked" else None
+        if self.references and self.visual_feedback:
+            self.references.track_ball_3d = True
+            self.references.ball_3d_fit = self.visual_ball_fit
         self.grasp_anchor = None
         self.previous_issued_gripper = 1.
         self.grasp_monitor.reset()
+        if self.retention_guard:
+            self.retention_guard.reset()
         if self.phase_guard:
             self.phase_guard.reset()
         self.encoder.reset()
@@ -329,20 +353,26 @@ class LearnedRecoveryController:
         del obs
         started = time.perf_counter()
         if self.references:
-            self.references.update(self.tick, force=self.ball is None)
-            metadata = self.references.observation_metadata(self.tick)
+            self.references.update(self.tick, force=self.ball is None or bool(
+                self.retention_guard and self.retention_guard.needs_rgb))
             self.ball, self.bowl = self.references.ball, self.references.bowl
             self.rgb_acquisition = self.references.log[0]
         elif self.ball is None:
             self.ball, self.bowl, self.rgb_acquisition = initial_references(env, self.robot)
-        metadata = (self.references.observation_metadata(self.tick) if self.references
-                    else self.reference_seed_metadata)
+        missing_target = self.ball is None
+        if missing_target and self.retention_guard and self.bowl is not None:
+            metadata = {"visibility": (False, self.references.visible["bowl"]),
+                        "last_seen_ticks": (None, self.references.last_seen["bowl"])}
+        else:
+            metadata = (self.references.observation_metadata(self.tick) if self.references
+                        else self.reference_seed_metadata)
         observation_env = self.source_frame.update() if self.source_frame else env
-        observed = self.encoder.encode(observation_env, self.ball, self.bowl, self.tick, **metadata)
-        if self.observation_geometry == "grasp":
+        observed = (None if missing_target else
+                    self.encoder.encode(observation_env, self.ball, self.bowl, self.tick, **metadata))
+        if observed is not None and self.observation_geometry == "grasp":
             observed = transform_observation_geometry(observed,
                 observation_names(self.reference_mode, self.history_mode, self.gripper_clock), geometry="grasp")
-        reference_ages = [(self.tick - seen) / env.control_hz
+        reference_ages = [None if seen is None else (self.tick - seen) / env.control_hz
                           for seen in metadata.get("last_seen_ticks", (0, 0))]
         pose = env.ee_pose()
         predicted_ball = (None if self.grasp_anchor is None
@@ -352,8 +382,14 @@ class LearnedRecoveryController:
         feedback = self.grasp_monitor.update(self.tick, pose[:3, 3],
             semantic_gripper(env, self.robot),
             self.previous_issued_gripper,
-            fresh_ball=fresh_ball, predicted_ball=predicted_ball)
-        if self.act:
+            fresh_ball=fresh_ball, predicted_ball=predicted_ball,
+            fresh_sphere=(getattr(self.references, "observed_ball", None)
+                if getattr(self.references, "observed_ball_tick", None) == self.tick else None))
+        seated_anchor = self.grasp_monitor.seated_rgb_anchor(pose, feedback) if self.visual_feedback else None
+        if seated_anchor is not None:
+            self.grasp_anchor = seated_anchor
+        feedback["carry_anchor_rebased_after_observed_lift"] = seated_anchor is not None
+        if self.act and not missing_target:
             raw, features = self.act.next()
             try:
                 base = (self.source_frame.hf_to_common(raw) if self.source_frame
@@ -365,17 +401,49 @@ class LearnedRecoveryController:
         else:
             base, features, invalid_prior = np.zeros(7), np.zeros(self.feature_dim, np.float32), None
         prediction_started = time.perf_counter()
-        action = self.head.predict(observed, base, features)
+        action = (np.r_[np.zeros(6), self.previous_issued_gripper] if missing_target
+                  else self.head.predict(observed, base, features))
         head_inference_ms = (time.perf_counter() - prediction_started) * 1000
         predicted_action = action.copy()
         guard_detail = None
-        if self.phase_guard:
+        if self.phase_guard and not missing_target:
             from real2sim.policy.phase_recovery_mlp import PHASE_NAMES
 
             action, guard_detail = self.phase_guard.filter(
                 action, PHASE_NAMES[self.head.last_phase_id], feedback)
-        native_action = self.source_frame.map_action(action) if self.source_frame else action
+        retention_detail = None
+        if self.retention_guard:
+            # Guard geometry and motion limits always use native task units.
+            action = self.source_frame.map_action(action) if self.source_frame else action
+            # A current 3D observation can corroborate the existing pickup
+            # reference without changing the trained reference or its age.
+            sphere = feedback.get("fresh_ball_3d")
+            corroborated = (self.retention_guard.mode == "visual" and self.ball is not None
+                            and sphere is not None and np.linalg.norm(np.asarray(sphere) - self.ball) <= .015)
+            guard_ball_age = 0. if corroborated else reference_ages[0]
+            action, retention_detail = self.retention_guard.filter(action, feedback,
+                position=pose[:3, 3], predicted_ball=predicted_ball, bowl=self.bowl,
+                ball_age_s=guard_ball_age, bowl_age_s=reference_ages[1])
+            retention_detail["rgb_3d_corroborated_pickup_reference"] = bool(corroborated)
+            retention_detail["pickup_reference_age_s"] = guard_ball_age
+        native_action = (self.source_frame.map_action(action)
+                         if self.source_frame and not self.retention_guard else action)
         result = self.executor.step(native_action)
+        if self.retention_guard:
+            self.retention_guard.observe_execution(rejected=result.ik_rejected,
+                achieved_action=result.detail["achieved_common_action"])
+            if retention_detail["stage_changed"]:
+                if self.act:
+                    self.act.invalidate("retention_stage_transition")
+                if retention_detail["execution_stage"] == "REACQUIRE":
+                    self.grasp_anchor = None
+                    self.grasp_monitor.reset()
+                    self.encoder.reset()
+                    if self.retention_guard.mode == "visual":
+                        self.references.invalidate_ball()
+                        self.ball = None
+                elif retention_detail["execution_stage"] == "ACQUIRE":
+                    self.encoder.reset()
         native = result.detail.get("requested_native")
         issued = (issued_gripper_opening(env, self.robot, native) if native is not None
                   else float(action[6]))
@@ -385,9 +453,13 @@ class LearnedRecoveryController:
         if issued >= .5:
             self.grasp_anchor = None
         elif self.previous_issued_gripper >= .5:
-            recent = bool(reference_ages and reference_ages[0] <= .2)
-            if recent and np.linalg.norm(self.ball - pose[:3, 3]) <= .06:
-                self.grasp_anchor = pose[:3, :3].T @ (self.ball - pose[:3, 3])
+            recent = bool(reference_ages and reference_ages[0] is not None and reference_ages[0] <= .2)
+            close_ball = (getattr(self.references, "observed_ball", None)
+                          if getattr(self.references, "observed_ball_tick", None) == self.tick else None)
+            if close_ball is None:
+                close_ball = self.ball if recent else None
+            if close_ball is not None and np.linalg.norm(close_ball - pose[:3, 3]) <= .06:
+                self.grasp_anchor = pose[:3, :3].T @ (close_ball - pose[:3, 3])
         self.previous_issued_gripper = issued
         if self.history_mode == "achieved":
             history_action = (self.source_frame.feedback_action(issued) if self.source_frame
@@ -406,14 +478,18 @@ class LearnedRecoveryController:
             history_mode=self.history_mode, history_feedback_action=history_action.tolist(),
             observation_geometry=self.observation_geometry,
             gripper_clock=self.gripper_clock,
-            rgb_ball_reference=self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist(),
+            rgb_ball_reference=None if self.ball is None else self.ball.tolist(), rgb_bowl_reference=self.bowl.tolist(),
             rgb_reference_visibility=list(metadata.get("visibility", (True, True))),
             rgb_reference_age_s=reference_ages,
             rgb_reference_handover=self.rgb_reference_handover,
-            recovery_inputs={"observations": observed.tolist(), "base_actions": base.tolist(),
+            head_skipped_missing_rgb_target=missing_target,
+            recovery_inputs={"observations": None if observed is None else observed.tolist(), "base_actions": base.tolist(),
                              "features": features.tolist()},
             observable_grasp_feedback=feedback, phase_guard=guard_detail,
+            visual_feedback_enabled=self.visual_feedback,
+            visual_ball_fit=self.visual_ball_fit,
             phase_guard_enabled=self.phase_guard is not None,
+            retention_guard=retention_detail, retention_guard_enabled=self.retention_guard is not None,
             predicted_common_action=predicted_action.tolist(),
             issued_gripper_open_fraction=issued,
             inference_ms=getattr(self.act, "last_inference_ms", 0.),
@@ -447,7 +523,8 @@ def validated_trial_seeds(seeds, *, name):
 def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
             source_scene=MEASURED_SCENE, learner=None, beta=1., iteration=0,
             expert_execution="common", reference_mode="initial", history_mode="selected",
-            observation_geometry="tcp", gripper_clock="all_switches", act_prefix_steps=0):
+            observation_geometry="tcp", gripper_clock="all_switches", act_prefix_steps=0,
+            act_prefix_until_stall=False, configured_gripper=False):
     train_seeds = validated_trial_seeds(train_seeds, name="Collection training seeds")
     val_seeds = validated_trial_seeds(val_seeds, name="Collection validation seeds")
     if (set(train_seeds) | set(val_seeds)) & RESERVED_EVALUATION_SEEDS:
@@ -458,7 +535,9 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         raise ValueError("DAgger beta must be in0..1 and source partitions disjoint")
     if not isinstance(act_prefix_steps, (int, np.integer)) or act_prefix_steps < 0:
         raise ValueError("Collection ACT prefix steps must be a nonnegative integer")
-    if act_prefix_steps and reference_mode != "tracked":
+    if act_prefix_steps and act_prefix_until_stall:
+        raise ValueError("Choose fixed prefix steps or stall-triggered prefix, not both")
+    if (act_prefix_steps or act_prefix_until_stall) and reference_mode != "tracked":
         raise ValueError("Collection ACT prefixes require tracked RGB references")
     base_names = observation_names(reference_mode, history_mode, gripper_clock)
     names = observation_geometry_names(base_names, geometry=observation_geometry)
@@ -479,14 +558,19 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
     if head is None and beta < 1:
         raise ValueError("Learner-mixture DAgger requires a fitted recovery head")
     extra = ([Path(learner) / "head.json", Path(learner) / "head.pt"] if learner else [])
+    source_scene = project_path(source_scene).resolve()
+    scene_name = source_scene.relative_to(REPO_ROOT) if source_scene.is_relative_to(REPO_ROOT) else source_scene
     before = source_files(snapshot, source_scene, extra)
     executed_sources = snapshot_sources(out, before)
     shared = SharedEpisode(robot, out / "live", source_scene,
-                           native_contract=policy.scene_contract)
+                           native_contract=policy.scene_contract,
+                           initial_gripper_percent=None if configured_gripper else 1.2)
     shadow = SharedEpisode(robot, out / "expert_shadow", source_scene,
-                           native_contract=policy.scene_contract)
+                           native_contract=policy.scene_contract,
+                           initial_gripper_percent=None if configured_gripper else 1.2)
     act = FrozenACTFeatures(shared, policy)
     executor = CommonCartesianExecutor(shared, require_source_mapping=True)
+    label_executor = CommonCartesianExecutor(shadow, require_source_mapping=True)
     encoder = RecoveryObservation(robot, shared.env.control_hz,
         **({"action_history": "achieved"} if history_mode == "achieved" else {}),
         **({"gripper_clock": "task_events"} if gripper_clock == "task_events" else {}))
@@ -495,8 +579,12 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "base_weights_frozen": True, "lighting_changed": False,
         "iteration": iteration, "beta_teacher_execution": beta, "learner": str(learner) if learner else None,
         "act_prefix_steps": int(act_prefix_steps),
+        "act_prefix_until_stall": bool(act_prefix_until_stall),
+        "source_scene": scene_name.as_posix(), "scene_sha256": before[str(source_scene)],
+        "initial_gripper_percent_override": None if configured_gripper else 1.2,
+        "configured_gripper": bool(configured_gripper),
         "prefix_actions_are_corrective_labels": False,
-        "expert_queries_executed_act_handoff_states": bool(act_prefix_steps),
+        "expert_queries_executed_act_handoff_states": bool(act_prefix_steps or act_prefix_until_stall),
         "expert_execution": expert_execution, "action_names": ACTION_NAMES,
         "action_scales": ACTION_SCALE.tolist(),
         "observation_names": names, "history_mode": history_mode,
@@ -512,6 +600,9 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "panda_actions_require_source_mapping": robot == "panda" and expert_execution == "common",
         "native_teacher_execution_bypasses_source_mapping": robot == "panda" and expert_execution == "native",
         "expert_terminal_hold_labels_included": False,
+        "expert_rejected_command_labels_included": False,
+        "common_labels_validated_in_shadow": expert_execution == "common",
+        "common_labels_use_accepted_backtracking_fraction": expert_execution == "common",
         "reference_mode": reference_mode,
         "reference_source": "Confident RGB detections plus declared camera/object geometry; tracked mode refreshes every5ticks",
         "source_sha256_before": before, "executed_sources_manifest": executed_sources, "trials": []}
@@ -527,9 +618,11 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                 previous_issued_gripper = None
                 teacher = None
                 prefix_ticks, prefix_finished, prefix_trace = 0, False, None
+                prefix_trigger = None
                 prefix_rgb_log = None
                 references = None
-                reason_counts = {}
+                reason_counts, label_counts = {}, {"accepted": 0, "rejected_native": 0,
+                    "terminal": 0, "rejected_common": 0}
                 trial_rows = []
                 try:
                     shared.reset(seed)
@@ -541,15 +634,32 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         references.update(0, force=True)
                         references.observation_metadata(0)
                         ball, bowl = references.ball, references.bowl
-                    if act_prefix_steps:
+                    if act_prefix_steps or act_prefix_until_stall:
                         if act_prefix_steps >= env.max_episode_steps:
                             raise ValueError("ACT prefix must leave at least one recovery control tick")
+                        from real2sim.policy.frozen_prefix_recovery import approach_distance
+                        from real2sim.policy.hf_recovery import ApproachMonitor
+                        from scripts.diag_v2_learned_panda_retarget_20261027 import (
+                            PANDA_OFFSET,
+                            SOURCE_OFFSET,
+                        )
+
+                        monitor = ApproachMonitor(env.control_hz) if act_prefix_until_stall else None
+                        offset = PANDA_OFFSET if robot == "panda" else SOURCE_OFFSET
+                        prefix_limit = monitor.deadline + 1 if monitor else act_prefix_steps
                         frozen = FrozenDriver(shared, policy)
                         prefix_trace = out / "prefixes" / partition / f"seed_{seed}.jsonl"
                         prefix_trace.parent.mkdir(parents=True, exist_ok=True)
                         with prefix_trace.open("w") as stream:
-                            for prefix_tick in range(act_prefix_steps):
+                            for prefix_tick in range(prefix_limit):
                                 references.update(prefix_tick)
+                                if monitor:
+                                    distance = approach_distance(env, references, offset, prefix_tick)
+                                    reason = monitor.update(prefix_tick, distance)
+                                    if reason:
+                                        prefix_trigger = {"tick": prefix_tick, "reason": reason,
+                                                          "distance_m": distance}
+                                        break
                                 result = frozen.step({}, env)
                                 prefix_ticks += 1
                                 prefix_finished = tracker.update(result.info["privileged_metrics"],
@@ -559,7 +669,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                                     "scoring_only": result.info["privileged_metrics"]}, default=json_default) + "\n")
                                 if prefix_finished:
                                     break
-                        references.update(prefix_ticks, force=True)
+                        if not act_prefix_until_stall:
+                            references.update(prefix_ticks, force=True)
                         prefix_rgb_log = references.log
                         observed_ticks = dict(references.last_seen)
                         references.last_seen = {name: None if seen is None else seen - prefix_ticks
@@ -601,10 +712,29 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         label_result = teacher.step({}, shadow.env)
                         command_phase = label_result.detail["phase"]
                         target = teacher_common_action(teacher, label_result, executor)
+                        label_valid = valid_teacher_label(label_result)
+                        if not label_valid:
+                            label_counts["rejected_native" if label_result.ik_rejected else "terminal"] += 1
+                        if label_valid and expert_execution == "common":
+                            # Validate the projected action against the actual
+                            # learner state, not the teacher's native branch or
+                            # the post-teacher-step shadow state. This execution
+                            # is confined to the shadow and supplies no inputs.
+                            mujoco.mj_copyData(shadow.env.data, shadow.env.model, env.data)
+                            shadow.env.steps, shadow.env._ready = env.steps, True
+                            if robot == "panda":
+                                shadow.env._ee_velocity = env._ee_velocity.copy()
+                            executable = label_executor.step(target)
+                            label_valid = not executable.ik_rejected
+                            if not label_valid:
+                                label_counts["rejected_common"] += 1
+                            if label_valid:
+                                target = np.asarray(executable.detail["common_action"], float)
                         # Terminal expert holds from a failed physical pickup
                         # are not corrective demonstrations. Retain the attempt
                         # in scoring but avoid hundreds of idle terminal labels.
-                        if command_phase not in ("FAILED", "DONE"):
+                        if label_valid:
+                            label_counts["accepted"] += 1
                             row = {"observations": observation,
                                 "base_actions": base.astype(np.float32), "features": features,
                                 "target_actions": target.astype(np.float32),
@@ -651,10 +781,12 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                     mean_latency_ms=None, video_path="", abort=abort)
                 row.update(partition=partition, supervised_rows=len(trial_rows), learner_executed_ticks=learner_ticks,
                     frozen_prefix_ticks=prefix_ticks,
+                    recovery_trigger=prefix_trigger,
                     frozen_prefix_trace=str(prefix_trace) if prefix_trace is not None else None,
                     frozen_prefix_trace_sha256=sha256_file(prefix_trace) if prefix_trace is not None else None,
                     frozen_prefix_rgb_log=prefix_rgb_log,
                     invalid_hf_priors=failures, command_reasons=reason_counts, initial_rgb=initial_rgb,
+                    teacher_label_counts=label_counts,
                     abort_source_projection=abort_projection,
                     teacher_final_phase=getattr(teacher, "phase", None) if initial_rgb else None,
                     rgb_expert_replans=replans, rgb_reference_log=references.log if references else None)
@@ -680,8 +812,9 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
 
 
 def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
-             source_scene=MEASURED_SCENE, video=False, phase_guard=False, recovery_frame="native",
-             act_prefix=False):
+             source_scene=MEASURED_SCENE, video=False, phase_guard=False, retention_guard=False, recovery_frame="native",
+             act_prefix=False, retention_mode="full", visual_feedback=False, visual_ball_fit="complete",
+             configured_gripper=False):
     seeds = validated_trial_seeds(seeds, name="Evaluation seeds")
     if out.exists():
         raise FileExistsError(out)
@@ -691,8 +824,13 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     head = load_recovery_head(head_dir, frozen_hash)
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] or act_prefix else None
     shared = SharedEpisode(robot, out / "setup", source_scene,
-                           native_contract=getattr(policy, "scene_contract", None))
+                           native_contract=getattr(policy, "scene_contract", None),
+                           initial_gripper_percent=None if configured_gripper else 1.2)
     controller = LearnedRecoveryController(shared, head, policy, phase_guard=phase_guard,
+                                           retention_guard=retention_guard,
+                                           retention_mode=retention_mode,
+                                           visual_feedback=visual_feedback,
+                                           visual_ball_fit=visual_ball_fit,
                                            recovery_frame=recovery_frame)
     if act_prefix:
         controller = frozen_prefix_controller(shared, controller, policy)
@@ -702,6 +840,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
         "robot": robot, "seeds": seeds, "head": str(head_dir), "head_sha256": head.head_sha256,
         "base_checkpoint_sha256": frozen_hash, "use_act": head.metadata["use_act"],
         "frozen_act_execution_prefix": act_prefix,
+        "initial_gripper_percent_override": None if configured_gripper else 1.2,
+        "configured_gripper": bool(configured_gripper),
         "reference_mode": head_reference_mode(head),
         "history_mode": head_history_mode(head),
         "observation_geometry": head_observation_geometry(head),
@@ -711,6 +851,11 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
         "panda_actions_require_source_mapping": robot == "panda" and (
             bool(head.metadata["use_act"]) or controller.source_frame is not None),
         "observable_grasp_feedback_changes_head_inputs": False,
+        "visual_feedback_enabled": controller.visual_feedback,
+        "visual_ball_fit": controller.visual_ball_fit,
+        "retention_guard_enabled": retention_guard,
+        "retention_guard_is_additional_execution_assistance": retention_guard,
+        "retention_guard_config": controller.retention_guard.config if controller.retention_guard else None,
         "phase_guard_enabled": phase_guard,
         "phase_guard_is_additional_execution_assistance": phase_guard,
         "observable_grasp_monitor_config": controller.grasp_monitor.config,
@@ -843,6 +988,10 @@ def controller_factory(*, env, source, robot, snapshot, condition, options):
     shared = SimpleNamespace(env=env, source=source, robot=robot)
     recovery = LearnedRecoveryController(shared, head, policy,
         phase_guard=bool(options.get("phase_guard", False)),
+        retention_guard=bool(options.get("retention_guard", False)),
+        retention_mode=options.get("retention_mode", "full"),
+        visual_feedback=bool(options.get("visual_feedback", False)),
+        visual_ball_fit=options.get("visual_ball_fit", "complete"),
         recovery_frame=options.get("recovery_frame", "native"))
     return frozen_prefix_controller(shared, recovery, policy) if condition == "hf_learned" else recovery
 
@@ -873,8 +1022,20 @@ def main():
     parser.add_argument("--video", action="store_true")
     parser.add_argument("--phase-guard", action="store_true",
                         help="Evaluate disclosed stateful jaw/phase/motion assistance")
+    parser.add_argument("--retention-guard", action="store_true",
+                        help="Evaluate observable retain/deliver/reacquire assistance with tracked RGB")
+    parser.add_argument("--retention-mode", choices=("full", "jaw", "visual"), default="full",
+                        help="visual adds 3D RGB carry/release validation; jaw preserves pickup motion; full also limits motion")
+    parser.add_argument("--visual-feedback", action="store_true",
+                        help="Observe 3D RGB ball feedback without enabling execution assistance")
+    parser.add_argument("--visual-ball-fit", choices=("complete", "arcs"), default="complete",
+                        help="Opt-in robust tangent arcs for partial RGB silhouettes; requires visual feedback")
+    parser.add_argument("--configured-gripper", action="store_true",
+                        help="Use the scene jaw reset, matching configured-gripper benchmarks")
     parser.add_argument("--act-prefix", action="store_true",
                         help="Execute frozen ACT first; observable approach failure triggers learned recovery")
+    parser.add_argument("--act-prefix-until-stall", action="store_true",
+                        help="Collection: use the same observable ACT handoff as evaluation")
     parser.add_argument("--act-prefix-steps", type=int, default=0,
                         help="Collection only: execute this many raw ACT ticks before corrective labels")
     args = parser.parse_args()
@@ -883,19 +1044,27 @@ def main():
             parser.error("--act-prefix is an evaluation option")
         if args.recovery_frame != "native":
             parser.error("--recovery-frame is an evaluation option")
-        if args.phase_guard:
-            parser.error("--phase-guard is an evaluation assistance option")
+        if (args.phase_guard or args.retention_guard or args.retention_mode != "full"
+                or args.visual_feedback or args.visual_ball_fit != "complete"):
+            parser.error("--phase-guard and --retention-guard are evaluation assistance options")
         return collect(args.robot, args.out, args.train_seeds, args.val_seeds,
             snapshot=args.snapshot, source_scene=args.source_scene, learner=args.head,
             beta=args.beta, iteration=args.iteration, expert_execution=args.expert_execution,
             reference_mode=args.reference_mode, history_mode=args.history_mode,
             observation_geometry=args.observation_geometry, gripper_clock=args.gripper_clock,
-            act_prefix_steps=args.act_prefix_steps)
+            act_prefix_steps=args.act_prefix_steps,
+            act_prefix_until_stall=args.act_prefix_until_stall,
+            configured_gripper=args.configured_gripper)
+    if args.act_prefix_until_stall:
+        parser.error("--act-prefix-until-stall is a collection option")
     if args.head is None:
         parser.error("--head is required for evaluation")
     return evaluate(args.robot, args.head, args.out, args.seeds,
         snapshot=args.snapshot, source_scene=args.source_scene, video=args.video,
-        phase_guard=args.phase_guard, recovery_frame=args.recovery_frame, act_prefix=args.act_prefix)
+        phase_guard=args.phase_guard, retention_guard=args.retention_guard,
+        recovery_frame=args.recovery_frame, act_prefix=args.act_prefix,
+        retention_mode=args.retention_mode, visual_feedback=args.visual_feedback,
+        visual_ball_fit=args.visual_ball_fit, configured_gripper=args.configured_gripper)
 
 
 if __name__ == "__main__":

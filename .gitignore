@@ -16,6 +16,9 @@ wheels/
 *.md*
 *!README.md*
 !docs/ACT_WEIGHT_SPACE_20261111.md
+!docs/DAGGER_STAGES_20261115.md
+!docs/RETENTION_SEQUENCING_20261115.md
+!docs/RECOVERY_DATA_FOLLOWUP_20261115.md
 
 # Large artifacts stay out of git
 .cache/
@@ -31,3 +34,6 @@ annotations/*.bak
 # Retained result inputs and trial records remain tracked. Keep newly generated
 # diagnostics local; use outputs/ for new runs (see docs/PROJECT_SUMMARY.md).
 /results/**
+
+!docs/VISUAL_RETENTION_FEEDBACK_20261115.md
+!docs/CARRY_OBSERVATION_FOLLOWUP_20261115.md

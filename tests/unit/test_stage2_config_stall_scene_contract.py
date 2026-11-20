@@ -272,9 +272,64 @@ def test_matching_scene_metadata_including_dagger_learner_files_is_accepted(tmp_
     assert report["collection_scenes"][0]["source_render_sha256"] == report["collection_scenes"][1]["source_render_sha256"]
 
 
+@pytest.mark.parametrize("trainer_module", [residual_trainer, phase_trainer])
+def test_identical_external_paths_and_legacy_schema_packs_are_accepted(tmp_path, trainer_module):
+    snapshot, base_hash = _make_snapshot(tmp_path)
+    external_a = "/machine-a/ext/custom_scene.yaml"
+    external_b = "/machine-b/ext/custom_scene.yaml"
+    pack_a = _make_pack(
+        tmp_path, "ext_a", base_hash=base_hash, train_episodes=(10,), val_episodes=(20,),
+        iteration=0, manifest_extra={
+            "source_scene": external_a,
+            "scene_sha256": "ext-scene-hash-1",
+            "source_sha256_before": {
+                external_a: "ext-scene-hash-1",
+                "/machine-a/repo/assets/menagerie/robotstudio_so101/so101.xml": "xml-hash-1",
+            },
+        },
+    )
+    pack_b = _make_pack(
+        tmp_path, "ext_b", base_hash=base_hash, train_episodes=(11,), val_episodes=(21,),
+        iteration=1, manifest_extra={
+            "source_scene": external_b,
+            "scene_sha256": "ext-scene-hash-1",
+            "source_sha256_before": {
+                external_b: "ext-scene-hash-1",
+                "/machine-b/repo/assets/menagerie/robotstudio_so101/so101.xml": "xml-hash-1",
+            },
+        },
+    )
+    out_ext = tmp_path / "ext_head"
+    report_ext = trainer_module.train([pack_a, pack_b], out_ext, snapshot=snapshot, steps=2, use_act=False)
+    assert report_ext["allow_mixed_scenes"] is False
+    assert [entry["source_scene"] for entry in report_ext["collection_scenes"]] == [external_a, external_b]
+
+    # Legacy pack (no top-level source_scene/scene_sha256) with matching source_sha256_before
+    # should combine cleanly with a new-schema pack for the same scene.
+    shared_hashes = {
+        "/repo/configs/v2/weight_space_20261111/sim_so101.yaml": "scene-hash-1",
+        "/repo/assets/menagerie/robotstudio_so101/so101.xml": "xml-hash-1",
+    }
+    legacy_pack = _make_pack(
+        tmp_path, "legacy", base_hash=base_hash, train_episodes=(12,), val_episodes=(22,),
+        iteration=0, manifest_extra={"source_sha256_before": shared_hashes},
+    )
+    new_pack = _make_pack(
+        tmp_path, "new_schema", base_hash=base_hash, train_episodes=(13,), val_episodes=(23,),
+        iteration=1, manifest_extra={
+            "source_scene": "configs/v2/weight_space_20261111/sim_so101.yaml",
+            "scene_sha256": "scene-hash-1",
+            "source_sha256_before": shared_hashes,
+        },
+    )
+    out_mix = tmp_path / "legacy_new_head"
+    report_mix = trainer_module.train([legacy_pack, new_pack], out_mix, snapshot=snapshot, steps=2, use_act=False)
+    assert report_mix["allow_mixed_scenes"] is False
+    assert len(report_mix["collection_scenes"]) == 2
+
+
 @pytest.mark.parametrize("conflict_meta", [
     {"scene_sha256": "different-scene-hash"},
-    {"source_scene": "configs/v2/sim_so101.yaml", "scene_sha256": "scene-hash-1"},
     {"scene_sha256": "scene-hash-1", "scene_contract": {"camera_keys": ["observation.images.top"]}},
     {"scene_sha256": "scene-hash-1", "source_sha256_before": {"configs/v2/sim_so101.yaml": "render-hash-2"}},
     {},  # One pack carries scene metadata and the other omits it.

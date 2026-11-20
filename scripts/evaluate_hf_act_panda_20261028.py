@@ -147,14 +147,21 @@ def camera_mount_at_start(env, source, mode="external_hand"):
         "panda_hand_relative_rotation": relative_R, "mode": mode}
 
 
+PANDA_DATA_CONFIG = "configs/v2/data.waypoint_20261026.yaml"
+
+
+def default_panda_scene(task):
+    return ("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml"
+            if task.get("operator_measurements") else "configs/v2/sim_panda.waypoint_20261026.yaml")
+
+
 def prepare_panda(out, source, task, base_dx, *, wrist_mount="external_hand", panda_scene=None):
     if panda_scene is None:
-        panda_scene = ("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml"
-            if task.get("operator_measurements") else "configs/v2/sim_panda.waypoint_20261026.yaml")
+        panda_scene = default_panda_scene(task)
     cfg = register_measured_task_workspace(load_yaml(panda_scene), task)
     cfg["control_hz"] = 25.
     cfg["render"] = copy.deepcopy(source.source.config["render"])
-    data = load_yaml("configs/v2/data.waypoint_20261026.yaml")
+    data = load_yaml(PANDA_DATA_CONFIG)
     data.update(policy_hz=25., camera_keys=["observation.images.iphone"], excluded_cameras=[])
     panda_task = copy.deepcopy(task)
     panda_task["additional_cameras"] = []

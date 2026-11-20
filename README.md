@@ -23,6 +23,7 @@ The following script entry points are supported and should remain listed here:
 - `scripts/run_cross_embodiment_recovery.py`
 - `scripts/train_recovery_mlp.py`
 - `scripts/train_phase_recovery_mlp.py`
+- `python -m real2sim.evaluation.visual_feedback_audit`
 
 An experimental direct weight edit is available separately from frozen ACT:
 
@@ -45,4 +46,44 @@ and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16)
 
 On Apple Silicon, install the optional backend with
 `uv pip install --python .venv/bin/python mlx==0.32.4` and add `--backend mlx`
-to `scripts/train_recovery_mlp.py`.
+to `scripts/train_recovery_mlp.py`. Gradients and AdamW run in MLX/Metal;
+the selected weights export to the existing `head.pt` runtime contract.
+ACT stays frozen. Use `scripts/run_recovery_dagger.py evaluate --act-prefix`
+for observable stall-triggered, latched handover to that head.
+
+Train aggregated original and corrective packs with optional `--balance-phases`
+to balance issued-command stages within each robot/episode. Phase labels affect
+training sampling only and are never runtime inputs. Validation selects the
+checkpoint; action loss does not establish closed-loop task success.
+
+For learner-visited corrective data, use `run_recovery_dagger.py collect`
+with `--head PREVIOUS_HEAD --beta 0.5 --iteration 1 --reference-mode tracked
+--act-prefix-until-stall`. This uses the evaluation stall monitor instead of a
+fixed ACT prefix. Preserve the head's history, geometry and gripper-clock options.
+See [the matched DAgger findings](docs/DAGGER_STAGES_20261115.md).
+
+An optional `--retention-guard` in recovery evaluation (or benchmark controller
+option `"retention_guard": true`) adds observable grasp/retain/release sequencing,
+loss reacquisition and rejection holds. It requires tracked RGB and native-frame
+recovery, and remains off by default. Both matched smoke tasks failed and Panda
+lift regressed; this is experimental assistance, not a promoted controller.
+See [the retention findings](docs/RETENTION_SEQUENCING_20261115.md).
+
+The [retention/data follow-up](docs/RECOVERY_DATA_FOLLOWUP_20261115.md) adds
+configured-jaw corrective collection, teacher-label accounting, a jaw-retention
+ablation and phase-balanced stage prediction. Historical confirmation on the
+original experiment checkout improved Panda from 1/5 to 4/5, with SO101 at 3/5.
+Those artifacts predate the publication branch's Panda retarget changes; see the
+follow-up for evidence scope and remaining transport/loss-recovery failures.
+
+Optional `--visual-feedback` adds RGB sphere observations without changing the
+head's inputs or filtering its actions. `--visual-ball-fit arcs` fits visible
+tangent arcs around shallow jaw occlusion; `complete` keeps the strict original
+fit. Both require declared camera calibration, ball colour and radius. Visual
+support remains an estimate, with `held_verified: false`. The separately enabled
+`--retention-guard --retention-mode visual` uses these observations for experimental
+carry/release assistance. Keep that guard disabled by default. See the
+[carry-observation follow-up](docs/CARRY_OBSERVATION_FOLLOWUP_20261115.md) for
+matched sensing coverage, controller outcomes and remaining failures. Audit
+saved observations with `python -m real2sim.evaluation.visual_feedback_audit`;
+scoring data enters only this offline audit.

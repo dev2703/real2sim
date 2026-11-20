@@ -15,7 +15,11 @@ from real2sim.artifacts import sha256_file
 from real2sim.policy.recovery_mlp import ACTION_NAMES, ACTION_SCALES, RecoveryMLP
 from real2sim.serialization import write_json
 
-SNAPSHOT = Path(".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest")
+if __package__:
+    from scripts.evaluate_hf_act_20261027 import SNAPSHOT
+else:
+    from evaluate_hf_act_20261027 import SNAPSHOT
+
 ARRAY_NAMES = ("observations", "base_actions", "features", "target_actions", "robot_id", "episode_index")
 SCENE_CONTRACT_KEYS = (
     "source_scene",
@@ -36,8 +40,9 @@ _SCENE_SOURCE_EXTENSIONS = (".yaml", ".yml", ".xml", ".stl", ".obj", ".png", ".m
 _IGNORED_SOURCE_FILES = {"head.json", "head.pt", "model.safetensors", "config.json"}
 
 
-def _canonical_scene_source_key(path_str: str) -> str:
-    parts = [part for part in path_str.replace("\\", "/").split("/") if part and part != "."]
+def _canonical_scene_source_key(path_str: str, *, source_scene: str | None = None) -> str:
+    normalized = path_str.replace("\\", "/")
+    parts = [part for part in normalized.split("/") if part and part != "."]
     best_index = -1
     for segments in _SCENE_SOURCE_SEGMENTS:
         width = len(segments)
@@ -47,6 +52,10 @@ def _canonical_scene_source_key(path_str: str) -> str:
                 break
     if best_index != -1:
         return "/".join(parts[best_index:])
+    if source_scene is not None:
+        source_norm = str(source_scene).replace("\\", "/")
+        if normalized == source_norm or normalized.endswith("/" + source_norm.lstrip("/")):
+            return "<source_scene>"
     return "/".join(parts) if parts else path_str
 
 
@@ -65,6 +74,21 @@ def _is_scene_source_entry(path_str: str) -> bool:
     return "scene" in lowered or "render" in lowered
 
 
+def _extract_scene_hashes(manifest: dict) -> dict[str, str]:
+    source_hashes = manifest.get("source_sha256_before")
+    if not isinstance(source_hashes, dict):
+        return {}
+    source_scene = manifest.get("source_scene")
+    scene_hashes = {}
+    for path_str, digest in source_hashes.items():
+        if _is_scene_source_entry(str(path_str)):
+            key = _canonical_scene_source_key(str(path_str), source_scene=source_scene)
+            if key in scene_hashes and scene_hashes[key] != digest:
+                raise ValueError(f"Conflicting digests for canonical scene source {key!r}")
+            scene_hashes[key] = digest
+    return scene_hashes
+
+
 def extract_scene_metadata(manifest: dict) -> dict:
     """Extract declared scene/render-source identifiers and hashes from a pack manifest."""
     metadata = {}
@@ -72,26 +96,40 @@ def extract_scene_metadata(manifest: dict) -> dict:
         value = manifest.get(key)
         if value is not None:
             metadata[key] = value
-    source_hashes = manifest.get("source_sha256_before")
-    if isinstance(source_hashes, dict):
-        scene_hashes = {}
-        for path_str, digest in source_hashes.items():
-            if _is_scene_source_entry(str(path_str)):
-                key = _canonical_scene_source_key(str(path_str))
-                if key in scene_hashes and scene_hashes[key] != digest:
-                    raise ValueError(f"Conflicting digests for canonical scene source {key!r}")
-                scene_hashes[key] = digest
-        if scene_hashes:
-            encoded = json.dumps(scene_hashes, sort_keys=True, separators=(",", ":")).encode()
-            metadata["source_render_sha256"] = hashlib.sha256(encoded).hexdigest()
+    scene_hashes = _extract_scene_hashes(manifest)
+    if scene_hashes:
+        encoded = json.dumps(scene_hashes, sort_keys=True, separators=(",", ":")).encode()
+        metadata["source_render_sha256"] = hashlib.sha256(encoded).hexdigest()
     return metadata
+
+
+def _comparison_identity(manifest: dict, record: dict, reference_scene_keys: set[str]) -> dict:
+    """Compare canonical content identities while preserving raw paths for reporting."""
+    identity = {key: value for key, value in record.items() if key not in ("directory", "source_scene")}
+    if "scene_sha256" not in identity:
+        scene_hashes = _extract_scene_hashes(manifest)
+        matched_keys = [key for key in reference_scene_keys if key in scene_hashes]
+        if len(matched_keys) == 1:
+            identity["scene_sha256"] = scene_hashes[matched_keys[0]]
+        elif not matched_keys:
+            so101_yamls = [key for key in scene_hashes if Path(key).name.startswith("sim_so101") and key.endswith((".yaml", ".yml"))]
+            if len(so101_yamls) == 1:
+                identity["scene_sha256"] = scene_hashes[so101_yamls[0]]
+    if not identity and "source_scene" in record:
+        identity["source_scene"] = record["source_scene"]
+    return identity
 
 
 def _validate_scene_compatibility(manifests, *, allow_mixed_scenes: bool) -> list[dict]:
     records = [{"directory": item["directory"], **extract_scene_metadata(item["manifest"])}
                for item in manifests]
-    identities = [{key: value for key, value in record.items() if key != "directory"}
-                  for record in records]
+    reference_scene_keys = {
+        _canonical_scene_source_key(str(record["source_scene"]))
+        for record in records
+        if record.get("source_scene") is not None
+    }
+    identities = [_comparison_identity(item["manifest"], record, reference_scene_keys)
+                  for item, record in zip(manifests, records, strict=True)]
     if any(identities) and not allow_mixed_scenes:
         reference = identities[0]
         for other in identities[1:]:

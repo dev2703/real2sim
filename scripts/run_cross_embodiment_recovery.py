@@ -34,6 +34,8 @@ def parser():
     result.add_argument("--out", type=Path, required=True)
     result.add_argument("--snapshot", type=Path, default=SNAPSHOT)
     result.add_argument("--source-scene", type=Path, default=SOURCE_SCENE)
+    result.add_argument("--configured-gripper", action="store_true",
+                        help="Use the source scene jaw reset in collection and evaluation")
     result.add_argument("--robots", nargs="+", choices=("so101", "panda"), default=["so101", "panda"],
                         help="Embodiments used for evaluation")
     result.add_argument("--train-robots", nargs="+", choices=("so101", "panda"),
@@ -85,7 +87,7 @@ def parser():
     result.add_argument("--dagger-val-seeds", nargs="+", type=int,
                         help="Held-out layouts revisited each DAgger round; defaults to --val-seeds")
     result.add_argument("--matched-benchmark", action="store_true",
-                        help="Evaluate raw ACT, RGB, ACT+RGB and fitted heads on identical resets")
+                        help="Evaluate frozen ACT and recovery controllers on identical resets")
     result.add_argument("--frozen-prefix", action="store_true",
                         help="Also compare frozen ACT followed by a fitted learned recovery head")
     result.add_argument("--prefix-recovery", choices=("learned", "no_act"),
@@ -108,6 +110,7 @@ def file_hash(path):
 def build_plan(args):
     """Construct an inspectable command graph; perform no model imports or writes."""
     out, snapshot, source_scene = map(local_path, (args.out, args.snapshot, args.source_scene))
+    gripper_options = ["--configured-gripper"] if args.configured_gripper else []
     train_robots = args.train_robots or args.robots
     if len(set(args.robots)) != len(args.robots) or len(set(train_robots)) != len(train_robots):
         raise ValueError("Embodiments must be unique")
@@ -252,7 +255,7 @@ def build_plan(args):
         for robot, directory in zip(train_robots, directories, strict=True):
             add(f"collect_{robot}", "run_recovery_dagger.py",
                 ["collect", "--robot", robot, "--out", directory,
-                 "--snapshot", snapshot, "--source-scene", source_scene,
+                 "--snapshot", snapshot, "--source-scene", source_scene, *gripper_options,
                  "--train-seeds", *args.train_seeds, "--val-seeds", *args.val_seeds,
                  "--history-mode", args.history_mode,
                  "--gripper-clock", args.gripper_clock,
@@ -321,7 +324,7 @@ def build_plan(args):
             additions.append(directory)
             add(f"collect_dagger_{iteration:04d}_{robot}", "run_recovery_dagger.py",
                 ["collect", "--robot", robot, "--out", directory,
-                 "--snapshot", snapshot, "--source-scene", source_scene,
+                 "--snapshot", snapshot, "--source-scene", source_scene, *gripper_options,
                  "--head", learner, "--beta", betas[iteration - 1], "--iteration", iteration,
                  "--train-seeds", *requested_splits["dagger_train_seeds"],
                  "--val-seeds", *requested_splits["dagger_val_seeds"],
@@ -345,7 +348,7 @@ def build_plan(args):
         heads = fit_heads(iteration)
     if args.matched_benchmark:
         directory = out / "benchmark"
-        conditions = ["raw", "rgb", "hf_rgb", *variants]
+        conditions = ["raw", *variants]
         benchmark_heads = dict(heads)
         if args.frozen_prefix:
             conditions.append("hf_learned")
@@ -353,7 +356,7 @@ def build_plan(args):
         add("matched_development_benchmark", "benchmark_frozen_act.py",
             ["--out", directory, "--robots", *args.robots,
              "--conditions", *conditions,
-             "--seeds", *args.seeds, "--snapshot", snapshot, "--source-scene", source_scene,
+             "--seeds", *args.seeds, "--snapshot", snapshot, "--source-scene", source_scene, *gripper_options,
              "--controller-factory", "scripts.run_recovery_dagger:controller_factory",
              "--controller-options", json.dumps({"heads": benchmark_heads, "recovery_frame": args.recovery_frame},
                                                  sort_keys=True)], directory, "report.json")
@@ -365,7 +368,7 @@ def build_plan(args):
             for variant, head, prefix in evaluations:
                 directory = out / "evaluation" / robot / variant
                 options = ["evaluate", "--robot", robot, "--head", head, "--out", directory,
-                           "--snapshot", snapshot, "--source-scene", source_scene,
+                           "--snapshot", snapshot, "--source-scene", source_scene, *gripper_options,
                            "--recovery-frame", args.recovery_frame, "--seeds", *args.seeds]
                 if prefix:
                     options.append("--act-prefix")
@@ -374,6 +377,7 @@ def build_plan(args):
                 add(f"evaluate_{robot}_{variant}", "run_recovery_dagger.py", options, directory, "report.json")
     return {"schema": "cross_embodiment_recovery_workflow_v1", "output": str(out),
             "snapshot": str(snapshot), "source_scene": str(source_scene), "robots": args.robots,
+            "configured_gripper": args.configured_gripper,
             "training_robots": list(train_robots),
             "zero_shot_target_robots": [robot for robot in args.robots if robot not in train_robots],
             "recovery_frame": args.recovery_frame,
