@@ -75,28 +75,14 @@ def check_episode_integrity(g, ep: int, expected_len: int, fps: float) -> None:
 
 def _index_episodes(ds: RawDataset, keep: list[int]) -> tuple[dict[int, int], set[int], dict[int, object], object]:
     """Index episode lengths and group frame rows once for the selected episodes."""
-    ep_lengths: dict[int, int] = {}
-    dup_eps: set[int] = set()
-    for ep_val, length_val in zip(
-        ds.episodes["episode_index"].tolist(), ds.episodes["length"].tolist(), strict=True
-    ):
-        ep_int = int(ep_val)
-        if ep_int in ep_lengths:
-            dup_eps.add(ep_int)
-        else:
-            ep_lengths[ep_int] = int(length_val)
-    if not keep:
-        return ep_lengths, dup_eps, {}, None
+    selected = set(keep)
+    table = ds.episodes[ds.episodes["episode_index"].isin(selected)]
+    ep_lengths = dict(zip(table["episode_index"], table["length"], strict=True))
+    dup_eps = set(table.loc[table["episode_index"].duplicated(), "episode_index"])
     df = ds.data
     empty_df = df.iloc[0:0]
-    keep_set = set(keep)
-    if len(keep_set) == 1:
-        ep0 = next(iter(keep_set))
-        sub = df[df["episode_index"] == ep0]
-        rows_by_ep = {ep0: sub} if len(sub) else {}
-    else:
-        source_df = df if len(keep_set) == len(ds.episode_indices) else df[df["episode_index"].isin(keep_set)]
-        rows_by_ep = {int(ep): g for ep, g in source_df.groupby("episode_index", sort=False)}
+    selected_rows = df[df["episode_index"].isin(selected)]
+    rows_by_ep = {ep: rows for ep, rows in selected_rows.groupby("episode_index", sort=False)}
     return ep_lengths, dup_eps, rows_by_ep, empty_df
 
 

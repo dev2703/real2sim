@@ -246,8 +246,12 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     if not isinstance(device, str) or not device or device != device.strip():
         raise ValueError("device must be a non-empty PyTorch device string")
     try:
-        torch.device(device)
-    except (RuntimeError, TypeError, ValueError) as exc:
+        requested_device = torch.device(device)
+        if requested_device.type == "meta":
+            raise ValueError("meta tensors cannot run native ACT")
+        if not plan_only and set(conditions) - {"no_act"} and device != "cpu":
+            torch.zeros(1, device=requested_device).cpu()
+    except (RuntimeError, TypeError, ValueError, AssertionError) as exc:
         raise ValueError(f"Unsupported PyTorch device: {device}") from exc
     if inference_backend not in ("legacy", "vectorized"):
         raise ValueError("inference_backend must be legacy or vectorized")

@@ -120,6 +120,11 @@ def test_prepare_preserves_episode_table_errors(tmp_path):
     }
     data_file = raw / "data" / "chunk-000" / "file-000.parquet"
     df_data = pd.read_parquet(data_file)
+    fractional = df_data.copy()
+    fractional["episode_index"] = fractional["episode_index"].replace({0: 0.5})
+    fractional.to_parquet(data_file, index=False)
+    with pytest.raises(ValueError, match="0 rows but episode table says 15"):
+        prepare(raw, cfg, tmp_path / "out_fractional", "s", "r", mode="joint")
     df_data[df_data["episode_index"] != 0].to_parquet(data_file, index=False)
     with pytest.raises(ValueError, match="0 rows but episode table says 15"):
         prepare(raw, cfg, tmp_path / "out_missing_rows", "s", "r", mode="joint")

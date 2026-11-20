@@ -309,7 +309,7 @@ def test_direct_and_module_cli_import_the_same_controller_factory(tmp_path):
     assert protocols[0]["runtime_source_sha256"][str(factory)] == sha256_file(factory)
 
 
-@pytest.mark.parametrize("device", ["", "  ", "cpu ", "unknown", None])
+@pytest.mark.parametrize("device", ["", "  ", "cpu ", "unknown", "meta", None])
 def test_invalid_device_is_rejected_before_writing_output(tmp_path, device):
     snapshot = tmp_path / "snapshot"
     snapshot.mkdir()
@@ -421,14 +421,14 @@ def test_opt_in_runtime_passes_device_and_backend_and_preserves_lazy_resume(tmp_
     monkeypatch.setattr(benchmark, "NativeLeRobotACT", Policy)
     out = tmp_path / "run"
     first = benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot,
-                          device="mps", inference_backend="vectorized")
-    assert loaded == [(snapshot, "mps", "vectorized")]
+                          device="cpu", inference_backend="vectorized")
+    assert loaded == [(snapshot, "cpu", "vectorized")]
     assert len(first["trials"]) == 1
 
     monkeypatch.setattr(benchmark, "SharedEpisode", lambda *a, **kw: pytest.fail("scene loaded"))
     monkeypatch.setattr(benchmark, "NativeLeRobotACT", lambda *a, **kw: pytest.fail("policy loaded"))
     resumed = benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot,
-                            device="mps", inference_backend="vectorized")
+                            device="cpu", inference_backend="vectorized")
     assert resumed["trials"] == first["trials"]
 
     with pytest.raises(ValueError, match="protocol/inputs changed"):
@@ -470,7 +470,7 @@ def test_opt_in_runtime_preserves_no_act_and_forwards_policy_to_learned_factory(
     )
     no_act_report = benchmark.run(
         tmp_path / "no_act", ["so101"], ["no_act"], [13000], snapshot=snapshot,
-        controller_factory="fake_mod:factory", device="mps", inference_backend="vectorized",
+        controller_factory="fake_mod:factory", device="cpu", inference_backend="vectorized",
     )
     assert len(no_act_report["trials"]) == 1
     assert seen_policies == [None]
@@ -486,8 +486,18 @@ def test_opt_in_runtime_preserves_no_act_and_forwards_policy_to_learned_factory(
     monkeypatch.setattr(benchmark, "NativeLeRobotACT", Policy)
     learned_report = benchmark.run(
         tmp_path / "learned", ["so101"], ["learned"], [13000], snapshot=snapshot,
-        controller_factory="fake_mod:factory", device="mps", inference_backend="vectorized",
+        controller_factory="fake_mod:factory", device="cpu", inference_backend="vectorized",
     )
     assert len(learned_report["trials"]) == 1
-    assert loaded == [(snapshot, "mps", "vectorized")]
+    assert loaded == [(snapshot, "cpu", "vectorized")]
     assert isinstance(seen_policies[1], Policy)
+
+def test_unavailable_execution_device_leaves_no_protocol(tmp_path, monkeypatch):
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("accelerator unavailable")
+
+    monkeypatch.setattr(benchmark.torch, "zeros", unavailable)
+    out = tmp_path / "run"
+    with pytest.raises(ValueError, match="device"):
+        benchmark.run(out, ["so101"], ["raw"], [13000], device="cuda:0")
+    assert not out.exists()
