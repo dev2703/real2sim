@@ -221,6 +221,8 @@ def test_grasp_monitor_and_rgb_close_anchor_follow_issued_jaw_without_changing_h
     controller.step({}, env)
     assert controller.grasp_anchor is None
     detail = controller.step({}, env).detail
+    assert not detail["retention_guard_enabled"]
+    assert not detail["visual_feedback_enabled"]
     assert detail["observable_grasp_feedback"]["commanded_opening"] == 1.
     assert not detail["observable_grasp_feedback"]["closed_command"]
     np.testing.assert_allclose(controller.grasp_anchor, [.01, 0., .02])
@@ -578,6 +580,7 @@ def test_close_anchor_uses_current_3d_rgb_when_table_reference_is_stale(monkeypa
     episode = SimpleNamespace(env=env, robot="panda", source=None)
     controller = dagger_module.LearnedRecoveryController(episode, head, visual_feedback=True, visual_ball_fit="arcs")
     detail = controller.step({}, env).detail
+    assert detail["visual_feedback_enabled"]
     assert detail["visual_ball_fit"] == "arcs" and not detail["retention_guard_enabled"]
     assert controller.references.ball_3d_fit == "arcs"
     if expected is None:

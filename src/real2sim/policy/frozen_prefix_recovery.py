@@ -15,9 +15,22 @@ import numpy as np
 from real2sim.geometry.so3 import is_rotation
 
 
-def approach_distance(env, ball, grasp_offset):
+def approach_distance(env, references, grasp_offset, tick):
+    """Measure approach only against a visible ball from the current refresh cycle."""
+    ball = references.ball
     if ball is None:
         return None
+    visible = getattr(references, "visible", None)
+    if visible is not None and not visible.get("ball", False):
+        return None
+    last_seen = getattr(references, "last_seen", None)
+    if last_seen is not None:
+        seen_tick = last_seen.get("ball")
+        if seen_tick is None or seen_tick > tick:
+            return None
+        refresh_ticks = getattr(references, "refresh_ticks", None)
+        if refresh_ticks is not None and tick - seen_tick >= int(refresh_ticks):
+            return None
     target = np.asarray(ball, float)
     pose = np.asarray(env.ee_pose(), float)
     if target.shape != (3,) or not np.isfinite(target).all():
@@ -71,23 +84,6 @@ class FrozenPrefixRecoveryController:
         self.frozen.reset()
         self.recovery.reset()
 
-    def _distance(self, env):
-        ball = self.references.ball
-        if ball is None:
-            return None
-        visible = getattr(self.references, "visible", None)
-        if visible is not None and not visible.get("ball", False):
-            return None
-        last_seen = getattr(self.references, "last_seen", None)
-        if last_seen is not None:
-            seen_tick = last_seen.get("ball")
-            if seen_tick is None or seen_tick > self.tick:
-                return None
-            refresh_ticks = getattr(self.references, "refresh_ticks", None)
-            if refresh_ticks is not None and self.tick - seen_tick >= int(refresh_ticks):
-                return None
-        return approach_distance(env, ball, self.grasp_offset)
-
     def step(self, obs, env):
         if env is not self.env:
             raise ValueError("Frozen-prefix controller is bound to a different environment")
@@ -96,7 +92,7 @@ class FrozenPrefixRecoveryController:
             # The tracker owns its refresh cadence and retains an aged RGB
             # reference when occluded. Stale or invisible targets yield no distance.
             self.references.update(self.tick)
-            distance = self._distance(env)
+            distance = approach_distance(env, self.references, self.grasp_offset, self.tick)
             reason = self.monitor.update(self.tick, distance)
             if reason:
                 self._trigger = {"tick": self.tick, "reason": str(reason), "distance_m": distance}

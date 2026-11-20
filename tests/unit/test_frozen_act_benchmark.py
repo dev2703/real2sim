@@ -51,6 +51,32 @@ def test_runtime_dependency_edits_invalidate_resume(tmp_path, monkeypatch, depen
     assert json.loads((out / "protocol.json").read_text()) == first
 
 
+def test_benchmark_and_collector_imports_are_all_runtime_hashed(tmp_path):
+    root = Path(benchmark.__file__).resolve().parents[1]
+    program = """
+import sys
+from pathlib import Path
+from real2sim.artifacts import sha256_file
+from scripts import benchmark_frozen_act as benchmark, run_recovery_dagger
+
+root = Path.cwd()
+hashes = benchmark.runtime_hashes(Path(sys.argv[1]), benchmark.MEASURED_SCENE)
+modules = {str(path) for module in tuple(sys.modules.values())
+           if (filename := getattr(module, "__file__", None))
+           and (path := Path(filename).resolve()).is_file()
+           and path.is_relative_to(root)
+           and path.relative_to(root).parts[0] in {"scripts", "src"}}
+assert str(Path(run_recovery_dagger.__file__).resolve()) in modules
+assert not (missing := modules - hashes.keys()), sorted(missing)
+for dependency in ("policy/retention_guard.py", "policy/sphere_arcs.py", "evaluation/visual_feedback_audit.py"):
+    path = root / "src/real2sim" / dependency
+    assert hashes[str(path)] == sha256_file(path)
+"""
+    result = subprocess.run([sys.executable, "-c", program, str(tmp_path)], cwd=root,
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
 @pytest.mark.parametrize("condition", ["rgb", "hf_rgb"])
 def test_geometric_rgb_conditions_are_rejected_before_any_run_is_written(tmp_path, condition):
     out = tmp_path / "removed_condition"

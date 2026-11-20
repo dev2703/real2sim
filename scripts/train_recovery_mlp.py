@@ -15,7 +15,11 @@ from real2sim.artifacts import sha256_file
 from real2sim.policy.recovery_mlp import ACTION_NAMES, ACTION_SCALES, RecoveryMLP
 from real2sim.serialization import write_json
 
-SNAPSHOT = Path(".cache/hf_models_20261027/models--bottowork--so101-act-h256-b16/snapshots/e696c8a078935432e3501e2c28c1fb2598fbff7e/latest")
+if __package__:
+    from scripts.evaluate_hf_act_20261027 import SNAPSHOT
+else:
+    from evaluate_hf_act_20261027 import SNAPSHOT
+
 ARRAY_NAMES = ("observations", "base_actions", "features", "target_actions", "robot_id", "episode_index")
 SCENE_CONTRACT_KEYS = (
     "source_scene",

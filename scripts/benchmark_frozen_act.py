@@ -52,7 +52,8 @@ def lighting(env):
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
     """Extend the shared evaluation hashes with matched-benchmark inputs."""
-    paths = {Path(__file__), Path(__file__).resolve().with_name("evaluate_hf_recovery.py"),
+    script_dir = Path(__file__).resolve().parent
+    paths = {Path(__file__), script_dir / "evaluate_hf_recovery.py", script_dir / "run_recovery_dagger.py",
              Path("physical_measurements.md"),
              Path("src/real2sim/evaluation/video.py"),
              Path("src/real2sim/evaluation/visual_feedback_audit.py"), *map(Path, extra_paths)}

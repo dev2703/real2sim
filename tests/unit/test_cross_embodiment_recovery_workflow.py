@@ -25,6 +25,23 @@ def collection(tmp_path, robot, *, train=(10000,), val=(11000,)):
     return directory
 
 
+@pytest.mark.parametrize("matched", [False, True])
+@pytest.mark.parametrize("configured", [False, True])
+def test_gripper_option_is_forwarded_to_collection_and_evaluation(tmp_path, matched, configured):
+    flags = ["--matched-benchmark"] if matched else []
+    if configured:
+        flags.append("--configured-gripper")
+    plan = build_plan(options(tmp_path, "--dagger-iterations", "1", "--frozen-prefix", *flags))
+    assert plan["configured_gripper"] is configured
+    for stage in plan["stages"]:
+        forwarded = configured and not stage["name"].startswith("train_")
+        assert stage["command"].count("--configured-gripper") == int(forwarded)
+    if matched and configured:
+        command = plan["stages"][-1]["command"]
+        assert command[command.index("--conditions") + 1:command.index("--seeds")] == [
+            "raw", "learned", "no_act", "hf_learned"]
+
+
 def test_fresh_workflow_trains_both_heads_and_compares_identical_resets(tmp_path):
     plan = build_plan(options(tmp_path, "--matched-benchmark"))
     assert [stage["name"] for stage in plan["stages"]] == [

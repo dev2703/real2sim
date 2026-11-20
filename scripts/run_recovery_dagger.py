@@ -21,6 +21,7 @@ import numpy as np
 import torch
 
 from real2sim.artifacts import sha256_file
+from real2sim.config import REPO_ROOT, project_path
 from real2sim.evaluation.metrics import TrialTracker, summarize
 from real2sim.evaluation.video import CaptionedVideo
 from real2sim.geometry.so3 import delta_action
@@ -140,15 +141,7 @@ def tracker_for(env):
 
 
 def source_files(snapshot, source_scene, extra=()):
-    return runtime_hashes(snapshot, source_scene, extra_paths=[Path(__file__),
-        Path("src/real2sim/policy/common_recovery.py"), Path("src/real2sim/policy/recovery_mlp.py"),
-        Path("src/real2sim/policy/phase_recovery_mlp.py"),
-        Path("src/real2sim/policy/source_recovery_frame.py"),
-        Path("src/real2sim/policy/progress_geometry.py"),
-        Path("src/real2sim/policy/frozen_prefix_recovery.py"),
-        Path("src/real2sim/policy/grasp_feedback.py"),
-        Path("src/real2sim/policy/retention_guard.py"),
-        Path("src/real2sim/policy/rgb_reference_tracker.py"), *extra])
+    return runtime_hashes(snapshot, source_scene, extra_paths=extra)
 
 
 def snapshot_sources(out, hashes):
@@ -565,6 +558,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
     if head is None and beta < 1:
         raise ValueError("Learner-mixture DAgger requires a fitted recovery head")
     extra = ([Path(learner) / "head.json", Path(learner) / "head.pt"] if learner else [])
+    source_scene = project_path(source_scene).resolve()
+    scene_name = source_scene.relative_to(REPO_ROOT) if source_scene.is_relative_to(REPO_ROOT) else source_scene
     before = source_files(snapshot, source_scene, extra)
     executed_sources = snapshot_sources(out, before)
     shared = SharedEpisode(robot, out / "live", source_scene,
@@ -585,6 +580,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
         "iteration": iteration, "beta_teacher_execution": beta, "learner": str(learner) if learner else None,
         "act_prefix_steps": int(act_prefix_steps),
         "act_prefix_until_stall": bool(act_prefix_until_stall),
+        "source_scene": scene_name.as_posix(), "scene_sha256": before[str(source_scene)],
         "initial_gripper_percent_override": None if configured_gripper else 1.2,
         "configured_gripper": bool(configured_gripper),
         "prefix_actions_are_corrective_labels": False,
@@ -658,7 +654,7 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                             for prefix_tick in range(prefix_limit):
                                 references.update(prefix_tick)
                                 if monitor:
-                                    distance = approach_distance(env, references.ball, offset)
+                                    distance = approach_distance(env, references, offset, prefix_tick)
                                     reason = monitor.update(prefix_tick, distance)
                                     if reason:
                                         prefix_trigger = {"tick": prefix_tick, "reason": reason,
@@ -817,7 +813,8 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
 
 def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
              source_scene=MEASURED_SCENE, video=False, phase_guard=False, retention_guard=False, recovery_frame="native",
-             act_prefix=False, retention_mode="full", visual_feedback=False, visual_ball_fit="complete"):
+             act_prefix=False, retention_mode="full", visual_feedback=False, visual_ball_fit="complete",
+             configured_gripper=False):
     seeds = validated_trial_seeds(seeds, name="Evaluation seeds")
     if out.exists():
         raise FileExistsError(out)
@@ -827,7 +824,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
     head = load_recovery_head(head_dir, frozen_hash)
     policy = NativeLeRobotACT(snapshot) if head.metadata["use_act"] or act_prefix else None
     shared = SharedEpisode(robot, out / "setup", source_scene,
-                           native_contract=getattr(policy, "scene_contract", None))
+                           native_contract=getattr(policy, "scene_contract", None),
+                           initial_gripper_percent=None if configured_gripper else 1.2)
     controller = LearnedRecoveryController(shared, head, policy, phase_guard=phase_guard,
                                            retention_guard=retention_guard,
                                            retention_mode=retention_mode,
@@ -842,6 +840,8 @@ def evaluate(robot, head_dir, out, seeds, *, snapshot=SNAPSHOT,
         "robot": robot, "seeds": seeds, "head": str(head_dir), "head_sha256": head.head_sha256,
         "base_checkpoint_sha256": frozen_hash, "use_act": head.metadata["use_act"],
         "frozen_act_execution_prefix": act_prefix,
+        "initial_gripper_percent_override": None if configured_gripper else 1.2,
+        "configured_gripper": bool(configured_gripper),
         "reference_mode": head_reference_mode(head),
         "history_mode": head_history_mode(head),
         "observation_geometry": head_observation_geometry(head),
@@ -1031,7 +1031,7 @@ def main():
     parser.add_argument("--visual-ball-fit", choices=("complete", "arcs"), default="complete",
                         help="Opt-in robust tangent arcs for partial RGB silhouettes; requires visual feedback")
     parser.add_argument("--configured-gripper", action="store_true",
-                        help="Collection: use the scene jaw reset, matching configured-gripper benchmarks")
+                        help="Use the scene jaw reset, matching configured-gripper benchmarks")
     parser.add_argument("--act-prefix", action="store_true",
                         help="Execute frozen ACT first; observable approach failure triggers learned recovery")
     parser.add_argument("--act-prefix-until-stall", action="store_true",
@@ -1055,8 +1055,6 @@ def main():
             act_prefix_steps=args.act_prefix_steps,
             act_prefix_until_stall=args.act_prefix_until_stall,
             configured_gripper=args.configured_gripper)
-    if args.configured_gripper:
-        parser.error("--configured-gripper is a collection option; use benchmark_frozen_act.py for matched evaluation resets")
     if args.act_prefix_until_stall:
         parser.error("--act-prefix-until-stall is a collection option")
     if args.head is None:
@@ -1066,7 +1064,7 @@ def main():
         phase_guard=args.phase_guard, retention_guard=args.retention_guard,
         recovery_frame=args.recovery_frame, act_prefix=args.act_prefix,
         retention_mode=args.retention_mode, visual_feedback=args.visual_feedback,
-        visual_ball_fit=args.visual_ball_fit)
+        visual_ball_fit=args.visual_ball_fit, configured_gripper=args.configured_gripper)
 
 
 if __name__ == "__main__":
