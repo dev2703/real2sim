@@ -6,6 +6,8 @@ base operates on the model, data, task configuration and object IDs initialized 
 
 from __future__ import annotations
 
+from functools import cached_property
+
 import mujoco
 import numpy as np
 
@@ -76,12 +78,16 @@ class PickPlaceEnv:
         self.renderer.update_scene(self.data, camera=camera)
         return self.renderer.render().copy()
 
+    @cached_property
+    def _geom_names(self) -> tuple[str, ...]:
+        return tuple(self.model.geom(i).name or f"geom_{i}" for i in range(self.model.ngeom))
+
     def _contact_pairs(self) -> list[dict]:
         pairs = []
         for contact in self.data.contact[:self.data.ncon]:
             a, b = int(contact.geom1), int(contact.geom2)
-            pairs.append({"geom1": self.model.geom(a).name or f"geom_{a}",
-                          "geom2": self.model.geom(b).name or f"geom_{b}",
+            pairs.append({"geom1": self._geom_names[a],
+                          "geom2": self._geom_names[b],
                           "distance_m": float(contact.dist)})
         return pairs
 

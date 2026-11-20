@@ -9,6 +9,7 @@ the predicted action. Simulator dynamic object state remains scoring only.
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import math
 import shutil
@@ -230,6 +231,25 @@ def save_pack(path, rows, *, feature_dim=256):
     np.savez_compressed(path, **arrays)
 
 
+def _accepts_render(fn):
+    params = inspect.signature(fn).parameters.values()
+    return any(param.name == "render" or param.kind is inspect.Parameter.VAR_KEYWORD for param in params)
+
+
+def _single_decision_iphone_renderer(env):
+    """Reuse one iPhone render across tracker refresh and ACT query within a decision."""
+    cached = {}
+
+    def render(camera):
+        if camera == "iphone":
+            if "iphone" not in cached:
+                cached["iphone"] = env.render("iphone")
+            return cached["iphone"]
+        return env.render(camera)
+
+    return render
+
+
 class LearnedRecoveryController:
     def __init__(self, episode, head, policy=None, *, phase_guard=False, recovery_frame="native"):
         self.episode, self.env, self.robot, self.head = episode, episode.env, episode.robot, head
@@ -328,8 +348,12 @@ class LearnedRecoveryController:
     def step(self, obs, env):
         del obs
         started = time.perf_counter()
+        render_camera = _single_decision_iphone_renderer(env) if self.references and self.act else None
         if self.references:
-            self.references.update(self.tick, force=self.ball is None)
+            if render_camera is not None and _accepts_render(self.references.update):
+                self.references.update(self.tick, force=self.ball is None, render=render_camera)
+            else:
+                self.references.update(self.tick, force=self.ball is None)
             metadata = self.references.observation_metadata(self.tick)
             self.ball, self.bowl = self.references.ball, self.references.bowl
             self.rgb_acquisition = self.references.log[0]
@@ -354,7 +378,10 @@ class LearnedRecoveryController:
             self.previous_issued_gripper,
             fresh_ball=fresh_ball, predicted_ball=predicted_ball)
         if self.act:
-            raw, features = self.act.next()
+            if render_camera is not None and _accepts_render(self.act.next):
+                raw, features = self.act.next(render=render_camera)
+            else:
+                raw, features = self.act.next()
             try:
                 base = (self.source_frame.hf_to_common(raw) if self.source_frame
                         else self.executor.hf_to_common(raw))
@@ -574,8 +601,12 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                     act.reset()
                     rng = np.random.default_rng(np.random.SeedSequence([seed, iteration, 20261028]))
                     for tick in range(0 if prefix_finished else env.max_episode_steps):
+                        render_camera = _single_decision_iphone_renderer(env) if references else None
                         if references:
-                            update = references.update(tick)
+                            if _accepts_render(references.update):
+                                update = references.update(tick, render=render_camera)
+                            else:
+                                update = references.update(tick)
                             ball, bowl = references.ball, references.bowl
                             if references.expert_needs_replan(teacher, update):
                                 teacher.reset()
@@ -585,7 +616,10 @@ def collect(robot, out, train_seeds, val_seeds, *, snapshot=SNAPSHOT,
                         observation = encoder.encode(env, ball, bowl, tick, **metadata)
                         if observation_geometry == "grasp":
                             observation = transform_observation_geometry(observation, base_names, geometry="grasp")
-                        raw, features = act.next()
+                        if render_camera is not None and _accepts_render(act.next):
+                            raw, features = act.next(render=render_camera)
+                        else:
+                            raw, features = act.next()
                         try:
                             base = executor.hf_to_common(raw)
                         except (RuntimeError, ValueError):
