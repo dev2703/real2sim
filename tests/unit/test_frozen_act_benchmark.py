@@ -32,6 +32,45 @@ def test_benchmark_cli_defaults_to_raw_act_only(tmp_path, monkeypatch):
     monkeypatch.setattr(sys, "argv", ["benchmark_frozen_act.py", "--out", str(tmp_path / "run"), "--plan-only"])
     benchmark.main()
     assert calls[0][0][2] == ["raw"]
+    assert calls[0][1]["device"] == "cpu"
+    assert calls[0][1]["inference_backend"] == "legacy"
+
+
+def test_benchmark_cli_forwards_opt_in_device_and_inference_backend(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(benchmark, "run", lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_frozen_act.py",
+            "--out",
+            str(tmp_path / "run"),
+            "--device",
+            "mps",
+            "--inference-backend",
+            "vectorized",
+            "--plan-only",
+        ],
+    )
+    benchmark.main()
+    assert calls[0][1]["device"] == "mps"
+    assert calls[0][1]["inference_backend"] == "vectorized"
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_frozen_act.py",
+            "--out",
+            str(tmp_path / "run"),
+            "--inference-backend",
+            "unknown",
+            "--plan-only",
+        ],
+    )
+    with pytest.raises(SystemExit):
+        benchmark.main()
 
 
 def test_benchmark_import_does_not_load_geometric_rgb_control():
@@ -268,3 +307,197 @@ def test_direct_and_module_cli_import_the_same_controller_factory(tmp_path):
     assert protocols[0] == protocols[1]
     factory = root / "scripts/run_recovery_dagger.py"
     assert protocols[0]["runtime_source_sha256"][str(factory)] == sha256_file(factory)
+
+
+@pytest.mark.parametrize("device", ["", "  ", "cpu ", "unknown", "meta", None])
+def test_invalid_device_is_rejected_before_writing_output(tmp_path, device):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+    out = tmp_path / "invalid_device"
+    with pytest.raises(ValueError, match="device"):
+        benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                      device=device, plan_only=True)
+    assert not out.exists()
+
+
+def test_invalid_inference_backend_is_rejected_before_writing_output(tmp_path):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+    out = tmp_path / "invalid_backend"
+    with pytest.raises(ValueError, match="inference_backend"):
+        benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                      inference_backend="unknown", plan_only=True)
+    assert not out.exists()
+
+
+def test_runtime_protocol_preserves_default_compatibility_and_blocks_incompatible_resume(tmp_path):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+
+    default_out = tmp_path / "default"
+    default_plan = benchmark.run(default_out, ["so101"], ["raw"], [13000],
+                                 snapshot=snapshot, plan_only=True)
+    assert "native_act_runtime" not in default_plan
+    assert benchmark.run(default_out, ["so101"], ["raw"], [13000],
+                         snapshot=snapshot, device="cpu", inference_backend="legacy",
+                         plan_only=True) == default_plan
+
+    for runtime in (("cpu", "vectorized"), ("mps", "legacy"), ("mps", "vectorized")):
+        with pytest.raises(ValueError, match="protocol/inputs changed"):
+            benchmark.run(default_out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                          device=runtime[0], inference_backend=runtime[1], plan_only=True)
+
+    opt_in_out = tmp_path / "mps_vec"
+    opt_in_plan = benchmark.run(opt_in_out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                                device="mps", inference_backend="vectorized", plan_only=True)
+    assert opt_in_plan["native_act_runtime"] == {"device": "mps", "inference_backend": "vectorized"}
+    assert opt_in_plan["protocol_id"] != default_plan["protocol_id"]
+    assert benchmark.run(opt_in_out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                         device="mps", inference_backend="vectorized", plan_only=True) == opt_in_plan
+
+    for incompatible in (("cpu", "legacy"), ("cpu", "vectorized"), ("mps", "legacy")):
+        with pytest.raises(ValueError, match="protocol/inputs changed"):
+            benchmark.run(opt_in_out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                          device=incompatible[0], inference_backend=incompatible[1], plan_only=True)
+
+
+def _fake_episode_runtime(monkeypatch, snapshot):
+    class Shared:
+        def __init__(self, robot, directory, *args, **kwargs):
+            self.robot = robot
+            self.source = None
+            self.env = SimpleNamespace(
+                control_hz=25., table_top=0., max_episode_steps=1,
+                task={"episode": {"success_hold_s": .04}, "ball": {"radius": .03}},
+            )
+
+        def reset(self, seed, scenario=None):
+            return {}, {}
+
+        def close(self):
+            pass
+
+    class Driver:
+        def __init__(self, shared, policy, execute_steps=None):
+            self.policy = policy
+
+        def step(self, obs, env):
+            metrics = {
+                "ee_ball_distance_m": .1, "ball_held": False, "lifted": False,
+                "ball_in_bowl": False, "ball_resting": True,
+                "ball_xyz": [0., 0., .03], "ball_xyz_task": [0., 0., .03],
+                "tool_xyz_task": [0., 0., .1],
+            }
+            return ApplyResult({}, {"control": {}, "privileged_metrics": metrics}, True, 0.,
+                               detail={"uses_act": True, "intervention": False})
+
+    monkeypatch.setattr(benchmark, "SharedEpisode", Shared)
+    monkeypatch.setattr(benchmark, "FrozenDriver", Driver)
+    monkeypatch.setattr(benchmark, "initial_fingerprint", lambda *_: {"native_reset": True})
+    monkeypatch.setattr(benchmark, "lighting", lambda *_: {"ambient": [0., 0., 0.]})
+    monkeypatch.setattr(benchmark, "runtime_hashes", lambda *_: {
+        str((snapshot / "model.safetensors").resolve()): sha256_file(snapshot / "model.safetensors")
+    })
+
+
+def test_opt_in_runtime_passes_device_and_backend_and_preserves_lazy_resume(tmp_path, monkeypatch):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    weights = snapshot / "model.safetensors"
+    weights.write_bytes(b"frozen ACT")
+    _fake_episode_runtime(monkeypatch, snapshot)
+
+    loaded = []
+
+    class Policy:
+        def __init__(self, path, *, device="cpu", inference_backend="legacy"):
+            loaded.append((Path(path), device, inference_backend))
+            self.weights_sha256 = sha256_file(weights)
+            self.scene_contract = {"camera_keys": ["observation.images.iphone"]}
+
+    monkeypatch.setattr(benchmark, "NativeLeRobotACT", Policy)
+    out = tmp_path / "run"
+    first = benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                          device="cpu", inference_backend="vectorized")
+    assert loaded == [(snapshot, "cpu", "vectorized")]
+    assert len(first["trials"]) == 1
+
+    monkeypatch.setattr(benchmark, "SharedEpisode", lambda *a, **kw: pytest.fail("scene loaded"))
+    monkeypatch.setattr(benchmark, "NativeLeRobotACT", lambda *a, **kw: pytest.fail("policy loaded"))
+    resumed = benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot,
+                            device="cpu", inference_backend="vectorized")
+    assert resumed["trials"] == first["trials"]
+
+    with pytest.raises(ValueError, match="protocol/inputs changed"):
+        benchmark.run(out, ["so101"], ["raw"], [13000], snapshot=snapshot)
+
+
+def test_opt_in_runtime_preserves_no_act_and_forwards_policy_to_learned_factory(tmp_path, monkeypatch):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    weights = snapshot / "model.safetensors"
+    weights.write_bytes(b"frozen ACT")
+    _fake_episode_runtime(monkeypatch, snapshot)
+
+    seen_policies = []
+
+    class Controller:
+        def reset(self):
+            pass
+
+        def step(self, obs, env):
+            metrics = {
+                "ee_ball_distance_m": .1, "ball_held": False, "lifted": False,
+                "ball_in_bowl": False, "ball_resting": True,
+                "ball_xyz": [0., 0., .03], "ball_xyz_task": [0., 0., .03],
+                "tool_xyz_task": [0., 0., .1],
+            }
+            return ApplyResult({}, {"control": {}, "privileged_metrics": metrics}, True, 0.,
+                               detail={"uses_act": False, "intervention": True})
+
+    def fake_factory(*, options, **_kwargs):
+        seen_policies.append(options.get("_frozen_act_policy"))
+        return Controller()
+
+    monkeypatch.setattr(benchmark, "NativeLeRobotACT", lambda *a, **kw: pytest.fail("no_act loaded policy"))
+    monkeypatch.setattr(
+        benchmark.importlib,
+        "import_module",
+        lambda name: SimpleNamespace(factory=fake_factory, __file__=__file__),
+    )
+    no_act_report = benchmark.run(
+        tmp_path / "no_act", ["so101"], ["no_act"], [13000], snapshot=snapshot,
+        controller_factory="fake_mod:factory", device="cpu", inference_backend="vectorized",
+    )
+    assert len(no_act_report["trials"]) == 1
+    assert seen_policies == [None]
+
+    loaded = []
+
+    class Policy:
+        def __init__(self, path, *, device="cpu", inference_backend="legacy"):
+            loaded.append((Path(path), device, inference_backend))
+            self.weights_sha256 = sha256_file(weights)
+            self.scene_contract = None
+
+    monkeypatch.setattr(benchmark, "NativeLeRobotACT", Policy)
+    learned_report = benchmark.run(
+        tmp_path / "learned", ["so101"], ["learned"], [13000], snapshot=snapshot,
+        controller_factory="fake_mod:factory", device="cpu", inference_backend="vectorized",
+    )
+    assert len(learned_report["trials"]) == 1
+    assert loaded == [(snapshot, "cpu", "vectorized")]
+    assert isinstance(seen_policies[1], Policy)
+
+def test_unavailable_execution_device_leaves_no_protocol(tmp_path, monkeypatch):
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("accelerator unavailable")
+
+    monkeypatch.setattr(benchmark.torch, "zeros", unavailable)
+    out = tmp_path / "run"
+    with pytest.raises(ValueError, match="device"):
+        benchmark.run(out, ["so101"], ["raw"], [13000], device="cuda:0")
+    assert not out.exists()

@@ -56,8 +56,7 @@ def compute_stats(x: np.ndarray) -> dict:
     }
 
 
-def check_episode_integrity(g, ep: int, expected_len: int, fps: float) -> None:
-    """Refuse episodes whose rows are missing, out of order or unevenly timed (raw data contract)."""
+def _validate_episode_rows(g, ep: int, expected_len: int, fps: float) -> tuple[np.ndarray, np.ndarray]:
     if len(g) != expected_len:
         raise ValueError(f"episode {ep}: {len(g)} rows but episode table says {expected_len}")
     fi = g["frame_index"].to_numpy()
@@ -66,6 +65,25 @@ def check_episode_integrity(g, ep: int, expected_len: int, fps: float) -> None:
     ts = g["timestamp"].to_numpy(dtype=np.float64)
     if len(ts) > 1 and not np.allclose(np.diff(ts), 1.0 / fps, atol=1e-3):
         raise ValueError(f"episode {ep}: timestamps are not uniform at {fps} fps")
+    return fi, ts
+
+
+def check_episode_integrity(g, ep: int, expected_len: int, fps: float) -> None:
+    """Refuse episodes whose rows are missing, out of order or unevenly timed (raw data contract)."""
+    _validate_episode_rows(g, ep, expected_len, fps)
+
+
+def _index_episodes(ds: RawDataset, keep: list[int]) -> tuple[dict[int, int], set[int], dict[int, object], object]:
+    """Index episode lengths and group frame rows once for the selected episodes."""
+    selected = set(keep)
+    table = ds.episodes[ds.episodes["episode_index"].isin(selected)]
+    ep_lengths = dict(zip(table["episode_index"], table["length"], strict=True))
+    dup_eps = set(table.loc[table["episode_index"].duplicated(), "episode_index"])
+    df = ds.data
+    empty_df = df.iloc[0:0]
+    selected_rows = df[df["episode_index"].isin(selected)]
+    rows_by_ep = {ep: rows for ep, rows in selected_rows.groupby("episode_index", sort=False)}
+    return ep_lengths, dup_eps, rows_by_ep, empty_df
 
 
 def prepare_joint(root: Path, cfg: dict, out_dir: Path, repo_id: str | None, revision: str | None, episodes: list[int] | None = None) -> dict:
@@ -120,38 +138,45 @@ def prepare(
     if fixed_split and episodes is not None:
         raise ValueError("fixed split cannot be silently restricted; create a separate debug manifest")
     if episodes is not None:
-        keep = [e for e in keep if e in set(episodes)]
+        requested = set(episodes)
+        keep = [e for e in keep if e in requested]
     stride = policy_stride(ds.fps, float(cfg["policy_hz"]))
     H, W = int(cfg["image"]["height"]), int(cfg["image"]["width"])
     pad_value = int(cfg["image"].get("pad_value", 114))
 
     # ---- tick table
+    ep_lengths, dup_eps, rows_by_ep, empty_df = _index_episodes(ds, keep)
     ticks = []
     for ep in keep:
-        g = ds.episode_rows(ep)
-        check_episode_integrity(g, ep, ds.episode_length(ep), ds.fps)
+        if ep in dup_eps or ep not in ep_lengths:
+            raise KeyError(f"episode {ep} not in episode table")
+        g = rows_by_ep.get(ep, empty_df)
+        fi, row_ts = _validate_episode_rows(g, ep, ep_lengths[ep], ds.fps)
         rows = episode_tick_rows(len(g), stride)
-        ticks.append((ep, g, rows))
-    N = sum(len(r) for _, _, r in ticks)
+        ticks.append((ep, g, rows, fi, row_ts, set(rows.tolist())))
+    N = sum(len(r) for _, _, r, _, _, _ in ticks)
 
     if (out_dir / "manifest.json").exists():
         raise FileExistsError(f"refusing to overwrite a completed derived dataset: {out_dir}")
     out_dir.mkdir(parents=True, exist_ok=True)
     keys_ = ["episode_index", "frame_index", "row_index", "timestamp", "ep_start", "ep_len", "state", "action"]
     if mode != "joint":
+        from real2sim.data.labels import episode_labels
+
         keys_ += ["joint_state", "joint_action", "label_is_extrapolated", "leader_follower_pos_err", "jump_flag"]
+    lead = int(cfg["labels"].get("cartesian_lead_ticks", 1)) if mode != "joint" else 1
+    policy_hz = float(cfg["policy_hz"])
     arrays = {k: [] for k in keys_}
     start = 0
-    for ep, g, rows in ticks:
+    for ep, g, rows, fi, row_ts, _ in ticks:
         n = len(rows)
         if mode != "joint":
-            from real2sim.data.labels import episode_labels
-
             S = ds.stack(g, "observation.state")[rows]
             A = ds.stack(g, "action")[rows]
+            obs_poses = fk.fk_real(S)
             lab = episode_labels(
-                fk.fk_real(S), S[:, 5], A[:, 5], hz=float(cfg["policy_hz"]), gripper_source=gripper_source,
-                lead=int(cfg["labels"].get("cartesian_lead_ticks", 1)), leader_poses=fk.fk_real(A),
+                obs_poses, S[:, 5], A[:, 5], hz=policy_hz, gripper_source=gripper_source,
+                lead=lead, leader_poses=fk.fk_real(A),
             )
             arrays["joint_state"].append(S.astype(np.float32))
             arrays["joint_action"].append(A.astype(np.float32))
@@ -159,16 +184,16 @@ def prepare(
             arrays["leader_follower_pos_err"].append(lab.leader_follower_pos_err.astype(np.float32))
             arrays["jump_flag"].append(lab.jump_flags)
         arrays["episode_index"].append(np.full(n, ep, np.int64))
-        arrays["frame_index"].append(g["frame_index"].to_numpy()[rows].astype(np.int64))
-        arrays["row_index"].append(g["index"].to_numpy()[rows].astype(np.int64))
-        arrays["timestamp"].append(g["timestamp"].to_numpy()[rows].astype(np.float64))
+        arrays["frame_index"].append(fi[rows].astype(np.int64, copy=False))
+        arrays["row_index"].append(g["index"].to_numpy()[rows].astype(np.int64, copy=False))
+        arrays["timestamp"].append(row_ts[rows])
         arrays["ep_start"].append(np.full(n, start, np.int64))
         arrays["ep_len"].append(np.full(n, n, np.int64))
         if mode != "joint":
             arrays["state"].append(lab.proprio.astype(np.float32))
             targets = lab.action
             if mode == "cartesian_absolute":
-                targets, extrapolated = absolute_pose_actions(fk.fk_real(S), A[:, 5], lead=int(cfg["labels"].get("cartesian_lead_ticks", 1)))
+                targets, extrapolated = absolute_pose_actions(obs_poses, A[:, 5], lead=lead)
                 if not np.array_equal(extrapolated, lab.label_is_extrapolated):
                     raise RuntimeError("absolute action masks differ from canonical labels")
             elif mode == "cartesian_tool":
@@ -190,21 +215,19 @@ def prepare(
         mm = np.lib.format.open_memmap(path, mode="w+", dtype=np.uint8, shape=(N, H, W, 3))
         t0 = time.time()
         offset = 0
-        for ep, _, rows in ticks:
-            want = set(rows.tolist())
-            g_rows = ds.episode_rows(ep)
-            row_ts = g_rows["timestamp"].to_numpy(dtype=np.float64)
+        for ep, _, rows, _, row_ts, want in ticks:
+            n_ep_rows = len(row_ts)
             seg = ds.video_segment(key, ep)
             # A frame dropped at the segment start shifts every image while keeping the tick count
             # (at stride 3) and the relative timestamps intact; only absolute counts reveal it.
             table_frames = int(round((seg.to_ts - seg.from_ts) * ds.fps))
-            if table_frames != len(g_rows):
+            if table_frames != n_ep_rows:
                 raise RuntimeError(f"{key} episode {ep}: video segment spans {table_frames} frames for "
-                                   f"{len(g_rows)} data rows (image/state misalignment)")
+                                   f"{n_ep_rows} data rows (image/state misalignment)")
             video_frames = ds.count_frames(key, ep)
-            if video_frames != len(g_rows):
+            if video_frames != n_ep_rows:
                 raise RuntimeError(f"{key} episode {ep}: video holds {video_frames} frames for "
-                                   f"{len(g_rows)} data rows (image/state misalignment)")
+                                   f"{n_ep_rows} data rows (image/state misalignment)")
             got = 0
             for pos, pts, frame in ds.iter_frames(key, ep, stride=stride):
                 if pos not in want:
@@ -216,8 +239,9 @@ def prepare(
                         f"{key} episode {ep}: frame {pos} at t={pts - seg.from_ts:.4f}s does not match "
                         f"data row timestamp {row_ts[pos]:.4f}s (image/state misalignment)")
                 rgb = frame.to_ndarray(format="rgb24")
-                img, geometry = letterbox_rgb(rgb, H, W, pad_value=pad_value)
-                mm[offset + got] = img
+                _, geometry = letterbox_rgb(
+                    rgb, H, W, pad_value=pad_value, out=mm[offset + got], geometry=geometry
+                )
                 got += 1
             if got != len(rows):
                 raise RuntimeError(f"{key} episode {ep}: decoded {got} frames for {len(rows)} ticks")

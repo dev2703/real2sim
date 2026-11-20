@@ -7,6 +7,9 @@ import numpy as np
 import torch
 
 
+LUMA_WEIGHTS = np.array([0.299, 0.587, 0.114], dtype=np.float32)
+
+
 class ImageAugmentation:
     def __init__(self, config: dict, letterbox: dict):
         allowed = {"brightness", "contrast", "saturation", "shift_pixels"}
@@ -33,10 +36,14 @@ class ImageAugmentation:
             for key in ("brightness", "contrast", "saturation")
         ]
         content *= brightness
-        grey = content @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-        content = (content - grey.mean()) * contrast + grey.mean()
-        grey = content @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-        content = grey[..., None] + (content - grey[..., None]) * saturation
+        mean_grey = (content @ LUMA_WEIGHTS).mean()
+        content -= mean_grey
+        content *= contrast
+        content += mean_grey
+        grey = (content @ LUMA_WEIGHTS)[..., None]
+        content -= grey
+        content *= saturation
+        content += grey
         content = np.round(np.clip(content, 0, 1) * 255).astype(np.uint8)
         shift = int(self.config["shift_pixels"])
         if shift:

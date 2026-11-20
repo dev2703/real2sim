@@ -8,12 +8,12 @@ import pytest
 import torch
 
 from real2sim.policy.train import train
-from tests.integration.test_flow_head_smoke import tiny_data  # noqa: F401
+from tests.integration.test_v2_resume import tiny_data  # noqa: F401
 
 
 @pytest.mark.integration
 def test_v2_act_selects_executed_prefix_score_and_persists_units(tiny_data, tmp_path):  # noqa: F811
-    data, _, manifest, _ = tiny_data
+    data, manifest = tiny_data
     manifest.update(contract_version="v2-test", action_representation="cartesian")
     # Give the canonical pose a valid orientation for physically meaningful baselines.
     (data / "manifest.json").write_text(json.dumps(manifest))

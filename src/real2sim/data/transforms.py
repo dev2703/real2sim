@@ -50,24 +50,66 @@ def letterbox_geometry(src_w: int, src_h: int, dst_w: int, dst_h: int) -> Letter
     )
 
 
+def _fill_padding(out: np.ndarray, g: LetterboxGeometry, pad_value: int) -> None:
+    if g.pad_top > 0:
+        out[: g.pad_top] = pad_value
+    bottom = g.pad_top + g.resized_h
+    if bottom < g.dst_h:
+        out[bottom:] = pad_value
+    if g.pad_left > 0:
+        out[g.pad_top : bottom, : g.pad_left] = pad_value
+    right = g.pad_left + g.resized_w
+    if right < g.dst_w:
+        out[g.pad_top : bottom, right:] = pad_value
+
+
 def letterbox_rgb(
-    img: np.ndarray, dst_h: int, dst_w: int, pad_value: int = DEFAULT_PAD_VALUE
+    img: np.ndarray,
+    dst_h: int,
+    dst_w: int,
+    pad_value: int = DEFAULT_PAD_VALUE,
+    *,
+    out: np.ndarray | None = None,
+    geometry: LetterboxGeometry | None = None,
 ) -> tuple[np.ndarray, LetterboxGeometry]:
     """Letterbox an ``HxWx3`` uint8 RGB image into ``dst_h x dst_w``."""
     if img.ndim != 3 or img.shape[2] != 3:
         raise ValueError(f"expected HxWx3 image, got {img.shape}")
     h, w = img.shape[:2]
-    g = letterbox_geometry(w, h, dst_w, dst_h)
+    if (
+        geometry is not None
+        and geometry.src_w == w
+        and geometry.src_h == h
+        and geometry.dst_w == dst_w
+        and geometry.dst_h == dst_h
+    ):
+        g = geometry
+    else:
+        g = letterbox_geometry(w, h, dst_w, dst_h)
     interp = cv2.INTER_AREA if g.scale < 1 else cv2.INTER_LINEAR
-    resized = cv2.resize(img, (g.resized_w, g.resized_h), interpolation=interp)
-    out = np.full((dst_h, dst_w, 3), pad_value, dtype=np.uint8)
-    out[g.pad_top : g.pad_top + g.resized_h, g.pad_left : g.pad_left + g.resized_w] = resized
+    if out is None:
+        if g.resized_w == dst_w and g.resized_h == dst_h:
+            resized = cv2.resize(img, (g.resized_w, g.resized_h), interpolation=interp)
+            if resized.dtype != np.uint8:
+                resized = resized.astype(np.uint8)
+            return resized, g
+        out = np.empty((dst_h, dst_w, 3), dtype=np.uint8)
+    elif out.shape != (dst_h, dst_w, 3) or out.dtype != np.uint8:
+        raise ValueError(f"expected out shape {(dst_h, dst_w, 3)} uint8, got {out.shape} {out.dtype}")
+    _fill_padding(out, g, pad_value)
+    dst_roi = out[g.pad_top : g.pad_top + g.resized_h, g.pad_left : g.pad_left + g.resized_w]
+    if img.dtype == np.uint8:
+        cv2.resize(img, (g.resized_w, g.resized_h), dst=dst_roi, interpolation=interp)
+    else:
+        dst_roi[...] = cv2.resize(img, (g.resized_w, g.resized_h), interpolation=interp)
     return out, g
 
 
 def to_chw_float(img_hwc_uint8: np.ndarray) -> np.ndarray:
     """``HxWx3`` uint8 -> ``3xHxW`` float32 in [0, 1] (LeRobot's expected image range)."""
-    return np.ascontiguousarray(img_hwc_uint8.transpose(2, 0, 1)).astype(np.float32) / 255.0
+    chw = img_hwc_uint8.transpose(2, 0, 1).astype(np.float32, order="C")
+    chw /= 255.0
+    return chw
 
 
 def adjust_intrinsics(K: np.ndarray, g: LetterboxGeometry) -> np.ndarray:
