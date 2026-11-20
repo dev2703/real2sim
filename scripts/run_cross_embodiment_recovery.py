@@ -348,9 +348,7 @@ def build_plan(args):
         heads = fit_heads(iteration)
     if args.matched_benchmark:
         directory = out / "benchmark"
-        # Configured resets use the current matched benchmark's ACT and learned
-        # conditions. Keep the historical plan for callers omitting the flag.
-        conditions = ["raw", *variants] if args.configured_gripper else ["raw", "rgb", "hf_rgb", *variants]
+        conditions = ["raw", *variants]
         benchmark_heads = dict(heads)
         if args.frozen_prefix:
             conditions.append("hf_learned")

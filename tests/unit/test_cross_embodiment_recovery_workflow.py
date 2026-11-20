@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts import benchmark_frozen_act
 from scripts.run_cross_embodiment_recovery import build_plan, main, parser, run_plan
 
 
@@ -36,10 +37,13 @@ def test_gripper_option_is_forwarded_to_collection_and_evaluation(tmp_path, matc
     for stage in plan["stages"]:
         forwarded = configured and not stage["name"].startswith("train_")
         assert stage["command"].count("--configured-gripper") == int(forwarded)
-    if matched and configured:
+    if matched:
         command = plan["stages"][-1]["command"]
         assert command[command.index("--conditions") + 1:command.index("--seeds")] == [
             "raw", "learned", "no_act", "hf_learned"]
+        parsed = benchmark_frozen_act.build_parser().parse_args(command[2:])
+        assert parsed.conditions == ["raw", "learned", "no_act", "hf_learned"]
+        assert parsed.configured_gripper is configured
 
 
 def test_fresh_workflow_trains_both_heads_and_compares_identical_resets(tmp_path):
@@ -54,7 +58,9 @@ def test_fresh_workflow_trains_both_heads_and_compares_identical_resets(tmp_path
     assert all("--require-command-labels" in stage["command"] for stage in plan["stages"][2:4])
     command = plan["stages"][-1]["command"]
     assert command[command.index("--conditions") + 1:command.index("--seeds")] == [
-        "raw", "rgb", "hf_rgb", "learned", "no_act"]
+        "raw", "learned", "no_act"]
+    parsed = benchmark_frozen_act.build_parser().parse_args(command[2:])
+    assert parsed.conditions == ["raw", "learned", "no_act"]
     assert json.loads(command[-1])["heads"] == plan["heads"]
     assert json.loads(command[-1])["recovery_frame"] == "native"
     assert plan["reserved_seeds_used"] is False

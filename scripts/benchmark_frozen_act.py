@@ -378,7 +378,7 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     return report
 
 
-def main():
+def build_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--robots", nargs="+", choices=("so101", "panda"), default=["so101", "panda"])
@@ -398,7 +398,11 @@ def main():
     parser.add_argument("--scenario-condition", default="nominal")
     parser.add_argument("--controller-factory")
     parser.add_argument("--controller-options", type=json.loads, default={})
-    args = parser.parse_args()
+    return parser
+
+
+def main():
+    args = build_parser().parse_args()
     run(args.out, args.robots, args.conditions, args.seeds, snapshot=args.snapshot,
         source_scene=args.source_scene, plan_only=args.plan_only, scenario_plan=args.scenario_plan,
         scenario_condition=args.scenario_condition, controller_factory=args.controller_factory,

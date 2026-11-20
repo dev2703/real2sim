@@ -51,6 +51,24 @@ def test_runtime_dependency_edits_invalidate_resume(tmp_path, monkeypatch, depen
     assert json.loads((out / "protocol.json").read_text()) == first
 
 
+@pytest.mark.parametrize("source_scene, expected_panda_scene", [
+    ("configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml",
+     "configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml"),
+    ("configs/v2/sim_so101.yaml",
+     "configs/v2/sim_panda.waypoint_20261026.yaml"),
+])
+def test_runtime_hashes_include_selected_panda_scene_and_data_yaml(
+        tmp_path, source_scene, expected_panda_scene):
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+    hashes = benchmark.raw_act.runtime_hashes(snapshot, Path(source_scene))
+    panda_path = Path(expected_panda_scene).resolve()
+    data_path = Path("configs/v2/data.waypoint_20261026.yaml").resolve()
+    assert hashes[str(panda_path)] == sha256_file(panda_path)
+    assert hashes[str(data_path)] == sha256_file(data_path)
+
+
 def test_benchmark_and_collector_imports_are_all_runtime_hashed(tmp_path):
     root = Path(benchmark.__file__).resolve().parents[1]
     program = """
