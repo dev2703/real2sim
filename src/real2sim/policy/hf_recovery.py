@@ -6,7 +6,7 @@ import numpy as np
 
 
 class ApproachMonitor:
-    """Use RGB target distance and elapsed control time, never task truth."""
+    """Use a full, fresh interval of RGB distances and elapsed control time."""
 
     def __init__(self, hz, *, patience_s=2., max_attempt_s=5., progress_m=.003):
         if not np.isfinite([hz, patience_s, max_attempt_s, progress_m]).all() or min(
@@ -18,13 +18,17 @@ class ApproachMonitor:
         self.distances = deque(maxlen=self.window + 1)
 
     def update(self, tick, distance_m):
+        # Missing detections (including skipped calls) must age out evidence.
+        # Keep the requirement for a full, fresh window of valid samples.
+        while self.distances and self.distances[0][0] < tick - self.window:
+            self.distances.popleft()
         if distance_m is not None:
             if not np.isfinite(distance_m) or distance_m < 0:
                 raise ValueError("RGB approach distance must be finite and nonnegative")
-            self.distances.append(float(distance_m))
+            self.distances.append((tick, float(distance_m)))
             if (len(self.distances) == self.window + 1 and distance_m > .04
-                    and self.distances[0] - min(self.distances) < self.progress_m):
-                return "RGB approach made less than 3mm progress over the patience interval"
+                    and self.distances[0][1] - min(d for _, d in self.distances) < self.progress_m):
+                return f"RGB approach made less than {self.progress_m * 1000:g}mm progress over the patience interval"
         if tick >= self.deadline:
             return "Bounded HF approach attempt elapsed; request RGB recovery"
         return None

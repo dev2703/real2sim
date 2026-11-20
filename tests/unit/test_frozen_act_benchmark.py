@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,41 @@ from real2sim.artifacts import sha256_file
 from real2sim.policy.adapters import ApplyResult
 from scripts import benchmark_frozen_act as benchmark
 from scripts.benchmark_frozen_act import aggregate, completed_trial, digest_json
+
+
+@pytest.mark.parametrize("dependency", [
+    "src/real2sim/perception/ball_hsv.py",
+    "src/real2sim/evaluation/oracle.py",
+    "src/real2sim/policy/bounded_joint.py",
+    "src/real2sim/data/follower_joint_targets.py",
+    "src/real2sim/data/labels.py",
+])
+def test_runtime_dependency_edits_invalidate_resume(tmp_path, monkeypatch, dependency):
+    root = Path(benchmark.__file__).resolve().parents[1]
+    shutil.copytree(root / "src", tmp_path / "src", ignore=shutil.ignore_patterns("__pycache__"))
+    shutil.copyfile(root / "physical_measurements.md", tmp_path / "physical_measurements.md")
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
+    monkeypatch.chdir(tmp_path)
+    out = tmp_path / "benchmark"
+    path = (tmp_path / dependency).resolve()
+    source_scene = root / benchmark.MEASURED_SCENE
+    options = {"snapshot": snapshot, "source_scene": source_scene, "plan_only": True}
+    first_hash = sha256_file(path)
+    first = benchmark.run(out, ["so101"], ["raw"], [12000], **options)
+    assert first["runtime_source_sha256"][str(path)] == first_hash
+    assert benchmark.raw_act.runtime_hashes(snapshot, source_scene)[str(path)] == first_hash
+
+    with path.open("a") as stream:
+        stream.write("\n# Runtime input changed.\n")
+    with pytest.raises(ValueError, match="protocol/inputs changed"):
+        benchmark.run(out, ["so101"], ["raw"], [12000], **options)
+
+    second = benchmark.run(tmp_path / "fresh", ["so101"], ["raw"], [12000], **options)
+    assert second["runtime_source_sha256"][str(path)] == sha256_file(path) != first_hash
+    assert second["protocol_id"] != first["protocol_id"]
+    assert json.loads((out / "protocol.json").read_text()) == first
 
 
 @pytest.mark.parametrize("condition", ["rgb", "hf_rgb"])
