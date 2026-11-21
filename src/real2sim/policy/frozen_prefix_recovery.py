@@ -61,6 +61,17 @@ class FrozenPrefixRecoveryController:
         ball = self.references.ball
         if ball is None:
             return None
+        visible = getattr(self.references, "visible", None)
+        if visible is not None and not visible.get("ball", False):
+            return None
+        last_seen = getattr(self.references, "last_seen", None)
+        if last_seen is not None:
+            seen_tick = last_seen.get("ball")
+            if seen_tick is None or seen_tick > self.tick:
+                return None
+            refresh_ticks = getattr(self.references, "refresh_ticks", None)
+            if refresh_ticks is not None and self.tick - seen_tick >= int(refresh_ticks):
+                return None
         target = np.asarray(ball, float)
         pose = np.asarray(env.ee_pose(), float)
         if target.shape != (3,) or not np.isfinite(target).all():
@@ -76,8 +87,8 @@ class FrozenPrefixRecoveryController:
             raise ValueError("Frozen-prefix controller is bound to a different environment")
         started = perf_counter()
         if self._trigger is None:
-            # The tracker owns its refresh cadence and may retain an aged RGB
-            # reference during occlusion. Missing references give no distance.
+            # The tracker owns its refresh cadence and retains an aged RGB
+            # reference when occluded. Stale or invisible targets yield no distance.
             self.references.update(self.tick)
             distance = self._distance(env)
             reason = self.monitor.update(self.tick, distance)

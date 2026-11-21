@@ -21,13 +21,8 @@ The following script entry points are supported and should remain listed here:
 - `scripts/audit_frozen_act_results.py`
 - `scripts/run_recovery_dagger.py`
 - `scripts/run_cross_embodiment_recovery.py`
-
-The recovery workflow keeps ACT weights frozen, supports phase or residual MLP
-heads, and separates training, validation and development episodes. It records
-unseen target arms explicitly. Grasp-relative targets, direct ACT-conditioned
-actions and a task-event jaw clock are versioned options; their presence does
-not establish better task performance. Reliable source-only transfer and robust
-learned recovery on both arms remain unresolved.
+- `scripts/train_recovery_mlp.py`
+- `scripts/train_phase_recovery_mlp.py`
 
 An experimental direct weight edit is available separately from frozen ACT:
 
@@ -42,24 +37,12 @@ uv run python -m real2sim.policy.weight_edit --snapshot "$SNAPSHOT" \
   --data outputs/v2/weight_edit_features_NEW --out outputs/v2/weight_edit_NEW
 ```
 
-This fits only ACT's final action layer against successful RGB teacher commands,
-balances the two arms, selects regularization and edit strength on separate
-episodes without worsening either arm's validation error, and exports a new
-native checkpoint. Panda commands are projected through the existing robot
-geometry adapter; this is target-arm supervision. Use `--robots so101` for
-source-only fitting. Corrective collection accepts `--rollin-snapshot EDITED`
-and `--act-prefix-steps 50`; prefix commands never become teacher labels.
-Evaluate each export with the matched benchmark before using it. See the
-[initial experiment](docs/ACT_WEIGHT_EDIT_20261109.md) and
-[both-arm investigation](docs/ACT_WEIGHT_SPACE_20261111.md) for results and the
-distinction between action accuracy and completed tasks. An explicit
-`render.near_clip_m: 0.005` prevents scenery extent from choosing a large near
-clipping distance; this optional setting applies to both robot scenes.
-
-The decoder editor also fits the existing final decoder feed-forward layers
-without adding a runtime network. Collect with `--feature-layer decoder_ffn_input`
-and fit with `python -m real2sim.policy.decoder_weight_edit`; see the both-arm
-investigation for complete commands. The candidate scene remains exploratory.
-
 Sources: [demonstrations](https://huggingface.co/datasets/bottowork/so101_act_pickplace_v2)
 and [native ACT checkpoint](https://huggingface.co/bottowork/so101-act-h256-b16).
+
+
+## MLX recovery training
+
+On Apple Silicon, install the optional backend with
+`uv pip install --python .venv/bin/python mlx==0.32.4` and add `--backend mlx`
+to `scripts/train_recovery_mlp.py`.

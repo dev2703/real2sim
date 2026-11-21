@@ -7,10 +7,52 @@ import pytest
 import torch
 from safetensors.torch import load_file
 
+from real2sim.data.prepare import compute_stats
 from real2sim.policy.act import build_act_config, load_checkpoint
 from real2sim.policy.paired import file_sha256
 from real2sim.policy.train import train, validate_exact_resume_model_config
-from tests.integration.test_flow_head_smoke import tiny_data  # noqa: F401
+
+
+@pytest.fixture
+def tiny_data(tmp_path):
+    root = tmp_path / "data"
+    root.mkdir()
+    rng = np.random.default_rng(23)
+    n, per_episode = 24, 6
+    state = rng.normal(0, .2, (n, 13)).astype(np.float32)
+    state[:, -1] = .5
+    action = rng.normal(0, .002, (n, 7)).astype(np.float32)
+    action[:, -1] = .4
+    ep = np.repeat(np.arange(4), per_episode)
+    frame = np.tile(np.arange(per_episode), 4)
+    extrapolated = frame == per_episode - 1
+    action[extrapolated] = 0
+    arrays = dict(state=state, canonical_state=state.copy(), action=action, episode_index=ep,
+                  frame_index=frame, row_index=np.arange(n), ep_start=ep * per_episode,
+                  ep_len=np.full(n, per_episode), label_is_extrapolated=extrapolated)
+    np.savez(root / "arrays.npz", **arrays)
+    images = rng.integers(0, 256, (n, 28, 42, 3), dtype=np.uint8)
+    np.save(root / "images_iphone.npy", images)
+    stats = {"observation.state": compute_stats(state[ep < 2]),
+             "action": compute_stats(action[(ep < 2) & ~extrapolated]),
+             "image_normalization": {"mean": [.485, .456, .406], "std": [.229, .224, .225]},
+             "train_episodes": [0, 1], "computed_on": "inner training episodes only"}
+    (root / "stats.json").write_text(json.dumps(stats))
+    manifest = {
+        "prepare_version": "observation_variants_v1", "camera_keys": ["observation.images.iphone"],
+        "image_shape_hwc": [28, 42, 3], "image_files": {"observation.images.iphone": "images_iphone.npy"},
+        "state_names": [str(i) for i in range(12)] + ["gripper_obs"],
+        "action_names": ["dx", "dy", "dz", "d_rx", "d_ry", "d_rz", "gripper_target"],
+        "split": {"train": [0, 1], "val": [2], "historical_val": [3], "seed": 42, "sha256": "split"},
+        "source_split": {"train": [0, 1, 2], "val": [3]},
+        "letterbox": {}, "source": {}, "policy_hz": 10, "label_semantics": "test",
+        "observation_variant": {"kind": "canonical", "history": 1},
+        "experiment_split": {"purpose": "smoke"},
+        "files_sha256": {name: file_sha256(root / name) for name in
+                         ("arrays.npz", "stats.json", "images_iphone.npy")},
+    }
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    return root, manifest
 
 
 def tiny_act_config(trajectory_weight=0.):
@@ -57,8 +99,8 @@ def tiny_act_config(trajectory_weight=0.):
 
 @pytest.mark.integration
 @pytest.mark.parametrize("trajectory_weight", [0., .1])
-def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path, trajectory_weight):  # noqa: F811
-    data, _, manifest, _ = tiny_data
+def test_two_view_act_resume_matches_uninterrupted_training(tiny_data, tmp_path, trajectory_weight):
+    data, manifest = tiny_data
     images = np.load(data / "images_iphone.npy")
     np.save(data / "images_top.npy", images[:, ::-1].copy())
     manifest["camera_keys"].append("observation.images.top")
@@ -93,8 +135,8 @@ def run_fingerprints(out):
 
 
 @pytest.fixture
-def trained_run(tiny_data, tmp_path):  # noqa: F811
-    data, _, _, _ = tiny_data
+def trained_run(tiny_data, tmp_path):
+    data, _ = tiny_data
     cfg = tiny_act_config()
     cfg["train"]["steps"] = 2
     out = tmp_path / "run"

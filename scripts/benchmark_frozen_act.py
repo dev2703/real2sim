@@ -22,30 +22,20 @@ import torch
 
 from real2sim.artifacts import sha256_file
 from real2sim.evaluation.metrics import TrialTracker, summarize
-from real2sim.policy.adapters import ApplyResult
-from real2sim.policy.follower_joint import check_joint_request
 from real2sim.policy.native_lerobot_act import NativeLeRobotACT
 from real2sim.serialization import json_default, write_json
-from real2sim.sim.kinematics import NativeKinematics
 
-if __package__:
-    from scripts import evaluate_hf_act_panda_20261028 as transfer
-else:
-    # Direct-file invocation puts scripts/, rather than the project root, on
-    # sys.path. Factories use the same scripts.module names as module invocation.
+if not __package__:
+    # Direct invocation also needs repository-local controller factories.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from scripts import evaluate_hf_act_panda_20261028 as transfer
+
+from real2sim.evaluation import raw_act
+from real2sim.evaluation.raw_act import FrozenDriver, digest_json
+from scripts import evaluate_hf_act_panda_20261028 as transfer
 
 MEASURED_SCENE = Path("configs/v2/measured_registration_20261028/sim_so101_positive_all_scalars.yaml")
 CONDITIONS = ("raw", "learned", "no_act", "hf_learned")
 CUSTOM_CONDITIONS = ("learned", "no_act", "hf_learned")
-
-
-def digest_json(value):
-    import hashlib
-
-    return hashlib.sha256(json.dumps(value, sort_keys=True, default=json_default,
-                                    allow_nan=False).encode()).hexdigest()
 
 
 def lighting(env):
@@ -61,140 +51,24 @@ def lighting(env):
 
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
-    """Hash executable inputs, including saved preprocessing and static assets."""
-    from real2sim.config import load_yaml, project_path
-
-    paths = {Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
-             Path(transfer.retarget.__file__),
-             Path("physical_measurements.md"), Path(source_scene)}
-    paths |= {p for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry")
-              for p in Path(directory).glob("*.py")}
+    """Extend the shared evaluation hashes with matched-benchmark inputs."""
+    paths = {Path(__file__), Path(__file__).resolve().with_name("evaluate_hf_recovery.py"),
+             Path("physical_measurements.md"),
+             Path("src/real2sim/evaluation/video.py"), *map(Path, extra_paths)}
     paths |= {Path("src/real2sim/policy") / name for name in (
-        "native_lerobot_act.py", "hf_recovery.py", "visual_waypoint.py", "visual_targets.py",
-        "follower_joint.py", "bounded_joint.py", "adapters.py", "common_recovery.py", "recovery_mlp.py",
-        "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py")}
-    paths.add(Path("src/real2sim/policy/source_recovery_frame.py"))
-    paths.add(Path("src/real2sim/policy/progress_geometry.py"))
-    paths.add(Path("src/real2sim/policy/frozen_prefix_recovery.py"))
-    paths |= {Path("src/real2sim/evaluation") / name for name in ("metrics.py", "video.py", "oracle.py")}
-    paths.add(Path("src/real2sim/perception/ball_hsv.py"))
-    paths |= {Path("src/real2sim") / name for name in ("config.py", "serialization.py", "artifacts.py")}
-    paths |= set(Path(snapshot).glob("*.json")) | set(Path(snapshot).glob("*.safetensors"))
-    for config in (source_scene, Path("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml")):
-        cfg = load_yaml(config)
-        paths |= {project_path(cfg[key]) for key in ("task_config", "data_config", "model", "manifest")}
-    paths |= {Path(p) for p in extra_paths}
-    return {str(p.resolve()): sha256_file(p) for p in sorted(paths)}
+        "hf_recovery.py", "visual_waypoint.py", "visual_targets.py", "common_recovery.py",
+        "recovery_mlp.py", "phase_recovery_mlp.py", "rgb_reference_tracker.py", "grasp_feedback.py",
+        "source_recovery_frame.py", "progress_geometry.py", "frozen_prefix_recovery.py")}
+    return raw_act.runtime_hashes(snapshot, source_scene, paths)
 
 
-class SharedEpisode:
-    """Identical embodiment setup for every compared control condition."""
+class SharedEpisode(raw_act.SharedEpisode):
+    """Use the matched benchmark's historical scene default."""
 
     def __init__(self, robot, directory, source_scene=MEASURED_SCENE, *, native_contract=None,
                  initial_gripper_percent=1.2):
-        directory.mkdir(parents=True)
-        self.robot = robot
-        scene, task = transfer.prepare_source(directory,
-            source_scene=source_scene, initial_gripper_percent=initial_gripper_percent,
-            native_contract=native_contract)
-        self.source = transfer.retarget.VirtualSource(scene)
-        self.env = self.source.source
-        self.start = self.opening = None
-        self.base_dx = -.15 if robot == "panda" else 0.
-        if robot == "panda":
-            from real2sim.panda.env import PandaPickPlaceEnv
-
-            panda_scene, _ = transfer.prepare_panda(directory, self.source, task, self.base_dx)
-            self.env = PandaPickPlaceEnv(panda_scene, render_images=False)
-            self.start, self.opening = transfer.panda_start(self.env, self.source, self.base_dx)
-            from real2sim.panda.adapter import PandaIK
-
-            self.guard = PandaIK(self.env.model, self.env.config, task_origin=self.env.offset)
-        elif robot != "so101":
-            self.close()
-            raise ValueError("Unknown embodiment")
-        else:
-            self.guard = NativeKinematics(self.env.model, self.env.config)
-
-    def reset(self, seed, scenario=None):
-        scenario = dict(scenario or {})
-        if self.robot == "panda":
-            scenario.update(joint_positions=self.start, gripper_opening=self.opening)
-        obs, info = self.env.reset(seed=seed, scenario=scenario or None)
-        self.source.q = self.source.source.initial_qpos.copy()
-        self.source.last_target = self.source.q.copy()
-        return obs, info
-
-    def close(self):
-        if self.env is not self.source.source:
-            self.env.close()
-        self.source.close()
-
-
-class FrozenDriver:
-    def __init__(self, shared, policy, execute_steps=None):
-        self.env, self.source, self.robot = shared.env, shared.source, shared.robot
-        self.policy = policy
-        self.guard = shared.guard
-        self.execute_steps = policy.config.n_action_steps if execute_steps is None else execute_steps
-        if type(self.execute_steps) is not int or not 1 <= self.execute_steps <= policy.config.chunk_size:
-            raise ValueError("execution prefix must be an integer within the saved action chunk")
-        self.reset()
-
-    def reset(self):
-        self.policy.reset()
-        self.queue = []
-        self.inference_ms = []
-
-    def step(self, obs, env):
-        del obs
-        raw_state, inference_ms = None, 0.
-        if not self.queue:
-            t0 = time.perf_counter()
-            raw_state = env.real_state() if self.robot == "so101" else self.source.source_state(env)[0]
-            if self.robot == "panda":
-                raw_state[5] = np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.
-            images = {key: env.render(env.camera_bindings[key]) for key in self.policy.camera_keys}
-            self.queue = list(self.policy.predict_action_chunk(raw_state, images)[:self.execute_steps])
-            inference_ms = (time.perf_counter() - t0) * 1000
-            self.inference_ms.append(inference_ms)
-        raw = self.queue.pop(0)
-        source_rejection = None
-        if self.robot == "so101":
-            _, bounded = transfer.native.saturate_gripper_only(raw, env)
-            current = env.sim_state()
-            self.guard.data.qpos[:] = env.data.qpos
-            accepted, reason, _ = check_joint_request(self.guard, current,
-                env.data.ctrl[env.actuator_ids], bounded, env.max_velocity / env.control_hz, samples=17)
-            command = bounded if accepted else current
-        else:
-            try:
-                _, bounded = self.source.source_action(raw)
-            except transfer.retarget.VirtualSourceCommandError as exc:
-                # Match the SO-101 hard-rejection contract: preserve measured
-                # arm and jaw positions without inventing a feasible ACT target.
-                accepted, reason = False, "source_target_native_limits"
-                source_rejection = exc.diagnostics()
-                command = np.r_[env.arm_qpos(), env.gripper_opening()]
-            else:
-                desired = transfer.retarget.target_from_source(self.source, bounded)
-                observed = env.ee_pose()
-                delta = desired[:3, 3] - observed[:3, 3]
-                distance = np.linalg.norm(delta)
-                if distance > .024:
-                    desired[:3, 3] = observed[:3, 3] + delta * .024 / distance
-                width = transfer.retarget.panda_opening_from_percent(raw[5], env.max_opening)
-                solved = self.guard.solve(desired, env.arm_qpos(),
-                    finger_opening=max(width, env.gripper_opening()))
-                accepted, reason = solved.accepted, solved.reason
-                command = np.r_[solved.qpos if accepted else env.arm_qpos(), width]
-        observed, _, _, truncated, info = env.step(command)
-        return ApplyResult(observed, info, truncated,
-            float(np.mean(info["control"]["limit_clipped"])), ik_rejected=not accepted,
-            detail={"uses_act": True, "intervention": False, "raw_hf_action": raw,
-                    "native_input": raw_state, "inference_ms": inference_ms,
-                    "guard_reason": reason, "requested_native": command,
-                    "source_command_rejection": source_rejection})
+        super().__init__(robot, directory, source_scene, native_contract=native_contract,
+                         initial_gripper_percent=initial_gripper_percent)
 
 
 def initial_fingerprint(shared, info):
@@ -258,14 +132,14 @@ def run_episode(shared, condition, seed, directory, policy=None, *, scenario=Non
                 intervention_count += assisted and not mode_before
                 mode_before = assisted
                 obs = result.obs
-                done = tracker.update(result.info["privileged_metrics"],
+                tracker.update(result.info["privileged_metrics"],
                     saturation=result.saturation, ik_rejected=result.ik_rejected)
                 stream.write(json.dumps({"tick": tick, "time_s": tick / env.control_hz,
                     "uses_act": uses_act, "assisted": assisted, "latency_ms": latency,
                     "detail": result.detail, "control": result.info["control"],
                     "scoring_only": result.info["privileged_metrics"]}, default=json_default,
                     allow_nan=False) + "\n")
-                if done or result.truncated:
+                if tracker.pick_place_success or result.truncated:
                     break
         if condition in CUSTOM_CONDITIONS:
             trigger = getattr(controller, "trigger", None)
@@ -433,22 +307,16 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     if set(conditions) & set(CUSTOM_CONDITIONS) and factory is None:
         raise ValueError("Learned conditions require --controller-factory module:function")
     torch.set_num_threads(2)
-    policy = NativeLeRobotACT(snapshot) if set(conditions) - {"no_act"} else None
+    needs_policy = bool(set(conditions) - {"no_act"})
+    policy = None
     all_rows = []
     fingerprints = {}
     for robot in robots:
         for condition in conditions:
             parent = out / robot / condition
             parent.mkdir(parents=True, exist_ok=True)
-            setup = parent / "setups" / f"setup_{time.time_ns()}"
-            shared = SharedEpisode(robot, setup, source_scene,
-                                   native_contract=getattr(policy, "scene_contract", None),
-                                   initial_gripper_percent=initial_gripper_percent)
+            shared = None
             try:
-                if model_effects:
-                    from scripts.prepare_fixed_lighting_robustness import apply_model_condition
-
-                    apply_model_condition(shared.env, model_effects)
                 for seed in seeds:
                     trial_root = parent / f"seed_{seed:06d}"
                     trial_root.mkdir(exist_ok=True)
@@ -456,6 +324,19 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
                                 for p in sorted(trial_root.glob("attempt_*/report.json"))]
                     row = next((r for r in reversed(existing) if r is not None), None)
                     if row is None:
+                        if shared is None:
+                            if needs_policy and policy is None:
+                                policy = NativeLeRobotACT(snapshot)
+                            setup = parent / "setups" / f"setup_{time.time_ns()}"
+                            shared = SharedEpisode(robot, setup, source_scene,
+                                native_contract=getattr(policy, "scene_contract", None),
+                                initial_gripper_percent=initial_gripper_percent)
+                            if model_effects:
+                                from scripts.prepare_fixed_lighting_robustness import (
+                                    apply_model_condition,
+                                )
+
+                                apply_model_condition(shared.env, model_effects)
                         attempts = [int(p.name.split("_")[-1]) for p in trial_root.glob("attempt_*") if p.is_dir()]
                         attempt = trial_root / f"attempt_{max(attempts, default=0) + 1:04d}"
                         before_lighting = lighting(shared.env)
@@ -486,7 +367,8 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
                         "success": row["pick_place_success"], "intervention": row["intervention_required"],
                         "abort": row["abort"]}), flush=True)
             finally:
-                shared.close()
+                if shared is not None:
+                    shared.close()
     report["status"] = "complete"
     report["matched_initial_states_verified"] = all(r["initial_state_sha256"] is not None for r in all_rows)
     write_json(out / "report.json", report, atomic=True)

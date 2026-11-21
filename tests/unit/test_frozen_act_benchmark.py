@@ -20,28 +20,35 @@ from scripts.benchmark_frozen_act import aggregate, completed_trial, digest_json
     "src/real2sim/perception/ball_hsv.py",
     "src/real2sim/evaluation/oracle.py",
     "src/real2sim/policy/bounded_joint.py",
+    "src/real2sim/data/follower_joint_targets.py",
+    "src/real2sim/data/labels.py",
 ])
 def test_runtime_dependency_edits_invalidate_resume(tmp_path, monkeypatch, dependency):
-    # Hash a disposable source tree so the test really changes a runtime input.
-    root = Path(__file__).resolve().parents[2]
-    for directory in ("src", "configs"):
-        shutil.copytree(root / directory, tmp_path / directory,
-                        ignore=shutil.ignore_patterns("__pycache__"))
+    root = Path(benchmark.__file__).resolve().parents[1]
+    shutil.copytree(root / "src", tmp_path / "src", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copyfile(root / "physical_measurements.md", tmp_path / "physical_measurements.md")
     snapshot = tmp_path / "snapshot"
     snapshot.mkdir()
     (snapshot / "model.safetensors").write_bytes(b"frozen ACT")
     monkeypatch.chdir(tmp_path)
     out = tmp_path / "benchmark"
-    first = benchmark.run(out, ["so101"], ["raw"], [12000],
-                          snapshot=snapshot, plan_only=True)
-    path = tmp_path / dependency
-    assert first["runtime_source_sha256"][str(path)] == sha256_file(path)
+    path = (tmp_path / dependency).resolve()
+    source_scene = root / benchmark.MEASURED_SCENE
+    options = {"snapshot": snapshot, "source_scene": source_scene, "plan_only": True}
+    first_hash = sha256_file(path)
+    first = benchmark.run(out, ["so101"], ["raw"], [12000], **options)
+    assert first["runtime_source_sha256"][str(path)] == first_hash
+    assert benchmark.raw_act.runtime_hashes(snapshot, source_scene)[str(path)] == first_hash
+
     with path.open("a") as stream:
         stream.write("\n# Runtime input changed.\n")
     with pytest.raises(ValueError, match="protocol/inputs changed"):
-        benchmark.run(out, ["so101"], ["raw"], [12000],
-                      snapshot=snapshot, plan_only=True)
+        benchmark.run(out, ["so101"], ["raw"], [12000], **options)
+
+    second = benchmark.run(tmp_path / "fresh", ["so101"], ["raw"], [12000], **options)
+    assert second["runtime_source_sha256"][str(path)] == sha256_file(path) != first_hash
+    assert second["protocol_id"] != first["protocol_id"]
+    assert json.loads((out / "protocol.json").read_text()) == first
 
 
 @pytest.mark.parametrize("condition", ["rgb", "hf_rgb"])
@@ -123,6 +130,29 @@ def test_complete_failed_trial_is_resumable_and_keeps_its_denominator(tmp_path):
     assert completed_trial(path, "frozen_protocol", robot="so101", condition="raw", seed=13000) == data["trial"]
 
 
+def test_resume_validates_trace_before_loading_policy_or_scene(tmp_path, monkeypatch):
+    (tmp_path / "model.safetensors").write_bytes(b"reference")
+    out = tmp_path / "run"
+    args = (out, ["so101"], ["raw"], [13000])
+    plan = benchmark.run(*args, snapshot=tmp_path, plan_only=True)
+    attempt = out / "so101/raw/seed_013000/attempt_0001"
+    attempt.mkdir(parents=True)
+    path, data = artifact(attempt)
+    data["protocol_id"] = plan["protocol_id"]
+    data["trial"].update(initial_state_sha256="reset", intervention_required=False)
+    data["trial_sha256"] = digest_json(data["trial"])
+    path.write_text(json.dumps(data))
+    monkeypatch.setattr(benchmark, "aggregate", lambda rows: {"n": len(rows)})
+    monkeypatch.setattr(benchmark, "SharedEpisode", lambda *a, **kw: pytest.fail("scene loaded"))
+    monkeypatch.setattr(benchmark, "NativeLeRobotACT", lambda *_: pytest.fail("policy loaded"))
+
+    report = benchmark.run(*args, snapshot=tmp_path)
+    assert report["trials"] == [data["trial"]]
+    (attempt / "ticks.jsonl").write_text("changed")
+    with pytest.raises(pytest.fail.Exception, match="policy loaded"):
+        benchmark.run(*args, snapshot=tmp_path)
+
+
 def test_partial_edited_or_wrong_seed_attempts_are_not_resumed(tmp_path):
     path, data = artifact(tmp_path)
     assert completed_trial(path, "frozen_protocol") is not None
@@ -174,6 +204,8 @@ def test_head_changes_invalidate_protocol_and_recovery_runtime_is_hashed(tmp_pat
     first = benchmark.run(tmp_path / "first", ["so101"], ["learned"], [12000],
                           snapshot=snapshot, controller_options=options, plan_only=True)
     hashes = first["runtime_source_sha256"]
+    driver_source = Path(benchmark.raw_act.__file__)
+    assert hashes[str(driver_source)] == sha256_file(driver_source)
     assert hashes[str(weights.resolve())] == sha256_file(weights)
     for name in ("common_recovery.py", "recovery_mlp.py", "phase_recovery_mlp.py",
                  "rgb_reference_tracker.py"):

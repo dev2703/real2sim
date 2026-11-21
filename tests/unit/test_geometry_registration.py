@@ -4,7 +4,11 @@ import cv2
 import numpy as np
 import pytest
 
-from real2sim.geometry.registration import fit_camera_registration, fit_joint_zero_offsets
+from real2sim.geometry.registration import (
+    _identifiability,
+    fit_camera_registration,
+    fit_joint_zero_offsets,
+)
 from real2sim.geometry.so101_fk import So101FK
 
 K = np.array([[900., 0, 640.], [0, 900., 360.], [0, 0, 1.]])
@@ -114,6 +118,28 @@ def test_joint_fit_reports_unobservable_parameters_instead_of_prior_confidence()
     assert null_directions.shape == (2, 5)
     np.testing.assert_allclose(null_directions[:, :3], 0, atol=1e-8)
     np.testing.assert_allclose(null_directions @ null_directions.T, np.eye(2), atol=1e-8)
+
+
+def test_wrist_roll_is_unobservable_with_a_free_landmark():
+    fk = So101FK()
+    q, _, groups, _, _, _ = joint_problem()
+    q = q[groups == 0]
+    marker = np.array([.02, .01, .005])
+
+    def project(offsets, point):
+        joints = q.copy()
+        joints[:, 3:] += offsets
+        poses = fk.fk_sim(joints)
+        points = poses[:, :3, 3] + poses[:, :3, :3] @ point
+        pixels = cv2.projectPoints(points, np.zeros(3), np.array([0., 0., 1.]), K, None)[0]
+        return pixels.ravel()
+
+    fixed = _identifiability(lambda x: project(x, marker), np.zeros(2), np.full(2, .1))
+    assert fixed["full_rank"]
+    free = _identifiability(lambda x: project(x[:2], x[2:]), np.r_[0., 0., marker],
+                            np.array([.1, .1, .01, .01, .01]))
+    assert free["rank"] == 4
+    assert free["conditional_parameter_std"] is None
 
 
 def test_fewer_pixel_constraints_than_joints_reports_complete_nullspace():

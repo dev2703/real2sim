@@ -78,6 +78,19 @@ def test_dataset_items(derived):
     assert set(np.unique([ds[i]["episode_index"] for i in range(len(ds))])) == set(m["split"]["train"])
 
 
+def test_image_normalization_returns_contiguous_chw(derived):
+    out, manifest = derived
+    ds = DerivedTickDataset(out, manifest["split"]["train"], chunk_size=20)
+    image = ds.images["observation.images.cam_good"][ds.indices[0]]
+    for frame in (image, image[::-2, 1::2]):
+        chw = frame.transpose(2, 0, 1).astype(np.float32) / 255.0
+        expected = (chw - ds.normalizer.img_mean) / ds.normalizer.img_std
+        actual = ds.normalizer.image(frame)
+        assert actual.flags.c_contiguous
+        assert actual.dtype == np.float32
+        np.testing.assert_array_equal(actual, expected)
+
+
 def test_act_config_files_parse():
     cfg = yaml.safe_load(open("configs/act_joint.yaml"))
     assert cfg["model"]["dim_model"] == 512 and cfg["train"]["batch_size"] == 16

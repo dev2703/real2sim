@@ -36,17 +36,21 @@ def digest_json(value):
 
 
 def runtime_hashes(snapshot, source_scene, extra_paths=()):
-    """Hash the native policy, processors, scene builders, inputs and assets."""
-    paths = {Path(__file__), Path("scripts/evaluate_raw_act.py"),
-             Path(transfer.__file__), Path(transfer.native.__file__),
+    """Hash shared evaluation inputs and any runner-specific dependencies."""
+    paths = {Path(__file__), Path(transfer.__file__), Path(transfer.native.__file__),
              Path(transfer.retarget.__file__), Path(source_scene), *map(Path, extra_paths)}
     for directory in ("src/real2sim/sim", "src/real2sim/panda", "src/real2sim/geometry"):
         paths.update(Path(directory).glob("*.py"))
     paths.update(Path("src/real2sim/policy") / name for name in (
-        "native_lerobot_act.py", "follower_joint.py", "bounded_joint.py", "adapters.py"))
+        "act.py", "adapters.py", "bounded_joint.py", "dataset.py",
+        "follower_joint.py", "native_lerobot_act.py"))
+    paths.update(Path("src/real2sim/data") / name for name in (
+        "follower_joint_targets.py", "labels.py", "raw.py", "resample.py", "transforms.py"))
     paths.update(Path("src/real2sim") / name for name in (
         "artifacts.py", "config.py", "serialization.py"))
-    paths.add(Path("src/real2sim/evaluation/metrics.py"))
+    paths.update(Path("src/real2sim/evaluation") / name for name in (
+        "metrics.py", "oracle.py", "replay.py"))
+    paths.add(Path("src/real2sim/perception/ball_hsv.py"))
     paths.update(Path(snapshot).glob("*.json"))
     paths.update(Path(snapshot).glob("*.safetensors"))
     for scene in (source_scene, Path("configs/v2/measured_registration_20261028/sim_panda_positive_all_scalars.yaml")):
@@ -110,7 +114,7 @@ class FrozenDriver:
         self.policy, self.guard = policy, shared.guard
         self.execute_steps = policy.config.n_action_steps if execute_steps is None else execute_steps
         if type(self.execute_steps) is not int or not 1 <= self.execute_steps <= policy.config.chunk_size:
-            raise ValueError("Execution prefix must be an integer within the saved action chunk")
+            raise ValueError("execution prefix must be an integer within the saved action chunk")
         self.reset()
 
     def reset(self):
@@ -265,14 +269,14 @@ def run_episode(shared, policy, seed, directory, *, execute_steps=None, scenario
                     raise ValueError("Raw ACT execution cannot accept assistance")
                 act_ticks += 1
                 obs = result.obs
-                done = tracker.update(result.info["privileged_metrics"],
+                tracker.update(result.info["privileged_metrics"],
                     saturation=result.saturation, ik_rejected=result.ik_rejected)
                 stream.write(json.dumps({"tick": tick, "time_s": tick / env.control_hz,
                     "uses_act": True, "assisted": False, "latency_ms": latency,
                     "detail": result.detail, "control": result.info["control"],
                     "scoring_only": result.info["privileged_metrics"]},
                     default=json_default, allow_nan=False) + "\n")
-                if done or result.truncated:
+                if tracker.pick_place_success or result.truncated:
                     break
     except (RuntimeError, ValueError, OSError) as exc:
         abort = f"{type(exc).__name__}: {exc}"
