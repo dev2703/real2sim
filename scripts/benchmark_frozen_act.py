@@ -218,7 +218,8 @@ def aggregate(rows):
 def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         source_scene=MEASURED_SCENE, plan_only=False, scenario_plan=None,
         scenario_condition="nominal", controller_factory=None, controller_options=None,
-        execute_steps=None, initial_gripper_percent=1.2):
+        execute_steps=None, initial_gripper_percent=1.2, device="cpu",
+        inference_backend="legacy"):
     if not seeds or len(set(seeds)) != len(seeds) or any(s < 0 for s in seeds):
         raise ValueError("Supply unique nonnegative trial seeds")
     if not robots or not set(robots) <= {"so101", "panda"} or len(set(robots)) != len(robots):
@@ -228,6 +229,18 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
     if initial_gripper_percent is not None and (
             not np.isfinite(initial_gripper_percent) or not 0 <= initial_gripper_percent <= 100):
         raise ValueError("initial gripper must be a finite percentage in [0, 100]")
+    if not isinstance(device, str) or not device or device != device.strip():
+        raise ValueError("device must be a non-empty PyTorch device string")
+    try:
+        requested_device = torch.device(device)
+        if requested_device.type == "meta":
+            raise ValueError("meta tensors cannot run native ACT")
+        if not plan_only and set(conditions) - {"no_act"} and device != "cpu":
+            torch.zeros(1, device=requested_device).cpu()
+    except (RuntimeError, TypeError, ValueError, AssertionError) as exc:
+        raise ValueError(f"Unsupported PyTorch device: {device}") from exc
+    if inference_backend not in ("legacy", "vectorized"):
+        raise ValueError("inference_backend must be legacy or vectorized")
     checkpoint_config_path = Path(snapshot) / "config.json"
     checkpoint_config = json.loads(checkpoint_config_path.read_text()) if checkpoint_config_path.is_file() else {}
     chunk_size = checkpoint_config.get("chunk_size")
@@ -293,6 +306,12 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
         "rgb_controller_enabled": False,
         "terminology": {"raw": "native ACT without a geometric controller handoff", "recovery_mlp": "learned model",
                         "DAgger": "iterative corrective-label data collection, not a controller"}}
+    if (device, inference_backend) != ("cpu", "legacy"):
+        # Omit the default runtime so existing legacy CPU protocols keep their digest.
+        protocol["native_act_runtime"] = {
+            "device": device,
+            "inference_backend": inference_backend,
+        }
     protocol_id = digest_json(protocol)
     protocol["protocol_id"] = protocol_id
     out.mkdir(parents=True, exist_ok=True)
@@ -326,7 +345,13 @@ def run(out, robots, conditions, seeds, *, snapshot=transfer.native.SNAPSHOT,
                     if row is None:
                         if shared is None:
                             if needs_policy and policy is None:
-                                policy = NativeLeRobotACT(snapshot)
+                                if (device, inference_backend) == ("cpu", "legacy"):
+                                    policy = NativeLeRobotACT(snapshot)
+                                else:
+                                    policy = NativeLeRobotACT(
+                                        snapshot, device=device,
+                                        inference_backend=inference_backend,
+                                    )
                             setup = parent / "setups" / f"setup_{time.time_ns()}"
                             shared = SharedEpisode(robot, setup, source_scene,
                                 native_contract=getattr(policy, "scene_contract", None),
@@ -390,6 +415,10 @@ def main():
                          help="Explicit source jaw override (legacy matched protocol defaults to 1.2 percent).")
     gripper.add_argument("--configured-gripper", action="store_true",
                          help="Keep the scene's configured jaw so its arm and jaw reset belong to the same source pose.")
+    parser.add_argument("--device", default="cpu",
+                        help="PyTorch device for frozen native ACT inference (default: cpu).")
+    parser.add_argument("--inference-backend", choices=("legacy", "vectorized"), default="legacy",
+                        help="Frozen native ACT inference backend (default: legacy).")
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--scenario-plan", type=Path)
     parser.add_argument("--scenario-condition", default="nominal")
@@ -400,7 +429,8 @@ def main():
         source_scene=args.source_scene, plan_only=args.plan_only, scenario_plan=args.scenario_plan,
         scenario_condition=args.scenario_condition, controller_factory=args.controller_factory,
         controller_options=args.controller_options, execute_steps=args.execute_steps,
-        initial_gripper_percent=None if args.configured_gripper else args.initial_gripper_percent)
+        initial_gripper_percent=None if args.configured_gripper else args.initial_gripper_percent,
+        device=args.device, inference_backend=args.inference_backend)
 
 
 if __name__ == "__main__":

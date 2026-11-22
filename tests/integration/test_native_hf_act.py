@@ -1,5 +1,7 @@
 """Use the downloaded native checkpoint's processors exactly once, without a scene."""
 
+import json
+
 import numpy as np
 import pytest
 import torch
@@ -21,7 +23,9 @@ def native():
 
 
 def test_native_saved_state_and_image_normalization_are_applied_once(native):
-    stats = load_file(SNAPSHOT / "policy_preprocessor_step_3_normalizer_processor.safetensors")
+    steps = json.loads((SNAPSHOT / "policy_preprocessor.json").read_text())["steps"]
+    normalizer, = (step for step in steps if step["registry_name"] == "normalizer_processor")
+    stats = load_file(SNAPSHOT / normalizer["state_file"])
     mean = stats["observation.state.mean"].numpy()
     images = {key: np.zeros((360, 640, 3), np.uint8) for key in native.camera_keys}
     batch = native.batch(mean, images)

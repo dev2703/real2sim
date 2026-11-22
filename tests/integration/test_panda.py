@@ -333,8 +333,11 @@ def test_ik_seed_a_few_ulp_past_a_joint_limit_is_clipped_not_fatal(env):
     T = ik.forward(env.initial_qpos)
     result = ik.solve(T, seed)  # must not raise
     assert result.qpos[3] >= ik.limits[3, 0]
-    with pytest.raises(ValueError):
-        ik.solve(T, np.where(np.arange(7) == 3, ik.limits[3, 0] - 0.01, seed))
+    overshot = seed.copy()
+    overshot[3] = ik.limits[3, 0] - 0.01
+    hold = ik.solve(T, overshot)
+    assert not hold.accepted and hold.reason in ("measured_beyond_soft_stop", "collision")
+    np.testing.assert_array_equal(hold.qpos, np.clip(overshot, *ik.limits.T))
     # End to end: drive joint4 onto its lower limit, as the IK does for near-base targets, then
     # tick the adapter with a zero delta; it must count (or accept) rather than raise.
     env.reset(seed=0)

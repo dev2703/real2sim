@@ -282,3 +282,156 @@ def test_frozen_features_follow_checkpoint_dimensions_and_reject_nonfinite_featu
         assert not bad_stream.pending and bad_stream.calls == 0
     finally:
         bad_stream.close()
+
+
+def _make_source_mapping_executor(error_for_x, *, with_actuator=False, max_step=.04):
+    executor = object.__new__(CommonCartesianExecutor)
+    executor.robot = "panda"
+    executor.require_source_mapping = True
+    env_kwargs = dict(
+        ee_pose=lambda: np.eye(4),
+        arm_qpos=lambda: np.zeros(7),
+        max_opening=.08,
+        gripper_opening=lambda: .05,
+        limits=np.tile([-1., 1.], (7, 1)),
+        step=lambda command: ({}, 0., False, False, {"control": {"limit_clipped": [False] * 8}}),
+    )
+    if with_actuator:
+        env_kwargs.update(
+            actuator_ids=np.arange(7),
+            data=SimpleNamespace(ctrl=np.zeros(7)),
+            max_velocity=np.full(7, max_step * 25.),
+            control_hz=25.,
+        )
+    executor.env = SimpleNamespace(**env_kwargs)
+
+    def forward(q, **_kwargs):
+        pose = np.eye(4)
+        pose[0, 3] = float(q[0])
+        return pose
+
+    def solve(target, _seed, **_kwargs):
+        q = np.zeros(7)
+        q[0] = float(target[0, 3])
+        return SimpleNamespace(accepted=True, reason="accepted", qpos=q)
+
+    projected_xs = []
+
+    def project_pose(pose):
+        x = float(pose[0, 3])
+        projected_xs.append(x)
+        error = float(error_for_x(x))
+        return SimpleNamespace(
+            error_m=error,
+            tolerance_m=.003,
+            accepted=error <= .003,
+            diagnostics=lambda: {
+                "accepted": error <= .003,
+                "position_error_m": error,
+                "position_tolerance_m": .003,
+                "position_representation": "position_only_with_causal_source_rotation_prior",
+            },
+        )
+
+    executor.guard = SimpleNamespace(forward=forward, solve=solve)
+    executor.source = SimpleNamespace(project_pose=project_pose)
+    return executor, projected_xs
+
+
+def test_source_mapping_path_caches_repeated_poses_and_preserves_counts_and_errors():
+    errors = {0.: .0005, .005: .0024, .01: .001, .015: .0012, .02: .0015}
+    executor, projected_xs = _make_source_mapping_executor(
+        lambda x: errors[round(x, 6)], with_actuator=True, max_step=.04)
+    current = np.zeros(7)
+    command = np.r_[.02, np.zeros(6)]
+    current_projection = executor.source.project_pose(np.eye(4))
+    projected_xs.clear()
+    projections = {}
+
+    accepted, detail = executor._source_mapping_path(
+        current, command, .05, current_projection, projections)
+
+    assert accepted is True
+    assert len(projected_xs) == 5
+    assert [round(x, 6) for x in projected_xs] == [0., .005, .01, .015, .02]
+    assert detail == {
+        "accepted": True,
+        "maximum_position_error_m": pytest.approx(.0024),
+        "position_tolerance_m": .003,
+        "command_margin_m": .001,
+        "path_samples": 10,
+    }
+
+
+def test_source_mapping_path_applies_endpoint_margin_when_pose_is_cached_from_interior():
+    # x=.02 has error 2.5mm: accepted at interior fraction=.5 (<=3mm),
+    # then revisited as the rate-limited second-path endpoint (fraction=1., <=2mm).
+    def error_for_x(x):
+        if np.isclose(x, .02):
+            return .0025
+        return .001
+
+    executor, projected_xs = _make_source_mapping_executor(
+        error_for_x, with_actuator=True, max_step=.02)
+    current = np.zeros(7)
+    command = np.r_[.04, np.zeros(6)]
+    current_projection = executor.source.project_pose(np.eye(4))
+    projected_xs.clear()
+    projections = {}
+
+    accepted, detail = executor._source_mapping_path(
+        current, command, .05, current_projection, projections)
+
+    assert accepted is False
+    assert len(projected_xs) == 7  # 5 on [0, .04], plus .005 and .015 on [0, .02]
+    assert detail["accepted"] is False
+    assert detail["within_measured_tolerance"] is True
+    assert detail["command_tolerance_m"] == pytest.approx(.002)
+    assert detail["reason"] == "virtual_source_command_margin"
+    assert detail["failed_at"] == "sampled_native_path"
+    assert detail["path_samples"] == 10
+    assert detail["maximum_position_error_m"] == pytest.approx(.0025)
+    assert detail["position_error_m"] == pytest.approx(.0025)
+
+    # Constant pose (all 5 samples identical) calls project_pose once yet still
+    # enforces the endpoint margin on the final sample.
+    constant_executor, constant_xs = _make_source_mapping_executor(lambda _x: .0025)
+    constant_current = constant_executor.source.project_pose(np.eye(4))
+    constant_xs.clear()
+    const_accepted, const_detail = constant_executor._source_mapping_path(
+        current, current, .05, constant_current, {})
+    assert const_accepted is False
+    assert len(constant_xs) == 1
+    assert const_detail["path_samples"] == 5
+    assert const_detail["reason"] == "virtual_source_command_margin"
+    assert const_detail["command_tolerance_m"] == pytest.approx(.002)
+    assert const_detail["maximum_position_error_m"] == pytest.approx(.0025)
+
+
+def test_step_backtracking_reuses_cached_projections_without_skipping_endpoint_margin():
+    def error_for_x(x):
+        if np.isclose(x, .02):
+            return .01
+        if np.isclose(x, .01):
+            return .0025  # passes interior at frac=.5 of .02, fails endpoint at .01
+        return .001
+
+    executor, projected_xs = _make_source_mapping_executor(error_for_x)
+    result = executor.step(np.array([.02, 0., 0., 0., 0., 0., .625]))
+
+    assert not result.ik_rejected
+    assert result.detail["feasibility_fraction"] == .25
+    # Distinct poses projected: 0.0 (current_pose), .005, .01, .015, .02,
+    # then .0025 and .0075 on the .5 candidate, and .00125 and .00375 on .25.
+    assert len(projected_xs) == len({round(x, 8) for x in projected_xs}) == 9
+    attempts = result.detail["feasibility_attempts"]
+    assert [attempt["reason"] for attempt in attempts] == [
+        "virtual_source_unrepresentable",
+        "virtual_source_command_margin",
+        "accepted",
+    ]
+    assert attempts[0]["source_mapping"]["path_samples"] == 5
+    assert attempts[1]["source_mapping"]["path_samples"] == 5
+    assert attempts[1]["source_mapping"]["maximum_position_error_m"] == pytest.approx(.0025)
+    assert attempts[2]["source_mapping"]["path_samples"] == 5
+    assert attempts[2]["source_mapping"]["maximum_position_error_m"] == pytest.approx(.001)

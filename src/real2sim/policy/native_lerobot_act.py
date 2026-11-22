@@ -11,12 +11,8 @@ import json
 from dataclasses import fields
 from pathlib import Path
 
-import draccus
 import numpy as np
 import torch
-from lerobot.configs.policies import PreTrainedConfig
-from lerobot.policies.act.modeling_act import ACTPolicy
-from lerobot.policies.factory import make_pre_post_processors
 from lerobot.utils.constants import OBS_ENV_STATE, OBS_STATE
 
 from real2sim.artifacts import sha256_file as file_sha256
@@ -30,6 +26,10 @@ def load_native_act_config(path):
     an older loader. Explicit dtypes and every other unknown field still fail;
     checkpoint files, weights and processor state are never rewritten.
     """
+    import draccus
+    from lerobot.configs.policies import PreTrainedConfig
+    from lerobot.policies.act.configuration_act import ACTConfig  # noqa: F401 - registers the ACT config
+
     path = Path(path)
     payload = json.loads((path / "config.json").read_text())
     if payload.get("type") != "act":
@@ -133,6 +133,9 @@ class NativeLeRobotACT:
     """Frozen ACT, raw observations, and native saved preprocessing/postprocessing."""
 
     def __init__(self, path, *, device="cpu", inference_backend="legacy"):
+        from lerobot.policies.act.modeling_act import ACTPolicy
+        from lerobot.policies.factory import make_pre_post_processors
+
         if inference_backend not in ("legacy", "vectorized"):
             raise ValueError("inference_backend must be legacy or vectorized")
         self.path = Path(path)

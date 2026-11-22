@@ -19,7 +19,10 @@ CART_DATA = Path(".cache/derived_cartesian")
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
-        not all(p.exists() for p in (JOINT_CK, CART_CK, JOINT_DATA / "manifest.json", CART_DATA / "manifest.json")),
+        not all(p.is_file() for p in (
+            JOINT_CK / "model.safetensors", CART_CK / "model.safetensors",
+            JOINT_DATA / "manifest.json", CART_DATA / "manifest.json",
+        )),
         reason="real checkpoints or derived datasets not present",
     ),
 ]

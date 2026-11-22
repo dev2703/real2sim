@@ -93,7 +93,7 @@ def _project(point, K, pose):
 
 
 def _contours(mask):
-    contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours, _ = cv2.findContours(mask.astype(np.uint8, copy=False), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     height, width = mask.shape
     for contour in contours:
         area = float(cv2.contourArea(contour))
@@ -226,7 +226,7 @@ def locate_objects(
     # of brightness levels, retaining the same metric/radius/convexity gates.
     # This changes image processing only; scene lighting is never altered.
     for brightness in range(80, 225, 8):
-        bowl_mask = (hsv[:, :, 1] <= 46) & (hsv[:, :, 2] >= brightness)
+        bowl_mask = cv2.inRange(hsv, (0, 0, brightness), (255, 46, 255))
         for points, area in _contours(bowl_mask):
             try:
                 plane = _plane_points(points, K, pose, bowl_rim_height_m)

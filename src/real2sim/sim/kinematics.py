@@ -79,6 +79,7 @@ class NativeKinematics:
 
     def __init__(self, model: mujoco.MjModel, config: dict):
         self.model = model
+        self.geom_body_names = tuple(model.body(i).name for i in model.geom_bodyid)
         self.data = mujoco.MjData(model)
         self.config = config["ik"]
         self.position_priority_fallback = self.config.get("position_priority_fallback", False)
@@ -124,7 +125,7 @@ class NativeKinematics:
         # Contact with a ball is expected during grasp; jaws may contact each other at closure.
         tolerated = {"ball", "gripper", "moving_jaw_so101_v1"}
         for contact in self.data.contact:
-            names = {self.model.body(self.model.geom_bodyid[g]).name
+            names = {self.geom_body_names[g]
                      for g in (contact.geom1, contact.geom2)}
             if "ball" in names or names <= tolerated:
                 continue

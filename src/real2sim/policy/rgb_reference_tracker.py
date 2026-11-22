@@ -27,11 +27,11 @@ class RGBReferenceTracker:
         self.visible = {"ball": False, "bowl": False}
         self.log = []
 
-    def update(self, tick, *, force=False):
+    def update(self, tick, *, force=False, render=None):
         if not force and tick % self.refresh_ticks:
             return None
         env = self.env
-        rgb = env.render("iphone")
+        rgb = env.render("iphone") if render is None else render("iphone")
         camera = env.model.camera("iphone").id
         K = camera_intrinsics_px(env.model, camera, rgb.shape[1], rgb.shape[0])
         pose = camera_pose_task(env.data.cam_xpos[camera], env.data.cam_xmat[camera], env.offset)

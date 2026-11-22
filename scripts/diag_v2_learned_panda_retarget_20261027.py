@@ -34,7 +34,6 @@ from real2sim.panda.adapter import PandaIK
 from real2sim.panda.env import PandaPickPlaceEnv
 from real2sim.panda.model import POINTING_DOWN
 from real2sim.panda.retarget import classify_contacts
-from real2sim.policy.act import load_checkpoint
 from real2sim.policy.adapters import normalize_image_chw
 from real2sim.policy.bounded_joint import bound_gripper_command
 from real2sim.serialization import json_default, write_json
@@ -313,6 +312,8 @@ def run(checkpoint, source_scene, panda_scene, out, mode, seeds, trace_path=None
     out.mkdir(parents=True)
     (out / "executed_script.py").write_bytes(Path(__file__).read_bytes())
     torch.set_num_threads(2)
+    from real2sim.policy.act import load_checkpoint
+
     policy, norm, contract = load_checkpoint(checkpoint, "cpu")
     if contract["state_names"] != contract["action_names"] or len(contract["state_names"]) != 6:
         raise ValueError("This diagnostic requires the native six-value SO-101 ACT contract")

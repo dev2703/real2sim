@@ -185,7 +185,7 @@ class CommonCartesianExecutor:
 
             self.guard = PandaIK(self.env.model, config, task_origin=self.env.offset)
 
-    def _source_mapping_path(self, current, command, grip, current_projection):
+    def _source_mapping_path(self, current, command, grip, current_projection, projections):
         """Check bounded native motion without mutating the virtual source.
 
         A 1 mm command margin sits inside the unchanged 3 mm measured-pose
@@ -211,7 +211,10 @@ class CommonCartesianExecutor:
         for start, end in paths:
             for fraction in np.linspace(0., 1., 5):
                 pose = self.guard.forward(start + fraction * (end - start), finger_opening=grip)
-                projection = self.source.project_pose(pose)
+                key = pose.tobytes()
+                if key not in projections:
+                    projections[key] = self.source.project_pose(pose)
+                projection = projections[key]
                 maximum_error = max(maximum_error, projection.error_m)
                 checked += 1
                 # Intermediate samples retain the measured bound, allowing a
@@ -319,6 +322,7 @@ class CommonCartesianExecutor:
         # No object goal or geometric corrective direction enters this step.
         attempts = []
         current_projection = None
+        projections = {}
         if beyond_soft_stop:
             accepted, reason = self._hold_measured_soft_stop(current)
             attempts.append({"fraction": 1., "accepted": False, "reason": reason})
@@ -353,8 +357,9 @@ class CommonCartesianExecutor:
                 if accepted and getattr(self, "require_source_mapping", False):
                     if current_projection is None:
                         current_projection = self.source.project_pose(current_pose)
+                        projections[current_pose.tobytes()] = current_projection
                     accepted, projection = self._source_mapping_path(
-                        current, solved.qpos, grip, current_projection)
+                        current, solved.qpos, grip, current_projection, projections)
                     if not accepted:
                         reason = projection["reason"]
                 attempts.append({"fraction": candidate_fraction, "accepted": accepted, "reason": reason,
@@ -450,7 +455,7 @@ class FrozenACTFeatures:
         self._captured = None
         self.policy.reset()
 
-    def next(self):
+    def next(self, *, render=None):
         env, source = self.episode.env, self.episode.source
         self.last_inference_ms = 0.
         if not self.pending:
@@ -461,7 +466,8 @@ class FrozenACTFeatures:
                 state, _ = source.source_state(env)
                 self.last_source_projection = source.last_projection.copy()
                 state[5] = float(np.clip(env.gripper_opening() / env.max_opening, 0., 1.) * 90.)
-            images = {key: env.render(env.camera_bindings[key]) for key in self.policy.camera_keys}
+            render_camera = env.render if render is None else render
+            images = {key: render_camera(env.camera_bindings[key]) for key in self.policy.camera_keys}
             self._captured = None
             chunks = self.policy.predict_action_chunk(state, images)
             chunks = np.asarray(chunks)

@@ -77,6 +77,7 @@ class PandaIK:
         if len(config["joint_names"]) != N_ARM:
             raise ValueError("PandaIK expects seven arm joints")
         ids = np.array([model.joint(name).id for name in config["joint_names"]])
+        self.finger_qadr = model.jnt_qposadr[[model.joint(name).id for name in ("finger_joint1", "finger_joint2")]]
         self.qadr = model.jnt_qposadr[ids]
         self.vadr = model.jnt_dofadr[ids]
         self.limits = model.jnt_range[ids].copy()
@@ -102,8 +103,7 @@ class PandaIK:
             raise ValueError("FK expects seven finite native joint radians")
         self.data.qpos[self.qadr] = qpos
         if finger_opening is not None:
-            for name in ("finger_joint1", "finger_joint2"):
-                self.data.qpos[self.model.jnt_qposadr[self.model.joint(name).id]] = finger_opening / 2
+            self.data.qpos[self.finger_qadr] = finger_opening / 2
         # Keep contacts/Jacobians current without solving dynamics for each IK probe.
         mujoco.mj_fwdPosition(self.model, self.data)
         return make_T(self.data.site_xmat[self.site].reshape(3, 3),
@@ -114,8 +114,7 @@ class PandaIK:
         opening = float(finger_opening)
         if not np.isfinite(opening) or opening < 0:
             raise ValueError("finger_opening must be a finite nonnegative total opening in metres")
-        for name in ("finger_joint1", "finger_joint2"):
-            self.data.qpos[self.model.jnt_qposadr[self.model.joint(name).id]] = opening / 2
+        self.data.qpos[self.finger_qadr] = opening / 2
 
     def _penetrates(self) -> bool:
         """Robot penetrating the table/bowl or itself beyond tolerance (ball contact tolerated)."""
